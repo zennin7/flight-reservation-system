@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.group2.flightres.controller.SeatMapController"
+      spacing="16"
+      styleClass="seatmap-container">
+
+    <padding>
+        <Insets top="24" bottom="24" left="24" right="24"/>
+    </padding>
+
+    <Label text="Select Your Seat" styleClass="seatmap-title"/>
+
+    <HBox spacing="20" alignment="CENTER_LEFT" styleClass="seatmap-legend">
+        <HBox spacing="6" alignment="CENTER_LEFT">
+            <Rectangle width="14" height="14" arcWidth="4" arcHeight="4" fill="#16a34a"/>
+            <Label text="Available"/>
+        </HBox>
+        <HBox spacing="6" alignment="CENTER_LEFT">
+            <Rectangle width="14" height="14" arcWidth="4" arcHeight="4" fill="#eab308"/>
+            <Label text="Selected"/>
+        </HBox>
+        <HBox spacing="6" alignment="CENTER_LEFT">
+            <Rectangle width="14" height="14" arcWidth="4" arcHeight="4" fill="#dc2626"/>
+            <Label text="Booked"/>
+        </HBox>
+    </HBox>
+
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="seatmap-scroll">
+        <GridPane fx:id="cabinGrid" hgap="6" vgap="6" alignment="CENTER"/>
+    </ScrollPane>
+
+    <HBox spacing="16" alignment="CENTER_RIGHT" styleClass="seatmap-footer">
+        <Label fx:id="totalPriceLabel" text="Total: R 0.00" styleClass="seatmap-total"/>
+        <Button fx:id="continueButton" text="Continue to Checkout" onAction="#handleContinue" disable="true" styleClass="seatmap-continue-button"/>
+    </HBox>
+
+</VBox>
