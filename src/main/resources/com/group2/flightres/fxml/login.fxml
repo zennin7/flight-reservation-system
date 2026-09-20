@@ -29,3 +29,4 @@
     <Button fx:id="loginButton" text="Log In" onAction="#handleLogin" styleClass="login-button"/>
 
 </VBox>
+

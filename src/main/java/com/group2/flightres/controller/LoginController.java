@@ -43,6 +43,14 @@ public class LoginController implements WizardStepController {
             hideError();
             if (onNext != null) {
                 onNext.run();
+            } else {
+                // Standalone test mode (no wizard context wired in yet)
+                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                        javafx.scene.control.Alert.AlertType.INFORMATION,
+                        "Login successful! Welcome, " + authenticatedUser.getFullName()
+                                + " (" + authenticatedUser.getRole() + ")");
+                alert.setHeaderText(null);
+                alert.showAndWait();
             }
         } catch (AuthenticationException e) {
             showError(e.getMessage());
@@ -60,3 +68,4 @@ public class LoginController implements WizardStepController {
         errorLabel.setManaged(false);
     }
 }
+
