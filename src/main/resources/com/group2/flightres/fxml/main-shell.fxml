@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.group2.flightres.controller.MainShellController"
+            styleClass="shell-root">
+
+    <top>
+        <HBox fx:id="stepperBar" alignment="CENTER" styleClass="stepper-bar"/>
+    </top>
+
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-area"/>
+    </center>
+
+</BorderPane>
