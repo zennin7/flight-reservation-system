@@ -25,3 +25,4 @@ public enum BookingStep {
         return (order + 1 < values.length) ? values[order + 1] : this;
     }
 }
+

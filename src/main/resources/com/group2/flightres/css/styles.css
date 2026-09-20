@@ -74,3 +74,30 @@
 .step-connector-completed {
     -fx-background-color: #16a34a;
 }
+
+.login-container {
+    -fx-background-color: #0f172a;
+}
+.login-title {
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+.login-input {
+    -fx-pref-width: 260px;
+    -fx-padding: 10;
+    -fx-background-radius: 6;
+}
+.login-button {
+    -fx-background-color: #2563eb;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-pref-width: 260px;
+    -fx-padding: 10;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+.login-error {
+    -fx-text-fill: #f87171;
+    -fx-font-size: 12px;
+}

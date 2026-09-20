@@ -10,3 +10,4 @@ import com.group2.flightres.model.BookingContext;
 public interface WizardStepController {
     void init(BookingContext context, Runnable onNext);
 }
+
