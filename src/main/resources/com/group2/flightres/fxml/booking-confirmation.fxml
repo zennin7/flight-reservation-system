@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.group2.flightres.controller.BookingConfirmationController"
+      alignment="TOP_CENTER"
+      spacing="16"
+      styleClass="confirmation-root">
+
+    <VBox VBox.vgrow="ALWAYS" alignment="CENTER" spacing="14" styleClass="card, confirmation-card">
+        <!-- Big Green Check Circle (72x72) -->
+        <StackPane styleClass="confirmation-check-circle">
+            <Label text="✓" styleClass="confirmation-check-icon"/>
+        </StackPane>
+
+        <!-- Title -->
+        <Label text="Booking confirmed" styleClass="confirmation-title"/>
+
+        <!-- Subtitle -->
+        <Label fx:id="confirmationEmailLabel"
+               text="A confirmation has been sent to david@example.com"
+               styleClass="confirmation-subtitle"/>
+
+        <!-- Dashed Reference Box -->
+        <HBox alignment="CENTER" spacing="44" styleClass="confirmation-ref-box">
+            <VBox.margin>
+                <Insets top="6" bottom="6"/>
+            </VBox.margin>
+
+            <!-- BOOKING REF -->
+            <VBox spacing="4" alignment="CENTER_LEFT">
+                <Label text="BOOKING REF" styleClass="confirmation-ref-label"/>
+                <Label fx:id="bookingRefLabel" text="K7P2QX" styleClass="confirmation-ref-val"/>
+            </VBox>
+
+            <!-- FLIGHT -->
+            <VBox spacing="4" alignment="CENTER_LEFT">
+                <Label text="FLIGHT" styleClass="confirmation-ref-label"/>
+                <Label fx:id="flightNumberLabel" text="GRP 204" styleClass="confirmation-ref-val"/>
+            </VBox>
+
+            <!-- SEAT -->
+            <VBox spacing="4" alignment="CENTER_LEFT">
+                <Label text="SEAT" styleClass="confirmation-ref-label"/>
+                <Label fx:id="seatNumberLabel" text="7E" styleClass="confirmation-ref-val"/>
+            </VBox>
+
+            <!-- TOTAL PAID -->
+            <VBox spacing="4" alignment="CENTER_LEFT">
+                <Label text="TOTAL PAID" styleClass="confirmation-ref-label"/>
+                <Label fx:id="totalPaidLabel" text="R 1,522" styleClass="confirmation-ref-val, confirmation-total-val"/>
+            </VBox>
+        </HBox>
+
+        <!-- Action Buttons -->
+        <HBox alignment="CENTER" spacing="14">
+            <VBox.margin>
+                <Insets top="10"/>
+            </VBox.margin>
+            <Button fx:id="downloadPdfButton"
+                    text="Download Boarding Pass (PDF)"
+                    onAction="#handleDownloadPdf"
+                    styleClass="btn-gold, download-pass-btn"/>
+            <Button fx:id="backToHomeButton"
+                    text="Back to Home"
+                    onAction="#handleBackToHome"
+                    styleClass="btn-grey, back-home-btn"/>
+        </HBox>
+    </VBox>
+
+</VBox>

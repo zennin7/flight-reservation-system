@@ -1038,3 +1038,95 @@
     -fx-background-radius: 8px;
 }
 
+/* -------------------------------------------------------------------
+ * Booking Confirmation Screen Specifics
+ * ------------------------------------------------------------------- */
+.confirmation-root {
+    -fx-padding: 16px 32px 24px 32px;
+    -fx-spacing: 16px;
+    -fx-alignment: top-center;
+    -fx-background-color: transparent;
+}
+
+.confirmation-card {
+    -fx-background-color: -sv-surface;
+    -fx-background-radius: 12px;
+    -fx-border-color: -sv-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-effect: -sv-card-shadow;
+    -fx-padding: 20px;
+    -fx-alignment: center;
+}
+
+.confirmation-check-circle {
+    -fx-min-width: 72px;
+    -fx-min-height: 72px;
+    -fx-max-width: 72px;
+    -fx-max-height: 72px;
+    -fx-pref-width: 72px;
+    -fx-pref-height: 72px;
+    -fx-background-radius: 36px;
+    -fx-background-color: -sv-available-green;
+    -fx-alignment: center;
+}
+
+.confirmation-check-icon {
+    -fx-font-size: 38px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+    -fx-alignment: center;
+}
+
+.confirmation-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -sv-text;
+}
+
+.confirmation-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: -sv-muted;
+}
+
+.confirmation-ref-box {
+    -fx-border-color: -sv-field-border;
+    -fx-border-width: 2px;
+    -fx-border-style: segments(6, 4);
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-padding: 18px 36px;
+    -fx-alignment: center;
+}
+
+.confirmation-ref-label {
+    -fx-font-size: 10px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -sv-muted;
+}
+
+.confirmation-ref-val {
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -sv-text;
+}
+
+.confirmation-total-val {
+    -fx-text-fill: -sv-available-green;
+}
+
+.download-pass-btn {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-padding: 12px 22px;
+    -fx-background-radius: 8px;
+}
+
+.back-home-btn {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-padding: 12px 26px;
+    -fx-background-radius: 8px;
+}
+
+
