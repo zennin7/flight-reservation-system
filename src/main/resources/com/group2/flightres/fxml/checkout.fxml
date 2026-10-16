@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.group2.flightres.controller.CheckoutController"
+      spacing="20"
+      alignment="TOP_CENTER"
+      styleClass="checkout-root">
+
+    <!-- Left Card: Booking Summary -->
+    <VBox HBox.hgrow="ALWAYS" styleClass="card, checkout-summary-card" spacing="0">
+        <Label text="Booking summary" styleClass="checkout-card-title">
+            <VBox.margin>
+                <Insets bottom="12"/>
+            </VBox.margin>
+        </Label>
+
+        <!-- Flight -->
+        <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+            <Label text="Flight" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="flightLabel" text="GRP 204 · JNB to CPT" styleClass="checkout-val-medium"/>
+        </HBox>
+
+        <!-- Departs -->
+        <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+            <Label text="Departs" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="departsLabel" text="2 Nov 2026 · 06:30" styleClass="checkout-val-medium"/>
+        </HBox>
+
+        <!-- Passenger -->
+        <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+            <Label text="Passenger" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="passengerLabel" text="David M." styleClass="checkout-val-medium"/>
+        </HBox>
+
+        <!-- Seat -->
+        <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+            <Label text="Seat" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="seatLabel" text="7E · Economy" styleClass="checkout-val-medium"/>
+        </HBox>
+
+        <!-- Divider 1 -->
+        <Region styleClass="checkout-divider">
+            <VBox.margin>
+                <Insets top="10" bottom="10"/>
+            </VBox.margin>
+        </Region>
+
+        <!-- Base Fare -->
+        <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+            <Label text="Base fare" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="baseFareLabel" text="R 1,200" styleClass="checkout-val-medium"/>
+        </HBox>
+
+        <!-- Demand Pricing -->
+        <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+            <Label text="Demand pricing" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="demandPricingLabel" text="R 180" styleClass="checkout-val-medium"/>
+        </HBox>
+
+        <!-- Taxes and Fees -->
+        <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+            <Label text="Taxes and fees" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="taxesFeesLabel" text="R 142" styleClass="checkout-val-medium"/>
+        </HBox>
+
+        <!-- Divider 2 -->
+        <Region styleClass="checkout-divider">
+            <VBox.margin>
+                <Insets top="10" bottom="12"/>
+            </VBox.margin>
+        </Region>
+
+        <!-- Total -->
+        <HBox alignment="CENTER_LEFT" styleClass="checkout-total-row">
+            <Label text="Total" styleClass="checkout-total-title" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="totalLabel" text="R 1,522" styleClass="checkout-total-amount"/>
+        </HBox>
+    </VBox>
+
+    <!-- Right Card: Passenger Details -->
+    <VBox styleClass="card, checkout-details-card" minWidth="310" prefWidth="310" maxWidth="310" spacing="12">
+        <Label text="Passenger details" styleClass="checkout-card-title"/>
+
+        <!-- Full Name -->
+        <VBox spacing="4">
+            <Label text="Full name" styleClass="checkout-field-label"/>
+            <TextField fx:id="fullNameField" text="David M." styleClass="text-field"/>
+        </VBox>
+
+        <!-- Email -->
+        <VBox spacing="4">
+            <Label text="Email" styleClass="checkout-field-label"/>
+            <TextField fx:id="emailField" text="david@example.com" styleClass="text-field"/>
+        </VBox>
+
+        <!-- Passport Number -->
+        <VBox spacing="4">
+            <Label text="Passport number" styleClass="checkout-field-label"/>
+            <TextField fx:id="passportField" promptText="A1234567" styleClass="text-field"/>
+        </VBox>
+
+        <!-- Buttons at Bottom -->
+        <VBox spacing="10" alignment="BOTTOM_CENTER" VBox.vgrow="ALWAYS">
+            <Button fx:id="confirmBookingButton"
+                    text="Confirm Booking"
+                    onAction="#handleConfirm"
+                    maxWidth="Infinity"
+                    styleClass="btn-gold, confirm-booking-btn"/>
+            <Button fx:id="backButton"
+                    text="Back"
+                    onAction="#handleBack"
+                    maxWidth="Infinity"
+                    styleClass="btn-grey, back-btn"/>
+        </VBox>
+    </VBox>
+
+</HBox>
