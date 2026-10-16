@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.group2.flightres.controller.AdminDashboardController"
+      styleClass="admin-dashboard-root"
+      spacing="18">
+
+    <!-- Screen Title -->
+    <Label text="Admin Dashboard" styleClass="admin-dashboard-title" />
+
+    <!-- Stat Cards Row -->
+    <HBox spacing="16" styleClass="admin-stat-row">
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
+            <Label text="Total Flights" styleClass="stat-card-title" />
+            <Label fx:id="totalFlightsLabel" text="24" styleClass="stat-card-value" />
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
+            <Label text="Total Bookings" styleClass="stat-card-title" />
+            <Label fx:id="totalBookingsLabel" text="312" styleClass="stat-card-value" />
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
+            <Label text="Revenue (This Month)" styleClass="stat-card-title" />
+            <Label fx:id="revenueLabel" text="R 458,200" styleClass="stat-card-value" />
+        </VBox>
+
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
+            <Label text="Seats Sold" styleClass="stat-card-title" />
+            <Label fx:id="seatsSoldLabel" text="86%" styleClass="stat-card-value" />
+        </VBox>
+    </HBox>
+
+    <!-- Booking Trends Card -->
+    <VBox styleClass="chart-card" VBox.vgrow="ALWAYS" spacing="0">
+        <Label text="Booking Trends" styleClass="chart-card-title" />
+
+        <BarChart fx:id="bookingTrendsChart" styleClass="admin-bar-chart" VBox.vgrow="ALWAYS"
+                  legendVisible="false" animated="false"
+                  horizontalGridLinesVisible="false" verticalGridLinesVisible="false"
+                  categoryGap="60" barGap="0">
+            <xAxis>
+                <CategoryAxis fx:id="xAxis" tickMarkVisible="false" />
+            </xAxis>
+            <yAxis>
+                <NumberAxis fx:id="yAxis" visible="false" tickLabelsVisible="false"
+                            tickMarkVisible="false" minorTickVisible="false"
+                            opacity="0" prefWidth="0" minWidth="0" maxWidth="0"
+                            autoRanging="false" lowerBound="0" upperBound="340" tickUnit="50" />
+            </yAxis>
+        </BarChart>
+
+        <Label text="Placeholder drawing. The real build uses JavaFX BarChart and PieChart fed from the database."
+               styleClass="chart-card-footer" />
+    </VBox>
+
+</VBox>

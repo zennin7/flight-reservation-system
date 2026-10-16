@@ -281,7 +281,7 @@
 }
 
 .btn-red, .button-danger {
-    -fx-background-color: -sv-red;
+    -fx-background-color: #dc2626;
     -fx-text-fill: #ffffff;
     -fx-font-size: 13px;
     -fx-font-weight: 700;
@@ -1128,5 +1128,107 @@
     -fx-padding: 12px 26px;
     -fx-background-radius: 8px;
 }
+
+/* -------------------------------------------------------------------
+ * Admin Dashboard Screen
+ * ------------------------------------------------------------------- */
+.admin-dashboard-root {
+    -fx-background-color: -sv-page;
+    -fx-padding: 22px 32px 26px 32px;
+}
+
+.admin-dashboard-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -sv-text;
+}
+
+.stat-card {
+    -fx-background-color: -sv-surface;
+    -fx-background-radius: 12px;
+    -fx-border-color: -sv-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-effect: -sv-card-shadow;
+    -fx-padding: 20px;
+    -fx-alignment: center;
+}
+
+.stat-card-title {
+    -fx-font-size: 12px;
+    -fx-text-fill: -sv-muted;
+}
+
+.stat-card-value {
+    -fx-font-size: 26px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -sv-text;
+}
+
+.chart-card {
+    -fx-background-color: -sv-surface;
+    -fx-background-radius: 12px;
+    -fx-border-color: -sv-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-effect: -sv-card-shadow;
+    -fx-padding: 20px;
+}
+
+.chart-card-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -sv-text;
+    -fx-padding: 0 0 12px 0;
+}
+
+.chart-card-footer {
+    -fx-font-size: 11px;
+    -fx-text-fill: -sv-muted;
+    -fx-padding: 10px 0 0 0;
+}
+
+.admin-bar-chart {
+    -fx-padding: 0 10px;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -sv-border transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.admin-bar-chart .chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.admin-bar-chart .chart-vertical-grid-lines,
+.admin-bar-chart .chart-horizontal-grid-lines {
+    -fx-stroke: transparent;
+}
+
+.admin-bar-chart .axis {
+    -fx-tick-label-fill: -sv-muted;
+    -fx-tick-label-font-size: 11px;
+}
+
+.admin-bar-chart .axis:bottom .axis-line {
+    -fx-stroke: transparent;
+}
+
+.admin-bar-chart .axis:left .axis-line {
+    -fx-stroke: transparent;
+}
+
+.admin-bar-chart .axis-tick-mark,
+.admin-bar-chart .axis-minor-tick-mark {
+    -fx-stroke: transparent;
+}
+
+.admin-bar-chart .chart-bar {
+    -fx-bar-fill: -sv-chart-bar;
+    -fx-background-color: -sv-chart-bar;
+    -fx-background-radius: 4px 4px 0 0;
+    -fx-background-insets: 0;
+}
+
+
 
 

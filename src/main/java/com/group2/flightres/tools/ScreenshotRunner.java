@@ -183,6 +183,9 @@ public class ScreenshotRunner extends Application {
                 controller.goToStep(BookingStep.CONFIRMATION);
                 break;
             case "07_admin_dashboard":
+                if (controller.getNavBar() != null) {
+                    controller.getNavBar().setAdminMode(true);
+                }
                 controller.handleNavigation("Dashboard");
                 break;
             case "shell":
