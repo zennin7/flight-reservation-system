@@ -29,7 +29,7 @@
                styleClass="confirmation-subtitle"/>
 
         <!-- Dashed Reference Box -->
-        <HBox alignment="CENTER" spacing="44" styleClass="confirmation-ref-box">
+        <HBox alignment="CENTER" spacing="44" styleClass="confirmation-ref-box" maxWidth="-Infinity">
             <VBox.margin>
                 <Insets top="6" bottom="6"/>
             </VBox.margin>

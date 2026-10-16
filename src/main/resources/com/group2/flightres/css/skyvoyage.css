@@ -281,7 +281,7 @@
 }
 
 .btn-red, .button-danger {
-    -fx-background-color: #dc2626;
+    -fx-background-color: -sv-red;
     -fx-text-fill: #ffffff;
     -fx-font-size: 13px;
     -fx-font-weight: 700;

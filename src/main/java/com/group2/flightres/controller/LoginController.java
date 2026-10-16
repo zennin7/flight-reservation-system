@@ -20,9 +20,14 @@ public class LoginController implements WizardStepController {
     @FXML private Button loginButton;
 
     private final AuthService authService = new AuthService();
+    private static User lastAuthenticatedUser;
 
     private BookingContext bookingContext;
     private Runnable onNext;
+
+    public static User getLastAuthenticatedUser() {
+        return lastAuthenticatedUser;
+    }
 
     @Override
     public void init(BookingContext context, Runnable onNext) {
@@ -42,6 +47,7 @@ public class LoginController implements WizardStepController {
 
         try {
             User authenticatedUser = authService.authenticate(username, password);
+            lastAuthenticatedUser = authenticatedUser;
             hideError();
             if (onNext != null) {
                 onNext.run();

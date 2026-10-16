@@ -4,6 +4,8 @@ import com.group2.flightres.component.NavBar;
 import com.group2.flightres.component.StepperBar;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingStep;
+import com.group2.flightres.model.User;
+import com.group2.flightres.model.UserRole;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -32,7 +34,7 @@ public class MainShellController {
         if (navBar != null) {
             navBar.setNavigationHandler(this::handleNavigation);
         }
-        goToStep(BookingStep.SEARCH);
+        handleNavigation("Home");
     }
 
     public void goToStep(BookingStep step) {
@@ -97,17 +99,25 @@ public class MainShellController {
                 loadOptionalScreen("/com/group2/flightres/fxml/login.fxml", false, "Login / Sign Up");
                 break;
             case "Dashboard":
+                if (navBar != null) {
+                    navBar.setAdminMode(true);
+                }
                 loadOptionalScreen("/com/group2/flightres/fxml/admin-dashboard.fxml", false, "Dashboard");
                 break;
             case "Logout":
                 if (navBar != null) {
                     navBar.setAdminMode(false);
                 }
-                goToStep(BookingStep.SEARCH);
+                handleNavigation("Home");
+                break;
+            case "Help":
+                if (navBar != null) {
+                    navBar.setAdminMode(!navBar.isAdminMode());
+                    handleNavigation(navBar.isAdminMode() ? "Dashboard" : "Home");
+                }
                 break;
             case "About":
             case "Contact":
-            case "Help":
             case "Bookings":
             case "Reports":
             default:
@@ -138,7 +148,19 @@ public class MainShellController {
             }
 
             Object controller = loader.getController();
-            if (controller instanceof WizardStepController wizardController) {
+            if (controller instanceof LoginController loginCtrl) {
+                loginCtrl.init(bookingContext, () -> {
+                    User u = LoginController.getLastAuthenticatedUser();
+                    if (u != null && u.getRole() == UserRole.ADMIN) {
+                        if (navBar != null) {
+                            navBar.setAdminMode(true);
+                        }
+                        handleNavigation("Dashboard");
+                    } else {
+                        handleNavigation("Home");
+                    }
+                });
+            } else if (controller instanceof WizardStepController wizardController) {
                 wizardController.init(bookingContext, () -> goToStep(BookingStep.SEARCH));
             }
         } catch (IOException e) {

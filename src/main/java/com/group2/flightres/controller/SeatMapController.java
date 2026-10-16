@@ -46,6 +46,7 @@ public class SeatMapController implements WizardStepController {
     private final Map<String, Button> seatButtonsByLabel = new HashMap<>();
     private final Map<String, FlightSeat> seatsByLabel = new HashMap<>();
     private final List<FlightSeat> selectedSeats = new ArrayList<>();
+    private boolean isSampleData = false;
 
     private BookingContext bookingContext;
     private Runnable onNext;
@@ -91,10 +92,14 @@ public class SeatMapController implements WizardStepController {
         try {
             seats = seatMapService.loadSeatMap(flightId);
             if (seats == null || seats.isEmpty()) {
+                isSampleData = true;
                 seats = generateSampleSeats();
+            } else {
+                isSampleData = false;
             }
         } catch (Exception e) {
             logger.warn("Could not query seat map from DAO; falling back to sample reference seats: {}", e.getMessage());
+            isSampleData = true;
             seats = generateSampleSeats();
         }
 
@@ -222,8 +227,10 @@ public class SeatMapController implements WizardStepController {
 
         try {
             if (alreadySelected) {
-                // Real logic call: deselect
-                seatMapService.deselectSeat(seat);
+                // Real logic call: deselect (when connected to real database)
+                if (!isSampleData) {
+                    seatMapService.deselectSeat(seat);
+                }
                 selectedSeats.remove(seat);
                 if (btn != null) {
                     btn.getStyleClass().remove("seat-selected");
@@ -232,7 +239,9 @@ public class SeatMapController implements WizardStepController {
             } else {
                 // Single seat selection for this wizard flow: clear previous
                 for (FlightSeat prev : new ArrayList<>(selectedSeats)) {
-                    seatMapService.deselectSeat(prev);
+                    if (!isSampleData) {
+                        seatMapService.deselectSeat(prev);
+                    }
                     Button prevBtn = seatButtonsByLabel.get(prev.getSeatLabel());
                     if (prevBtn != null) {
                         prevBtn.getStyleClass().remove("seat-selected");
@@ -241,8 +250,10 @@ public class SeatMapController implements WizardStepController {
                 }
                 selectedSeats.clear();
 
-                // Real logic call: hold/select
-                seatMapService.selectSeat(seat);
+                // Real logic call: hold/select (when connected to real database)
+                if (!isSampleData) {
+                    seatMapService.selectSeat(seat);
+                }
                 selectedSeats.add(seat);
                 if (btn != null) {
                     btn.getStyleClass().remove("seat-available");

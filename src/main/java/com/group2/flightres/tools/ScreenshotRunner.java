@@ -62,10 +62,13 @@ public class ScreenshotRunner extends Application {
 
         List<String> screensToCapture = new ArrayList<>();
         if ("all".equalsIgnoreCase(targetScreen)) {
-            screensToCapture.add("shell");
             screensToCapture.add("01_home");
             screensToCapture.add("02_login");
             screensToCapture.add("03_flight_search");
+            screensToCapture.add("04_seat_map");
+            screensToCapture.add("05_checkout");
+            screensToCapture.add("06_confirmation");
+            screensToCapture.add("07_admin_dashboard");
         } else {
             screensToCapture.add(targetScreen);
         }
