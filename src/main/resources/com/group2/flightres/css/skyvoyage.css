@@ -570,3 +570,73 @@
     -fx-font-size: 11px;
     -fx-text-fill: -sv-muted;
 }
+
+/* -------------------------------------------------------------------
+ * Login Screen Specifics
+ * ------------------------------------------------------------------- */
+.login-card {
+    -fx-background-color: -sv-surface;
+    -fx-background-radius: 12px;
+    -fx-border-color: -sv-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-effect: -sv-card-shadow;
+    -fx-padding: 28px;
+}
+
+.login-card-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -sv-text;
+    -fx-alignment: center;
+}
+
+.login-card-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: -sv-muted;
+    -fx-alignment: center;
+}
+
+.login-field-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -sv-muted;
+}
+
+.login-error-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: -sv-error-text;
+}
+
+.login-submit-btn {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-padding: 12px 22px;
+    -fx-background-radius: 8px;
+}
+
+.login-hint-text {
+    -fx-font-size: 11px;
+    -fx-text-fill: -sv-muted;
+}
+
+.remember-me-checkbox {
+    -fx-font-size: 12px;
+    -fx-text-fill: -sv-muted;
+    -fx-cursor: hand;
+}
+
+.remember-me-checkbox .box {
+    -fx-background-color: -sv-surface;
+    -fx-border-color: -sv-field-border;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.remember-me-checkbox:selected .box {
+    -fx-background-color: -sv-gold;
+    -fx-border-color: -sv-gold;
+}
+
+.remember-me-checkbox:selected .mark {
+    -fx-background-color: #ffffff;
+}
