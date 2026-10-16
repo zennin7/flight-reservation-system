@@ -3,46 +3,98 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.Rectangle?>
 
-<VBox xmlns="http://javafx.com/javafx"
+<HBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.group2.flightres.controller.SeatMapController"
-      spacing="16"
-      styleClass="seatmap-container">
+      spacing="20"
+      alignment="TOP_CENTER"
+      styleClass="seat-map-root">
 
-    <padding>
-        <Insets top="24" bottom="24" left="24" right="24"/>
-    </padding>
-
-    <Label text="Select Your Seat" styleClass="seatmap-title"/>
-
-    <HBox spacing="20" alignment="CENTER_LEFT" styleClass="seatmap-legend">
-        <HBox spacing="6" alignment="CENTER_LEFT">
-            <Rectangle width="14" height="14" arcWidth="4" arcHeight="4" fill="#16a34a"/>
-            <Label text="Available"/>
+    <!-- Left Card: Seat Grid & Legend -->
+    <VBox HBox.hgrow="ALWAYS" styleClass="card, seat-grid-card" spacing="8" alignment="TOP_CENTER">
+        <!-- Title -->
+        <HBox alignment="CENTER_LEFT" maxWidth="Infinity">
+            <Label fx:id="flightTitleLabel"
+                   text="Choose your seat · GRP 204 JNB ➔ CPT"
+                   styleClass="seat-map-title" />
         </HBox>
-        <HBox spacing="6" alignment="CENTER_LEFT">
-            <Rectangle width="14" height="14" arcWidth="4" arcHeight="4" fill="#eab308"/>
-            <Label text="Selected"/>
+
+        <!-- Cabin Area -->
+        <VBox fx:id="cabinContainer" alignment="CENTER" spacing="6" VBox.vgrow="ALWAYS">
+            <!-- Programmatically populated First Class 2x2 and Economy 3x3 -->
+        </VBox>
+
+        <!-- Bottom Legend -->
+        <HBox alignment="CENTER" spacing="18" styleClass="seat-legend-box">
+            <HBox alignment="CENTER" spacing="6">
+                <Region styleClass="legend-swatch, legend-available" />
+                <Label text="Available" styleClass="legend-label" />
+            </HBox>
+            <HBox alignment="CENTER" spacing="6">
+                <Region styleClass="legend-swatch, legend-selected" />
+                <Label text="Your selection" styleClass="legend-label" />
+            </HBox>
+            <HBox alignment="CENTER" spacing="6">
+                <Region styleClass="legend-swatch, legend-taken" />
+                <Label text="Taken" styleClass="legend-label" />
+            </HBox>
         </HBox>
-        <HBox spacing="6" alignment="CENTER_LEFT">
-            <Rectangle width="14" height="14" arcWidth="4" arcHeight="4" fill="#dc2626"/>
-            <Label text="Booked"/>
+    </VBox>
+
+    <!-- Right Card: Selection Summary & Actions -->
+    <VBox styleClass="card, seat-selection-card" minWidth="270" prefWidth="270" maxWidth="270" spacing="12">
+        <Label text="Your selection" styleClass="selection-card-title" />
+
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Seat" styleClass="selection-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="seatSelectionLabel" text="7E · Economy" styleClass="selection-val-bold" />
         </HBox>
-    </HBox>
 
-    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="seatmap-scroll">
-        <GridPane fx:id="cabinGrid" hgap="6" vgap="6" alignment="CENTER"/>
-    </ScrollPane>
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Base fare" styleClass="selection-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="baseFareLabel" text="R 1,200" styleClass="selection-val-bold" />
+        </HBox>
 
-    <HBox spacing="16" alignment="CENTER_RIGHT" styleClass="seatmap-footer">
-        <Label fx:id="totalPriceLabel" text="Total: R 0.00" styleClass="seatmap-total"/>
-        <Button fx:id="continueButton" text="Continue to Checkout" onAction="#handleContinue" disable="true" styleClass="seatmap-continue-button"/>
-    </HBox>
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Class multiplier" styleClass="selection-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="classMultiplierLabel" text="x 1.0" styleClass="selection-val-bold" />
+        </HBox>
 
-</VBox>
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Demand pricing" styleClass="selection-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="demandPricingLabel" text="+ R 180" styleClass="selection-val-bold" />
+        </HBox>
+
+        <!-- Divider -->
+        <Region styleClass="selection-divider" />
+
+        <!-- Total Row -->
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Total" styleClass="selection-total-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Label fx:id="totalPriceLabel" text="R 1,380" styleClass="selection-total-val" />
+        </HBox>
+
+        <Label text="Hover any seat to see its price. Seats are held for 10 minutes."
+               wrapText="true"
+               styleClass="selection-hint-label" />
+
+        <!-- Buttons at Bottom -->
+        <VBox spacing="10" alignment="BOTTOM_CENTER" VBox.vgrow="ALWAYS">
+            <Button fx:id="continueButton"
+                    text="Continue to Checkout"
+                    onAction="#handleContinue"
+                    maxWidth="Infinity"
+                    styleClass="btn-gold, continue-checkout-btn" />
+            <Button fx:id="backButton"
+                    text="Back"
+                    onAction="#handleBack"
+                    maxWidth="Infinity"
+                    styleClass="btn-grey, back-btn" />
+        </VBox>
+    </VBox>
+
+</HBox>

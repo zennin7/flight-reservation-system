@@ -24,5 +24,10 @@ public enum BookingStep {
         BookingStep[] values = values();
         return (order + 1 < values.length) ? values[order + 1] : this;
     }
+
+    public BookingStep previous() {
+        BookingStep[] values = values();
+        return (order - 1 >= 0) ? values[order - 1] : this;
+    }
 }
 

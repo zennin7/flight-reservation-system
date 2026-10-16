@@ -73,7 +73,7 @@ public class MainShellController {
 
             Object controller = loader.getController();
             if (controller instanceof WizardStepController wizardController) {
-                wizardController.init(bookingContext, () -> goToStep(step.next()));
+                wizardController.init(bookingContext, () -> goToStep(step.next()), () -> goToStep(step.previous()));
             }
         } catch (IOException e) {
             logger.error("Failed to load wizard step: {}", step, e);
