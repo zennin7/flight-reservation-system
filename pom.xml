@@ -14,6 +14,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>21.0.3</javafx.version>
         <mainClass>com.group2.flightres.App</mainClass>
+        <screen>all</screen>
+        <theme>all</theme>
     </properties>
 
     <dependencies>
@@ -102,6 +104,10 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>${mainClass}</mainClass>
+                    <options>
+                        <option>-Dscreen=${screen}</option>
+                        <option>-Dtheme=${theme}</option>
+                    </options>
                 </configuration>
             </plugin>
 

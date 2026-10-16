@@ -1,5 +1,7 @@
 package com.group2.flightres.tools;
 
+import com.group2.flightres.controller.MainShellController;
+import com.group2.flightres.model.BookingStep;
 import com.group2.flightres.util.ThemeManager;
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
@@ -20,7 +22,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,20 +37,6 @@ public class ScreenshotRunner extends Application {
     private static final int HEIGHT = 740;
     private static final Path OUTPUT_DIR = Path.of("docs", "screenshots");
 
-    // Standard screen name to FXML mapping
-    private static final Map<String, String> SCREEN_FXML_MAP = new HashMap<>();
-
-    static {
-        SCREEN_FXML_MAP.put("shell", "/com/group2/flightres/fxml/main-shell.fxml");
-        SCREEN_FXML_MAP.put("01_home", "/com/group2/flightres/fxml/home.fxml");
-        SCREEN_FXML_MAP.put("02_login", "/com/group2/flightres/fxml/login.fxml");
-        SCREEN_FXML_MAP.put("03_flight_search", "/com/group2/flightres/fxml/flight-search.fxml");
-        SCREEN_FXML_MAP.put("04_seat_map", "/com/group2/flightres/fxml/seat-map.fxml");
-        SCREEN_FXML_MAP.put("05_checkout", "/com/group2/flightres/fxml/checkout.fxml");
-        SCREEN_FXML_MAP.put("06_confirmation", "/com/group2/flightres/fxml/booking-confirmation.fxml");
-        SCREEN_FXML_MAP.put("07_admin_dashboard", "/com/group2/flightres/fxml/admin-dashboard.fxml");
-    }
-
     private Stage primaryStage;
 
     @Override
@@ -57,7 +46,6 @@ public class ScreenshotRunner extends Application {
         stage.setWidth(WIDTH);
         stage.setHeight(HEIGHT);
 
-        // Ensure output folder exists
         File outDir = OUTPUT_DIR.toFile();
         if (!outDir.exists()) {
             boolean created = outDir.mkdirs();
@@ -66,26 +54,56 @@ public class ScreenshotRunner extends Application {
 
         Parameters params = getParameters();
         Map<String, String> namedParams = params.getNamed();
-        String targetScreen = namedParams.getOrDefault("screen", "shell");
-        String targetTheme = namedParams.getOrDefault("theme", "all");
+
+        String targetScreen = namedParams.getOrDefault("screen", System.getProperty("screen", "01_home"));
+        String targetTheme = namedParams.getOrDefault("theme", System.getProperty("theme", "all"));
 
         logger.info("Starting ScreenshotRunner: targetScreen={}, targetTheme={}", targetScreen, targetTheme);
 
-        runCaptureSequence(targetScreen, targetTheme);
+        List<String> screensToCapture = new ArrayList<>();
+        if ("all".equalsIgnoreCase(targetScreen)) {
+            screensToCapture.add("shell");
+            screensToCapture.add("01_home");
+            screensToCapture.add("02_login");
+            screensToCapture.add("03_flight_search");
+        } else {
+            screensToCapture.add(targetScreen);
+        }
+
+        List<ThemeManager.Theme> themesToCapture = new ArrayList<>();
+        if ("light".equalsIgnoreCase(targetTheme)) {
+            themesToCapture.add(ThemeManager.Theme.LIGHT);
+        } else if ("dark".equalsIgnoreCase(targetTheme)) {
+            themesToCapture.add(ThemeManager.Theme.DARK);
+        } else {
+            themesToCapture.add(ThemeManager.Theme.LIGHT);
+            themesToCapture.add(ThemeManager.Theme.DARK);
+        }
+
+        runQueue(screensToCapture, themesToCapture);
     }
 
-    private void runCaptureSequence(String targetScreen, String targetTheme) {
-        String fxmlPath = SCREEN_FXML_MAP.getOrDefault(targetScreen, "/com/group2/flightres/fxml/main-shell.fxml");
+    private void runQueue(List<String> screens, List<ThemeManager.Theme> themes) {
+        List<Runnable> tasks = new ArrayList<>();
 
-        if ("light".equalsIgnoreCase(targetTheme)) {
-            captureSingle(fxmlPath, ThemeManager.Theme.LIGHT, getOutputFileName(targetScreen, ThemeManager.Theme.LIGHT), () -> finish());
-        } else if ("dark".equalsIgnoreCase(targetTheme)) {
-            captureSingle(fxmlPath, ThemeManager.Theme.DARK, getOutputFileName(targetScreen, ThemeManager.Theme.DARK), () -> finish());
+        for (String screen : screens) {
+            for (ThemeManager.Theme theme : themes) {
+                String outName = getOutputFileName(screen, theme);
+                tasks.add(() -> captureScreen(screen, theme, outName, () -> executeNext(tasks)));
+            }
+        }
+
+        executeNext(tasks);
+    }
+
+    private void executeNext(List<Runnable> tasks) {
+        if (tasks.isEmpty()) {
+            logger.info("All screenshot captures finished.");
+            Platform.exit();
+            System.exit(0);
         } else {
-            // Capture both LIGHT and DARK sequentially
-            captureSingle(fxmlPath, ThemeManager.Theme.LIGHT, getOutputFileName(targetScreen, ThemeManager.Theme.LIGHT), () -> {
-                captureSingle(fxmlPath, ThemeManager.Theme.DARK, getOutputFileName(targetScreen, ThemeManager.Theme.DARK), () -> finish());
-            });
+            Runnable nextTask = tasks.remove(0);
+            nextTask.run();
         }
     }
 
@@ -97,12 +115,15 @@ public class ScreenshotRunner extends Application {
         return screenKey + suffix;
     }
 
-    private void captureSingle(String fxmlPath, ThemeManager.Theme theme, String outputFileName, Runnable onComplete) {
+    private void captureScreen(String targetScreen, ThemeManager.Theme theme, String outputFileName, Runnable onComplete) {
         logger.info("Rendering {} in {} theme...", outputFileName, theme);
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/main-shell.fxml"));
             Parent root = loader.load();
+            MainShellController controller = loader.getController();
+
+            configureShellScreen(controller, targetScreen);
 
             Scene scene = new Scene(root, WIDTH, HEIGHT);
             ThemeManager.getInstance().setTheme(theme);
@@ -111,8 +132,7 @@ public class ScreenshotRunner extends Application {
             primaryStage.setScene(scene);
             primaryStage.show();
 
-            // Wait one pulse + brief delay to ensure CSS styling and layout settle completely
-            PauseTransition pause = new PauseTransition(Duration.millis(300));
+            PauseTransition pause = new PauseTransition(Duration.millis(350));
             pause.setOnFinished(e -> {
                 root.applyCss();
                 root.layout();
@@ -133,10 +153,41 @@ public class ScreenshotRunner extends Application {
             pause.play();
 
         } catch (Exception e) {
-            logger.error("Error loading FXML {} for screenshot", fxmlPath, e);
+            logger.error("Error setting up screen {} for screenshot", targetScreen, e);
             if (onComplete != null) {
                 onComplete.run();
             }
+        }
+    }
+
+    private void configureShellScreen(MainShellController controller, String targetScreen) {
+        if (controller == null) return;
+
+        switch (targetScreen) {
+            case "01_home":
+                controller.handleNavigation("Home");
+                break;
+            case "02_login":
+                controller.handleNavigation("Login");
+                break;
+            case "03_flight_search":
+                controller.goToStep(BookingStep.SEARCH);
+                break;
+            case "04_seat_map":
+                controller.goToStep(BookingStep.SEAT_SELECTION);
+                break;
+            case "05_checkout":
+                controller.goToStep(BookingStep.CHECKOUT);
+                break;
+            case "06_confirmation":
+                controller.goToStep(BookingStep.CONFIRMATION);
+                break;
+            case "07_admin_dashboard":
+                controller.handleNavigation("Dashboard");
+                break;
+            case "shell":
+            default:
+                break;
         }
     }
 
@@ -154,12 +205,6 @@ public class ScreenshotRunner extends Application {
             parent.mkdirs();
         }
         ImageIO.write(bufferedImage, "png", targetFile);
-    }
-
-    private void finish() {
-        logger.info("Screenshot capture completed.");
-        Platform.exit();
-        System.exit(0);
     }
 
     public static void main(String[] args) {

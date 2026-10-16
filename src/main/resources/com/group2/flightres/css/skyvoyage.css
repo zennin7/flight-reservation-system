@@ -323,24 +323,32 @@
     -fx-border-color: -sv-field-border;
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
-    -fx-padding: 2px;
+    -fx-padding: 4px 8px;
     -fx-font-size: 13px;
+    -fx-min-height: 40px;
+    -fx-pref-height: 40px;
 }
 
 .combo-box:focused {
     -fx-border-color: -sv-gold;
 }
 
-.combo-box .cell {
+.combo-box .cell, .combo-box .list-cell {
     -fx-text-fill: -sv-text;
+    -fx-padding: 2px 4px;
+    -fx-font-size: 13px;
 }
 
 .combo-box .arrow-button {
     -fx-background-color: transparent;
+    -fx-padding: 0 4px;
 }
 
 .combo-box .arrow {
+    -fx-shape: "M 0 0 L 8 0 L 4 5 Z";
     -fx-background-color: -sv-muted;
+    -fx-scale-shape: true;
+    -fx-padding: 3px 4px;
 }
 
 .date-picker {
@@ -348,8 +356,10 @@
     -fx-border-color: -sv-field-border;
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
-    -fx-padding: 2px;
+    -fx-padding: 4px 8px;
     -fx-font-size: 13px;
+    -fx-min-height: 40px;
+    -fx-pref-height: 40px;
 }
 
 .date-picker:focused {
@@ -360,14 +370,20 @@
     -fx-background-color: transparent;
     -fx-border-color: transparent;
     -fx-text-fill: -sv-text;
+    -fx-prompt-text-fill: -sv-muted;
+    -fx-padding: 2px 4px;
 }
 
 .date-picker .arrow-button {
     -fx-background-color: transparent;
+    -fx-padding: 0 4px;
 }
 
 .date-picker .arrow-button .arrow {
+    -fx-shape: "M 0 0 L 8 0 L 4 5 Z";
     -fx-background-color: -sv-muted;
+    -fx-scale-shape: true;
+    -fx-padding: 3px 4px;
 }
 
 /* -------------------------------------------------------------------
@@ -489,4 +505,68 @@
 
 .hero-plane-fin {
     -fx-fill: -sv-hero-plane-fin;
+}
+
+/* -------------------------------------------------------------------
+ * Home Screen Specifics
+ * ------------------------------------------------------------------- */
+.home-root {
+    -fx-background-color: -sv-page;
+}
+
+.hero-title {
+    -fx-font-size: 44px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -sv-text;
+}
+
+.hero-title-gold {
+    -fx-font-size: 44px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -sv-gold;
+}
+
+.hero-description {
+    -fx-font-size: 14px;
+    -fx-text-fill: -sv-muted;
+    -fx-line-spacing: 2px;
+}
+
+.home-search-card {
+    -fx-padding: 20px 22px;
+    -fx-alignment: bottom-center;
+}
+
+.search-flights-btn {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-padding: 12px 20px;
+    -fx-graphic-text-gap: 8px;
+}
+
+.feature-icon-circle {
+    -fx-min-width: 46px;
+    -fx-min-height: 46px;
+    -fx-max-width: 46px;
+    -fx-max-height: 46px;
+    -fx-pref-width: 46px;
+    -fx-pref-height: 46px;
+    -fx-background-radius: 23px;
+    -fx-background-color: -sv-icon-circle;
+    -fx-alignment: center;
+}
+
+.feature-icon {
+    -fx-fill: -sv-gold;
+}
+
+.feature-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -sv-text;
+}
+
+.feature-desc {
+    -fx-font-size: 11px;
+    -fx-text-fill: -sv-muted;
 }
