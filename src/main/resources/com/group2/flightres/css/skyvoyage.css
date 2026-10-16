@@ -1,0 +1,492 @@
+/* ===================================================================
+ * SkyVoyage Master Component Stylesheet
+ * Uses looked-up colour variables defined in theme-light / theme-dark.
+ * =================================================================== */
+
+/* Root & Global Typography */
+.root {
+    -fx-font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -fx-font-size: 14px;
+    -fx-background-color: -sv-page;
+    -fx-text-fill: -sv-text;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+/* Shell Layout */
+.shell-root {
+    -fx-background-color: -sv-page;
+}
+
+.content-area {
+    -fx-background-color: -sv-page;
+    -fx-alignment: top-center;
+}
+
+/* -------------------------------------------------------------------
+ * Navigation Bar (64px)
+ * ------------------------------------------------------------------- */
+.nav-bar {
+    -fx-min-height: 64px;
+    -fx-pref-height: 64px;
+    -fx-max-height: 64px;
+    -fx-background-color: -sv-surface;
+    -fx-padding: 0 28px;
+    -fx-border-color: transparent transparent -sv-border transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-alignment: center-left;
+}
+
+.nav-logo-box {
+    -fx-alignment: center-left;
+    -fx-spacing: 8px;
+    -fx-cursor: hand;
+}
+
+.nav-logo-icon {
+    -fx-fill: -sv-gold;
+}
+
+.logo-text-sky {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -sv-text;
+}
+
+.logo-text-voyage {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -sv-gold;
+}
+
+.logo-subtitle {
+    -fx-font-size: 8px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -sv-muted;
+}
+
+.nav-links-box {
+    -fx-alignment: center;
+    -fx-spacing: 26px;
+}
+
+.nav-link {
+    -fx-background-color: transparent;
+    -fx-text-fill: -sv-text;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-padding: 6px 2px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-cursor: hand;
+}
+
+.nav-link:hover {
+    -fx-text-fill: -sv-gold;
+}
+
+.nav-link-active {
+    -fx-text-fill: -sv-text;
+    -fx-border-color: transparent transparent -sv-gold transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.nav-right-box {
+    -fx-alignment: center-right;
+    -fx-spacing: 18px;
+}
+
+.nav-user-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: -sv-text;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-graphic-text-gap: 6px;
+    -fx-cursor: hand;
+    -fx-padding: 6px 8px;
+}
+
+.nav-user-btn:hover {
+    -fx-text-fill: -sv-gold;
+}
+
+.nav-user-icon {
+    -fx-stroke: -sv-text;
+    -fx-stroke-width: 1.6;
+    -fx-fill: transparent;
+}
+
+.nav-admin-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -sv-text;
+}
+
+.theme-toggle-btn {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 6px 8px;
+    -fx-background-radius: 8px;
+    -fx-border-color: -sv-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+}
+
+.theme-toggle-btn:hover {
+    -fx-background-color: -sv-grey-button-bg;
+}
+
+.theme-toggle-icon {
+    -fx-fill: -sv-muted;
+}
+
+/* -------------------------------------------------------------------
+ * Stepper Component
+ * ------------------------------------------------------------------- */
+.stepper-wrapper {
+    -fx-padding: 18px 32px 0 32px;
+    -fx-alignment: center;
+}
+
+.stepper-container {
+    -fx-alignment: center;
+    -fx-spacing: 12px;
+}
+
+.step-item {
+    -fx-alignment: center;
+    -fx-spacing: 6px;
+}
+
+.step-circle {
+    -fx-min-width: 24px;
+    -fx-min-height: 24px;
+    -fx-max-width: 24px;
+    -fx-max-height: 24px;
+    -fx-pref-width: 24px;
+    -fx-pref-height: 24px;
+    -fx-background-radius: 12px;
+    -fx-alignment: center;
+}
+
+.step-circle-done {
+    -fx-background-color: -sv-available-green;
+}
+
+.step-circle-active {
+    -fx-background-color: -sv-gold;
+}
+
+.step-circle-pending {
+    -fx-background-color: -sv-stepper-pending-bg;
+}
+
+.step-circle-text {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+}
+
+.step-label {
+    -fx-font-size: 13px;
+}
+
+.step-label-done {
+    -fx-text-fill: -sv-available-green;
+    -fx-font-weight: 600;
+}
+
+.step-label-active {
+    -fx-text-fill: -sv-gold;
+    -fx-font-weight: 700;
+}
+
+.step-label-pending {
+    -fx-text-fill: -sv-muted;
+    -fx-font-weight: 500;
+}
+
+.step-arrow {
+    -fx-text-fill: -sv-muted;
+    -fx-font-size: 13px;
+}
+
+/* -------------------------------------------------------------------
+ * Cards
+ * ------------------------------------------------------------------- */
+.card, .sv-card {
+    -fx-background-color: -sv-surface;
+    -fx-background-radius: 12px;
+    -fx-border-color: -sv-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-effect: -sv-card-shadow;
+    -fx-padding: 20px;
+}
+
+.stat-card {
+    -fx-background-color: -sv-surface;
+    -fx-background-radius: 12px;
+    -fx-border-color: -sv-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-effect: -sv-card-shadow;
+    -fx-padding: 20px;
+    -fx-alignment: center;
+}
+
+.stat-card-title {
+    -fx-font-size: 12px;
+    -fx-text-fill: -sv-muted;
+}
+
+.stat-card-value {
+    -fx-font-size: 26px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -sv-text;
+    -fx-padding: 6px 0 0 0;
+}
+
+/* -------------------------------------------------------------------
+ * Buttons
+ * ------------------------------------------------------------------- */
+.btn-gold, .button-primary {
+    -fx-background-color: -sv-gold-gradient;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-background-radius: 8px;
+    -fx-padding: 9px 18px;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.btn-gold:hover, .button-primary:hover {
+    -fx-opacity: 0.92;
+}
+
+.btn-grey, .button-secondary {
+    -fx-background-color: -sv-grey-button-bg;
+    -fx-text-fill: -sv-grey-button-text;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-background-radius: 8px;
+    -fx-padding: 9px 18px;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.btn-grey:hover, .button-secondary:hover {
+    -fx-background-color: -sv-grey-button-hover;
+}
+
+.btn-red, .button-danger {
+    -fx-background-color: -sv-red;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-background-radius: 8px;
+    -fx-padding: 9px 18px;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.btn-red:hover, .button-danger:hover {
+    -fx-opacity: 0.90;
+}
+
+/* -------------------------------------------------------------------
+ * Form Controls & Input Styling
+ * ------------------------------------------------------------------- */
+.form-label {
+    -fx-font-size: 10px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -sv-muted;
+}
+
+.text-field, .password-field {
+    -fx-background-color: -sv-surface;
+    -fx-border-color: -sv-field-border;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-text-fill: -sv-text;
+    -fx-padding: 10px 12px;
+    -fx-font-size: 13px;
+}
+
+.text-field:focused, .password-field:focused {
+    -fx-border-color: -sv-gold;
+}
+
+.combo-box {
+    -fx-background-color: -sv-surface;
+    -fx-border-color: -sv-field-border;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 2px;
+    -fx-font-size: 13px;
+}
+
+.combo-box:focused {
+    -fx-border-color: -sv-gold;
+}
+
+.combo-box .cell {
+    -fx-text-fill: -sv-text;
+}
+
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-box .arrow {
+    -fx-background-color: -sv-muted;
+}
+
+.date-picker {
+    -fx-background-color: -sv-surface;
+    -fx-border-color: -sv-field-border;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 2px;
+    -fx-font-size: 13px;
+}
+
+.date-picker:focused {
+    -fx-border-color: -sv-gold;
+}
+
+.date-picker .text-field {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: -sv-text;
+}
+
+.date-picker .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.date-picker .arrow-button .arrow {
+    -fx-background-color: -sv-muted;
+}
+
+/* -------------------------------------------------------------------
+ * Seat Map
+ * ------------------------------------------------------------------- */
+.seat {
+    -fx-min-width: 36px;
+    -fx-min-height: 36px;
+    -fx-max-width: 36px;
+    -fx-max-height: 36px;
+    -fx-pref-width: 36px;
+    -fx-pref-height: 36px;
+    -fx-background-radius: 6px;
+    -fx-alignment: center;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+    -fx-cursor: hand;
+}
+
+.seat-available {
+    -fx-background-color: -sv-seat-available;
+}
+
+.seat-taken {
+    -fx-background-color: -sv-seat-taken;
+    -fx-cursor: default;
+}
+
+.seat-selected {
+    -fx-background-color: -sv-gold, -sv-surface, -sv-gold;
+    -fx-background-insets: 0, 2, 4;
+    -fx-background-radius: 8px, 7px, 6px;
+    -fx-text-fill: #ffffff;
+}
+
+/* -------------------------------------------------------------------
+ * TableView
+ * ------------------------------------------------------------------- */
+.table-view {
+    -fx-background-color: -sv-surface;
+    -fx-border-color: -sv-border;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: -sv-table-header;
+    -fx-background-radius: 12px 12px 0 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: -sv-table-header-text;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+}
+
+.table-view .table-row-cell {
+    -fx-background-color: -sv-surface;
+    -fx-border-color: transparent transparent -sv-border transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .table-row-cell:odd {
+    -fx-background-color: -sv-surface;
+}
+
+.table-view .table-row-cell:filled:selected {
+    -fx-background-color: -sv-icon-circle;
+}
+
+.table-view .table-cell {
+    -fx-text-fill: -sv-text;
+    -fx-font-size: 14px;
+    -fx-alignment: center-left;
+}
+
+/* -------------------------------------------------------------------
+ * ScrollBar
+ * ------------------------------------------------------------------- */
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: -sv-border;
+    -fx-background-radius: 4px;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: -sv-muted;
+}
+
+.scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* -------------------------------------------------------------------
+ * Hero Section
+ * ------------------------------------------------------------------- */
+.hero-banner {
+    -fx-background-color: -sv-hero-bg;
+}
+
+.hero-plane-body {
+    -fx-fill: -sv-hero-plane;
+}
+
+.hero-plane-fin {
+    -fx-fill: -sv-hero-plane-fin;
+}

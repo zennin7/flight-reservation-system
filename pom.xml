@@ -112,4 +112,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>screenshots</id>
+            <properties>
+                <mainClass>com.group2.flightres.tools.ScreenshotRunner</mainClass>
+            </properties>
+        </profile>
+    </profiles>
 </project>

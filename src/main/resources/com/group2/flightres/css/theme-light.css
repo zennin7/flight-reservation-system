@@ -1,0 +1,44 @@
+/* ===================================================================
+ * SkyVoyage Theme - Light
+ * Looked-up colour variables only.
+ * =================================================================== */
+.root {
+    -sv-page: #f5f6f8;
+    -sv-surface: #ffffff;
+    -sv-text: #0f1b33;
+    -sv-muted: #6b7280;
+    -sv-border: #e5e7eb;
+    -sv-field-border: #d9dde5;
+
+    -sv-gold: #b98a2e;
+    -sv-gold-from: #cfa544;
+    -sv-gold-to: #a97f26;
+    -sv-gold-gradient: linear-gradient(to bottom, #cfa544, #a97f26);
+
+    -sv-grey-button-bg: #e9ecf1;
+    -sv-grey-button-text: #334155;
+    -sv-grey-button-hover: #dbe0e8;
+
+    -sv-table-header: #0f1b33;
+    -sv-table-header-text: #ffffff;
+    -sv-icon-circle: #f6ecd8;
+
+    -sv-available-green: #16a34a;
+    -sv-taken-red: #dc2626;
+    -sv-error-red: #dc2626;
+    -sv-error-text: #f87171;
+
+    -sv-card-shadow: dropshadow(gaussian, rgba(15,27,51,0.10), 10, 0, 0, 2);
+
+    -sv-hero-bg: linear-gradient(from 0% 0% to 100% 10%, #ffffff 0%, #ffffff 42%, #fbeed6 70%, #f0c486 100%);
+    -sv-hero-plane: #cfd6e2;
+    -sv-hero-plane-fin: #b98a2e;
+
+    -sv-stepper-pending-bg: #94a3b8;
+    -sv-stepper-pending-text: #6b7280;
+
+    -sv-seat-available: #16a34a;
+    -sv-seat-taken: #dc2626;
+
+    -sv-chart-bar: linear-gradient(to bottom, #cfa544, #a97f26);
+}

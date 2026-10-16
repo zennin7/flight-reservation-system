@@ -1,5 +1,6 @@
 package com.group2.flightres;
 
+import com.group2.flightres.util.ThemeManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -10,22 +11,25 @@ import java.io.IOException;
 
 public class App extends Application {
 
+    private static final int DEFAULT_WIDTH = 1000;
+    private static final int DEFAULT_HEIGHT = 740;
+    private static final int MIN_WIDTH = 900;
+    private static final int MIN_HEIGHT = 680;
+
     @Override
     public void start(Stage stage) throws IOException {
-        // TEMP: loads login.fxml directly, standalone, to test the
-        // Auth backend before Flight Search exists for it to hand off
-        // to. Will be replaced with main-shell.fxml once Flight Search
-        // is built and Login is wired into BookingStep as step 0.
         FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("/com/group2/flightres/fxml/login.fxml"));
+                getClass().getResource("/com/group2/flightres/fxml/main-shell.fxml"));
         Parent root = loader.load();
 
-        Scene scene = new Scene(root, 500, 500);
-        scene.getStylesheets().add(
-                getClass().getResource("/com/group2/flightres/css/styles.css").toExternalForm());
+        Scene scene = new Scene(root, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        ThemeManager.getInstance().registerScene(scene);
 
-        stage.setTitle("Flight Reservation System — Login Test Build");
+        stage.setTitle("SkyVoyage Flight Reservations");
         stage.setScene(scene);
+        stage.setMinWidth(MIN_WIDTH);
+        stage.setMinHeight(MIN_HEIGHT);
+        stage.setResizable(true);
         stage.show();
     }
 
