@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.group2.flightres.controller.FlightSearchController"
+      styleClass="flight-search-root"
+      spacing="16"
+      alignment="TOP_CENTER">
+
+    <!-- Top: Search Bar Card -->
+    <HBox alignment="BOTTOM_CENTER" spacing="12" styleClass="card, search-bar-card">
+        <!-- FROM -->
+        <VBox spacing="6" HBox.hgrow="ALWAYS" minWidth="180" prefWidth="215">
+            <Label text="FROM" styleClass="form-label" />
+            <ComboBox fx:id="fromCombo" maxWidth="Infinity" />
+        </VBox>
+
+        <!-- TO -->
+        <VBox spacing="6" HBox.hgrow="ALWAYS" minWidth="180" prefWidth="215">
+            <Label text="TO" styleClass="form-label" />
+            <ComboBox fx:id="toCombo" maxWidth="Infinity" />
+        </VBox>
+
+        <!-- DEPARTURE DATE -->
+        <VBox spacing="6" HBox.hgrow="ALWAYS" minWidth="140" prefWidth="165">
+            <Label text="DEPARTURE DATE" styleClass="form-label" />
+            <DatePicker fx:id="departureDatePicker" promptText="2026-11-02" maxWidth="Infinity" />
+        </VBox>
+
+        <!-- PASSENGERS -->
+        <VBox spacing="6" minWidth="110" prefWidth="130">
+            <Label text="PASSENGERS" styleClass="form-label" />
+            <ComboBox fx:id="passengersCombo" maxWidth="Infinity" />
+        </VBox>
+
+        <!-- SEARCH BUTTON -->
+        <Button fx:id="searchButton" text="Search" styleClass="btn-gold, search-btn" minWidth="120" prefWidth="120">
+            <graphic>
+                <SVGPath content="M 6 6 A 4 4 0 1 1 6 14 A 4 4 0 1 1 6 6 Z M 13 13 L 18 18"
+                         stroke="WHITE" strokeWidth="2" fill="TRANSPARENT" />
+            </graphic>
+        </Button>
+    </HBox>
+
+    <!-- Bottom: Results Card -->
+    <VBox VBox.vgrow="ALWAYS" styleClass="card, flight-results-card" spacing="0">
+        <TableView fx:id="flightsTable" styleClass="flights-table">
+            <columns>
+                <TableColumn fx:id="flightCol" text="FLIGHT" prefWidth="180" />
+                <TableColumn fx:id="departsCol" text="DEPARTS" prefWidth="150" />
+                <TableColumn fx:id="arrivesCol" text="ARRIVES" prefWidth="150" />
+                <TableColumn fx:id="durationCol" text="DURATION" prefWidth="150" />
+                <TableColumn fx:id="fromPriceCol" text="FROM" prefWidth="150" />
+                <TableColumn fx:id="actionCol" text="" prefWidth="150" />
+            </columns>
+        </TableView>
+
+        <Label fx:id="resultsCountLabel"
+               text="4 flights found. Prices are base fares before seat class and demand pricing."
+               styleClass="results-count-label" />
+    </VBox>
+
+</VBox>
