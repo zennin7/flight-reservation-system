@@ -4,3 +4,5 @@ target/
 .vscode/
 .DS_Store
 *.log
+
+src/main/resources/com/group2/flightres/app.json
