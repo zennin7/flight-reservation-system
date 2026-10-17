@@ -58,9 +58,6 @@
                             autoRanging="false" lowerBound="0" upperBound="340" tickUnit="50" />
             </yAxis>
         </BarChart>
-
-        <Label text="Placeholder drawing. The real build uses JavaFX BarChart and PieChart fed from the database."
-               styleClass="chart-card-footer" />
     </VBox>
 
 </VBox>

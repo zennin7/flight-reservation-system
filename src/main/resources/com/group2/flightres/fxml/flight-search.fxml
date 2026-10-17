@@ -47,8 +47,8 @@
         <!-- SEARCH BUTTON -->
         <Button fx:id="searchButton" text="Search" styleClass="btn-gold, search-btn" minWidth="120" prefWidth="120">
             <graphic>
-                <SVGPath content="M 6 6 A 4 4 0 1 1 6 14 A 4 4 0 1 1 6 6 Z M 13 13 L 18 18"
-                         stroke="WHITE" strokeWidth="2" fill="TRANSPARENT" />
+                <SVGPath content="M 7 2.5 A 4.5 4.5 0 1 0 7 11.5 A 4.5 4.5 0 1 0 7 2.5 M 10.2 10.2 L 15 15"
+                         stroke="WHITE" strokeWidth="2" strokeLineCap="ROUND" fill="TRANSPARENT" />
             </graphic>
         </Button>
     </HBox>
@@ -58,11 +58,11 @@
         <TableView fx:id="flightsTable" styleClass="flights-table">
             <columns>
                 <TableColumn fx:id="flightCol" text="FLIGHT" prefWidth="180" />
-                <TableColumn fx:id="departsCol" text="DEPARTS" prefWidth="150" />
-                <TableColumn fx:id="arrivesCol" text="ARRIVES" prefWidth="150" />
-                <TableColumn fx:id="durationCol" text="DURATION" prefWidth="150" />
-                <TableColumn fx:id="fromPriceCol" text="FROM" prefWidth="150" />
-                <TableColumn fx:id="actionCol" text="" prefWidth="150" />
+                <TableColumn fx:id="departsCol" text="DEPARTS" prefWidth="145" />
+                <TableColumn fx:id="arrivesCol" text="ARRIVES" prefWidth="145" />
+                <TableColumn fx:id="durationCol" text="DURATION" prefWidth="145" />
+                <TableColumn fx:id="fromPriceCol" text="FROM" prefWidth="145" />
+                <TableColumn fx:id="actionCol" text="" prefWidth="170" />
             </columns>
         </TableView>
 

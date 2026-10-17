@@ -29,9 +29,11 @@
         </HBox>
 
         <!-- Cabin Area -->
-        <VBox fx:id="cabinContainer" alignment="CENTER" spacing="6" VBox.vgrow="ALWAYS">
+        <VBox fx:id="cabinContainer" alignment="TOP_CENTER" spacing="6">
             <!-- Programmatically populated First Class 2x2 and Economy 3x3 -->
         </VBox>
+
+        <Region VBox.vgrow="ALWAYS" />
 
         <!-- Bottom Legend -->
         <HBox alignment="CENTER" spacing="18" styleClass="seat-legend-box">

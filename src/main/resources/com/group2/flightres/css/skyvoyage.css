@@ -884,6 +884,7 @@
     -fx-border-width: 0 0 1 0;
     -fx-cell-size: 72px;
     -fx-pref-height: 72px;
+    -fx-padding: 0 18px 0 0;
 }
 
 .flights-table .table-row-cell:odd {
@@ -917,9 +918,9 @@
 .flights-table .flight-select-btn {
     -fx-font-size: 13px;
     -fx-font-weight: 700;
-    -fx-pref-width: 140px;
-    -fx-min-width: 140px;
-    -fx-max-width: 140px;
+    -fx-pref-width: 132px;
+    -fx-min-width: 120px;
+    -fx-max-width: 135px;
     -fx-pref-height: 38px;
     -fx-min-height: 38px;
     -fx-background-radius: 8px;

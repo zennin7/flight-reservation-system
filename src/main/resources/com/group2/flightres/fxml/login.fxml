@@ -77,9 +77,6 @@
                 onAction="#handleLogin"
                 styleClass="btn-gold, login-submit-btn"
                 maxWidth="Infinity" />
-
-        <!-- Bottom Informational Note -->
-        <Label text="Red error text only shows after a failed login." styleClass="login-hint-text" textAlignment="CENTER" />
     </VBox>
 
 </StackPane>
