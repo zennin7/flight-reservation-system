@@ -99,22 +99,38 @@ public class MainShellController {
                 loadOptionalScreen("/com/group2/flightres/fxml/login.fxml", false, "Login / Sign Up");
                 break;
             case "Dashboard":
-                if (navBar != null) {
-                    navBar.setAdminMode(true);
+                boolean isAdmin = (bookingContext != null && bookingContext.getCurrentUser() != null
+                        && bookingContext.getCurrentUser().getRole() == UserRole.ADMIN);
+                if (isAdmin) {
+                    if (navBar != null) {
+                        navBar.setAdminMode(true);
+                    }
+                    loadOptionalScreen("/com/group2/flightres/fxml/admin-dashboard.fxml", false, "Dashboard");
+                } else {
+                    logger.warn("Access denied for route 'Dashboard'. Administrator privileges required.");
+                    javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                            javafx.scene.control.Alert.AlertType.WARNING,
+                            "Access denied. Administrator privileges are required to view the dashboard.");
+                    alert.setHeaderText(null);
+                    alert.showAndWait();
                 }
-                loadOptionalScreen("/com/group2/flightres/fxml/admin-dashboard.fxml", false, "Dashboard");
                 break;
             case "Logout":
+                if (bookingContext != null) {
+                    bookingContext.setCurrentUser(null);
+                }
                 if (navBar != null) {
                     navBar.setAdminMode(false);
                 }
                 handleNavigation("Home");
                 break;
             case "Help":
-                if (navBar != null) {
-                    navBar.setAdminMode(!navBar.isAdminMode());
-                    handleNavigation(navBar.isAdminMode() ? "Dashboard" : "Home");
-                }
+                logger.info("Help clicked.");
+                javafx.scene.control.Alert helpAlert = new javafx.scene.control.Alert(
+                        javafx.scene.control.Alert.AlertType.INFORMATION,
+                        "Need assistance with your booking? Contact SkyVoyage support at support@skyvoyage.com or call 0800 123 456.");
+                helpAlert.setHeaderText("SkyVoyage Customer Support");
+                helpAlert.showAndWait();
                 break;
             case "About":
             case "Contact":

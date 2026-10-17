@@ -1,6 +1,7 @@
 package com.group2.flightres.tools;
 
 import com.group2.flightres.controller.MainShellController;
+import com.group2.flightres.controller.SeatMapController;
 import com.group2.flightres.model.BookingStep;
 import com.group2.flightres.util.ThemeManager;
 import javafx.animation.PauseTransition;
@@ -42,6 +43,8 @@ public class ScreenshotRunner extends Application {
     @Override
     public void start(Stage stage) {
         this.primaryStage = stage;
+        SeatMapController.setPreselectForScreenshots(true);
+        System.setProperty("skyvoyage.screenshots", "true");
         stage.setTitle("SkyVoyage Screenshot Runner");
         stage.setWidth(WIDTH);
         stage.setHeight(HEIGHT);
@@ -186,6 +189,10 @@ public class ScreenshotRunner extends Application {
                 controller.goToStep(BookingStep.CONFIRMATION);
                 break;
             case "07_admin_dashboard":
+                com.group2.flightres.model.User adminUser = new com.group2.flightres.model.User();
+                adminUser.setUsername("testadmin");
+                adminUser.setRole(com.group2.flightres.model.UserRole.ADMIN);
+                controller.getBookingContext().setCurrentUser(adminUser);
                 if (controller.getNavBar() != null) {
                     controller.getNavBar().setAdminMode(true);
                 }

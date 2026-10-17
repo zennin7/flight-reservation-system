@@ -14,6 +14,7 @@ public class BookingContext {
     private Long flightId;
     private List<FlightSeat> selectedSeats = new ArrayList<>();
     private BigDecimal totalPrice = BigDecimal.ZERO;
+    private User currentUser;
 
     public Long getFlightId() { return flightId; }
     public void setFlightId(Long flightId) { this.flightId = flightId; }
@@ -23,5 +24,8 @@ public class BookingContext {
 
     public BigDecimal getTotalPrice() { return totalPrice; }
     public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
+
+    public User getCurrentUser() { return currentUser; }
+    public void setCurrentUser(User currentUser) { this.currentUser = currentUser; }
 }
 

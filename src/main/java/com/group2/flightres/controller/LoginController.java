@@ -10,8 +10,12 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LoginController implements WizardStepController {
+
+    private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
 
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
@@ -48,6 +52,9 @@ public class LoginController implements WizardStepController {
         try {
             User authenticatedUser = authService.authenticate(username, password);
             lastAuthenticatedUser = authenticatedUser;
+            if (bookingContext != null) {
+                bookingContext.setCurrentUser(authenticatedUser);
+            }
             hideError();
             if (onNext != null) {
                 onNext.run();
@@ -62,6 +69,9 @@ public class LoginController implements WizardStepController {
             }
         } catch (AuthenticationException e) {
             showError(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Authentication error during login: {}", e.getMessage(), e);
+            showError("Unable to connect to the database. Please try again later.");
         }
     }
 

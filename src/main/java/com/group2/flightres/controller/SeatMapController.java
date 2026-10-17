@@ -32,6 +32,7 @@ public class SeatMapController implements WizardStepController {
     private static final Logger logger = LoggerFactory.getLogger(SeatMapController.class);
 
     @FXML private Label flightTitleLabel;
+    @FXML private Label fallbackNoticeLabel;
     @FXML private VBox cabinContainer;
 
     @FXML private Label seatSelectionLabel;
@@ -41,6 +42,16 @@ public class SeatMapController implements WizardStepController {
     @FXML private Label totalPriceLabel;
     @FXML private Button continueButton;
     @FXML private Button backButton;
+
+    private static boolean preselectForScreenshots = false;
+
+    public static void setPreselectForScreenshots(boolean preselect) {
+        preselectForScreenshots = preselect;
+    }
+
+    public static boolean isPreselectForScreenshots() {
+        return preselectForScreenshots || Boolean.getBoolean("skyvoyage.screenshots");
+    }
 
     private final SeatMapService seatMapService = new SeatMapService();
     private final Map<String, Button> seatButtonsByLabel = new HashMap<>();
@@ -92,6 +103,7 @@ public class SeatMapController implements WizardStepController {
         try {
             seats = seatMapService.loadSeatMap(flightId);
             if (seats == null || seats.isEmpty()) {
+                logger.warn("Seat map from DAO returned empty list; falling back to sample reference seats.");
                 isSampleData = true;
                 seats = generateSampleSeats();
             } else {
@@ -103,21 +115,39 @@ public class SeatMapController implements WizardStepController {
             seats = generateSampleSeats();
         }
 
+        if (fallbackNoticeLabel != null) {
+            fallbackNoticeLabel.setVisible(isSampleData);
+            fallbackNoticeLabel.setManaged(isSampleData);
+        }
+
         for (FlightSeat seat : seats) {
             seatsByLabel.put(seat.getSeatLabel(), seat);
         }
 
         buildCabinLayout();
 
-        // Sample data default: pre-select 7E to match reference PNG
-        // TODO(wire-real-data): preserve existing selection if bookingContext already has one.
-        FlightSeat seat7E = seatsByLabel.get("7E");
-        if (seat7E != null) {
-            selectedSeats.add(seat7E);
-            Button btn7E = seatButtonsByLabel.get("7E");
-            if (btn7E != null) {
-                btn7E.getStyleClass().removeAll("seat-available", "seat-taken");
-                btn7E.getStyleClass().add("seat-selected");
+        // Seat 7E must be pre-selected ONLY when ScreenshotRunner runs. In the real app no seat is pre-selected.
+        if (isPreselectForScreenshots()) {
+            FlightSeat seat7E = seatsByLabel.get("7E");
+            if (seat7E != null && seat7E.getStatus() == SeatStatus.AVAILABLE) {
+                selectedSeats.add(seat7E);
+                Button btn7E = seatButtonsByLabel.get("7E");
+                if (btn7E != null) {
+                    btn7E.getStyleClass().removeAll("seat-available", "seat-taken");
+                    btn7E.getStyleClass().add("seat-selected");
+                }
+            }
+        } else if (bookingContext != null && bookingContext.getSelectedSeats() != null && !bookingContext.getSelectedSeats().isEmpty()) {
+            for (FlightSeat prev : bookingContext.getSelectedSeats()) {
+                FlightSeat currentSeat = seatsByLabel.get(prev.getSeatLabel());
+                if (currentSeat != null && currentSeat.getStatus() != SeatStatus.BOOKED) {
+                    selectedSeats.add(currentSeat);
+                    Button btn = seatButtonsByLabel.get(currentSeat.getSeatLabel());
+                    if (btn != null) {
+                        btn.getStyleClass().removeAll("seat-available", "seat-taken");
+                        btn.getStyleClass().add("seat-selected");
+                    }
+                }
             }
         }
 

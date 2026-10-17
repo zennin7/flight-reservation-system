@@ -16,11 +16,16 @@
 
     <!-- Left Card: Seat Grid & Legend -->
     <VBox HBox.hgrow="ALWAYS" styleClass="card, seat-grid-card" spacing="8" alignment="TOP_CENTER">
-        <!-- Title -->
-        <HBox alignment="CENTER_LEFT" maxWidth="Infinity">
+        <!-- Title & Fallback Notice -->
+        <HBox alignment="CENTER_LEFT" spacing="10" maxWidth="Infinity">
             <Label fx:id="flightTitleLabel"
                    text="Choose your seat · GRP 204 JNB ➔ CPT"
                    styleClass="seat-map-title" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="fallbackNoticeLabel"
+                   text="Showing sample seats, database unavailable"
+                   styleClass="fallback-notice-label"
+                   visible="false" managed="false" />
         </HBox>
 
         <!-- Cabin Area -->
