@@ -106,7 +106,6 @@ public class ScreenshotRunner extends Application {
         if (tasks.isEmpty()) {
             logger.info("All screenshot captures finished.");
             Platform.exit();
-            System.exit(0);
         } else {
             Runnable nextTask = tasks.remove(0);
             nextTask.run();
