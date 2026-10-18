@@ -56,16 +56,21 @@ public final class BoardingPassPdfGenerator {
             String passenger = (context != null && context.getPassengerName() != null && !context.getPassengerName().isBlank())
                     ? context.getPassengerName() : "Valued Passenger";
             String flightNo = (context != null && context.getFlightNumber() != null && !context.getFlightNumber().isBlank())
-                    ? context.getFlightNumber() : "GRP 204";
-            String origin = (context != null && context.getOrigin() != null) ? context.getOrigin() : "Johannesburg (JNB)";
-            String destination = (context != null && context.getDestination() != null) ? context.getDestination() : "Cape Town (CPT)";
-            String depDate = (context != null && context.getDepartureDate() != null) ? context.getDepartureDate() : "2 Nov 2026";
-            String depTime = (context != null && context.getDepartureTime() != null) ? context.getDepartureTime() : "06:30";
-            String seat = (context != null && !context.getSeatLabel().isBlank()) ? context.getSeatLabel() : "7E";
+                    ? context.getFlightNumber() : "—";
+            String origin = (context != null && context.getOrigin() != null && !context.getOrigin().isBlank())
+                    ? context.getOrigin() : "—";
+            String destination = (context != null && context.getDestination() != null && !context.getDestination().isBlank())
+                    ? context.getDestination() : "—";
+            String depDate = (context != null && context.getDepartureDate() != null && !context.getDepartureDate().isBlank())
+                    ? context.getDepartureDate() : "—";
+            String depTime = (context != null && context.getDepartureTime() != null && !context.getDepartureTime().isBlank())
+                    ? context.getDepartureTime() : "—";
+            String seat = (context != null && context.getSeatLabel() != null && !context.getSeatLabel().isBlank())
+                    ? context.getSeatLabel() : "—";
             SeatClass seatCls = (context != null) ? context.getSeatClass() : SeatClass.ECONOMY;
             String seatClassStr = (seatCls == SeatClass.FIRST) ? "FIRST CLASS" : "ECONOMY CLASS";
             String bookingRef = (context != null && context.getBookingReference() != null && !context.getBookingReference().isBlank())
-                    ? context.getBookingReference() : "K7P2QX";
+                    ? context.getBookingReference() : (context != null ? context.generateBookingReference() : "—");
 
             // Fonts
             Font fontBrandSky = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.WHITE);
