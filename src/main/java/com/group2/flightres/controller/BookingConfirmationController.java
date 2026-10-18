@@ -82,6 +82,47 @@ public class BookingConfirmationController implements WizardStepController {
     @FXML
     private void handleDownloadPdf() {
         logger.info("Download Boarding Pass (PDF) clicked.");
+        javafx.stage.Window window = (downloadPdfButton != null && downloadPdfButton.getScene() != null)
+                ? downloadPdfButton.getScene().getWindow() : null;
+
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Save Boarding Pass");
+        String ref = (bookingContext != null && bookingContext.getBookingReference() != null && !bookingContext.getBookingReference().isBlank())
+                ? bookingContext.getBookingReference() : "REF";
+        fileChooser.setInitialFileName("BoardingPass_" + ref + ".pdf");
+        fileChooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("PDF Documents (*.pdf)", "*.pdf"));
+
+        java.io.File targetFile = fileChooser.showSaveDialog(window);
+        if (targetFile == null) {
+            logger.info("User cancelled saving boarding pass.");
+            return;
+        }
+
+        try {
+            com.group2.flightres.util.BoardingPassPdfGenerator.generate(bookingContext, targetFile);
+
+            javafx.scene.control.Alert successAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+            successAlert.setTitle("Boarding Pass Downloaded");
+            successAlert.setHeaderText("Success!");
+            successAlert.setContentText("Boarding pass successfully saved to:\n" + targetFile.getAbsolutePath());
+            successAlert.show();
+
+            try {
+                if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.OPEN)) {
+                    java.awt.Desktop.getDesktop().open(targetFile);
+                }
+            } catch (Exception ex) {
+                logger.warn("Could not automatically open PDF file via Desktop: {}", ex.getMessage());
+            }
+
+        } catch (Exception e) {
+            logger.error("Failed to generate boarding pass PDF", e);
+            javafx.scene.control.Alert errorAlert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+            errorAlert.setTitle("Download Failed");
+            errorAlert.setHeaderText("Error Generating PDF");
+            errorAlert.setContentText("Could not create boarding pass: " + e.getMessage());
+            errorAlert.showAndWait();
+        }
     }
 
     @FXML
