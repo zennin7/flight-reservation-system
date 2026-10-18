@@ -60,6 +60,12 @@ public class CheckoutController implements WizardStepController {
 
     @FXML
     public void initialize() {
+        if (confirmBookingButton != null) {
+            com.group2.flightres.util.Motion.attachHoverLift(confirmBookingButton);
+        }
+        if (backButton != null) {
+            com.group2.flightres.util.Motion.attachHoverLift(backButton);
+        }
         populateData();
     }
 
