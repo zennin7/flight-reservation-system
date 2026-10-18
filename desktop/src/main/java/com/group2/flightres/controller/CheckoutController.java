@@ -1,6 +1,11 @@
 package com.group2.flightres.controller;
 
+import com.group2.flightres.exception.SeatUnavailableException;
+import com.group2.flightres.exception.ValidationException;
 import com.group2.flightres.model.BookingContext;
+import com.group2.flightres.model.BookingRecord;
+import com.group2.flightres.service.BookingService;
+import com.group2.flightres.util.ValidationUtil;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -35,6 +40,7 @@ public class CheckoutController implements WizardStepController {
     @FXML private Button confirmBookingButton;
     @FXML private Button backButton;
 
+    private final BookingService bookingService = new BookingService();
     private BookingContext bookingContext;
     private Runnable onNext;
     private Runnable onBack;
@@ -154,16 +160,54 @@ public class CheckoutController implements WizardStepController {
             return;
         }
 
+        try {
+            ValidationUtil.validatePassengerName(fullName);
+            ValidationUtil.validateEmail(email);
+            if (!passport.isEmpty()) {
+                ValidationUtil.validatePassportNumber(passport);
+            }
+        } catch (ValidationException ve) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, ve.getMessage());
+            alert.setHeaderText("Validation Error");
+            alert.showAndWait();
+            return;
+        }
+
         if (bookingContext != null) {
             bookingContext.setPassengerName(fullName);
             bookingContext.setPassengerEmail(email);
             bookingContext.setPassportNumber(passport);
-            if (bookingContext.getBookingReference() == null || bookingContext.getBookingReference().isBlank()) {
+        }
+
+        try {
+            if (bookingContext != null && bookingContext.getSelectedSeats() != null && !bookingContext.getSelectedSeats().isEmpty()) {
+                BookingRecord record = bookingService.createBooking(bookingContext);
+                bookingContext.setBookingReference(record.getBookingReference());
+                logger.info("Successfully confirmed booking '{}' in database.", record.getBookingReference());
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING, "No seats selected. Please select a seat first.");
+                alert.setHeaderText("Missing Seat Selection");
+                alert.showAndWait();
+                return;
+            }
+        } catch (SeatUnavailableException sue) {
+            logger.warn("Seat hold expired or taken: {}", sue.getMessage());
+            Alert alert = new Alert(Alert.AlertType.WARNING, sue.getMessage());
+            alert.setHeaderText("Seat Unavailable");
+            alert.showAndWait();
+            if (onBack != null) {
+                onBack.run();
+            }
+            return;
+        } catch (Exception ex) {
+            logger.warn("Database booking transaction failed: {}", ex.getMessage());
+            // Offline / DB unavailable fallback
+            if (bookingContext != null && (bookingContext.getBookingReference() == null || bookingContext.getBookingReference().isBlank())) {
                 bookingContext.generateBookingReference();
             }
         }
 
-        logger.info("Confirming booking for: {} (Ref: {})", fullName,
+        logger.info("Proceeding to confirmation for: {} (Ref: {})", fullName,
                 (bookingContext != null ? bookingContext.getBookingReference() : "N/A"));
 
         if (onNext != null) {

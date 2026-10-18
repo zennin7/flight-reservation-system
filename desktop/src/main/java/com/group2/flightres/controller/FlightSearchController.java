@@ -2,6 +2,7 @@ package com.group2.flightres.controller;
 
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.FlightSearchResult;
+import com.group2.flightres.service.FlightService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -43,6 +45,7 @@ public class FlightSearchController implements WizardStepController {
 
     @FXML private Label resultsCountLabel;
 
+    private final FlightService flightService = new FlightService();
     private BookingContext bookingContext;
     private Runnable onNext;
 
@@ -52,13 +55,22 @@ public class FlightSearchController implements WizardStepController {
     public void init(BookingContext context, Runnable onNext) {
         this.bookingContext = context;
         this.onNext = onNext;
+        if (bookingContext != null) {
+            if (bookingContext.getOrigin() != null && !bookingContext.getOrigin().isBlank() && fromCombo != null) {
+                fromCombo.setValue(bookingContext.getOrigin());
+            }
+            if (bookingContext.getDestination() != null && !bookingContext.getDestination().isBlank() && toCombo != null) {
+                toCombo.setValue(bookingContext.getDestination());
+            }
+        }
+        performSearch();
     }
 
     @FXML
     public void initialize() {
         initSearchControls();
         initTable();
-        loadSampleFlights();
+        performSearch();
     }
 
     private void initSearchControls() {
@@ -190,9 +202,32 @@ public class FlightSearchController implements WizardStepController {
         flightsTable.maxHeightProperty().bind(flightsTable.prefHeightProperty());
     }
 
-    private void loadSampleFlights() {
-        // Sample rows matching reference PNG: 03_flight_search
-        // TODO(wire-real-data): Replace with FlightService query once DAO is created.
+    private void performSearch() {
+        String from = (fromCombo != null && fromCombo.getValue() != null) ? fromCombo.getValue() : "Johannesburg (JNB)";
+        String to = (toCombo != null && toCombo.getValue() != null) ? toCombo.getValue() : "Cape Town (CPT)";
+        LocalDate date = (departureDatePicker != null) ? departureDatePicker.getValue() : LocalDate.of(2026, 11, 2);
+
+        flightList.clear();
+        try {
+            List<FlightSearchResult> results = flightService.searchFlights(from, to, date);
+            if (results != null && !results.isEmpty()) {
+                flightList.addAll(results);
+                if (resultsCountLabel != null) {
+                    resultsCountLabel.setText(results.size() + " flights found. Prices are base fares before seat class and demand pricing.");
+                }
+            } else {
+                if (resultsCountLabel != null) {
+                    String dStr = (date != null) ? date.format(DATE_FORMATTER) : "selected date";
+                    resultsCountLabel.setText("No flights found for " + from + " -> " + to + " on " + dStr + ".");
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Could not query flights from database; falling back to sample flights: {}", e.getMessage());
+            loadSampleFlightsFallback();
+        }
+    }
+
+    private void loadSampleFlightsFallback() {
         flightList.clear();
         flightList.add(new FlightSearchResult(1L, "GRP 204", "06:30", "08:40", "2h 10m", new BigDecimal("1200"), "R 1,200"));
         flightList.add(new FlightSearchResult(2L, "GRP 318", "09:15", "11:25", "2h 10m", new BigDecimal("1450"), "R 1,450"));
@@ -200,14 +235,14 @@ public class FlightSearchController implements WizardStepController {
         flightList.add(new FlightSearchResult(4L, "GRP 507", "17:45", "19:55", "2h 10m", new BigDecimal("1680"), "R 1,680"));
 
         if (resultsCountLabel != null) {
-            resultsCountLabel.setText("4 flights found. Prices are base fares before seat class and demand pricing.");
+            resultsCountLabel.setText("Showing sample flights, database unavailable.");
         }
     }
 
     @FXML
     private void handleSearch() {
         logger.info("Search button clicked. Refreshing flights list.");
-        loadSampleFlights();
+        performSearch();
     }
 
     private void handleSelectFlight(FlightSearchResult flight) {
@@ -228,6 +263,7 @@ public class FlightSearchController implements WizardStepController {
             bookingContext.setDepartureTime(flight.getDepartureTime());
             bookingContext.setArrivalTime(flight.getArrivalTime());
             bookingContext.setBaseFare(flight.getBasePrice());
+            bookingContext.recalculateTotals();
         }
         if (onNext != null) {
             onNext.run();

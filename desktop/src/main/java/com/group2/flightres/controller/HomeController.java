@@ -53,6 +53,14 @@ public class HomeController implements WizardStepController {
     @FXML
     private void handleSearch() {
         logger.info("Search Flights clicked from Home screen.");
+        if (bookingContext != null) {
+            if (fromCombo != null && fromCombo.getValue() != null) {
+                bookingContext.setOrigin(fromCombo.getValue());
+            }
+            if (toCombo != null && toCombo.getValue() != null) {
+                bookingContext.setDestination(toCombo.getValue());
+            }
+        }
         if (onNext != null) {
             onNext.run();
         }

@@ -391,8 +391,7 @@ public class SeatMapController implements WizardStepController {
     }
 
     /**
-     * Generates sample seats matching the SkyVoyage reference PNG: 04_seat_map.
-     * TODO(wire-real-data): Replace with real database seeds when DB is active.
+     * Generates fallback seats matching reference when database is unavailable.
      */
     private List<FlightSeat> generateSampleSeats() {
         List<FlightSeat> list = new ArrayList<>();

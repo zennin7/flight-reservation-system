@@ -35,6 +35,15 @@ public class DashboardStats {
     public double getSeatsSoldPercentage() { return seatsSoldPercentage; }
     public void setSeatsSoldPercentage(double seatsSoldPercentage) { this.seatsSoldPercentage = seatsSoldPercentage; }
 
+    public String getRevenueFormatted() {
+        if (totalRevenue == null) return "R 0";
+        return String.format(java.util.Locale.US, "R %,d", totalRevenue.longValue());
+    }
+
+    public String getSeatsSoldPercentageFormatted() {
+        return Math.round(seatsSoldPercentage) + "%";
+    }
+
     public List<DailyBookingStat> getBookingsPerDay() { return bookingsPerDay; }
     public void setBookingsPerDay(List<DailyBookingStat> bookingsPerDay) { this.bookingsPerDay = bookingsPerDay; }
 
@@ -58,6 +67,7 @@ public class DashboardStats {
         public LocalDate getDate() { return date; }
         public String getDayLabel() { return dayLabel; }
         public long getCount() { return count; }
+        public long getBookingCount() { return count; }
     }
 
     public static class DestinationStat {
