@@ -102,6 +102,7 @@ public class FlightSearchController implements WizardStepController {
         }
         if (searchButton != null) {
             searchButton.setOnAction(e -> handleSearch());
+            com.group2.flightres.util.Motion.attachHoverLift(searchButton);
         }
     }
 
@@ -172,6 +173,7 @@ public class FlightSearchController implements WizardStepController {
 
             {
                 selectBtn.getStyleClass().addAll("btn-gold", "flight-select-btn");
+                com.group2.flightres.util.Motion.attachHoverLift(selectBtn);
                 container.setAlignment(Pos.CENTER_RIGHT);
                 container.setPadding(javafx.geometry.Insets.EMPTY);
                 selectBtn.setOnAction(e -> {

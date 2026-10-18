@@ -936,7 +936,9 @@
 }
 
 .flights-table .table-row-cell:hover {
-    -fx-background-color: -sv-surface;
+    -fx-background-color: -sv-surface-elevated;
+    -fx-border-color: transparent transparent -sv-gold-primary transparent;
+    -fx-border-width: 0 0 1 0;
 }
 
 .flights-table .table-cell {
