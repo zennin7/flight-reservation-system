@@ -761,8 +761,29 @@
 }
 
 /* -------------------------------------------------------------------
- * Login Screen Specifics
+ * Login Screen Specifics (Elevated Split-Screen Layout)
  * ------------------------------------------------------------------- */
+.login-split-root {
+    -fx-background-color: -sv-page;
+}
+
+.login-photo-overlay {
+    -fx-background-color: linear-gradient(to top, rgba(10, 17, 24, 0.88) 0%, rgba(10, 17, 24, 0.35) 45%, rgba(10, 17, 24, 0.10) 100%);
+}
+
+.login-tagline-caps {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -sv-gold-primary;
+}
+
+.login-photo-quote {
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-line-spacing: 2px;
+}
+
 .login-card {
     -fx-background-color: -sv-surface;
     -fx-background-radius: 12px;
@@ -770,7 +791,7 @@
     -fx-border-width: 1px;
     -fx-border-radius: 12px;
     -fx-effect: -sv-card-shadow;
-    -fx-padding: 28px;
+    -fx-padding: 32px 28px;
 }
 
 .login-card-title {

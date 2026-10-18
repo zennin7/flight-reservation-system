@@ -40,6 +40,13 @@ public class LoginController implements WizardStepController {
     }
 
     @FXML
+    public void initialize() {
+        if (loginButton != null) {
+            com.group2.flightres.util.Motion.attachHoverLift(loginButton);
+        }
+    }
+
+    @FXML
     private void handleLogin() {
         String username = usernameField.getText().trim();
         String password = passwordField.getText();

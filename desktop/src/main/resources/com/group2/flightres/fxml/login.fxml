@@ -6,77 +6,81 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.SVGPath?>
 
-<StackPane xmlns="http://javafx.com/javafx"
-           xmlns:fx="http://javafx.com/fxml"
-           fx:controller="com.group2.flightres.controller.LoginController"
-           styleClass="hero-banner"
-           alignment="CENTER"
-           prefWidth="1000"
-           prefHeight="676">
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.group2.flightres.controller.LoginController"
+      styleClass="login-split-root"
+      alignment="CENTER_LEFT"
+      prefWidth="1000"
+      prefHeight="676">
 
-    <!-- Background Plane Graphic (positioned at top right as in design reference) -->
-    <Pane pickOnBounds="false">
-        <Pane layoutX="536" layoutY="30" prefWidth="440" prefHeight="200" pickOnBounds="false">
-            <SVGPath content="M20 130 Q200 78 410 44 Q426 44 420 58 Q390 98 245 134 Q120 160 20 130Z"
-                     styleClass="hero-plane-body" />
-            <SVGPath content="M205 108 L335 26 L356 30 L276 120Z"
-                     styleClass="hero-plane-body" opacity="0.85" />
-            <SVGPath content="M205 134 L305 182 L289 188 L172 144Z"
-                     styleClass="hero-plane-body" opacity="0.9" />
-            <SVGPath content="M48 126 L30 72 L66 104Z"
-                     styleClass="hero-plane-fin" />
-        </Pane>
-    </Pane>
-
-    <!-- Centered Login Card -->
-    <VBox alignment="TOP_CENTER" spacing="14" maxWidth="340" maxHeight="-Infinity" styleClass="card, login-card">
-        <StackPane.margin>
-            <Insets top="10" bottom="10"/>
-        </StackPane.margin>
-
-        <!-- Title & Subtitle -->
-        <VBox alignment="CENTER" spacing="4">
-            <Label text="Welcome back" styleClass="login-card-title" />
-            <Label text="Log in to book and manage your flights" styleClass="login-card-subtitle" />
+    <!-- Left: Photographic Showcase with Table Mountain aerial airplane window -->
+    <StackPane prefWidth="440" minWidth="440" maxWidth="440" prefHeight="676">
+        <ImageView fitWidth="440" fitHeight="676" preserveRatio="false">
+            <image>
+                <Image url="@../photos/login-side.jpg"/>
+            </image>
+        </ImageView>
+        <Region styleClass="login-photo-overlay" prefWidth="440" prefHeight="676"/>
+        <VBox alignment="BOTTOM_LEFT" spacing="6">
+            <StackPane.margin>
+                <Insets left="32" right="32" bottom="36"/>
+            </StackPane.margin>
+            <Label text="FLY ABOVE THE ORDINARY" styleClass="login-tagline-caps"/>
+            <Label text="Experience South Africa from new heights with refined comfort and seamless booking."
+                   styleClass="login-photo-quote" wrapText="true" maxWidth="360"/>
         </VBox>
+    </StackPane>
 
-        <!-- Username Field -->
-        <VBox spacing="4" alignment="TOP_LEFT">
-            <Label text="Username" styleClass="login-field-label" />
-            <TextField fx:id="usernameField" promptText="Username" styleClass="text-field" />
+    <!-- Right: Elevated Authentication Form -->
+    <StackPane HBox.hgrow="ALWAYS" alignment="CENTER" prefHeight="676">
+        <VBox alignment="TOP_CENTER" spacing="16" maxWidth="360" maxHeight="-Infinity" styleClass="card, login-card">
+            <!-- Title & Subtitle -->
+            <VBox alignment="CENTER" spacing="4">
+                <Label text="Welcome back" styleClass="login-card-title" />
+                <Label text="Log in to book and manage your flights" styleClass="login-card-subtitle" />
+            </VBox>
+
+            <!-- Username Field -->
+            <VBox spacing="4" alignment="TOP_LEFT">
+                <Label text="Username" styleClass="login-field-label" />
+                <TextField fx:id="usernameField" promptText="Username" styleClass="text-field" />
+            </VBox>
+
+            <!-- Password Field -->
+            <VBox spacing="4" alignment="TOP_LEFT">
+                <Label text="Password" styleClass="login-field-label" />
+                <PasswordField fx:id="passwordField" promptText="Password" styleClass="password-field" />
+            </VBox>
+
+            <!-- Remember Me CheckBox -->
+            <HBox alignment="CENTER_LEFT">
+                <CheckBox fx:id="rememberMeCheckBox" text="Remember me" styleClass="remember-me-checkbox" />
+            </HBox>
+
+            <!-- Error Label (hidden until login fails) -->
+            <Label fx:id="errorLabel"
+                   text="Incorrect username or password."
+                   styleClass="login-error-text"
+                   visible="false"
+                   managed="false"
+                   wrapText="true" />
+
+            <!-- Log In Button -->
+            <Button fx:id="loginButton"
+                    text="Log In"
+                    onAction="#handleLogin"
+                    styleClass="btn-gold, login-submit-btn"
+                    maxWidth="Infinity" />
         </VBox>
+    </StackPane>
 
-        <!-- Password Field -->
-        <VBox spacing="4" alignment="TOP_LEFT">
-            <Label text="Password" styleClass="login-field-label" />
-            <PasswordField fx:id="passwordField" promptText="Password" styleClass="password-field" />
-        </VBox>
-
-        <!-- Remember Me CheckBox -->
-        <HBox alignment="CENTER_LEFT">
-            <CheckBox fx:id="rememberMeCheckBox" text="Remember me" styleClass="remember-me-checkbox" />
-        </HBox>
-
-        <!-- Error Label (hidden until login fails) -->
-        <Label fx:id="errorLabel"
-               text="Incorrect username or password."
-               styleClass="login-error-text"
-               visible="false"
-               managed="false"
-               wrapText="true" />
-
-        <!-- Log In Button -->
-        <Button fx:id="loginButton"
-                text="Log In"
-                onAction="#handleLogin"
-                styleClass="btn-gold, login-submit-btn"
-                maxWidth="Infinity" />
-    </VBox>
-
-</StackPane>
+</HBox>
