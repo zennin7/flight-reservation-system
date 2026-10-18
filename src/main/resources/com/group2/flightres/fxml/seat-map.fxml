@@ -19,7 +19,7 @@
         <!-- Title & Fallback Notice -->
         <HBox alignment="CENTER_LEFT" spacing="10" maxWidth="Infinity">
             <Label fx:id="flightTitleLabel"
-                   text="Choose your seat · GRP 204 JNB ➔ CPT"
+                   text="Choose your seat"
                    styleClass="seat-map-title" />
             <Region HBox.hgrow="ALWAYS" />
             <Label fx:id="fallbackNoticeLabel"
@@ -58,12 +58,12 @@
 
         <HBox alignment="CENTER_LEFT">
             <Label text="Seat" styleClass="selection-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="seatSelectionLabel" text="7E · Economy" styleClass="selection-val-bold" />
+            <Label fx:id="seatSelectionLabel" text="None" styleClass="selection-val-bold" />
         </HBox>
 
         <HBox alignment="CENTER_LEFT">
             <Label text="Base fare" styleClass="selection-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="baseFareLabel" text="R 1,200" styleClass="selection-val-bold" />
+            <Label fx:id="baseFareLabel" text="R 0" styleClass="selection-val-bold" />
         </HBox>
 
         <HBox alignment="CENTER_LEFT">
@@ -73,7 +73,7 @@
 
         <HBox alignment="CENTER_LEFT">
             <Label text="Demand pricing" styleClass="selection-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="demandPricingLabel" text="+ R 180" styleClass="selection-val-bold" />
+            <Label fx:id="demandPricingLabel" text="+ R 0" styleClass="selection-val-bold" />
         </HBox>
 
         <!-- Divider -->
@@ -82,7 +82,7 @@
         <!-- Total Row -->
         <HBox alignment="CENTER_LEFT">
             <Label text="Total" styleClass="selection-total-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="totalPriceLabel" text="R 1,380" styleClass="selection-total-val" />
+            <Label fx:id="totalPriceLabel" text="R 0" styleClass="selection-total-val" />
         </HBox>
 
         <Label text="Hover any seat to see its price. Seats are held for 10 minutes."

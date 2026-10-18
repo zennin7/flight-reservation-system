@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 /**
  * Controller for SkyVoyage Screen 03 Flight Search.
@@ -213,7 +214,20 @@ public class FlightSearchController implements WizardStepController {
         logger.info("Flight selected: {} (ID: {})", flight.getFlightNumber(), flight.getFlightId());
         if (bookingContext != null) {
             bookingContext.setFlightId(flight.getFlightId());
-            bookingContext.setTotalPrice(flight.getBasePrice());
+            bookingContext.setFlightNumber(flight.getFlightNumber());
+            if (fromCombo != null && fromCombo.getValue() != null) {
+                bookingContext.setOrigin(fromCombo.getValue());
+            }
+            if (toCombo != null && toCombo.getValue() != null) {
+                bookingContext.setDestination(toCombo.getValue());
+            }
+            if (departureDatePicker != null && departureDatePicker.getValue() != null) {
+                DateTimeFormatter dFmt = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH);
+                bookingContext.setDepartureDate(departureDatePicker.getValue().format(dFmt));
+            }
+            bookingContext.setDepartureTime(flight.getDepartureTime());
+            bookingContext.setArrivalTime(flight.getArrivalTime());
+            bookingContext.setBaseFare(flight.getBasePrice());
         }
         if (onNext != null) {
             onNext.run();

@@ -7,6 +7,9 @@ import javafx.scene.control.Label;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
+import java.util.Locale;
+
 /**
  * Controller for SkyVoyage Screen 06 Booking Confirmation.
  */
@@ -38,15 +41,42 @@ public class BookingConfirmationController implements WizardStepController {
     }
 
     private void populateData() {
-        // Sample data matching 06_confirmation reference PNG
-        // TODO(wire-real-data): bind from real booking transaction
-        if (confirmationEmailLabel != null) {
-            confirmationEmailLabel.setText("A confirmation has been sent to david@example.com");
+        if (bookingContext == null) {
+            return;
         }
-        if (bookingRefLabel != null) bookingRefLabel.setText("K7P2QX");
-        if (flightNumberLabel != null) flightNumberLabel.setText("GRP 204");
-        if (seatNumberLabel != null) seatNumberLabel.setText("7E");
-        if (totalPaidLabel != null) totalPaidLabel.setText("R 1,522");
+
+        String email = bookingContext.getPassengerEmail();
+        if (confirmationEmailLabel != null) {
+            if (email != null && !email.isBlank()) {
+                confirmationEmailLabel.setText("A confirmation has been sent to " + email);
+            } else {
+                confirmationEmailLabel.setText("A confirmation has been sent to your email");
+            }
+        }
+
+        if (bookingRefLabel != null) {
+            String ref = bookingContext.getBookingReference();
+            bookingRefLabel.setText(ref != null && !ref.isBlank() ? ref : "—");
+        }
+
+        if (flightNumberLabel != null) {
+            String fn = bookingContext.getFlightNumber();
+            flightNumberLabel.setText(fn != null && !fn.isBlank() ? fn : "—");
+        }
+
+        if (seatNumberLabel != null) {
+            String seat = bookingContext.getSeatLabel();
+            seatNumberLabel.setText(seat != null && !seat.isBlank() ? seat : "—");
+        }
+
+        if (totalPaidLabel != null) {
+            totalPaidLabel.setText(formatPrice(bookingContext.getTotalPrice()));
+        }
+    }
+
+    private String formatPrice(BigDecimal price) {
+        if (price == null) return "R 0";
+        return String.format(Locale.US, "R %,d", price.longValue());
     }
 
     @FXML

@@ -126,6 +126,13 @@ public class SeatMapController implements WizardStepController {
 
         buildCabinLayout();
 
+        if (flightTitleLabel != null) {
+            String flightInfo = (bookingContext != null)
+                    ? bookingContext.getFlightRouteDisplay()
+                    : "";
+            flightTitleLabel.setText(flightInfo.isEmpty() ? "Choose your seat" : "Choose your seat · " + flightInfo);
+        }
+
         // Seat 7E must be pre-selected ONLY when ScreenshotRunner runs. In the real app no seat is pre-selected.
         if (isPreselectForScreenshots()) {
             FlightSeat seat7E = seatsByLabel.get("7E");
@@ -302,20 +309,29 @@ public class SeatMapController implements WizardStepController {
             String clsName = (seat.getSeatClass() == SeatClass.FIRST) ? "First Class" : "Economy";
             seatSelectionLabel.setText(seat.getSeatLabel() + " · " + clsName);
         }
-        if (baseFareLabel != null) baseFareLabel.setText("R 1,200");
+        BigDecimal base = (bookingContext != null && bookingContext.getBaseFare() != null)
+                ? bookingContext.getBaseFare() : new BigDecimal("1200");
+        if (baseFareLabel != null) baseFareLabel.setText(formatPrice(base));
+        BigDecimal mult = (seat.getSeatClass() == SeatClass.FIRST) ? new BigDecimal("2.0") : new BigDecimal("1.0");
         if (classMultiplierLabel != null) {
             classMultiplierLabel.setText(seat.getSeatClass() == SeatClass.FIRST ? "x 2.0" : "x 1.0");
         }
         if (demandPricingLabel != null) demandPricingLabel.setText("+ R 180");
         if (totalPriceLabel != null) {
-            totalPriceLabel.setText(formatPrice(seat.getCalculatedPrice()));
+            BigDecimal seatPrice = seat.getCalculatedPrice() != null
+                    ? seat.getCalculatedPrice()
+                    : base.multiply(mult).add(new BigDecimal("180"));
+            totalPriceLabel.setText(formatPrice(seatPrice));
         }
     }
 
     private void updateSelectionSummary() {
+        BigDecimal base = (bookingContext != null && bookingContext.getBaseFare() != null)
+                ? bookingContext.getBaseFare() : new BigDecimal("1200");
+
         if (selectedSeats.isEmpty()) {
             if (seatSelectionLabel != null) seatSelectionLabel.setText("None");
-            if (baseFareLabel != null) baseFareLabel.setText("R 1,200");
+            if (baseFareLabel != null) baseFareLabel.setText(formatPrice(base));
             if (classMultiplierLabel != null) classMultiplierLabel.setText("x 1.0");
             if (demandPricingLabel != null) demandPricingLabel.setText("+ R 0");
             if (totalPriceLabel != null) totalPriceLabel.setText("R 0");
@@ -324,12 +340,16 @@ public class SeatMapController implements WizardStepController {
             FlightSeat seat = selectedSeats.get(0);
             String clsName = (seat.getSeatClass() == SeatClass.FIRST) ? "First Class" : "Economy";
             if (seatSelectionLabel != null) seatSelectionLabel.setText(seat.getSeatLabel() + " · " + clsName);
-            if (baseFareLabel != null) baseFareLabel.setText("R 1,200");
+            if (baseFareLabel != null) baseFareLabel.setText(formatPrice(base));
+            BigDecimal mult = (seat.getSeatClass() == SeatClass.FIRST) ? new BigDecimal("2.0") : new BigDecimal("1.0");
             if (classMultiplierLabel != null) {
                 classMultiplierLabel.setText(seat.getSeatClass() == SeatClass.FIRST ? "x 2.0" : "x 1.0");
             }
             if (demandPricingLabel != null) demandPricingLabel.setText("+ R 180");
-            if (totalPriceLabel != null) totalPriceLabel.setText(formatPrice(seat.getCalculatedPrice()));
+            BigDecimal seatPrice = seat.getCalculatedPrice() != null
+                    ? seat.getCalculatedPrice()
+                    : base.multiply(mult).add(new BigDecimal("180"));
+            if (totalPriceLabel != null) totalPriceLabel.setText(formatPrice(seatPrice));
             if (continueButton != null) continueButton.setDisable(false);
         }
     }
@@ -345,7 +365,16 @@ public class SeatMapController implements WizardStepController {
         if (bookingContext != null) {
             bookingContext.setSelectedSeats(new ArrayList<>(selectedSeats));
             if (!selectedSeats.isEmpty()) {
-                bookingContext.setTotalPrice(selectedSeats.get(0).getCalculatedPrice());
+                FlightSeat seat = selectedSeats.get(0);
+                BigDecimal base = (bookingContext.getBaseFare() != null)
+                        ? bookingContext.getBaseFare() : new BigDecimal("1200");
+                bookingContext.setBaseFare(base);
+                BigDecimal mult = (seat.getSeatClass() == SeatClass.FIRST)
+                        ? new BigDecimal("2.0") : new BigDecimal("1.0");
+                bookingContext.setClassMultiplier(mult);
+                bookingContext.setDemandPricing(new BigDecimal("180"));
+                bookingContext.setTaxesAndFees(new BigDecimal("142"));
+                bookingContext.recalculateTotals();
             }
         }
         if (onNext != null) {

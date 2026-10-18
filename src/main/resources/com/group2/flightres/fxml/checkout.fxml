@@ -26,25 +26,25 @@
         <!-- Flight -->
         <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
             <Label text="Flight" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="flightLabel" text="GRP 204 · JNB to CPT" styleClass="checkout-val-medium"/>
+            <Label fx:id="flightLabel" text="" styleClass="checkout-val-medium"/>
         </HBox>
 
         <!-- Departs -->
         <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
             <Label text="Departs" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="departsLabel" text="2 Nov 2026 · 06:30" styleClass="checkout-val-medium"/>
+            <Label fx:id="departsLabel" text="" styleClass="checkout-val-medium"/>
         </HBox>
 
         <!-- Passenger -->
         <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
             <Label text="Passenger" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="passengerLabel" text="David M." styleClass="checkout-val-medium"/>
+            <Label fx:id="passengerLabel" text="" styleClass="checkout-val-medium"/>
         </HBox>
 
         <!-- Seat -->
         <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
             <Label text="Seat" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="seatLabel" text="7E · Economy" styleClass="checkout-val-medium"/>
+            <Label fx:id="seatLabel" text="" styleClass="checkout-val-medium"/>
         </HBox>
 
         <!-- Divider 1 -->
@@ -57,19 +57,19 @@
         <!-- Base Fare -->
         <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
             <Label text="Base fare" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="baseFareLabel" text="R 1,200" styleClass="checkout-val-medium"/>
+            <Label fx:id="baseFareLabel" text="" styleClass="checkout-val-medium"/>
         </HBox>
 
         <!-- Demand Pricing -->
         <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
             <Label text="Demand pricing" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="demandPricingLabel" text="R 180" styleClass="checkout-val-medium"/>
+            <Label fx:id="demandPricingLabel" text="" styleClass="checkout-val-medium"/>
         </HBox>
 
         <!-- Taxes and Fees -->
         <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
             <Label text="Taxes and fees" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="taxesFeesLabel" text="R 142" styleClass="checkout-val-medium"/>
+            <Label fx:id="taxesFeesLabel" text="" styleClass="checkout-val-medium"/>
         </HBox>
 
         <!-- Divider 2 -->
@@ -82,7 +82,7 @@
         <!-- Total -->
         <HBox alignment="CENTER_LEFT" styleClass="checkout-total-row">
             <Label text="Total" styleClass="checkout-total-title" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Label fx:id="totalLabel" text="R 1,522" styleClass="checkout-total-amount"/>
+            <Label fx:id="totalLabel" text="" styleClass="checkout-total-amount"/>
         </HBox>
     </VBox>
 
@@ -93,13 +93,13 @@
         <!-- Full Name -->
         <VBox spacing="4">
             <Label text="Full name" styleClass="checkout-field-label"/>
-            <TextField fx:id="fullNameField" text="David M." styleClass="text-field"/>
+            <TextField fx:id="fullNameField" promptText="Full name" styleClass="text-field"/>
         </VBox>
 
         <!-- Email -->
         <VBox spacing="4">
             <Label text="Email" styleClass="checkout-field-label"/>
-            <TextField fx:id="emailField" text="david@example.com" styleClass="text-field"/>
+            <TextField fx:id="emailField" promptText="Email address" styleClass="text-field"/>
         </VBox>
 
         <!-- Passport Number -->

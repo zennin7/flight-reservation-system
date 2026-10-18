@@ -180,12 +180,15 @@ public class ScreenshotRunner extends Application {
                 controller.goToStep(BookingStep.SEARCH);
                 break;
             case "04_seat_map":
+                setupSampleBookingContext(controller.getBookingContext());
                 controller.goToStep(BookingStep.SEAT_SELECTION);
                 break;
             case "05_checkout":
+                setupSampleBookingContext(controller.getBookingContext());
                 controller.goToStep(BookingStep.CHECKOUT);
                 break;
             case "06_confirmation":
+                setupSampleBookingContext(controller.getBookingContext());
                 controller.goToStep(BookingStep.CONFIRMATION);
                 break;
             case "07_admin_dashboard":
@@ -202,6 +205,34 @@ public class ScreenshotRunner extends Application {
             default:
                 break;
         }
+    }
+
+    private void setupSampleBookingContext(com.group2.flightres.model.BookingContext ctx) {
+        if (ctx == null) return;
+        ctx.setFlightId(1L);
+        ctx.setFlightNumber("GRP 204");
+        ctx.setOrigin("Johannesburg (JNB)");
+        ctx.setDestination("Cape Town (CPT)");
+        ctx.setDepartureDate("2 Nov 2026");
+        ctx.setDepartureTime("06:30");
+        ctx.setArrivalTime("08:40");
+
+        com.group2.flightres.model.FlightSeat seat7E = new com.group2.flightres.model.FlightSeat();
+        seat7E.setSeatRow(7);
+        seat7E.setSeatCol('E');
+        seat7E.setSeatClass(com.group2.flightres.model.SeatClass.ECONOMY);
+        seat7E.setStatus(com.group2.flightres.model.SeatStatus.AVAILABLE);
+
+        ctx.setSelectedSeats(new ArrayList<>(List.of(seat7E)));
+        ctx.setBaseFare(new java.math.BigDecimal("1200"));
+        ctx.setClassMultiplier(new java.math.BigDecimal("1.0"));
+        ctx.setDemandPricing(new java.math.BigDecimal("180"));
+        ctx.setTaxesAndFees(new java.math.BigDecimal("142"));
+        ctx.setTotalPrice(new java.math.BigDecimal("1522"));
+
+        ctx.setPassengerName("David M.");
+        ctx.setPassengerEmail("david@example.com");
+        ctx.setBookingReference("K7P2QX");
     }
 
     private static void saveImageToPng(WritableImage image, File targetFile) throws IOException {

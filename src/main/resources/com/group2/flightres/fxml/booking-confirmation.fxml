@@ -25,7 +25,7 @@
 
         <!-- Subtitle -->
         <Label fx:id="confirmationEmailLabel"
-               text="A confirmation has been sent to david@example.com"
+               text=""
                styleClass="confirmation-subtitle"/>
 
         <!-- Dashed Reference Box -->
@@ -37,25 +37,25 @@
             <!-- BOOKING REF -->
             <VBox spacing="4" alignment="CENTER_LEFT">
                 <Label text="BOOKING REF" styleClass="confirmation-ref-label"/>
-                <Label fx:id="bookingRefLabel" text="K7P2QX" styleClass="confirmation-ref-val"/>
+                <Label fx:id="bookingRefLabel" text="" styleClass="confirmation-ref-val"/>
             </VBox>
 
             <!-- FLIGHT -->
             <VBox spacing="4" alignment="CENTER_LEFT">
                 <Label text="FLIGHT" styleClass="confirmation-ref-label"/>
-                <Label fx:id="flightNumberLabel" text="GRP 204" styleClass="confirmation-ref-val"/>
+                <Label fx:id="flightNumberLabel" text="" styleClass="confirmation-ref-val"/>
             </VBox>
 
             <!-- SEAT -->
             <VBox spacing="4" alignment="CENTER_LEFT">
                 <Label text="SEAT" styleClass="confirmation-ref-label"/>
-                <Label fx:id="seatNumberLabel" text="7E" styleClass="confirmation-ref-val"/>
+                <Label fx:id="seatNumberLabel" text="" styleClass="confirmation-ref-val"/>
             </VBox>
 
             <!-- TOTAL PAID -->
             <VBox spacing="4" alignment="CENTER_LEFT">
                 <Label text="TOTAL PAID" styleClass="confirmation-ref-label"/>
-                <Label fx:id="totalPaidLabel" text="R 1,522" styleClass="confirmation-ref-val, confirmation-total-val"/>
+                <Label fx:id="totalPaidLabel" text="" styleClass="confirmation-ref-val, confirmation-total-val"/>
             </VBox>
         </HBox>
 
