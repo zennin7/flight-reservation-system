@@ -1144,12 +1144,13 @@
 }
 
 .confirmation-ref-box {
-    -fx-border-color: -sv-field-border;
-    -fx-border-width: 2px;
-    -fx-border-style: segments(6, 4);
+    -fx-border-color: -sv-gold-primary;
+    -fx-border-width: 1.5px;
+    -fx-border-style: segments(6, 6);
     -fx-border-radius: 12px;
+    -fx-background-color: -sv-surface-elevated;
     -fx-background-radius: 12px;
-    -fx-padding: 18px 36px;
+    -fx-padding: 20px 40px;
     -fx-alignment: center;
 }
 

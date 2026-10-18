@@ -38,6 +38,8 @@ public class BookingConfirmationController implements WizardStepController {
     @FXML
     public void initialize() {
         populateData();
+        com.group2.flightres.util.Motion.attachHoverLift(downloadPdfButton);
+        com.group2.flightres.util.Motion.attachHoverLift(backToHomeButton);
     }
 
     private void populateData() {
