@@ -2,10 +2,12 @@ package com.group2.flightres.controller;
 
 import com.group2.flightres.component.NavBar;
 import com.group2.flightres.component.StepperBar;
+import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingStep;
 import com.group2.flightres.model.User;
 import com.group2.flightres.model.UserRole;
+import com.group2.flightres.util.Motion;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -72,6 +74,7 @@ public class MainShellController {
             FXMLLoader loader = new FXMLLoader(resource);
             Node view = loader.load();
             contentArea.getChildren().setAll(view);
+            Motion.screenTransition(view);
 
             Object controller = loader.getController();
             if (controller instanceof WizardStepController wizardController) {
@@ -128,8 +131,9 @@ public class MainShellController {
                 logger.info("Help clicked.");
                 javafx.scene.control.Alert helpAlert = new javafx.scene.control.Alert(
                         javafx.scene.control.Alert.AlertType.INFORMATION,
-                        "Need assistance with your booking? Contact SkyVoyage support at support@skyvoyage.com or call 0800 123 456.");
-                helpAlert.setHeaderText("SkyVoyage Customer Support");
+                        "Need assistance with your booking? Contact " + BrandConfig.APP_NAME + " support at "
+                                + BrandConfig.SUPPORT_EMAIL + " or call " + BrandConfig.SUPPORT_PHONE + ".");
+                helpAlert.setHeaderText(BrandConfig.APP_NAME + " Customer Support");
                 helpAlert.showAndWait();
                 break;
             case "About":
@@ -158,6 +162,7 @@ public class MainShellController {
             FXMLLoader loader = new FXMLLoader(resource);
             Node view = loader.load();
             contentArea.getChildren().setAll(view);
+            Motion.screenTransition(view);
 
             if (stepperWrapper != null) {
                 stepperWrapper.setVisible(showStepper);

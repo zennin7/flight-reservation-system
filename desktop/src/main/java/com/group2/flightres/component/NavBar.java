@@ -1,5 +1,6 @@
 package com.group2.flightres.component;
 
+import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.util.ThemeManager;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -62,10 +63,10 @@ public class NavBar extends HBox {
         planeIcon.setContent(SVG_PLANE_LOGO);
         planeIcon.getStyleClass().add("nav-logo-icon");
 
-        Label skyLabel = new Label("Sky");
+        Label skyLabel = new Label(BrandConfig.LOGO_PREFIX);
         skyLabel.getStyleClass().add("logo-text-sky");
 
-        Label voyageLabel = new Label("Voyage");
+        Label voyageLabel = new Label(BrandConfig.LOGO_SUFFIX);
         voyageLabel.getStyleClass().add("logo-text-voyage");
 
         HBox brandNameBox = new HBox(0, skyLabel, voyageLabel);

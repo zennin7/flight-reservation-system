@@ -663,10 +663,14 @@
 }
 
 /* -------------------------------------------------------------------
- * Hero Section
+ * Hero Section (Elevated Photographic Hero)
  * ------------------------------------------------------------------- */
 .hero-banner {
-    -fx-background-color: -sv-hero-bg;
+    -fx-background-color: #070d14;
+}
+
+.hero-overlay {
+    -fx-background-color: linear-gradient(to right, rgba(10, 17, 24, 0.88) 0%, rgba(10, 17, 24, 0.55) 55%, rgba(10, 17, 24, 0.18) 100%);
 }
 
 .hero-plane-body {
@@ -685,20 +689,20 @@
 }
 
 .hero-title {
-    -fx-font-size: 44px;
+    -fx-font-size: 42px;
     -fx-font-weight: 800;
-    -fx-text-fill: -sv-text;
+    -fx-text-fill: #ffffff;
 }
 
 .hero-title-gold {
-    -fx-font-size: 44px;
+    -fx-font-size: 42px;
     -fx-font-weight: 800;
-    -fx-text-fill: -sv-gold;
+    -fx-text-fill: -sv-gold-primary;
 }
 
 .hero-description {
     -fx-font-size: 14px;
-    -fx-text-fill: -sv-muted;
+    -fx-text-fill: #cbd5e1;
     -fx-line-spacing: 2px;
 }
 
@@ -714,14 +718,29 @@
     -fx-graphic-text-gap: 8px;
 }
 
+.home-feature-card {
+    -fx-background-color: -sv-surface;
+    -fx-background-radius: 12px;
+    -fx-border-color: -sv-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-padding: 12px 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 8, 0, 0, 2);
+}
+
+.home-feature-card:hover {
+    -fx-border-color: -sv-gold-primary;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.12), 12, 0, 0, 4);
+}
+
 .feature-icon-circle {
-    -fx-min-width: 46px;
-    -fx-min-height: 46px;
-    -fx-max-width: 46px;
-    -fx-max-height: 46px;
-    -fx-pref-width: 46px;
-    -fx-pref-height: 46px;
-    -fx-background-radius: 23px;
+    -fx-min-width: 44px;
+    -fx-min-height: 44px;
+    -fx-max-width: 44px;
+    -fx-max-height: 44px;
+    -fx-pref-width: 44px;
+    -fx-pref-height: 44px;
+    -fx-background-radius: 22px;
     -fx-background-color: -sv-icon-circle;
     -fx-alignment: center;
 }
@@ -731,7 +750,7 @@
 }
 
 .feature-title {
-    -fx-font-size: 14px;
+    -fx-font-size: 13px;
     -fx-font-weight: 700;
     -fx-text-fill: -sv-text;
 }

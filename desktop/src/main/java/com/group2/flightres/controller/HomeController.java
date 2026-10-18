@@ -47,6 +47,7 @@ public class HomeController implements WizardStepController {
         }
         if (searchFlightsButton != null) {
             searchFlightsButton.setOnAction(e -> handleSearch());
+            com.group2.flightres.util.Motion.attachHoverLift(searchFlightsButton);
         }
     }
 

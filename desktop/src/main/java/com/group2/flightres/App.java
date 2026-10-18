@@ -1,5 +1,6 @@
 package com.group2.flightres;
 
+import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.util.ThemeManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -25,7 +26,7 @@ public class App extends Application {
         Scene scene = new Scene(root, DEFAULT_WIDTH, DEFAULT_HEIGHT);
         ThemeManager.getInstance().registerScene(scene);
 
-        stage.setTitle("SkyVoyage Flight Reservations");
+        stage.setTitle(BrandConfig.WINDOW_TITLE);
         stage.setScene(scene);
         stage.setMinWidth(MIN_WIDTH);
         stage.setMinHeight(MIN_HEIGHT);

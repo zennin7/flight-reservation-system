@@ -1,5 +1,6 @@
 package com.group2.flightres.tools;
 
+import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.controller.MainShellController;
 import com.group2.flightres.controller.SeatMapController;
 import com.group2.flightres.model.BookingStep;
@@ -36,7 +37,12 @@ public class ScreenshotRunner extends Application {
     private static final Logger logger = LoggerFactory.getLogger(ScreenshotRunner.class);
     private static final int WIDTH = 1000;
     private static final int HEIGHT = 740;
-    private static final Path OUTPUT_DIR = Path.of("docs", "screenshots");
+    private static Path getOutputDir() {
+        if (new File("..", "docs/screenshots").exists()) {
+            return Path.of("..", "docs", "screenshots");
+        }
+        return Path.of("docs", "screenshots");
+    }
 
     private Stage primaryStage;
 
@@ -45,14 +51,14 @@ public class ScreenshotRunner extends Application {
         this.primaryStage = stage;
         SeatMapController.setPreselectForScreenshots(true);
         System.setProperty("skyvoyage.screenshots", "true");
-        stage.setTitle("SkyVoyage Screenshot Runner");
+        stage.setTitle(BrandConfig.WINDOW_TITLE + " - Screenshot Runner");
         stage.setWidth(WIDTH);
         stage.setHeight(HEIGHT);
 
-        File outDir = OUTPUT_DIR.toFile();
+        File outDir = getOutputDir().toFile();
         if (!outDir.exists()) {
             boolean created = outDir.mkdirs();
-            logger.info("Created output directory {}: {}", OUTPUT_DIR, created);
+            logger.info("Created output directory {}: {}", outDir, created);
         }
 
         Parameters params = getParameters();
@@ -143,7 +149,7 @@ public class ScreenshotRunner extends Application {
                 root.layout();
 
                 WritableImage snapshot = scene.snapshot(null);
-                File targetFile = OUTPUT_DIR.resolve(outputFileName).toFile();
+                File targetFile = getOutputDir().resolve(outputFileName).toFile();
                 try {
                     saveImageToPng(snapshot, targetFile);
                     logger.info("Successfully generated: {}", targetFile.getAbsolutePath());
