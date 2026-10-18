@@ -133,7 +133,11 @@ public class MainShellController {
                 helpAlert.showAndWait();
                 break;
             case "About":
+                loadOptionalScreen("/com/group2/flightres/fxml/about.fxml", false, "About");
+                break;
             case "Contact":
+                loadOptionalScreen("/com/group2/flightres/fxml/contact.fxml", false, "Contact");
+                break;
             case "Bookings":
             case "Reports":
             default:
@@ -176,6 +180,10 @@ public class MainShellController {
                         handleNavigation("Home");
                     }
                 });
+            } else if (controller instanceof AboutController aboutCtrl) {
+                aboutCtrl.init(bookingContext, () -> handleNavigation("Home"));
+            } else if (controller instanceof ContactController contactCtrl) {
+                contactCtrl.init(bookingContext, () -> handleNavigation("Home"));
             } else if (controller instanceof WizardStepController wizardController) {
                 wizardController.init(bookingContext, () -> goToStep(BookingStep.SEARCH));
             }

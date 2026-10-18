@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.group2.flightres.controller.ContactController"
+           alignment="CENTER"
+           styleClass="shell-root"
+           prefWidth="1000"
+           prefHeight="676">
+
+    <VBox alignment="TOP_CENTER" spacing="16" maxWidth="560" maxHeight="-Infinity" styleClass="card">
+        <padding>
+            <Insets top="28" right="32" bottom="28" left="32"/>
+        </padding>
+
+        <!-- Brand Title -->
+        <HBox alignment="CENTER" spacing="4">
+            <Label text="Sky" styleClass="logo-text-sky"/>
+            <Label text="Voyage" styleClass="logo-text-voyage"/>
+        </HBox>
+
+        <Label text="Contact Customer Support" styleClass="confirmation-title"/>
+        <Label text="Need assistance with your booking? Our dedicated customer care team is available around the clock."
+               styleClass="confirmation-subtitle"
+               textAlignment="CENTER"
+               wrapText="true"/>
+
+        <!-- Divider -->
+        <Region styleClass="checkout-divider" maxWidth="Infinity">
+            <VBox.margin>
+                <Insets top="4" bottom="4"/>
+            </VBox.margin>
+        </Region>
+
+        <!-- Contact Info Rows -->
+        <VBox spacing="10" maxWidth="Infinity">
+            <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+                <Label text="Support Email" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Label text="support@skyvoyage.com" styleClass="checkout-val-medium"/>
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+                <Label text="Phone (Toll-Free)" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Label text="0800 123 456" styleClass="checkout-val-medium"/>
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+                <Label text="Operating Hours" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Label text="24/7 Hours Available" styleClass="checkout-val-medium"/>
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+                <Label text="Physical Address" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Label text="Terminal 1, O.R. Tambo International Airport" styleClass="checkout-val-medium"/>
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
+                <Label text="Headquarters" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Label text="Johannesburg, South Africa" styleClass="checkout-val-medium"/>
+            </HBox>
+        </VBox>
+
+        <!-- Back Button -->
+        <HBox alignment="CENTER">
+            <VBox.margin>
+                <Insets top="12"/>
+            </VBox.margin>
+            <Button fx:id="backToHomeBtn"
+                    text="Back to Home"
+                    onAction="#handleBackToHome"
+                    styleClass="btn-gold"
+                    minWidth="180"/>
+        </HBox>
+    </VBox>
+
+</StackPane>
