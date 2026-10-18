@@ -82,6 +82,9 @@ public class SeatMapController implements WizardStepController {
 
     @FXML
     public void initialize() {
+        if (continueButton != null) {
+            com.group2.flightres.util.Motion.attachHoverLift(continueButton);
+        }
         if (bookingContext == null) {
             loadSeatMap();
         }
@@ -295,6 +298,7 @@ public class SeatMapController implements WizardStepController {
                 if (btn != null) {
                     btn.getStyleClass().remove("seat-available");
                     btn.getStyleClass().add("seat-selected");
+                    com.group2.flightres.util.Motion.pop(btn);
                 }
             }
             updateSelectionSummary();
