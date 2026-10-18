@@ -5,6 +5,8 @@ import com.group2.flightres.dao.SeatDao;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -14,8 +16,11 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class SeatDaoImpl implements SeatDao {
+
+    private static final Logger logger = LoggerFactory.getLogger(SeatDaoImpl.class);
 
     private static final String SEAT_MAP_QUERY = """
         SELECT flight_seat_id, flight_id, seat_row, seat_col, seat_class,
@@ -42,13 +47,42 @@ public class SeatDaoImpl implements SeatDao {
     private static final String BOOK_SEAT_QUERY = """
         UPDATE flight_seats
         SET status = 'BOOKED', held_until = NULL
-        WHERE flight_seat_id = ? AND status = 'HELD'
+        WHERE flight_seat_id = ? AND (status = 'HELD' OR status = 'AVAILABLE')
+        """;
+
+    private static final String RELEASE_EXPIRED_HOLDS_QUERY = """
+        UPDATE flight_seats
+        SET status = 'AVAILABLE', held_until = NULL
+        WHERE status = 'HELD' AND held_until < NOW()
+        """;
+
+    private static final String FIND_SEAT_BY_ID_QUERY = """
+        SELECT flight_seat_id, flight_id, seat_row, seat_col, seat_class,
+               display_row, display_col, status, calculated_price
+        FROM seat_pricing_view
+        WHERE flight_seat_id = ?
         """;
 
     @Override
-    public List<FlightSeat> getSeatMapForFlight(long flightId) {
-        List<FlightSeat> seats = new ArrayList<>();
+    public int releaseExpiredHolds() {
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(RELEASE_EXPIRED_HOLDS_QUERY)) {
+            int updated = stmt.executeUpdate();
+            if (updated > 0) {
+                logger.info("Released {} expired seat holds back to AVAILABLE", updated);
+            }
+            return updated;
+        } catch (SQLException e) {
+            logger.warn("Could not release expired holds: {}", e.getMessage());
+            return 0;
+        }
+    }
 
+    @Override
+    public List<FlightSeat> getSeatMapForFlight(long flightId) {
+        releaseExpiredHolds();
+
+        List<FlightSeat> seats = new ArrayList<>();
         try (Connection conn = DatabaseConfig.getDataSource().getConnection();
              PreparedStatement stmt = conn.prepareStatement(SEAT_MAP_QUERY)) {
 
@@ -56,20 +90,11 @@ public class SeatDaoImpl implements SeatDao {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    FlightSeat seat = new FlightSeat();
-                    seat.setFlightSeatId(rs.getLong("flight_seat_id"));
-                    seat.setFlightId(rs.getLong("flight_id"));
-                    seat.setSeatRow(rs.getInt("seat_row"));
-                    seat.setSeatCol(rs.getString("seat_col").charAt(0));
-                    seat.setSeatClass(SeatClass.valueOf(rs.getString("seat_class")));
-                    seat.setDisplayRow(rs.getInt("display_row"));
-                    seat.setDisplayCol(rs.getInt("display_col"));
-                    seat.setStatus(SeatStatus.valueOf(rs.getString("status")));
-                    seat.setCalculatedPrice(rs.getBigDecimal("calculated_price"));
-                    seats.add(seat);
+                    seats.add(mapSeat(rs));
                 }
             }
         } catch (SQLException e) {
+            logger.error("Failed to load seat map for flight {}: {}", flightId, e.getMessage(), e);
             throw new RuntimeException("Failed to load seat map for flight " + flightId, e);
         }
 
@@ -78,6 +103,8 @@ public class SeatDaoImpl implements SeatDao {
 
     @Override
     public boolean holdSeat(long flightSeatId) {
+        releaseExpiredHolds();
+
         try (Connection conn = DatabaseConfig.getDataSource().getConnection();
              PreparedStatement stmt = conn.prepareStatement(HOLD_SEAT_QUERY)) {
 
@@ -85,8 +112,10 @@ public class SeatDaoImpl implements SeatDao {
             stmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now().plusMinutes(5)));
             stmt.setLong(2, flightSeatId);
 
-            return stmt.executeUpdate() == 1;
+            int updated = stmt.executeUpdate();
+            return updated == 1;
         } catch (SQLException e) {
+            logger.error("Failed to hold seat {}: {}", flightSeatId, e.getMessage(), e);
             throw new RuntimeException("Failed to hold seat " + flightSeatId, e);
         }
     }
@@ -99,6 +128,7 @@ public class SeatDaoImpl implements SeatDao {
             stmt.setLong(1, flightSeatId);
             return stmt.executeUpdate() == 1;
         } catch (SQLException e) {
+            logger.error("Failed to release seat {}: {}", flightSeatId, e.getMessage(), e);
             throw new RuntimeException("Failed to release seat " + flightSeatId, e);
         }
     }
@@ -111,7 +141,39 @@ public class SeatDaoImpl implements SeatDao {
             stmt.setLong(1, flightSeatId);
             return stmt.executeUpdate() == 1;
         } catch (SQLException e) {
+            logger.error("Failed to book seat {}: {}", flightSeatId, e.getMessage(), e);
             throw new RuntimeException("Failed to book seat " + flightSeatId, e);
         }
+    }
+
+    @Override
+    public Optional<FlightSeat> findSeatById(long flightSeatId) {
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(FIND_SEAT_BY_ID_QUERY)) {
+
+            stmt.setLong(1, flightSeatId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapSeat(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to find seat by ID {}: {}", flightSeatId, e.getMessage(), e);
+        }
+        return Optional.empty();
+    }
+
+    private FlightSeat mapSeat(ResultSet rs) throws SQLException {
+        FlightSeat seat = new FlightSeat();
+        seat.setFlightSeatId(rs.getLong("flight_seat_id"));
+        seat.setFlightId(rs.getLong("flight_id"));
+        seat.setSeatRow(rs.getInt("seat_row"));
+        seat.setSeatCol(rs.getString("seat_col").charAt(0));
+        seat.setSeatClass(SeatClass.valueOf(rs.getString("seat_class")));
+        seat.setDisplayRow(rs.getInt("display_row"));
+        seat.setDisplayCol(rs.getInt("display_col"));
+        seat.setStatus(SeatStatus.valueOf(rs.getString("status")));
+        seat.setCalculatedPrice(rs.getBigDecimal("calculated_price"));
+        return seat;
     }
 }
