@@ -73,47 +73,42 @@ public class CheckoutController implements WizardStepController {
         if (bookingContext == null) {
             return;
         }
+        populateFlightAndPassengerLabels();
+        populatePriceSummary();
+        populateInputFields();
+    }
 
+    private void populateFlightAndPassengerLabels() {
         if (flightLabel != null) {
             flightLabel.setText(bookingContext.getFlightRouteDisplay());
         }
         if (departsLabel != null) {
             departsLabel.setText(bookingContext.getDepartureDisplay());
         }
-
-        String passenger = bookingContext.getPassengerName();
-        if ((passenger == null || passenger.isBlank()) && bookingContext.getCurrentUser() != null) {
-            passenger = bookingContext.getCurrentUser().getFullName();
-        }
+        String passenger = resolvePassengerName();
         if (passengerLabel != null) {
-            passengerLabel.setText(passenger != null && !passenger.isBlank() ? passenger : "Guest");
+            passengerLabel.setText(!passenger.isBlank() ? passenger : "Guest");
         }
-
         if (seatLabel != null) {
             seatLabel.setText(bookingContext.getSeatDisplay());
         }
+    }
 
-        BigDecimal base = bookingContext.getBaseFare();
-        if (base == null) base = BigDecimal.ZERO;
+    private void populatePriceSummary() {
+        BigDecimal base = bookingContext.getBaseFare() != null ? bookingContext.getBaseFare() : BigDecimal.ZERO;
         if (bookingContext.getClassMultiplier() != null && bookingContext.getClassMultiplier().compareTo(BigDecimal.ONE) > 0) {
             base = base.multiply(bookingContext.getClassMultiplier());
         }
+        if (baseFareLabel != null) baseFareLabel.setText(formatPrice(base));
+        if (demandPricingLabel != null) demandPricingLabel.setText(formatPrice(bookingContext.getDemandPricing()));
+        if (taxesFeesLabel != null) taxesFeesLabel.setText(formatPrice(bookingContext.getTaxesAndFees()));
+        if (totalLabel != null) totalLabel.setText(formatPrice(bookingContext.getTotalPrice()));
+    }
 
-        if (baseFareLabel != null) {
-            baseFareLabel.setText(formatPrice(base));
-        }
-        if (demandPricingLabel != null) {
-            demandPricingLabel.setText(formatPrice(bookingContext.getDemandPricing()));
-        }
-        if (taxesFeesLabel != null) {
-            taxesFeesLabel.setText(formatPrice(bookingContext.getTaxesAndFees()));
-        }
-        if (totalLabel != null) {
-            totalLabel.setText(formatPrice(bookingContext.getTotalPrice()));
-        }
-
+    private void populateInputFields() {
+        String passenger = resolvePassengerName();
         if (fullNameField != null) {
-            if (passenger != null && !passenger.isBlank()) {
+            if (!passenger.isBlank()) {
                 fullNameField.setText(passenger);
             }
             fullNameField.textProperty().addListener((obs, oldV, newV) -> {
@@ -122,20 +117,31 @@ public class CheckoutController implements WizardStepController {
                 }
             });
         }
-
         if (emailField != null) {
-            String email = bookingContext.getPassengerEmail();
-            if ((email == null || email.isBlank()) && bookingContext.getCurrentUser() != null) {
-                email = bookingContext.getCurrentUser().getEmail();
-            }
-            if (email != null && !email.isBlank()) {
+            String email = resolvePassengerEmail();
+            if (!email.isBlank()) {
                 emailField.setText(email);
             }
         }
-
         if (passportField != null && bookingContext.getPassportNumber() != null) {
             passportField.setText(bookingContext.getPassportNumber());
         }
+    }
+
+    private String resolvePassengerName() {
+        String name = bookingContext.getPassengerName();
+        if ((name == null || name.isBlank()) && bookingContext.getCurrentUser() != null) {
+            name = bookingContext.getCurrentUser().getFullName();
+        }
+        return name != null ? name : "";
+    }
+
+    private String resolvePassengerEmail() {
+        String email = bookingContext.getPassengerEmail();
+        if ((email == null || email.isBlank()) && bookingContext.getCurrentUser() != null) {
+            email = bookingContext.getCurrentUser().getEmail();
+        }
+        return email != null ? email : "";
     }
 
     private String formatPrice(BigDecimal price) {
@@ -152,30 +158,7 @@ public class CheckoutController implements WizardStepController {
         String passport = (passportField != null && passportField.getText() != null)
                 ? passportField.getText().trim() : "";
 
-        if (fullName.isEmpty()) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, "Please enter the passenger's full name.");
-            alert.setHeaderText("Missing Information");
-            alert.showAndWait();
-            return;
-        }
-
-        if (email.isEmpty()) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, "Please enter a valid email address for confirmation.");
-            alert.setHeaderText("Missing Information");
-            alert.showAndWait();
-            return;
-        }
-
-        try {
-            ValidationUtil.validatePassengerName(fullName);
-            ValidationUtil.validateEmail(email);
-            if (!passport.isEmpty()) {
-                ValidationUtil.validatePassportNumber(passport);
-            }
-        } catch (ValidationException ve) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, ve.getMessage());
-            alert.setHeaderText("Validation Error");
-            alert.showAndWait();
+        if (!validateInputs(fullName, email, passport)) {
             return;
         }
 
@@ -185,30 +168,25 @@ public class CheckoutController implements WizardStepController {
             bookingContext.setPassportNumber(passport);
         }
 
+        if (bookingContext == null || bookingContext.getSelectedSeats() == null || bookingContext.getSelectedSeats().isEmpty()) {
+            showAlert("Missing Seat Selection", "No seats selected. Please select a seat first.");
+            return;
+        }
+
         try {
-            if (bookingContext != null && bookingContext.getSelectedSeats() != null && !bookingContext.getSelectedSeats().isEmpty()) {
-                BookingRecord record = bookingService.createBooking(bookingContext);
-                bookingContext.setBookingReference(record.getBookingReference());
-                logger.info("Successfully confirmed booking '{}' in database.", record.getBookingReference());
-            } else {
-                Alert alert = new Alert(Alert.AlertType.WARNING, "No seats selected. Please select a seat first.");
-                alert.setHeaderText("Missing Seat Selection");
-                alert.showAndWait();
-                return;
-            }
+            BookingRecord record = bookingService.createBooking(bookingContext);
+            bookingContext.setBookingReference(record.getBookingReference());
+            logger.info("Successfully confirmed booking '{}' in database.", record.getBookingReference());
         } catch (SeatUnavailableException sue) {
             logger.warn("Seat hold expired or taken: {}", sue.getMessage());
-            Alert alert = new Alert(Alert.AlertType.WARNING, sue.getMessage());
-            alert.setHeaderText("Seat Unavailable");
-            alert.showAndWait();
+            showAlert("Seat Unavailable", sue.getMessage());
             if (onBack != null) {
                 onBack.run();
             }
             return;
         } catch (Exception ex) {
             logger.warn("Database booking transaction failed: {}", ex.getMessage());
-            // Offline / DB unavailable fallback
-            if (bookingContext != null && (bookingContext.getBookingReference() == null || bookingContext.getBookingReference().isBlank())) {
+            if (bookingContext.getBookingReference() == null || bookingContext.getBookingReference().isBlank()) {
                 bookingContext.generateBookingReference();
             }
         }
@@ -219,6 +197,34 @@ public class CheckoutController implements WizardStepController {
         if (onNext != null) {
             onNext.run();
         }
+    }
+
+    private boolean validateInputs(String fullName, String email, String passport) {
+        if (fullName.isEmpty()) {
+            showAlert("Missing Information", "Please enter the passenger's full name.");
+            return false;
+        }
+        if (email.isEmpty()) {
+            showAlert("Missing Information", "Please enter a valid email address for confirmation.");
+            return false;
+        }
+        try {
+            ValidationUtil.validatePassengerName(fullName);
+            ValidationUtil.validateEmail(email);
+            if (!passport.isEmpty()) {
+                ValidationUtil.validatePassportNumber(passport);
+            }
+            return true;
+        } catch (ValidationException ve) {
+            showAlert("Validation Error", ve.getMessage());
+            return false;
+        }
+    }
+
+    private void showAlert(String header, String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING, message);
+        alert.setHeaderText(header);
+        alert.showAndWait();
     }
 
     @FXML
