@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title th:text="${appName + ' – Sign In'}">SkyVoyage – Sign In</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ================================================================= -->
+  <!-- Navigation Bar (Shared Component)                                 -->
+  <!-- ================================================================= -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="/" class="brand-logo">
+        <svg class="brand-icon" viewBox="0 0 40 32">
+          <path d="M3 21 L35 4 L38 7 L26 16 L28 28 L24 29 L18 19 L9 24 L6 22 Z"/>
+        </svg>
+        <div>
+          <div class="brand-name">
+            <span class="logo-sky" th:text="${logoPrefix}">Sky</span><span class="logo-voyage" th:text="${logoSuffix}">Voyage</span>
+          </div>
+          <div class="brand-tagline">Flight Reservations</div>
+        </div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link">Home</a></li>
+        <li><a href="/flights" class="nav-link">Flights</a></li>
+        <li><a href="/about" class="nav-link">About</a></li>
+        <li><a href="/contact" class="nav-link">Contact</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="/" class="btn btn-secondary btn-sm">&larr; Back to Home</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- =============================================================== -->
+    <!-- Split Photographic Layout (Conforms to ELEVATE_SPEC Screen 02)  -->
+    <!-- =============================================================== -->
+    <div class="login-split-container">
+      <!-- Left Column: Scenic South Africa Photo Split -->
+      <div class="login-side-photo">
+        <div class="login-side-overlay"></div>
+        <div class="login-side-caption">
+          <div class="hero-badge" style="background: rgba(197, 160, 40, 0.25); border-color: rgba(197, 160, 40, 0.4); margin-bottom: 12px;">
+            Seamless Travel
+          </div>
+          <h2>Elevate your travel experience.</h2>
+          <p>
+            Sign in to access rapid booking holds, view reservation history, and unlock gold-tier domestic air privileges.
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Column: Authentication Card Form -->
+      <div class="login-side-form-col">
+        <div class="auth-card">
+          <h2>Welcome back</h2>
+          <p class="auth-lead">Enter your credentials to manage flights and account settings.</p>
+
+          <!-- Error Alert if Authentication Fails -->
+          <div th:if="${loginError != null}" class="alert-error" th:text="${loginError}">
+            Incorrect username or password.
+          </div>
+
+          <form action="/login" method="POST">
+            <!-- CSRF Token (Mandatory) -->
+            <input type="hidden" name="csrf_token" th:value="${csrf_token}">
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="uName">Username or Email</label>
+              <input type="text" id="uName" name="username" class="form-input"
+                     placeholder="e.g. admin or testuser" required
+                     th:value="${username != null ? username : ''}">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label for="uPass" style="margin-bottom: 0;">Password</label>
+                <a href="#" style="font-size: 11px; color: var(--sv-gold-primary); text-decoration: none;">Forgot password?</a>
+              </div>
+              <input type="password" id="uPass" name="password" class="form-input"
+                     placeholder="Enter your password" required>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px; font-size: 13px; color: var(--sv-text-secondary);">
+              <input type="checkbox" id="rememberMe" style="accent-color: var(--sv-gold-primary);">
+              <label for="rememberMe" style="font-size: 13px; text-transform: none; letter-spacing: 0; color: inherit; cursor: pointer;">
+                Remember me on this device
+              </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="height: 48px; font-size: 15px;">
+              Log In &rarr;
+            </button>
+          </form>
+
+          <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--sv-border); text-align: center; font-size: 12px; color: var(--sv-muted);">
+            Demo Admin: <code>admin</code> / <code>admin123</code> &bull; Standard: <code>david</code> / <code>password123</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- Footer                                                            -->
+  <!-- ================================================================= -->
+  <footer class="site-footer">
+    <div class="footer-bottom" style="border-top: none; padding-top: 0;">
+      <div>&copy; 2026 <span th:text="${appName}">SkyVoyage</span> Ltd. All rights reserved.</div>
+      <div>Privacy Policy &middot; Security Guidelines</div>
+    </div>
+  </footer>
+
+</body>
+</html>
