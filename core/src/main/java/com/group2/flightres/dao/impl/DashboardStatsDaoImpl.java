@@ -85,91 +85,99 @@ public class DashboardStatsDaoImpl implements DashboardStatsDao {
         DashboardStats stats = new DashboardStats();
 
         try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
-
-            // 1. Total Bookings and Revenue
-            try (PreparedStatement stmt = conn.prepareStatement(TOTAL_BOOKINGS_REVENUE_QUERY);
-                 ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    stats.setTotalBookings(rs.getLong("total_bookings"));
-                    stats.setTotalRevenue(rs.getBigDecimal("total_revenue"));
-                }
-            }
-
-            // 2. Total Flights
-            try (PreparedStatement stmt = conn.prepareStatement(TOTAL_FLIGHTS_QUERY);
-                 ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    stats.setTotalFlights(rs.getLong("total_flights"));
-                }
-            }
-
-            // 3. Seats Sold Percentage
-            try (PreparedStatement stmt = conn.prepareStatement(SEATS_SOLD_PCT_QUERY);
-                 ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    BigDecimal pct = rs.getBigDecimal("seats_sold_pct");
-                    stats.setSeatsSoldPercentage(pct != null ? pct.doubleValue() : 0.0);
-                }
-            }
-
-            // 4. Bookings per day (last 7 days continuous series)
-            Map<LocalDate, Long> dayCounts = new HashMap<>();
-            try (PreparedStatement stmt = conn.prepareStatement(BOOKINGS_PER_DAY_QUERY);
-                 ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    Date d = rs.getDate("b_date");
-                    if (d != null) {
-                        dayCounts.put(d.toLocalDate(), rs.getLong("b_count"));
-                    }
-                }
-            }
-
-            LocalDate today = LocalDate.now();
-            List<DailyBookingStat> dailyList = new ArrayList<>();
-            for (int i = 6; i >= 0; i--) {
-                LocalDate date = today.minusDays(i);
-                long count = dayCounts.getOrDefault(date, 0L);
-                String label = date.format(DAY_LABEL_FORMAT);
-                dailyList.add(new DailyBookingStat(date, label, count));
-            }
-            stats.setBookingsPerDay(dailyList);
-
-            // 5. Bookings by seat class
-            Map<SeatClass, Long> classMap = new LinkedHashMap<>();
-            classMap.put(SeatClass.FIRST, 0L);
-            classMap.put(SeatClass.ECONOMY, 0L);
-            try (PreparedStatement stmt = conn.prepareStatement(BOOKINGS_BY_CLASS_QUERY);
-                 ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    String clsStr = rs.getString("seat_class");
-                    if (clsStr != null) {
-                        SeatClass sc = SeatClass.valueOf(clsStr);
-                        classMap.put(sc, rs.getLong("class_count"));
-                    }
-                }
-            }
-            stats.setBookingsByClass(classMap);
-
-            // 6. Top destinations
-            List<DestinationStat> topDests = new ArrayList<>();
-            try (PreparedStatement stmt = conn.prepareStatement(TOP_DESTINATIONS_QUERY);
-                 ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    String city = rs.getString("city");
-                    String iata = rs.getString("iata_code");
-                    long count = rs.getLong("dest_count");
-                    topDests.add(new DestinationStat(city, iata, count));
-                }
-            }
-            stats.setTopDestinations(topDests);
+            populateKpis(conn, stats);
+            stats.setBookingsPerDay(queryDailyStats(conn));
+            stats.setBookingsByClass(queryClassStats(conn));
+            stats.setTopDestinations(queryTopDestinations(conn));
 
             logger.info("Loaded dashboard stats: totalBookings={}, revenue={}, flights={}, seatsSold={}%",
                     stats.getTotalBookings(), stats.getTotalRevenue(), stats.getTotalFlights(), stats.getSeatsSoldPercentage());
-
         } catch (SQLException e) {
             logger.error("Failed to query dashboard statistics from database: {}", e.getMessage(), e);
         }
 
         return stats;
+    }
+
+    private void populateKpis(Connection conn, DashboardStats stats) throws SQLException {
+        // 1. Total Bookings and Revenue
+        try (PreparedStatement stmt = conn.prepareStatement(TOTAL_BOOKINGS_REVENUE_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                stats.setTotalBookings(rs.getLong("total_bookings"));
+                stats.setTotalRevenue(rs.getBigDecimal("total_revenue"));
+            }
+        }
+
+        // 2. Total Flights
+        try (PreparedStatement stmt = conn.prepareStatement(TOTAL_FLIGHTS_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                stats.setTotalFlights(rs.getLong("total_flights"));
+            }
+        }
+
+        // 3. Seats Sold Percentage
+        try (PreparedStatement stmt = conn.prepareStatement(SEATS_SOLD_PCT_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                BigDecimal pct = rs.getBigDecimal("seats_sold_pct");
+                stats.setSeatsSoldPercentage(pct != null ? pct.doubleValue() : 0.0);
+            }
+        }
+    }
+
+    private List<DailyBookingStat> queryDailyStats(Connection conn) throws SQLException {
+        Map<LocalDate, Long> dayCounts = new HashMap<>();
+        try (PreparedStatement stmt = conn.prepareStatement(BOOKINGS_PER_DAY_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Date d = rs.getDate("b_date");
+                if (d != null) {
+                    dayCounts.put(d.toLocalDate(), rs.getLong("b_count"));
+                }
+            }
+        }
+
+        LocalDate today = LocalDate.now();
+        List<DailyBookingStat> dailyList = new ArrayList<>();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            long count = dayCounts.getOrDefault(date, 0L);
+            String label = date.format(DAY_LABEL_FORMAT);
+            dailyList.add(new DailyBookingStat(date, label, count));
+        }
+        return dailyList;
+    }
+
+    private Map<SeatClass, Long> queryClassStats(Connection conn) throws SQLException {
+        Map<SeatClass, Long> classMap = new LinkedHashMap<>();
+        classMap.put(SeatClass.FIRST, 0L);
+        classMap.put(SeatClass.ECONOMY, 0L);
+        try (PreparedStatement stmt = conn.prepareStatement(BOOKINGS_BY_CLASS_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String clsStr = rs.getString("seat_class");
+                if (clsStr != null) {
+                    SeatClass sc = SeatClass.valueOf(clsStr);
+                    classMap.put(sc, rs.getLong("class_count"));
+                }
+            }
+        }
+        return classMap;
+    }
+
+    private List<DestinationStat> queryTopDestinations(Connection conn) throws SQLException {
+        List<DestinationStat> topDests = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(TOP_DESTINATIONS_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String city = rs.getString("city");
+                String iata = rs.getString("iata_code");
+                long count = rs.getLong("dest_count");
+                topDests.add(new DestinationStat(city, iata, count));
+            }
+        }
+        return topDests;
     }
 }
