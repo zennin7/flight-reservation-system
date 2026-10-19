@@ -204,6 +204,7 @@ public class ScreenshotRunner extends Application {
                 if (controller.getNavBar() != null) {
                     controller.getNavBar().setAdminMode(true);
                 }
+                com.group2.flightres.controller.AdminDashboardController.setSampleStatsForTesting(createSampleDashboardStats());
                 controller.handleNavigation("Dashboard");
                 break;
             case "shell":
@@ -238,6 +239,23 @@ public class ScreenshotRunner extends Application {
         ctx.setPassengerName("David M.");
         ctx.setPassengerEmail("david@example.com");
         ctx.setBookingReference("K7P2QX");
+    }
+
+    private com.group2.flightres.model.DashboardStats createSampleDashboardStats() {
+        com.group2.flightres.model.DashboardStats stats = new com.group2.flightres.model.DashboardStats();
+        stats.setTotalFlights(24);
+        stats.setTotalBookings(312);
+        stats.setTotalRevenue(new java.math.BigDecimal("458200"));
+        stats.setSeatsSoldPercentage(86.0);
+        java.util.List<com.group2.flightres.model.DashboardStats.DailyBookingStat> daily = new java.util.ArrayList<>();
+        daily.add(new com.group2.flightres.model.DashboardStats.DailyBookingStat(null, "May", 80));
+        daily.add(new com.group2.flightres.model.DashboardStats.DailyBookingStat(null, "Jun", 110));
+        daily.add(new com.group2.flightres.model.DashboardStats.DailyBookingStat(null, "Jul", 140));
+        daily.add(new com.group2.flightres.model.DashboardStats.DailyBookingStat(null, "Aug", 115));
+        daily.add(new com.group2.flightres.model.DashboardStats.DailyBookingStat(null, "Sep", 175));
+        daily.add(new com.group2.flightres.model.DashboardStats.DailyBookingStat(null, "Oct", 205));
+        stats.setBookingsPerDay(daily);
+        return stats;
     }
 
     private static void saveImageToPng(WritableImage image, File targetFile) throws IOException {

@@ -1209,6 +1209,11 @@
     -fx-alignment: center;
 }
 
+.stat-card:hover {
+    -fx-border-color: -sv-gold-primary;
+    -fx-effect: -sv-card-shadow-elevated;
+}
+
 .stat-card-title {
     -fx-font-size: 12px;
     -fx-text-fill: -sv-muted;
@@ -1228,6 +1233,11 @@
     -fx-border-radius: 12px;
     -fx-effect: -sv-card-shadow;
     -fx-padding: 20px;
+}
+
+.chart-card:hover {
+    -fx-border-color: -sv-gold-primary;
+    -fx-effect: -sv-card-shadow-elevated;
 }
 
 .chart-card-title {

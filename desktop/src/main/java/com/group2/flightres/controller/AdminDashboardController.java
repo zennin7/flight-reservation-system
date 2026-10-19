@@ -9,6 +9,7 @@ import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,18 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private NumberAxis yAxis;
 
+    @FXML private VBox cardFlights;
+    @FXML private VBox cardBookings;
+    @FXML private VBox cardRevenue;
+    @FXML private VBox cardSeats;
+    @FXML private VBox cardChart;
+
+    private static DashboardStats sampleStatsForTesting;
+
+    public static void setSampleStatsForTesting(DashboardStats stats) {
+        sampleStatsForTesting = stats;
+    }
+
     private final DashboardStatsService statsService;
 
     public AdminDashboardController() {
@@ -57,28 +70,34 @@ public class AdminDashboardController implements Initializable {
             bookingTrendsChart.setLegendVisible(false);
         }
 
-        DashboardStats stats = null;
-        try {
-            stats = statsService.getStats();
-        } catch (Exception e) {
-            logger.warn("Could not query platform statistics from database: {}", e.getMessage());
+        com.group2.flightres.util.Motion.attachHoverLift(cardFlights);
+        com.group2.flightres.util.Motion.attachHoverLift(cardBookings);
+        com.group2.flightres.util.Motion.attachHoverLift(cardRevenue);
+        com.group2.flightres.util.Motion.attachHoverLift(cardSeats);
+        com.group2.flightres.util.Motion.attachHoverLift(cardChart);
+
+        DashboardStats stats = sampleStatsForTesting;
+        if (stats == null) {
+            try {
+                stats = statsService.getStats();
+            } catch (Exception e) {
+                logger.warn("Could not query platform statistics from database: {}", e.getMessage());
+            }
         }
 
         populateStats(stats);
     }
 
     private void populateStats(DashboardStats stats) {
-        boolean isScreenshotMode = Boolean.getBoolean("skyvoyage.screenshots");
-
-        if (stats != null && (!isScreenshotMode || stats.getTotalBookings() > 0)) {
-            if (totalFlightsLabel != null) {
-                totalFlightsLabel.setText(String.valueOf(stats.getTotalFlights()));
-            }
-            if (totalBookingsLabel != null) {
-                totalBookingsLabel.setText(String.valueOf(stats.getTotalBookings()));
-            }
-            if (revenueLabel != null) {
-                revenueLabel.setText(stats.getRevenueFormatted());
+        if (stats != null) {
+            if (com.group2.flightres.util.Motion.isEnabled()) {
+                com.group2.flightres.util.Motion.countUp(totalFlightsLabel, stats.getTotalFlights(), "", "");
+                com.group2.flightres.util.Motion.countUp(totalBookingsLabel, stats.getTotalBookings(), "", "");
+                com.group2.flightres.util.Motion.countUp(revenueLabel, stats.getTotalRevenue() != null ? stats.getTotalRevenue().longValue() : 0, "R ", "");
+            } else {
+                if (totalFlightsLabel != null) totalFlightsLabel.setText(String.valueOf(stats.getTotalFlights()));
+                if (totalBookingsLabel != null) totalBookingsLabel.setText(String.valueOf(stats.getTotalBookings()));
+                if (revenueLabel != null) revenueLabel.setText(stats.getRevenueFormatted());
             }
             if (seatsSoldLabel != null) {
                 seatsSoldLabel.setText(stats.getSeatsSoldPercentageFormatted());
@@ -93,25 +112,6 @@ public class AdminDashboardController implements Initializable {
                         series.getData().add(new XYChart.Data<>(day.getDayLabel(), day.getBookingCount()));
                     }
                 }
-                bookingTrendsChart.getData().add(series);
-            }
-        } else if (isScreenshotMode) {
-            // Reference values for visual screenshot tests matching design PNG
-            if (totalFlightsLabel != null) totalFlightsLabel.setText("24");
-            if (totalBookingsLabel != null) totalBookingsLabel.setText("312");
-            if (revenueLabel != null) revenueLabel.setText("R 458,200");
-            if (seatsSoldLabel != null) seatsSoldLabel.setText("86%");
-
-            if (bookingTrendsChart != null) {
-                bookingTrendsChart.getData().clear();
-                XYChart.Series<String, Number> series = new XYChart.Series<>();
-                series.setName("Bookings");
-                series.getData().add(new XYChart.Data<>("May", 80));
-                series.getData().add(new XYChart.Data<>("Jun", 110));
-                series.getData().add(new XYChart.Data<>("Jul", 140));
-                series.getData().add(new XYChart.Data<>("Aug", 115));
-                series.getData().add(new XYChart.Data<>("Sep", 175));
-                series.getData().add(new XYChart.Data<>("Oct", 205));
                 bookingTrendsChart.getData().add(series);
             }
         } else {

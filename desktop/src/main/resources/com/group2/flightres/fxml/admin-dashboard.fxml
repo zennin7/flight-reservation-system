@@ -19,29 +19,29 @@
 
     <!-- Stat Cards Row -->
     <HBox spacing="16" styleClass="admin-stat-row">
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
+        <VBox fx:id="cardFlights" styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
             <Label text="Total Flights" styleClass="stat-card-title" />
-            <Label fx:id="totalFlightsLabel" text="24" styleClass="stat-card-value" />
+            <Label fx:id="totalFlightsLabel" text="" styleClass="stat-card-value" />
         </VBox>
 
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
+        <VBox fx:id="cardBookings" styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
             <Label text="Total Bookings" styleClass="stat-card-title" />
-            <Label fx:id="totalBookingsLabel" text="312" styleClass="stat-card-value" />
+            <Label fx:id="totalBookingsLabel" text="" styleClass="stat-card-value" />
         </VBox>
 
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
+        <VBox fx:id="cardRevenue" styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
             <Label text="Revenue (This Month)" styleClass="stat-card-title" />
-            <Label fx:id="revenueLabel" text="R 458,200" styleClass="stat-card-value" />
+            <Label fx:id="revenueLabel" text="" styleClass="stat-card-value" />
         </VBox>
 
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
+        <VBox fx:id="cardSeats" styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6">
             <Label text="Seats Sold" styleClass="stat-card-title" />
-            <Label fx:id="seatsSoldLabel" text="86%" styleClass="stat-card-value" />
+            <Label fx:id="seatsSoldLabel" text="" styleClass="stat-card-value" />
         </VBox>
     </HBox>
 
     <!-- Booking Trends Card -->
-    <VBox styleClass="chart-card" VBox.vgrow="ALWAYS" spacing="0">
+    <VBox fx:id="cardChart" styleClass="chart-card" VBox.vgrow="ALWAYS" spacing="0">
         <Label text="Booking Trends" styleClass="chart-card-title" />
 
         <BarChart fx:id="bookingTrendsChart" styleClass="admin-bar-chart" VBox.vgrow="ALWAYS"
