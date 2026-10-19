@@ -46,6 +46,7 @@ public class AdminDashboardController implements Initializable {
     @FXML private VBox cardRevenue;
     @FXML private VBox cardSeats;
     @FXML private VBox cardChart;
+    @FXML private javafx.scene.control.Button refreshButton;
 
     private static DashboardStats sampleStatsForTesting;
 
@@ -75,7 +76,20 @@ public class AdminDashboardController implements Initializable {
         com.group2.flightres.util.Motion.attachHoverLift(cardRevenue);
         com.group2.flightres.util.Motion.attachHoverLift(cardSeats);
         com.group2.flightres.util.Motion.attachHoverLift(cardChart);
+        if (refreshButton != null) {
+            com.group2.flightres.util.Motion.attachHoverLift(refreshButton);
+        }
 
+        refresh();
+    }
+
+    @FXML
+    private void handleRefresh() {
+        logger.info("Admin dashboard refresh triggered by user.");
+        refresh();
+    }
+
+    public void refresh() {
         DashboardStats stats = sampleStatsForTesting;
         if (stats == null) {
             try {
@@ -84,7 +98,6 @@ public class AdminDashboardController implements Initializable {
                 logger.warn("Could not query platform statistics from database: {}", e.getMessage());
             }
         }
-
         populateStats(stats);
     }
 

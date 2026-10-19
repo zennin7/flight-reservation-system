@@ -14,8 +14,12 @@
       styleClass="admin-dashboard-root"
       spacing="18">
 
-    <!-- Screen Title -->
-    <Label text="Admin Dashboard" styleClass="admin-dashboard-title" />
+    <!-- Screen Header Row with Title and Refresh Button -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label text="Admin Dashboard" styleClass="admin-dashboard-title" />
+        <javafx.scene.layout.Region HBox.hgrow="ALWAYS" />
+        <javafx.scene.control.Button fx:id="refreshButton" text="↻ Refresh" onAction="#handleRefresh" styleClass="btn-grey" />
+    </HBox>
 
     <!-- Stat Cards Row -->
     <HBox spacing="16" styleClass="admin-stat-row">

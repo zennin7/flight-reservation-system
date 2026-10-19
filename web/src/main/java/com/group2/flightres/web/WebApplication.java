@@ -129,7 +129,15 @@ public class WebApplication {
         // Book / Confirm Booking
         app.post("/book", this::handleBook);
 
-        // Booking Confirmation
+        // Booking Confirmation & Lookup
+        app.get("/confirmation", ctx -> {
+            String ref = ctx.queryParam("reference");
+            if (ref != null && !ref.isBlank()) {
+                ctx.redirect("/confirmation/" + ref.trim().toUpperCase(java.util.Locale.ROOT));
+            } else {
+                ctx.redirect("/");
+            }
+        });
         app.get("/confirmation/{reference}", this::handleConfirmation);
 
         // Authentication
