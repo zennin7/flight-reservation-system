@@ -108,14 +108,14 @@ public class SeatMapController implements WizardStepController {
             if (seats == null || seats.isEmpty()) {
                 logger.warn("Seat map from DAO returned empty list; falling back to sample reference seats.");
                 isSampleData = true;
-                seats = generateSampleSeats();
+                seats = SeatMapFallback.generateSampleSeats(flightId, bookingContext);
             } else {
                 isSampleData = false;
             }
         } catch (Exception e) {
             logger.warn("Could not query seat map from DAO; falling back to sample reference seats: {}", e.getMessage());
             isSampleData = true;
-            seats = generateSampleSeats();
+            seats = SeatMapFallback.generateSampleSeats(flightId, bookingContext);
         }
 
         if (fallbackNoticeLabel != null) {
@@ -136,32 +136,33 @@ public class SeatMapController implements WizardStepController {
             flightTitleLabel.setText(flightInfo.isEmpty() ? "Choose your seat" : "Choose your seat · " + flightInfo);
         }
 
-        // Seat 7E must be pre-selected ONLY when ScreenshotRunner runs. In the real app no seat is pre-selected.
+        applyInitialSelection();
+        updateSelectionSummary();
+    }
+
+    private void applyInitialSelection() {
         if (isPreselectForScreenshots()) {
             FlightSeat seat7E = seatsByLabel.get("7E");
             if (seat7E != null && seat7E.getStatus() == SeatStatus.AVAILABLE) {
-                selectedSeats.add(seat7E);
-                Button btn7E = seatButtonsByLabel.get("7E");
-                if (btn7E != null) {
-                    btn7E.getStyleClass().removeAll("seat-available", "seat-taken");
-                    btn7E.getStyleClass().add("seat-selected");
-                }
+                markSeatSelected(seat7E);
             }
-        } else if (bookingContext != null && bookingContext.getSelectedSeats() != null && !bookingContext.getSelectedSeats().isEmpty()) {
+        } else if (bookingContext != null && bookingContext.getSelectedSeats() != null) {
             for (FlightSeat prev : bookingContext.getSelectedSeats()) {
                 FlightSeat currentSeat = seatsByLabel.get(prev.getSeatLabel());
                 if (currentSeat != null && currentSeat.getStatus() != SeatStatus.BOOKED) {
-                    selectedSeats.add(currentSeat);
-                    Button btn = seatButtonsByLabel.get(currentSeat.getSeatLabel());
-                    if (btn != null) {
-                        btn.getStyleClass().removeAll("seat-available", "seat-taken");
-                        btn.getStyleClass().add("seat-selected");
-                    }
+                    markSeatSelected(currentSeat);
                 }
             }
         }
+    }
 
-        updateSelectionSummary();
+    private void markSeatSelected(FlightSeat seat) {
+        selectedSeats.add(seat);
+        Button btn = seatButtonsByLabel.get(seat.getSeatLabel());
+        if (btn != null) {
+            btn.getStyleClass().removeAll("seat-available", "seat-taken");
+            btn.getStyleClass().add("seat-selected");
+        }
     }
 
     private void buildCabinLayout() {
@@ -224,7 +225,7 @@ public class SeatMapController implements WizardStepController {
 
         FlightSeat seat = seatsByLabel.get(seatLabel);
         if (seat == null) {
-            seat = createFallbackSeat(seatLabel, SeatStatus.AVAILABLE);
+            seat = SeatMapFallback.createFallbackSeat(flightId, seatLabel, SeatStatus.AVAILABLE, bookingContext);
             seatsByLabel.put(seatLabel, seat);
         }
 
@@ -308,54 +309,42 @@ public class SeatMapController implements WizardStepController {
         }
     }
 
-    private void previewSeat(FlightSeat seat) {
-        if (seatSelectionLabel != null) {
-            String clsName = (seat.getSeatClass() == SeatClass.FIRST) ? "First Class" : "Economy";
-            seatSelectionLabel.setText(seat.getSeatLabel() + " · " + clsName);
-        }
+    private void renderSelectionSummary(FlightSeat seat, boolean isInteractive) {
         BigDecimal base = (bookingContext != null && bookingContext.getBaseFare() != null)
                 ? bookingContext.getBaseFare() : new BigDecimal("1200");
+
+        if (seat == null) {
+            if (seatSelectionLabel != null) seatSelectionLabel.setText("None");
+            if (baseFareLabel != null) baseFareLabel.setText(formatPrice(base));
+            if (classMultiplierLabel != null) classMultiplierLabel.setText("x 1.0");
+            if (demandPricingLabel != null) demandPricingLabel.setText("+ R 0");
+            if (totalPriceLabel != null) totalPriceLabel.setText("R 0");
+            if (isInteractive && continueButton != null) continueButton.setDisable(true);
+            return;
+        }
+
+        String clsName = (seat.getSeatClass() == SeatClass.FIRST) ? "First Class" : "Economy";
+        if (seatSelectionLabel != null) seatSelectionLabel.setText(seat.getSeatLabel() + " · " + clsName);
         if (baseFareLabel != null) baseFareLabel.setText(formatPrice(base));
         BigDecimal mult = (seat.getSeatClass() == SeatClass.FIRST) ? new BigDecimal("2.0") : new BigDecimal("1.0");
         if (classMultiplierLabel != null) {
             classMultiplierLabel.setText(seat.getSeatClass() == SeatClass.FIRST ? "x 2.0" : "x 1.0");
         }
         if (demandPricingLabel != null) demandPricingLabel.setText("+ R 180");
-        if (totalPriceLabel != null) {
-            BigDecimal seatPrice = seat.getCalculatedPrice() != null
-                    ? seat.getCalculatedPrice()
-                    : base.multiply(mult).add(new BigDecimal("180"));
-            totalPriceLabel.setText(formatPrice(seatPrice));
-        }
+        BigDecimal seatPrice = seat.getCalculatedPrice() != null
+                ? seat.getCalculatedPrice()
+                : base.multiply(mult).add(new BigDecimal("180"));
+        if (totalPriceLabel != null) totalPriceLabel.setText(formatPrice(seatPrice));
+        if (isInteractive && continueButton != null) continueButton.setDisable(false);
+    }
+
+    private void previewSeat(FlightSeat seat) {
+        renderSelectionSummary(seat, false);
     }
 
     private void updateSelectionSummary() {
-        BigDecimal base = (bookingContext != null && bookingContext.getBaseFare() != null)
-                ? bookingContext.getBaseFare() : new BigDecimal("1200");
-
-        if (selectedSeats.isEmpty()) {
-            if (seatSelectionLabel != null) seatSelectionLabel.setText("None");
-            if (baseFareLabel != null) baseFareLabel.setText(formatPrice(base));
-            if (classMultiplierLabel != null) classMultiplierLabel.setText("x 1.0");
-            if (demandPricingLabel != null) demandPricingLabel.setText("+ R 0");
-            if (totalPriceLabel != null) totalPriceLabel.setText("R 0");
-            if (continueButton != null) continueButton.setDisable(true);
-        } else {
-            FlightSeat seat = selectedSeats.get(0);
-            String clsName = (seat.getSeatClass() == SeatClass.FIRST) ? "First Class" : "Economy";
-            if (seatSelectionLabel != null) seatSelectionLabel.setText(seat.getSeatLabel() + " · " + clsName);
-            if (baseFareLabel != null) baseFareLabel.setText(formatPrice(base));
-            BigDecimal mult = (seat.getSeatClass() == SeatClass.FIRST) ? new BigDecimal("2.0") : new BigDecimal("1.0");
-            if (classMultiplierLabel != null) {
-                classMultiplierLabel.setText(seat.getSeatClass() == SeatClass.FIRST ? "x 2.0" : "x 1.0");
-            }
-            if (demandPricingLabel != null) demandPricingLabel.setText("+ R 180");
-            BigDecimal seatPrice = seat.getCalculatedPrice() != null
-                    ? seat.getCalculatedPrice()
-                    : base.multiply(mult).add(new BigDecimal("180"));
-            if (totalPriceLabel != null) totalPriceLabel.setText(formatPrice(seatPrice));
-            if (continueButton != null) continueButton.setDisable(false);
-        }
+        FlightSeat activeSeat = selectedSeats.isEmpty() ? null : selectedSeats.get(0);
+        renderSelectionSummary(activeSeat, true);
     }
 
     private String formatPrice(BigDecimal price) {
@@ -392,78 +381,5 @@ public class SeatMapController implements WizardStepController {
         if (onBack != null) {
             onBack.run();
         }
-    }
-
-    /**
-     * Generates fallback seats matching reference when database is unavailable.
-     */
-    private List<FlightSeat> generateSampleSeats() {
-        List<FlightSeat> list = new ArrayList<>();
-        long id = 100L;
-
-        BigDecimal base = (bookingContext != null && bookingContext.getBaseFare() != null && bookingContext.getBaseFare().compareTo(BigDecimal.ZERO) > 0)
-                ? bookingContext.getBaseFare() : new BigDecimal("1200");
-        BigDecimal demand = (bookingContext != null && bookingContext.getDemandPricing() != null && bookingContext.getDemandPricing().compareTo(BigDecimal.ZERO) > 0)
-                ? bookingContext.getDemandPricing() : new BigDecimal("180");
-        BigDecimal firstPrice = base.multiply(new BigDecimal("2.0")).add(demand);
-        BigDecimal econPrice = base.multiply(new BigDecimal("1.0")).add(demand);
-
-        // First Class: 1A(A), 1B(B), 1C(A), 1D(A), 2A(A), 2B(A), 2C(B), 2D(B)
-        Set<String> firstBooked = Set.of("1B", "2C", "2D");
-        int[] firstRows = {1, 2};
-        char[] firstCols = {'A', 'B', 'C', 'D'};
-        for (int r : firstRows) {
-            for (char c : firstCols) {
-                String label = r + String.valueOf(c);
-                SeatStatus status = firstBooked.contains(label) ? SeatStatus.BOOKED : SeatStatus.AVAILABLE;
-                FlightSeat seat = new FlightSeat();
-                seat.setFlightSeatId(id++);
-                seat.setFlightId(flightId);
-                seat.setSeatRow(r);
-                seat.setSeatCol(c);
-                seat.setSeatClass(SeatClass.FIRST);
-                seat.setStatus(status);
-                seat.setCalculatedPrice(firstPrice);
-                list.add(seat);
-            }
-        }
-
-        // Economy Booked: 6A, 6B, 7C, 7D, 7F, 8A, 9B, 10C, 10D, 11A, 11F
-        Set<String> econBooked = Set.of("6A", "6B", "7C", "7D", "7F", "8A", "9B", "10C", "10D", "11A", "11F");
-        int[] econRows = {6, 7, 8, 9, 10, 11};
-        char[] econCols = {'A', 'B', 'C', 'D', 'E', 'F'};
-        for (int r : econRows) {
-            for (char c : econCols) {
-                String label = r + String.valueOf(c);
-                SeatStatus status = econBooked.contains(label) ? SeatStatus.BOOKED : SeatStatus.AVAILABLE;
-                FlightSeat seat = new FlightSeat();
-                seat.setFlightSeatId(id++);
-                seat.setFlightId(flightId);
-                seat.setSeatRow(r);
-                seat.setSeatCol(c);
-                seat.setSeatClass(SeatClass.ECONOMY);
-                seat.setStatus(status);
-                seat.setCalculatedPrice(econPrice);
-                list.add(seat);
-            }
-        }
-
-        return list;
-    }
-
-    private FlightSeat createFallbackSeat(String label, SeatStatus status) {
-        BigDecimal base = (bookingContext != null && bookingContext.getBaseFare() != null && bookingContext.getBaseFare().compareTo(BigDecimal.ZERO) > 0)
-                ? bookingContext.getBaseFare() : new BigDecimal("1200");
-        BigDecimal demand = (bookingContext != null && bookingContext.getDemandPricing() != null && bookingContext.getDemandPricing().compareTo(BigDecimal.ZERO) > 0)
-                ? bookingContext.getDemandPricing() : new BigDecimal("180");
-        BigDecimal econPrice = base.multiply(new BigDecimal("1.0")).add(demand);
-
-        FlightSeat s = new FlightSeat();
-        s.setFlightSeatId(System.currentTimeMillis());
-        s.setFlightId(flightId);
-        s.setStatus(status);
-        s.setSeatClass(SeatClass.ECONOMY);
-        s.setCalculatedPrice(econPrice);
-        return s;
     }
 }
