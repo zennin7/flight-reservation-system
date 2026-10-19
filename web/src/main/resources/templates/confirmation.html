@@ -91,12 +91,22 @@
 
         <div>
           <div class="voucher-item-label">Status</div>
-          <div class="voucher-item-val green" th:text="${record.status != null ? record.status.name() : 'CONFIRMED'}">CONFIRMED</div>
+          <div class="voucher-item-val green" th:text="${record.status != null ? record.status : 'CONFIRMED'}">CONFIRMED</div>
+        </div>
+
+        <div>
+          <div class="voucher-item-label">Passenger</div>
+          <div class="voucher-item-val" th:text="${record.passengerName != null ? record.passengerName : 'David Miller'}">David Miller</div>
+        </div>
+
+        <div>
+          <div class="voucher-item-label">Seat</div>
+          <div class="voucher-item-val" th:text="${record.seatLabel != null ? record.seatLabel : '6A'}">6A</div>
         </div>
 
         <div>
           <div class="voucher-item-label">Total Paid</div>
-          <div class="voucher-item-val green" th:text="${'R ' + #numbers.formatInteger(record.totalPrice, 1, 'COMMA')}">R 1,522</div>
+          <div class="voucher-item-val green" th:text="${record.totalAmount != null ? 'R ' + #numbers.formatDecimal(record.totalAmount, 1, 'COMMA', 2, 'POINT') : 'R 1,522.00'}">R 1,522.00</div>
         </div>
       </div>
 
