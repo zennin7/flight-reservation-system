@@ -38,21 +38,19 @@ public final class BoardingPassPdfGenerator {
 
     private BoardingPassPdfGenerator() {}
 
-    /**
-     * Generates a boarding pass PDF from the provided BookingContext.
-     */
-    public static void generate(BookingContext context, File targetFile) throws DocumentException, IOException {
-        logger.info("Generating boarding pass PDF at: {}", targetFile.getAbsolutePath());
-
-        // Landscape card dimensions: 620 x 290 pt
-        Rectangle pageSize = new Rectangle(620f, 290f);
-        Document document = new Document(pageSize, 16f, 16f, 16f, 16f);
-
-        try (FileOutputStream fos = new FileOutputStream(targetFile)) {
-            PdfWriter writer = PdfWriter.getInstance(document, fos);
-            document.open();
-
-            // Extract context values with fallbacks
+    private record PassData(
+            String passenger,
+            String flightNo,
+            String origin,
+            String destination,
+            String depDate,
+            String depTime,
+            String seat,
+            SeatClass seatCls,
+            String seatClassStr,
+            String bookingRef
+    ) {
+        static PassData from(BookingContext context) {
             String passenger = (context != null && context.getPassengerName() != null && !context.getPassengerName().isBlank())
                     ? context.getPassengerName() : "Valued Passenger";
             String flightNo = (context != null && context.getFlightNumber() != null && !context.getFlightNumber().isBlank())
@@ -67,201 +65,213 @@ public final class BoardingPassPdfGenerator {
                     ? context.getDepartureTime() : "—";
             String seat = (context != null && context.getSeatLabel() != null && !context.getSeatLabel().isBlank())
                     ? context.getSeatLabel() : "—";
-            SeatClass seatCls = (context != null) ? context.getSeatClass() : SeatClass.ECONOMY;
+            SeatClass seatCls = (context != null && context.getSeatClass() != null) ? context.getSeatClass() : SeatClass.ECONOMY;
             String seatClassStr = (seatCls == SeatClass.FIRST) ? "FIRST CLASS" : "ECONOMY CLASS";
             String bookingRef = (context != null && context.getBookingReference() != null && !context.getBookingReference().isBlank())
                     ? context.getBookingReference() : (context != null ? context.generateBookingReference() : "—");
+            return new PassData(passenger, flightNo, origin, destination, depDate, depTime, seat, seatCls, seatClassStr, bookingRef);
+        }
+    }
 
-            // Fonts
-            Font fontBrandSky = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.WHITE);
-            Font fontBrandVoyage = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, COLOR_GOLD);
-            Font fontPassTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, COLOR_GOLD);
+    /**
+     * Generates a boarding pass PDF from the provided BookingContext.
+     */
+    public static void generate(BookingContext context, File targetFile) throws DocumentException, IOException {
+        logger.info("Generating boarding pass PDF at: {}", targetFile.getAbsolutePath());
 
-            Font fontLabel = FontFactory.getFont(FontFactory.HELVETICA, 8, COLOR_MUTED);
-            Font fontValue = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, COLOR_DARK);
-            Font fontValueSmall = FontFactory.getFont(FontFactory.HELVETICA, 10, COLOR_DARK);
-            Font fontSeatBig = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, COLOR_GOLD);
-            Font fontRefBig = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, COLOR_NAVY);
-            Font fontBarcodeCode = FontFactory.getFont(FontFactory.COURIER, 8, COLOR_MUTED);
+        Rectangle pageSize = new Rectangle(620f, 290f);
+        Document document = new Document(pageSize, 16f, 16f, 16f, 16f);
 
-            // Outer Card Container Table (Main pass 72%, Tear-off stub 28%)
+        try (FileOutputStream fos = new FileOutputStream(targetFile)) {
+            PdfWriter writer = PdfWriter.getInstance(document, fos);
+            document.open();
+
+            PassData data = PassData.from(context);
+
             PdfPTable card = new PdfPTable(2);
             card.setWidthPercentage(100f);
             card.setWidths(new float[]{72f, 28f});
 
-            // ==========================================
-            // LEFT SIDE: MAIN BOARDING PASS
-            // ==========================================
-            PdfPCell leftCell = new PdfPCell();
-            leftCell.setBackgroundColor(Color.WHITE);
-            leftCell.setBorderColor(COLOR_BORDER);
-            leftCell.setBorderWidth(1.2f);
-            leftCell.setPadding(0);
-
-            // Left Header Table (Navy background)
-            PdfPTable leftHeader = new PdfPTable(2);
-            leftHeader.setWidthPercentage(100f);
-            leftHeader.setWidths(new float[]{65f, 35f});
-
-            PdfPCell brandCell = new PdfPCell();
-            brandCell.setBackgroundColor(COLOR_NAVY);
-            brandCell.setPadding(8);
-            brandCell.setPaddingLeft(12);
-            brandCell.setBorder(Rectangle.NO_BORDER);
-
-            Phrase brandPhrase = new Phrase();
-            brandPhrase.add(new Phrase("Sky", fontBrandSky));
-            brandPhrase.add(new Phrase("Voyage", fontBrandVoyage));
-            brandPhrase.add(new Phrase("   BOARDING PASS", fontPassTitle));
-            brandCell.addElement(brandPhrase);
-            leftHeader.addCell(brandCell);
-
-            PdfPCell classCell = new PdfPCell();
-            classCell.setBackgroundColor(COLOR_NAVY);
-            classCell.setPadding(8);
-            classCell.setPaddingRight(12);
-            classCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            classCell.setBorder(Rectangle.NO_BORDER);
-            Paragraph classPara = new Paragraph(seatClassStr, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, COLOR_GOLD));
-            classPara.setAlignment(Element.ALIGN_RIGHT);
-            classCell.addElement(classPara);
-            leftHeader.addCell(classCell);
-
-            // Left Body Details Table
-            PdfPTable leftBody = new PdfPTable(4);
-            leftBody.setWidthPercentage(100f);
-            leftBody.setWidths(new float[]{32f, 24f, 22f, 22f});
-            leftBody.setSpacingBefore(8f);
-
-            // Row 1: Passenger Name, Flight, Seat, Class
-            addDetailCell(leftBody, "PASSENGER NAME", passenger, fontLabel, fontValue);
-            addDetailCell(leftBody, "FLIGHT", flightNo, fontLabel, fontValue);
-            addDetailCell(leftBody, "SEAT", seat, fontLabel, fontSeatBig);
-            addDetailCell(leftBody, "CLASS", (seatCls == SeatClass.FIRST ? "First" : "Economy"), fontLabel, fontValue);
-
-            // Row 2: From, To, Gate, Boarding Time
-            addDetailCell(leftBody, "FROM", origin, fontLabel, fontValueSmall);
-            addDetailCell(leftBody, "TO", destination, fontLabel, fontValueSmall);
-            addDetailCell(leftBody, "GATE", "A12", fontLabel, fontValue);
-            addDetailCell(leftBody, "BOARDING", "45m Prior", fontLabel, fontValue);
-
-            // Row 3: Date, Departure Time, Booking Ref, Status
-            addDetailCell(leftBody, "DATE", depDate, fontLabel, fontValueSmall);
-            addDetailCell(leftBody, "DEPARTS", depTime, fontLabel, fontValue);
-            addDetailCell(leftBody, "BOOKING REF", bookingRef, fontLabel, fontRefBig);
-            addDetailCell(leftBody, "STATUS", "CONFIRMED", fontLabel, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, new Color(46, 125, 50)));
-
-            // Left Bottom Barcode Section
-            PdfPTable barcodeTable = new PdfPTable(1);
-            barcodeTable.setWidthPercentage(100f);
-            barcodeTable.setSpacingBefore(10f);
-
-            PdfPCell barcodeCell = new PdfPCell();
-            barcodeCell.setBorder(Rectangle.NO_BORDER);
-            barcodeCell.setPaddingLeft(12);
-            barcodeCell.setPaddingBottom(10);
-
-            // Text barcode representation
-            Paragraph barcodeCode = new Paragraph("* " + bookingRef + " · " + flightNo + " · " + seat + " *", fontBarcodeCode);
-            barcodeCell.addElement(barcodeCode);
-            barcodeTable.addCell(barcodeCell);
-
-            PdfPTable leftContent = new PdfPTable(1);
-            leftContent.setWidthPercentage(100f);
-            leftContent.addCell(leftHeader);
-
-            PdfPCell bodyWrapper = new PdfPCell();
-            bodyWrapper.setBorder(Rectangle.NO_BORDER);
-            bodyWrapper.setPadding(10);
-            bodyWrapper.addElement(leftBody);
-            bodyWrapper.addElement(barcodeTable);
-            leftContent.addCell(bodyWrapper);
-
-            leftCell.addElement(leftContent);
-            card.addCell(leftCell);
-
-            // ==========================================
-            // RIGHT SIDE: TEAR-OFF STUB / RECEIPT
-            // ==========================================
-            PdfPCell rightCell = new PdfPCell();
-            rightCell.setBackgroundColor(COLOR_BG);
-            rightCell.setBorderColor(COLOR_BORDER);
-            rightCell.setBorderWidth(1.2f);
-            rightCell.setPadding(0);
-
-            PdfPTable rightHeader = new PdfPTable(1);
-            rightHeader.setWidthPercentage(100f);
-
-            PdfPCell stubHeader = new PdfPCell();
-            stubHeader.setBackgroundColor(COLOR_NAVY);
-            stubHeader.setPadding(8);
-            stubHeader.setBorder(Rectangle.NO_BORDER);
-            Paragraph stubTitle = new Paragraph("PASSENGER RECEIPT", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, COLOR_GOLD));
-            stubTitle.setAlignment(Element.ALIGN_CENTER);
-            stubHeader.addElement(stubTitle);
-            rightHeader.addCell(stubHeader);
-
-            PdfPTable rightBody = new PdfPTable(1);
-            rightBody.setWidthPercentage(100f);
-            rightBody.setSpacingBefore(6f);
-
-            addStubRow(rightBody, "PASSENGER", passenger, fontLabel, fontValueSmall);
-            addStubRow(rightBody, "FLIGHT / DATE", flightNo + " · " + depDate, fontLabel, fontValueSmall);
-            addStubRow(rightBody, "SEAT", seat + " (" + (seatCls == SeatClass.FIRST ? "First" : "Economy") + ")", fontLabel, fontSeatBig);
-            addStubRow(rightBody, "BOOKING REF", bookingRef, fontLabel, fontRefBig);
-
-            PdfPCell stubBodyWrapper = new PdfPCell();
-            stubBodyWrapper.setBorder(Rectangle.NO_BORDER);
-            stubBodyWrapper.setPadding(8);
-            stubBodyWrapper.addElement(rightBody);
-
-            PdfPTable rightContent = new PdfPTable(1);
-            rightContent.setWidthPercentage(100f);
-            rightContent.addCell(rightHeader);
-            rightContent.addCell(stubBodyWrapper);
-
-            rightCell.addElement(rightContent);
-            card.addCell(rightCell);
-
+            card.addCell(buildMainPassCell(data));
+            card.addCell(buildTearOffStubCell(data));
             document.add(card);
 
-            // Draw graphical barcode placeholder on left side using PdfContentByte lines
-            PdfContentByte cb = writer.getDirectContent();
-            float startX = 36f;
-            float startY = 32f;
-            float barHeight = 24f;
-
-            // Barcode pattern derived from reference & seat
-            String seed = bookingRef + flightNo + seat;
-            cb.setColorStroke(Color.BLACK);
-            float currentX = startX;
-            for (int i = 0; i < 65; i++) {
-                char ch = seed.charAt(i % seed.length());
-                float width = ((ch + i * 7) % 3) + 1.0f;
-                cb.setLineWidth(width);
-                cb.moveTo(currentX, startY);
-                cb.lineTo(currentX, startY + barHeight);
-                cb.stroke();
-                currentX += width + ((i % 2 == 0) ? 2.5f : 1.5f);
-                if (currentX > 380f) break;
-            }
-
-            // Draw mini barcode on right stub
-            float stubStartX = 460f;
-            float stubCurrentX = stubStartX;
-            for (int i = 0; i < 30; i++) {
-                char ch = seed.charAt((i * 3) % seed.length());
-                float width = ((ch + i) % 2) + 1.0f;
-                cb.setLineWidth(width);
-                cb.moveTo(stubCurrentX, startY);
-                cb.lineTo(stubCurrentX, startY + 16f);
-                cb.stroke();
-                stubCurrentX += width + 2f;
-                if (stubCurrentX > 590f) break;
-            }
+            drawBarcodeStrips(writer.getDirectContent(), data.bookingRef() + data.flightNo() + data.seat());
 
             document.close();
             logger.info("Successfully wrote boarding pass PDF: {} bytes", targetFile.length());
+        }
+    }
+
+    private static PdfPCell buildMainPassCell(PassData data) {
+        Font fontBrandSky = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.WHITE);
+        Font fontBrandVoyage = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, COLOR_GOLD);
+        Font fontPassTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, COLOR_GOLD);
+        Font fontLabel = FontFactory.getFont(FontFactory.HELVETICA, 8, COLOR_MUTED);
+        Font fontValue = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, COLOR_DARK);
+        Font fontValueSmall = FontFactory.getFont(FontFactory.HELVETICA, 10, COLOR_DARK);
+        Font fontSeatBig = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, COLOR_GOLD);
+        Font fontRefBig = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, COLOR_NAVY);
+        Font fontBarcodeCode = FontFactory.getFont(FontFactory.COURIER, 8, COLOR_MUTED);
+
+        PdfPCell leftCell = new PdfPCell();
+        leftCell.setBackgroundColor(Color.WHITE);
+        leftCell.setBorderColor(COLOR_BORDER);
+        leftCell.setBorderWidth(1.2f);
+        leftCell.setPadding(0);
+
+        PdfPTable leftHeader = new PdfPTable(2);
+        leftHeader.setWidthPercentage(100f);
+        leftHeader.setWidths(new float[]{65f, 35f});
+
+        PdfPCell brandCell = new PdfPCell();
+        brandCell.setBackgroundColor(COLOR_NAVY);
+        brandCell.setPadding(8);
+        brandCell.setPaddingLeft(12);
+        brandCell.setBorder(Rectangle.NO_BORDER);
+
+        Phrase brandPhrase = new Phrase();
+        brandPhrase.add(new Phrase("Sky", fontBrandSky));
+        brandPhrase.add(new Phrase("Voyage", fontBrandVoyage));
+        brandPhrase.add(new Phrase("   BOARDING PASS", fontPassTitle));
+        brandCell.addElement(brandPhrase);
+        leftHeader.addCell(brandCell);
+
+        PdfPCell classCell = new PdfPCell();
+        classCell.setBackgroundColor(COLOR_NAVY);
+        classCell.setPadding(8);
+        classCell.setPaddingRight(12);
+        classCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        classCell.setBorder(Rectangle.NO_BORDER);
+        Paragraph classPara = new Paragraph(data.seatClassStr(), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, COLOR_GOLD));
+        classPara.setAlignment(Element.ALIGN_RIGHT);
+        classCell.addElement(classPara);
+        leftHeader.addCell(classCell);
+
+        PdfPTable leftBody = new PdfPTable(4);
+        leftBody.setWidthPercentage(100f);
+        leftBody.setWidths(new float[]{32f, 24f, 22f, 22f});
+        leftBody.setSpacingBefore(8f);
+
+        addDetailCell(leftBody, "PASSENGER NAME", data.passenger(), fontLabel, fontValue);
+        addDetailCell(leftBody, "FLIGHT", data.flightNo(), fontLabel, fontValue);
+        addDetailCell(leftBody, "SEAT", data.seat(), fontLabel, fontSeatBig);
+        addDetailCell(leftBody, "CLASS", (data.seatCls() == SeatClass.FIRST ? "First" : "Economy"), fontLabel, fontValue);
+
+        addDetailCell(leftBody, "FROM", data.origin(), fontLabel, fontValueSmall);
+        addDetailCell(leftBody, "TO", data.destination(), fontLabel, fontValueSmall);
+        addDetailCell(leftBody, "GATE", "A12", fontLabel, fontValue);
+        addDetailCell(leftBody, "BOARDING", "45m Prior", fontLabel, fontValue);
+
+        addDetailCell(leftBody, "DATE", data.depDate(), fontLabel, fontValueSmall);
+        addDetailCell(leftBody, "DEPARTS", data.depTime(), fontLabel, fontValue);
+        addDetailCell(leftBody, "BOOKING REF", data.bookingRef(), fontLabel, fontRefBig);
+        addDetailCell(leftBody, "STATUS", "CONFIRMED", fontLabel, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, new Color(46, 125, 50)));
+
+        PdfPTable barcodeTable = new PdfPTable(1);
+        barcodeTable.setWidthPercentage(100f);
+        barcodeTable.setSpacingBefore(10f);
+
+        PdfPCell barcodeCell = new PdfPCell();
+        barcodeCell.setBorder(Rectangle.NO_BORDER);
+        barcodeCell.setPaddingLeft(12);
+        barcodeCell.setPaddingBottom(10);
+
+        Paragraph barcodeCode = new Paragraph("* " + data.bookingRef() + " · " + data.flightNo() + " · " + data.seat() + " *", fontBarcodeCode);
+        barcodeCell.addElement(barcodeCode);
+        barcodeTable.addCell(barcodeCell);
+
+        PdfPTable leftContent = new PdfPTable(1);
+        leftContent.setWidthPercentage(100f);
+        leftContent.addCell(leftHeader);
+
+        PdfPCell bodyWrapper = new PdfPCell();
+        bodyWrapper.setBorder(Rectangle.NO_BORDER);
+        bodyWrapper.setPadding(10);
+        bodyWrapper.addElement(leftBody);
+        bodyWrapper.addElement(barcodeTable);
+        leftContent.addCell(bodyWrapper);
+
+        leftCell.addElement(leftContent);
+        return leftCell;
+    }
+
+    private static PdfPCell buildTearOffStubCell(PassData data) {
+        Font fontLabel = FontFactory.getFont(FontFactory.HELVETICA, 8, COLOR_MUTED);
+        Font fontValueSmall = FontFactory.getFont(FontFactory.HELVETICA, 10, COLOR_DARK);
+        Font fontSeatBig = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, COLOR_GOLD);
+        Font fontRefBig = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, COLOR_NAVY);
+
+        PdfPCell rightCell = new PdfPCell();
+        rightCell.setBackgroundColor(COLOR_BG);
+        rightCell.setBorderColor(COLOR_BORDER);
+        rightCell.setBorderWidth(1.2f);
+        rightCell.setPadding(0);
+
+        PdfPTable rightHeader = new PdfPTable(1);
+        rightHeader.setWidthPercentage(100f);
+
+        PdfPCell stubHeader = new PdfPCell();
+        stubHeader.setBackgroundColor(COLOR_NAVY);
+        stubHeader.setPadding(8);
+        stubHeader.setBorder(Rectangle.NO_BORDER);
+        Paragraph stubTitle = new Paragraph("PASSENGER RECEIPT", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, COLOR_GOLD));
+        stubTitle.setAlignment(Element.ALIGN_CENTER);
+        stubHeader.addElement(stubTitle);
+        rightHeader.addCell(stubHeader);
+
+        PdfPTable rightBody = new PdfPTable(1);
+        rightBody.setWidthPercentage(100f);
+        rightBody.setSpacingBefore(6f);
+
+        addStubRow(rightBody, "PASSENGER", data.passenger(), fontLabel, fontValueSmall);
+        addStubRow(rightBody, "FLIGHT / DATE", data.flightNo() + " · " + data.depDate(), fontLabel, fontValueSmall);
+        addStubRow(rightBody, "SEAT", data.seat() + " (" + (data.seatCls() == SeatClass.FIRST ? "First" : "Economy") + ")", fontLabel, fontSeatBig);
+        addStubRow(rightBody, "BOOKING REF", data.bookingRef(), fontLabel, fontRefBig);
+
+        PdfPCell stubBodyWrapper = new PdfPCell();
+        stubBodyWrapper.setBorder(Rectangle.NO_BORDER);
+        stubBodyWrapper.setPadding(8);
+        stubBodyWrapper.addElement(rightBody);
+
+        PdfPTable rightContent = new PdfPTable(1);
+        rightContent.setWidthPercentage(100f);
+        rightContent.addCell(rightHeader);
+        rightContent.addCell(stubBodyWrapper);
+
+        rightCell.addElement(rightContent);
+        return rightCell;
+    }
+
+    private static void drawBarcodeStrips(PdfContentByte cb, String seed) {
+        float startX = 36f;
+        float startY = 32f;
+        float barHeight = 24f;
+
+        cb.setColorStroke(Color.BLACK);
+        float currentX = startX;
+        for (int i = 0; i < 65; i++) {
+            char ch = seed.charAt(i % seed.length());
+            float width = ((ch + i * 7) % 3) + 1.0f;
+            cb.setLineWidth(width);
+            cb.moveTo(currentX, startY);
+            cb.lineTo(currentX, startY + barHeight);
+            cb.stroke();
+            currentX += width + ((i % 2 == 0) ? 2.5f : 1.5f);
+            if (currentX > 380f) break;
+        }
+
+        float stubStartX = 460f;
+        float stubCurrentX = stubStartX;
+        for (int i = 0; i < 30; i++) {
+            char ch = seed.charAt((i * 3) % seed.length());
+            float width = ((ch + i) % 2) + 1.0f;
+            cb.setLineWidth(width);
+            cb.moveTo(stubCurrentX, startY);
+            cb.lineTo(stubCurrentX, startY + 16f);
+            cb.stroke();
+            stubCurrentX += width + 2f;
+            if (stubCurrentX > 590f) break;
         }
     }
 
