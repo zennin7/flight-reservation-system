@@ -44,12 +44,12 @@
         <VBox spacing="10" maxWidth="Infinity">
             <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
                 <Label text="Support Email" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                <Label text="support@skyvoyage.com" styleClass="checkout-val-medium"/>
+                <Label fx:id="supportEmailLabel" text="support@skyvoyage.com" styleClass="checkout-val-medium"/>
             </HBox>
 
             <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
                 <Label text="Phone (Toll-Free)" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                <Label text="0800 123 456" styleClass="checkout-val-medium"/>
+                <Label fx:id="supportPhoneLabel" text="0800 123 456" styleClass="checkout-val-medium"/>
             </HBox>
 
             <HBox alignment="CENTER_LEFT" styleClass="checkout-row">

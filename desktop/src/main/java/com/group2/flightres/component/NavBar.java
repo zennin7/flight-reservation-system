@@ -9,7 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
+
 import javafx.scene.shape.SVGPath;
 
 import java.util.ArrayList;
@@ -219,15 +219,13 @@ public class NavBar extends HBox {
         if (theme == ThemeManager.Theme.DARK) {
             // Sun icon to toggle to light
             themeIcon.setContent(SVG_SUN_ICON);
-            themeIcon.setStroke(Color.web("#d4a63c"));
-            themeIcon.setFill(Color.web("#d4a63c"));
+            themeIcon.getStyleClass().setAll("theme-toggle-icon", "theme-icon-sun");
             themeIcon.setStrokeWidth(1.2);
             themeToggleBtn.setAccessibleText("Switch to Light Theme");
         } else {
             // Moon icon to toggle to dark
             themeIcon.setContent(SVG_MOON_ICON);
-            themeIcon.setStroke(Color.web("#6b7280"));
-            themeIcon.setFill(Color.web("#6b7280"));
+            themeIcon.getStyleClass().setAll("theme-toggle-icon", "theme-icon-moon");
             themeIcon.setStrokeWidth(1.0);
             themeToggleBtn.setAccessibleText("Switch to Dark Theme");
         }

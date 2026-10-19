@@ -140,6 +140,16 @@
     -fx-fill: -sv-muted;
 }
 
+.theme-icon-sun {
+    -fx-fill: -sv-gold-primary;
+    -fx-stroke: -sv-gold-primary;
+}
+
+.theme-icon-moon {
+    -fx-fill: -sv-muted;
+    -fx-stroke: -sv-muted;
+}
+
 /* -------------------------------------------------------------------
  * Stepper Component
  * ------------------------------------------------------------------- */
