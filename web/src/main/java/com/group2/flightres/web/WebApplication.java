@@ -235,6 +235,17 @@ public class WebApplication {
         FlightSearchResult flight = flightOpt.get();
         model.put("flight", flight);
 
+        String origin = ctx.queryParam("origin");
+        if (origin == null || origin.isBlank()) origin = "Johannesburg (JNB)";
+        String destination = ctx.queryParam("destination");
+        if (destination == null || destination.isBlank()) destination = "Cape Town (CPT)";
+        String departureDate = ctx.queryParam("departureDate");
+        if (departureDate == null || departureDate.isBlank()) departureDate = "2026-11-02";
+
+        model.put("origin", origin);
+        model.put("destination", destination);
+        model.put("departureDate", departureDate);
+
         List<FlightSeat> seats = seatMapService.loadSeatMap(flightId);
 
         // Group seats by row for clean CSS grid rendering
