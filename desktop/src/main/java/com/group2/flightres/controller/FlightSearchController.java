@@ -11,6 +11,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,57 +118,39 @@ public class FlightSearchController implements WizardStepController {
         durationCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDuration()));
         fromPriceCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPriceFormatted()));
 
-        // Bold flight number and price styling
-        flightCol.setCellFactory(col -> new TableCell<>() {
+        flightCol.setCellFactory(createStyledCellFactory("table-cell-bold"));
+        fromPriceCol.setCellFactory(createStyledCellFactory("table-cell-bold"));
+        durationCol.setCellFactory(createStyledCellFactory("table-cell-muted"));
+        actionCol.setCellFactory(createActionCellFactory());
+
+        // Set table height dynamically according to rows + header so no empty space or scrollbar shows
+        flightsTable.prefHeightProperty().bind(
+                Bindings.size(flightList).multiply(72).add(42)
+        );
+        flightsTable.minHeightProperty().bind(flightsTable.prefHeightProperty());
+        flightsTable.maxHeightProperty().bind(flightsTable.prefHeightProperty());
+    }
+
+    private static Callback<TableColumn<FlightSearchResult, String>, TableCell<FlightSearchResult, String>> createStyledCellFactory(String styleClass) {
+        return col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
-                    getStyleClass().remove("table-cell-bold");
+                    getStyleClass().remove(styleClass);
                 } else {
                     setText(item);
-                    if (!getStyleClass().contains("table-cell-bold")) {
-                        getStyleClass().add("table-cell-bold");
+                    if (!getStyleClass().contains(styleClass)) {
+                        getStyleClass().add(styleClass);
                     }
                 }
             }
-        });
+        };
+    }
 
-        fromPriceCol.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    getStyleClass().remove("table-cell-bold");
-                } else {
-                    setText(item);
-                    if (!getStyleClass().contains("table-cell-bold")) {
-                        getStyleClass().add("table-cell-bold");
-                    }
-                }
-            }
-        });
-
-        durationCol.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    getStyleClass().remove("table-cell-muted");
-                } else {
-                    setText(item);
-                    if (!getStyleClass().contains("table-cell-muted")) {
-                        getStyleClass().add("table-cell-muted");
-                    }
-                }
-            }
-        });
-
-        // Select button cell factory
-        actionCol.setCellFactory(col -> new TableCell<>() {
+    private Callback<TableColumn<FlightSearchResult, Void>, TableCell<FlightSearchResult, Void>> createActionCellFactory() {
+        return col -> new TableCell<>() {
             private final Button selectBtn = new Button("Select");
             private final HBox container = new HBox(selectBtn);
 
@@ -188,20 +171,9 @@ public class FlightSearchController implements WizardStepController {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(container);
-                }
+                setGraphic(empty ? null : container);
             }
-        });
-
-        // Set table height dynamically according to rows + header so no empty space or scrollbar shows
-        flightsTable.prefHeightProperty().bind(
-                Bindings.size(flightList).multiply(72).add(42)
-        );
-        flightsTable.minHeightProperty().bind(flightsTable.prefHeightProperty());
-        flightsTable.maxHeightProperty().bind(flightsTable.prefHeightProperty());
+        };
     }
 
     private void performSearch() {
