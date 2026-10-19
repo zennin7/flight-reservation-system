@@ -225,59 +225,17 @@ public class WebApplication {
     }
 
     private void handleSeats(Context ctx) {
-        long flightId;
-        try {
-            flightId = Long.parseLong(ctx.pathParam("id"));
-        } catch (NumberFormatException e) {
+        long flightId = parseFlightId(ctx.pathParam("id"));
+        if (flightId <= 0) {
             ctx.redirect("/flights");
             return;
         }
-
-        Optional<FlightSearchResult> flightOpt = flightService.getFlightById(flightId);
-        if (flightOpt.isEmpty()) {
-            ctx.redirect("/flights");
-            return;
-        }
-
-        Map<String, Object> model = baseModel(ctx);
-        FlightSearchResult flight = flightOpt.get();
-        model.put("flight", flight);
-
-        String origin = ctx.queryParam("origin");
-        if (origin == null || origin.isBlank()) origin = "Johannesburg (JNB)";
-        String destination = ctx.queryParam("destination");
-        if (destination == null || destination.isBlank()) destination = "Cape Town (CPT)";
-        String departureDate = ctx.queryParam("departureDate");
-        if (departureDate == null || departureDate.isBlank()) departureDate = "2026-11-02";
-
-        model.put("origin", origin);
-        model.put("destination", destination);
-        model.put("departureDate", departureDate);
-
-        List<FlightSeat> seats = seatMapService.loadSeatMap(flightId);
-
-        // Group seats by row for clean CSS grid rendering
-        Map<Integer, List<FlightSeat>> seatsByRow = new TreeMap<>();
-        for (FlightSeat seat : seats) {
-            seatsByRow.computeIfAbsent(seat.getSeatRow(), k -> new ArrayList<>()).add(seat);
-        }
-        for (List<FlightSeat> rowList : seatsByRow.values()) {
-            rowList.sort(Comparator.comparing(FlightSeat::getSeatCol));
-        }
-
-        model.put("seatsByRow", seatsByRow);
-        model.put("firstClassRows", List.of(1, 2));
-        model.put("economyRows", List.of(6, 7, 8, 9, 10, 11));
-
-        ctx.render("seats.html", model);
+        renderSeatsPage(ctx, flightId, null);
     }
 
     private void handleBook(Context ctx) {
-        long flightId = Long.parseLong(ctx.formParam("flightId"));
-        long flightSeatId = Long.parseLong(ctx.formParam("flightSeatId"));
-        String passengerName = ctx.formParam("passengerName");
-        String passengerEmail = ctx.formParam("passengerEmail");
-        String passportNumber = ctx.formParam("passportNumber");
+        long flightId = parseFlightId(ctx.formParam("flightId"));
+        long flightSeatId = parseFlightId(ctx.formParam("flightSeatId"));
 
         Optional<FlightSearchResult> flightOpt = flightService.getFlightById(flightId);
         if (flightOpt.isEmpty()) {
@@ -308,72 +266,118 @@ public class WebApplication {
             return;
         }
 
-        // 2. Build BookingContext
-        BookingContext bookingContext = new BookingContext();
-        bookingContext.setFlightId(flight.getFlightId());
-        bookingContext.setFlightNumber(flight.getFlightNumber());
+        // 2. Build BookingContext & complete transactional booking
+        try {
+            BookingContext bookingContext = buildBookingContext(ctx, flight, targetSeat);
+            BookingRecord record = bookingService.createBooking(bookingContext);
+            ctx.redirect("/confirmation/" + record.getBookingReference());
+        } catch (Exception e) {
+            logger.error("Booking creation failed: {}", e.getMessage());
+            seatMapService.deselectSeat(targetSeat);
+            renderSeatsWithError(ctx, flightId, "Booking failed: " + e.getMessage());
+        }
+    }
+
+    private BookingContext buildBookingContext(Context ctx, FlightSearchResult flight, FlightSeat targetSeat) {
+        BookingContext bc = new BookingContext();
+        bc.setFlightId(flight.getFlightId());
+        bc.setFlightNumber(flight.getFlightNumber());
+
         String origin = ctx.formParam("origin");
-        if (origin == null || origin.isBlank()) origin = "Johannesburg (JNB)";
+        bc.setOrigin(origin != null && !origin.isBlank() ? origin : "Johannesburg (JNB)");
+
         String destination = ctx.formParam("destination");
-        if (destination == null || destination.isBlank()) destination = "Cape Town (CPT)";
+        bc.setDestination(destination != null && !destination.isBlank() ? destination : "Cape Town (CPT)");
+
         String departureDate = ctx.formParam("departureDate");
-        if (departureDate == null || departureDate.isBlank()) departureDate = "2026-11-02";
+        bc.setDepartureDate(departureDate != null && !departureDate.isBlank() ? departureDate : "2026-11-02");
 
-        bookingContext.setOrigin(origin);
-        bookingContext.setDestination(destination);
-        bookingContext.setDepartureDate(departureDate);
-        bookingContext.setDepartureTime(flight.getDepartureTime());
-        bookingContext.setArrivalTime(flight.getArrivalTime());
+        bc.setDepartureTime(flight.getDepartureTime());
+        bc.setArrivalTime(flight.getArrivalTime());
 
-        bookingContext.setPassengerName(passengerName);
-        bookingContext.setPassengerEmail(passengerEmail);
-        bookingContext.setPassportNumber(passportNumber);
-
-        bookingContext.setSelectedSeats(List.of(targetSeat));
+        bc.setPassengerName(ctx.formParam("passengerName"));
+        bc.setPassengerEmail(ctx.formParam("passengerEmail"));
+        bc.setPassportNumber(ctx.formParam("passportNumber"));
+        bc.setSelectedSeats(List.of(targetSeat));
 
         BigDecimal basePrice = flight.getBasePrice();
         BigDecimal classMult = targetSeat.getSeatClass() == SeatClass.FIRST ? new BigDecimal("2.5") : BigDecimal.ONE;
         BigDecimal demandPrice = new BigDecimal("180");
         BigDecimal totalPrice = basePrice.multiply(classMult).add(demandPrice);
 
-        bookingContext.setBaseFare(basePrice);
-        bookingContext.setClassMultiplier(classMult);
-        bookingContext.setDemandPricing(demandPrice);
-        bookingContext.setTotalPrice(totalPrice);
+        bc.setBaseFare(basePrice);
+        bc.setClassMultiplier(classMult);
+        bc.setDemandPricing(demandPrice);
+        bc.setTotalPrice(totalPrice);
 
         User currentUser = ctx.sessionAttribute("user");
         if (currentUser != null) {
-            bookingContext.setCurrentUser(currentUser);
+            bc.setCurrentUser(currentUser);
         }
-
-        // 3. Complete transactional booking
-        try {
-            BookingRecord record = bookingService.createBooking(bookingContext);
-            ctx.redirect("/confirmation/" + record.getBookingReference());
-        } catch (Exception e) {
-            logger.error("Booking creation failed: {}", e.getMessage());
-            // Release hold on failure
-            seatMapService.deselectSeat(targetSeat);
-            renderSeatsWithError(ctx, flightId, "Booking failed: " + e.getMessage());
-        }
+        return bc;
     }
 
     private void renderSeatsWithError(Context ctx, long flightId, String error) {
-        Map<String, Object> model = baseModel(ctx);
+        renderSeatsPage(ctx, flightId, error);
+    }
+
+    private void renderSeatsPage(Context ctx, long flightId, String error) {
         Optional<FlightSearchResult> flightOpt = flightService.getFlightById(flightId);
-        flightOpt.ifPresent(flight -> model.put("flight", flight));
+        if (flightOpt.isEmpty()) {
+            ctx.redirect("/flights");
+            return;
+        }
+
+        Map<String, Object> model = baseModel(ctx);
+        model.put("flight", flightOpt.get());
+
+        String origin = ctx.queryParam("origin");
+        if (origin == null || origin.isBlank()) origin = ctx.formParam("origin");
+        if (origin == null || origin.isBlank()) origin = "Johannesburg (JNB)";
+
+        String destination = ctx.queryParam("destination");
+        if (destination == null || destination.isBlank()) destination = ctx.formParam("destination");
+        if (destination == null || destination.isBlank()) destination = "Cape Town (CPT)";
+
+        String departureDate = ctx.queryParam("departureDate");
+        if (departureDate == null || departureDate.isBlank()) departureDate = ctx.formParam("departureDate");
+        if (departureDate == null || departureDate.isBlank()) departureDate = "2026-11-02";
+
+        model.put("origin", origin);
+        model.put("destination", destination);
+        model.put("departureDate", departureDate);
 
         List<FlightSeat> seats = seatMapService.loadSeatMap(flightId);
+        Map<Integer, List<FlightSeat>> seatsByRow = groupSeatsByRow(seats);
+
+        model.put("seatsByRow", seatsByRow);
+        model.put("firstClassRows", List.of(1, 2));
+        model.put("economyRows", List.of(6, 7, 8, 9, 10, 11));
+        if (error != null) {
+            model.put("bookingError", error);
+        }
+
+        ctx.render("seats.html", model);
+    }
+
+    private Map<Integer, List<FlightSeat>> groupSeatsByRow(List<FlightSeat> seats) {
         Map<Integer, List<FlightSeat>> seatsByRow = new TreeMap<>();
         for (FlightSeat seat : seats) {
             seatsByRow.computeIfAbsent(seat.getSeatRow(), k -> new ArrayList<>()).add(seat);
         }
-        model.put("seatsByRow", seatsByRow);
-        model.put("firstClassRows", List.of(1, 2));
-        model.put("economyRows", List.of(6, 7, 8, 9, 10, 11));
-        model.put("bookingError", error);
+        for (List<FlightSeat> rowList : seatsByRow.values()) {
+            rowList.sort(Comparator.comparing(FlightSeat::getSeatCol));
+        }
+        return seatsByRow;
+    }
 
-        ctx.render("seats.html", model);
+    private long parseFlightId(String str) {
+        if (str == null || str.isBlank()) return -1L;
+        try {
+            return Long.parseLong(str.trim());
+        } catch (NumberFormatException e) {
+            return -1L;
+        }
     }
 
     private void handleConfirmation(Context ctx) {
