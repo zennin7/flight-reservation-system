@@ -63,7 +63,7 @@ public class BookingDaoImpl implements BookingDao {
         VALUES (?, ?, 'CARD', 'COMPLETED'::payment_status, ?)
         """;
 
-    private static final String FIND_BY_REF_QUERY = """
+    private static final String BOOKING_SELECT_FROM = """
         SELECT b.booking_id, b.booking_ref, b.status AS booking_status, b.total_amount, b.created_at,
                f.flight_id, f.flight_number, f.departure_time, f.arrival_time,
                origin_ap.city AS origin_city, origin_ap.iata_code AS origin_code,
@@ -79,28 +79,13 @@ public class BookingDaoImpl implements BookingDao {
         LEFT JOIN booking_seats bs ON bs.booking_id = b.booking_id
         LEFT JOIN flight_seats fs ON fs.flight_seat_id = bs.flight_seat_id
         LEFT JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id
-        WHERE b.booking_ref = ?
         """;
 
-    private static final String FIND_BY_USER_QUERY = """
-        SELECT b.booking_id, b.booking_ref, b.status AS booking_status, b.total_amount, b.created_at,
-               f.flight_id, f.flight_number, f.departure_time, f.arrival_time,
-               origin_ap.city AS origin_city, origin_ap.iata_code AS origin_code,
-               dest_ap.city AS dest_city, dest_ap.iata_code AS dest_code,
-               u.user_id, u.email AS user_email,
-               bs.passenger_name, bs.passport_number,
-               st.seat_row, st.seat_col, st.seat_class
-        FROM bookings b
-        JOIN flights f ON f.flight_id = b.flight_id
-        JOIN airports origin_ap ON origin_ap.airport_id = f.origin_airport_id
-        JOIN airports dest_ap ON dest_ap.airport_id = f.dest_airport_id
-        JOIN users u ON u.user_id = b.user_id
-        LEFT JOIN booking_seats bs ON bs.booking_id = b.booking_id
-        LEFT JOIN flight_seats fs ON fs.flight_seat_id = bs.flight_seat_id
-        LEFT JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id
-        WHERE b.user_id = ?
-        ORDER BY b.created_at DESC
-        """;
+    private static final String FIND_BY_REF_QUERY = BOOKING_SELECT_FROM + " WHERE b.booking_ref = ?\n";
+
+    private static final String FIND_BY_USER_QUERY = BOOKING_SELECT_FROM + " WHERE b.user_id = ?\nORDER BY b.created_at DESC\n";
+
+    private record BookingHeader(long bookingId, LocalDateTime createdAt) {}
 
     @Override
     public BookingRecord createBooking(BookingContext context) {
@@ -113,96 +98,19 @@ public class BookingDaoImpl implements BookingDao {
             conn = DatabaseConfig.getDataSource().getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Resolve User
             long userId = resolveUserId(conn, context);
-
-            // 2. Generate unique 6-char PNR
             String pnr = generateUniquePnr(conn);
             context.setBookingReference(pnr);
 
-            // 3. Insert Booking
-            long bookingId;
-            LocalDateTime createdAt;
-            try (PreparedStatement stmt = conn.prepareStatement(INSERT_BOOKING_QUERY)) {
-                stmt.setString(1, pnr);
-                stmt.setLong(2, userId);
-                stmt.setLong(3, context.getFlightId() != null ? context.getFlightId() : 1L);
-                stmt.setBigDecimal(4, context.getTotalPrice() != null ? context.getTotalPrice() : BigDecimal.ZERO);
-
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        bookingId = rs.getLong("booking_id");
-                        Timestamp ts = rs.getTimestamp("created_at");
-                        createdAt = (ts != null) ? ts.toLocalDateTime() : LocalDateTime.now();
-                    } else {
-                        throw new SQLException("Failed to obtain generated booking ID");
-                    }
-                }
-            }
-
-            // 4. Mark seats BOOKED and insert into booking_seats
-            List<FlightSeat> seats = context.getSelectedSeats();
-            String passengerName = context.getPassengerName() != null ? context.getPassengerName() : "Valued Passenger";
-            String passport = context.getPassportNumber() != null ? context.getPassportNumber() : "PA999999";
-            LocalDate dob = LocalDate.of(1990, 1, 1);
-
-            for (FlightSeat seat : seats) {
-                // Optimistic check: must be HELD or AVAILABLE
-                try (PreparedStatement stmt = conn.prepareStatement(BOOK_FLIGHT_SEAT_QUERY)) {
-                    stmt.setLong(1, seat.getFlightSeatId());
-                    int updated = stmt.executeUpdate();
-                    if (updated == 0) {
-                        logger.warn("Transaction rollback: Seat {} ({}) is no longer available",
-                                seat.getSeatLabel(), seat.getFlightSeatId());
-                        conn.rollback();
-                        throw new SeatUnavailableException("Seat " + seat.getSeatLabel() + " is no longer available.");
-                    }
-                }
-
-                // Insert into booking_seats
-                try (PreparedStatement stmt = conn.prepareStatement(INSERT_BOOKING_SEAT_QUERY)) {
-                    stmt.setLong(1, bookingId);
-                    stmt.setLong(2, seat.getFlightSeatId());
-                    stmt.setString(3, passengerName);
-                    stmt.setString(4, passport);
-                    stmt.setDate(5, Date.valueOf(dob));
-                    stmt.setBigDecimal(6, seat.getCalculatedPrice() != null ? seat.getCalculatedPrice() : context.getTotalPrice());
-                    stmt.executeQuery();
-                }
-            }
-
-            // 5. Insert payment record
-            try (PreparedStatement stmt = conn.prepareStatement(INSERT_PAYMENT_QUERY)) {
-                stmt.setLong(1, bookingId);
-                stmt.setBigDecimal(2, context.getTotalPrice() != null ? context.getTotalPrice() : BigDecimal.ZERO);
-                stmt.setString(3, "TXN-" + pnr);
-                stmt.executeUpdate();
-            }
+            BookingHeader header = insertBookingHeader(conn, pnr, userId, context);
+            persistBookingSeats(conn, header.bookingId(), context);
+            persistPayment(conn, header.bookingId(), pnr, context);
 
             conn.commit();
             logger.info("Successfully created booking {} (ID: {}) for flight {} in transaction",
-                    pnr, bookingId, context.getFlightId());
+                    pnr, header.bookingId(), context.getFlightId());
 
-            BookingRecord record = new BookingRecord();
-            record.setBookingId(bookingId);
-            record.setBookingReference(pnr);
-            record.setUserId(userId);
-            record.setFlightId(context.getFlightId());
-            record.setFlightNumber(context.getFlightNumber());
-            record.setOrigin(context.getOrigin());
-            record.setDestination(context.getDestination());
-            record.setDepartureTime(context.getDepartureTime());
-            record.setArrivalTime(context.getArrivalTime());
-            record.setStatus("CONFIRMED");
-            record.setTotalAmount(context.getTotalPrice());
-            record.setCreatedAt(createdAt);
-            record.setPassengerName(passengerName);
-            record.setPassengerEmail(context.getPassengerEmail());
-            record.setPassportNumber(passport);
-            record.setSeatLabel(context.getSeatLabel());
-            record.setSeatClass(context.getSeatClass());
-
-            return record;
+            return buildBookingRecord(header, pnr, userId, context);
         } catch (SQLException e) {
             if (conn != null) {
                 try { conn.rollback(); } catch (SQLException ex) { logger.error("Rollback failed", ex); }
@@ -214,6 +122,96 @@ public class BookingDaoImpl implements BookingDao {
                 try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
             }
         }
+    }
+
+    private BookingHeader insertBookingHeader(Connection conn, String pnr, long userId, BookingContext context)
+            throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(INSERT_BOOKING_QUERY)) {
+            stmt.setString(1, pnr);
+            stmt.setLong(2, userId);
+            stmt.setLong(3, context.getFlightId() != null ? context.getFlightId() : 1L);
+            stmt.setBigDecimal(4, context.getTotalPrice() != null ? context.getTotalPrice() : BigDecimal.ZERO);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    long bookingId = rs.getLong("booking_id");
+                    Timestamp ts = rs.getTimestamp("created_at");
+                    LocalDateTime createdAt = (ts != null) ? ts.toLocalDateTime() : LocalDateTime.now();
+                    return new BookingHeader(bookingId, createdAt);
+                } else {
+                    throw new SQLException("Failed to obtain generated booking ID");
+                }
+            }
+        }
+    }
+
+    private void persistBookingSeats(Connection conn, long bookingId, BookingContext context)
+            throws SQLException, SeatUnavailableException {
+        List<FlightSeat> seats = context.getSelectedSeats();
+        String passengerName = context.getPassengerName() != null ? context.getPassengerName() : "Valued Passenger";
+        String passport = context.getPassportNumber() != null ? context.getPassportNumber() : "PA999999";
+        LocalDate dob = LocalDate.of(1990, 1, 1);
+
+        for (FlightSeat seat : seats) {
+            // Optimistic check: must be HELD or AVAILABLE
+            try (PreparedStatement stmt = conn.prepareStatement(BOOK_FLIGHT_SEAT_QUERY)) {
+                stmt.setLong(1, seat.getFlightSeatId());
+                int updated = stmt.executeUpdate();
+                if (updated == 0) {
+                    logger.warn("Transaction rollback: Seat {} ({}) is no longer available",
+                            seat.getSeatLabel(), seat.getFlightSeatId());
+                    conn.rollback();
+                    throw new SeatUnavailableException("Seat " + seat.getSeatLabel() + " is no longer available.");
+                }
+            }
+
+            // Insert into booking_seats
+            try (PreparedStatement stmt = conn.prepareStatement(INSERT_BOOKING_SEAT_QUERY)) {
+                stmt.setLong(1, bookingId);
+                stmt.setLong(2, seat.getFlightSeatId());
+                stmt.setString(3, passengerName);
+                stmt.setString(4, passport);
+                stmt.setDate(5, Date.valueOf(dob));
+                stmt.setBigDecimal(6, seat.getCalculatedPrice() != null ? seat.getCalculatedPrice() : context.getTotalPrice());
+                stmt.executeQuery();
+            }
+        }
+    }
+
+    private void persistPayment(Connection conn, long bookingId, String pnr, BookingContext context)
+            throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(INSERT_PAYMENT_QUERY)) {
+            stmt.setLong(1, bookingId);
+            stmt.setBigDecimal(2, context.getTotalPrice() != null ? context.getTotalPrice() : BigDecimal.ZERO);
+            stmt.setString(3, "TXN-" + pnr);
+            stmt.executeUpdate();
+        }
+    }
+
+    private BookingRecord buildBookingRecord(BookingHeader header, String pnr, long userId, BookingContext context) {
+        String passengerName = context.getPassengerName() != null ? context.getPassengerName() : "Valued Passenger";
+        String passport = context.getPassportNumber() != null ? context.getPassportNumber() : "PA999999";
+
+        BookingRecord record = new BookingRecord();
+        record.setBookingId(header.bookingId());
+        record.setBookingReference(pnr);
+        record.setUserId(userId);
+        record.setFlightId(context.getFlightId());
+        record.setFlightNumber(context.getFlightNumber());
+        record.setOrigin(context.getOrigin());
+        record.setDestination(context.getDestination());
+        record.setDepartureTime(context.getDepartureTime());
+        record.setArrivalTime(context.getArrivalTime());
+        record.setStatus("CONFIRMED");
+        record.setTotalAmount(context.getTotalPrice());
+        record.setCreatedAt(header.createdAt());
+        record.setPassengerName(passengerName);
+        record.setPassengerEmail(context.getPassengerEmail());
+        record.setPassportNumber(passport);
+        record.setSeatLabel(context.getSeatLabel());
+        record.setSeatClass(context.getSeatClass());
+
+        return record;
     }
 
     @Override
