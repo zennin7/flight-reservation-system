@@ -27,11 +27,15 @@ public class AppConfig {
 
     private static AppConfig load() {
         ObjectMapper mapper = new ObjectMapper();
-        try (InputStream is = AppConfig.class.getResourceAsStream("/com/group2/flightres/app.json")) {
-            if (is == null) {
-                throw new IllegalStateException("app.json not found on classpath");
-            }
-            return mapper.readValue(is, AppConfig.class);
+        InputStream is = AppConfig.class.getResourceAsStream("/com/group2/flightres/app.json");
+        if (is == null) {
+            is = AppConfig.class.getResourceAsStream("/com/group2/flightres/app.json.example");
+        }
+        if (is == null) {
+            throw new IllegalStateException("app.json not found on classpath");
+        }
+        try (InputStream stream = is) {
+            return mapper.readValue(stream, AppConfig.class);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load app.json", e);
         }
