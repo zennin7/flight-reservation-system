@@ -683,14 +683,6 @@
     -fx-background-color: linear-gradient(to right, rgba(10, 17, 24, 0.88) 0%, rgba(10, 17, 24, 0.55) 55%, rgba(10, 17, 24, 0.18) 100%);
 }
 
-.hero-plane-body {
-    -fx-fill: -sv-hero-plane;
-}
-
-.hero-plane-fin {
-    -fx-fill: -sv-hero-plane-fin;
-}
-
 /* -------------------------------------------------------------------
  * Home Screen Specifics
  * ------------------------------------------------------------------- */
@@ -832,11 +824,6 @@
     -fx-font-weight: 700;
     -fx-padding: 12px 22px;
     -fx-background-radius: 8px;
-}
-
-.login-hint-text {
-    -fx-font-size: 11px;
-    -fx-text-fill: -sv-muted;
 }
 
 .remember-me-checkbox {
@@ -1255,12 +1242,6 @@
     -fx-font-weight: 700;
     -fx-text-fill: -sv-text;
     -fx-padding: 0 0 12px 0;
-}
-
-.chart-card-footer {
-    -fx-font-size: 11px;
-    -fx-text-fill: -sv-muted;
-    -fx-padding: 10px 0 0 0;
 }
 
 .admin-bar-chart {

@@ -68,6 +68,4 @@
 
     /* Hero */
     -sv-hero-bg: linear-gradient(from 0% 0% to 100% 10%, #070d14 0%, #070d14 40%, #201710 75%, #634316 100%);
-    -sv-hero-plane: #8d97a8;
-    -sv-hero-plane-fin: #d4af37;
 }

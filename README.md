@@ -91,29 +91,31 @@ flight-reservation-system (Root Parent POM)
 
 ## 🖼️ Application Screenshots
 
+> Application screenshots are generated into `docs/screenshots/` via `ScreenshotRunner` (`mvn -pl desktop javafx:run -Pscreenshots`) and web capture scripts (`scripts/generate_screenshots.cmd`).
+
 ### 💻 Desktop Application (JavaFX 21)
 
 | Screen | Light Mode | Dark Mode |
 |---|---|---|
-| **01 Home & Search** | [View Light](docs/screenshots/01_home_light.png) | [View Dark](docs/screenshots/01_home_dark.png) |
-| **02 Split-Screen Login** | [View Light](docs/screenshots/02_login_light.png) | [View Dark](docs/screenshots/02_login_dark.png) |
-| **03 Flight Results** | [View Light](docs/screenshots/03_flight_search_light.png) | [View Dark](docs/screenshots/03_flight_search_dark.png) |
-| **04 Fuselage Seat Map** | [View Light](docs/screenshots/04_seat_map_light.png) | [View Dark](docs/screenshots/04_seat_map_dark.png) |
-| **05 Checkout Summary** | [View Light](docs/screenshots/05_checkout_light.png) | [View Dark](docs/screenshots/05_checkout_dark.png) |
-| **06 Confirmation Voucher** | [View Light](docs/screenshots/06_confirmation_light.png) | [View Dark](docs/screenshots/06_confirmation_dark.png) |
-| **07 Admin Dashboard** | [View Light](docs/screenshots/07_admin_dashboard_light.png) | [View Dark](docs/screenshots/07_admin_dashboard_dark.png) |
+| **01 Home & Search** | Pending reskin capture | Pending reskin capture |
+| **02 Split-Screen Login** | Pending reskin capture | Pending reskin capture |
+| **03 Flight Results** | Pending reskin capture | Pending reskin capture |
+| **04 Fuselage Seat Map** | Pending reskin capture | Pending reskin capture |
+| **05 Checkout Summary** | Pending reskin capture | Pending reskin capture |
+| **06 Confirmation Voucher** | Pending reskin capture | Pending reskin capture |
+| **07 Admin Dashboard** | Pending reskin capture | Pending reskin capture |
 
 ### 🌐 Web Application (Javalin 6 + Thymeleaf)
 
 | Page | Desktop View (1200×900) | Mobile View (390×844) |
 |---|---|---|
-| **01 Home Landing Page** | [View Desktop](docs/screenshots/web/01_home_desktop.png) | [View Mobile](docs/screenshots/web/01_home_mobile.png) |
-| **02 Available Flights** | [View Desktop](docs/screenshots/web/02_flights_desktop.png) | [View Mobile](docs/screenshots/web/02_flights_mobile.png) |
-| **03 Seat Selection & Checkout** | [View Desktop](docs/screenshots/web/03_seats_desktop.png) | [View Mobile](docs/screenshots/web/03_seats_mobile.png) |
-| **04 E-Ticket Confirmation Voucher** | [View Desktop](docs/screenshots/web/04_confirmation_desktop.png) | [View Mobile](docs/screenshots/web/04_confirmation_mobile.png) |
-| **05 Split Hero Login** | [View Desktop](docs/screenshots/web/05_login_desktop.png) | [View Mobile](docs/screenshots/web/05_login_mobile.png) |
-| **06 About Us & Fleet** | [View Desktop](docs/screenshots/web/06_about_desktop.png) | [View Mobile](docs/screenshots/web/06_about_mobile.png) |
-| **07 Concierge & Contact** | [View Desktop](docs/screenshots/web/07_contact_desktop.png) | [View Mobile](docs/screenshots/web/07_contact_mobile.png) |
+| **01 Home Landing Page** | Pending reskin capture | Pending reskin capture |
+| **02 Available Flights** | Pending reskin capture | Pending reskin capture |
+| **03 Seat Selection & Checkout** | Pending reskin capture | Pending reskin capture |
+| **04 E-Ticket Confirmation Voucher** | Pending reskin capture | Pending reskin capture |
+| **05 Split Hero Login** | Pending reskin capture | Pending reskin capture |
+| **06 About Us & Fleet** | Pending reskin capture | Pending reskin capture |
+| **07 Concierge & Contact** | Pending reskin capture | Pending reskin capture |
 
 ---
 
