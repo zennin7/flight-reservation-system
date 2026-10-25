@@ -36,11 +36,13 @@ public class ThemeManager {
     private final String lightThemeUrl;
     private final String darkThemeUrl;
     private final String skyvoyageCssUrl;
+    private final String glassCssUrl;
 
     private ThemeManager() {
         this.lightThemeUrl = getResourceUrl("/com/group2/flightres/css/theme-light.css");
         this.darkThemeUrl = getResourceUrl("/com/group2/flightres/css/theme-dark.css");
         this.skyvoyageCssUrl = getResourceUrl("/com/group2/flightres/css/skyvoyage.css");
+        this.glassCssUrl = getResourceUrl("/com/group2/flightres/css/glass.css");
 
         // Load stored preference, defaulting to LIGHT
         String storedThemeName = preferences.get(PREF_KEY_THEME, Theme.LIGHT.name());
@@ -109,6 +111,27 @@ public class ThemeManager {
             stylesheets.add(skyvoyageCssUrl);
         }
 
+        if (scene.getRoot() != null) {
+            scene.getRoot().applyCss();
+        }
+    }
+
+    /**
+     * Attaches the glass stylesheet (glass.css) to the specified scene.
+     * Registers custom fonts (Inter and Lora) and attaches glass styling
+     * without modifying global theme settings or affecting existing screens.
+     *
+     * @param scene the Scene to style with glass.css
+     */
+    public synchronized void applyGlassTheme(Scene scene) {
+        if (scene == null || glassCssUrl == null) {
+            return;
+        }
+        FontLoader.loadFonts();
+        var stylesheets = scene.getStylesheets();
+        if (!stylesheets.contains(glassCssUrl)) {
+            stylesheets.add(glassCssUrl);
+        }
         if (scene.getRoot() != null) {
             scene.getRoot().applyCss();
         }
