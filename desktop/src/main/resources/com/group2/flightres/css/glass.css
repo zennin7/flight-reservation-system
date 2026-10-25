@@ -224,8 +224,7 @@
  * ------------------------------------------------------------------- */
 
 .headline-serif, .glass-headline {
-    -fx-font-family: 'Lora', Georgia, serif;
-    -fx-font-weight: 600;
+    -fx-font-family: 'Lora SemiBold';
     -fx-font-size: 32px;
     -fx-text-fill: #ffffff;
 }

@@ -1,5 +1,6 @@
 package com.group2.flightres.tools;
 
+import com.group2.flightres.util.FontLoader;
 import com.group2.flightres.util.GlassBackground;
 import com.group2.flightres.util.ThemeManager;
 import javafx.animation.PauseTransition;
@@ -46,6 +47,9 @@ public class GlassFoundationTestRunner extends Application {
 
     @Override
     public void start(Stage stage) {
+        // Load fonts BEFORE the Scene is created so CSS can resolve font families
+        FontLoader.loadFonts();
+
         stage.setTitle("Glass Foundation Preview");
         stage.setWidth(WIDTH);
         stage.setHeight(HEIGHT);
@@ -75,6 +79,7 @@ public class GlassFoundationTestRunner extends Application {
         TextField sampleInput = new TextField();
         sampleInput.setPromptText("Search flight destination or reference (e.g. CPT)...");
         sampleInput.setText("Cape Town International (CPT)");
+        sampleInput.deselect(); // prevent selection highlight in screenshot
 
         // Buttons row
         HBox buttonsRow = new HBox(14);
@@ -133,6 +138,7 @@ public class GlassFoundationTestRunner extends Application {
         pause.setOnFinished(e -> {
             scene.getRoot().applyCss();
             scene.getRoot().layout();
+            sampleInput.deselect(); // ensure no selection highlight in snapshot
 
             WritableImage snapshot = scene.snapshot(null);
             File outputFile = getOutputDir().resolve("glass-foundation.png").toFile();

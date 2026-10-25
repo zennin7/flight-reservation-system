@@ -41,7 +41,7 @@ public final class FontLoader {
                     }
                     Font font = Font.loadFont(is, 14.0);
                     if (font != null) {
-                        logger.info("Successfully loaded font: {} ({}) from {}", font.getName(), font.getFamily(), fontFile);
+                        logger.info("FONT_LOADED name='{}' family='{}' from {}", font.getName(), font.getFamily(), fontFile);
                     } else {
                         logger.warn("JavaFX Font.loadFont returned null for: {}", fontFile);
                     }
@@ -49,6 +49,13 @@ public final class FontLoader {
                     logger.error("Failed to load font from resource: {}", fontFile, e);
                 }
             }
+            // Diagnostic: print all registered families so we can verify exact names
+            java.util.List<String> families = Font.getFamilies();
+            logger.info("FONT_FAMILIES_WITH_LORA: {}",
+                    families.stream()
+                            .filter(f -> f.toLowerCase().contains("lora") || f.toLowerCase().contains("inter"))
+                            .collect(java.util.stream.Collectors.toList()));
+            logger.info("ALL_FONT_FAMILIES_COUNT: {}", families.size());
         }
     }
 }

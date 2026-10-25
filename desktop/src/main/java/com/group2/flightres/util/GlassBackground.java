@@ -25,14 +25,16 @@ public class GlassBackground extends StackPane {
 
     private static final Logger logger = LoggerFactory.getLogger(GlassBackground.class);
 
-    public static final double DEFAULT_BLUR_RADIUS = 40.0;
-    public static final double DEFAULT_DARKNESS = -0.50; // -50% brightness
+    public static final double DEFAULT_BLUR_RADIUS = 28.0;
+    public static final double DEFAULT_DARKNESS = -0.35; // -35% brightness
     public static final String DEFAULT_NAVY_OVERLAY_COLOR = "rgba(11, 18, 32, 0.60)";
 
     private final ImageView backgroundImageView = new ImageView();
     private final ColorAdjust colorAdjust = new ColorAdjust();
     private final GaussianBlur gaussianBlur = new GaussianBlur();
     private final Region navyOverlay = new Region();
+    private final Region glowGold = new Region();   // soft gold top-left
+    private final Region glowBlue = new Region();   // soft blue bottom-right
     private final StackPane contentContainer = new StackPane();
     private final Rectangle clipRect = new Rectangle();
 
@@ -61,14 +63,31 @@ public class GlassBackground extends StackPane {
         navyOverlay.prefWidthProperty().bind(widthProperty());
         navyOverlay.prefHeightProperty().bind(heightProperty());
 
+        // 2b. Radial glow accents (sit above navy overlay, below content)
+        glowGold.prefWidthProperty().bind(widthProperty());
+        glowGold.prefHeightProperty().bind(heightProperty());
+        glowGold.setMouseTransparent(true);
+        // Gold glow: centred upper-left, soft radial fade
+        glowGold.setStyle(
+                "-fx-background-color: radial-gradient(center 20% 22%, radius 65%," +
+                " rgba(212,166,60,0.16) 0%, transparent 100%);");
+
+        glowBlue.prefWidthProperty().bind(widthProperty());
+        glowBlue.prefHeightProperty().bind(heightProperty());
+        glowBlue.setMouseTransparent(true);
+        // Blue glow: centred lower-right
+        glowBlue.setStyle(
+                "-fx-background-color: radial-gradient(center 80% 78%, radius 60%," +
+                " rgba(79,124,255,0.12) 0%, transparent 100%);");
+
         // 3. Configure content container
         contentContainer.setAlignment(Pos.CENTER);
         if (content != null) {
             contentContainer.getChildren().add(content);
         }
 
-        // 4. Assemble stack: ImageView (bottom), Navy overlay (middle), Content (top)
-        getChildren().addAll(backgroundImageView, navyOverlay, contentContainer);
+        // 4. Assemble stack: ImageView (bottom), Navy overlay, Glow accents, Content (top)
+        getChildren().addAll(backgroundImageView, navyOverlay, glowGold, glowBlue, contentContainer);
 
         // 5. Constrain blurred bleed using clip
         clipRect.widthProperty().bind(widthProperty());
