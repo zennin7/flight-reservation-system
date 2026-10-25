@@ -1,5 +1,6 @@
 package com.group2.flightres.util;
 
+import javafx.beans.DefaultProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.effect.ColorAdjust;
@@ -21,6 +22,7 @@ import java.net.URL;
  * and a top content container. Automatically scales and crops the background image to "cover"
  * the window bounds on resize.
  */
+@DefaultProperty("content")
 public class GlassBackground extends StackPane {
 
     private static final Logger logger = LoggerFactory.getLogger(GlassBackground.class);
@@ -37,6 +39,11 @@ public class GlassBackground extends StackPane {
     private final Region glowBlue = new Region();   // soft blue bottom-right
     private final StackPane contentContainer = new StackPane();
     private final Rectangle clipRect = new Rectangle();
+    private String currentPhotoPath;
+
+    public GlassBackground() {
+        this("/com/group2/flightres/photos/dest-capetown.jpg", DEFAULT_BLUR_RADIUS, DEFAULT_DARKNESS, null);
+    }
 
     public GlassBackground(String photoPath) {
         this(photoPath, DEFAULT_BLUR_RADIUS, DEFAULT_DARKNESS, null);
@@ -108,6 +115,7 @@ public class GlassBackground extends StackPane {
      * Supports classpath resources starting with "/" or file URLs.
      */
     public void setPhoto(String photoPath) {
+        this.currentPhotoPath = photoPath;
         try {
             Image img = null;
             if (photoPath.startsWith("/")) {
@@ -134,6 +142,14 @@ public class GlassBackground extends StackPane {
         } catch (Exception e) {
             logger.error("Error setting glass background photo: {}", photoPath, e);
         }
+    }
+
+    public String getPhotoPath() {
+        return currentPhotoPath;
+    }
+
+    public void setPhotoPath(String photoPath) {
+        setPhoto(photoPath);
     }
 
     /**

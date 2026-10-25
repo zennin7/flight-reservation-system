@@ -1,69 +1,137 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import com.group2.flightres.util.GlassBackground?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.shape.SVGPath?>
 
-<HBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.group2.flightres.controller.LoginController"
-      styleClass="login-split-root"
-      alignment="CENTER_LEFT"
-      prefWidth="1000"
-      prefHeight="676">
+<GlassBackground xmlns="http://javafx.com/javafx"
+                 xmlns:fx="http://javafx.com/fxml"
+                 fx:controller="com.group2.flightres.controller.LoginController"
+                 photoPath="/com/group2/flightres/photos/dest-capetown.jpg"
+                 stylesheets="@../css/glass.css"
+                 styleClass="login-root"
+                 prefWidth="1000"
+                 prefHeight="676">
 
-    <!-- Left: Photographic Showcase with Table Mountain aerial airplane window -->
-    <StackPane prefWidth="440" minWidth="440" maxWidth="440" prefHeight="676">
-        <ImageView fitWidth="440" fitHeight="676" preserveRatio="false">
-            <image>
-                <Image url="@../photos/login-side.jpg"/>
-            </image>
-        </ImageView>
-        <Region styleClass="login-photo-overlay" prefWidth="440" prefHeight="676"/>
-        <VBox alignment="BOTTOM_LEFT" spacing="6">
-            <StackPane.margin>
-                <Insets left="32" right="32" bottom="36"/>
-            </StackPane.margin>
-            <Label text="FLY ABOVE THE ORDINARY" styleClass="login-tagline-caps"/>
-            <Label text="Experience South Africa from new heights with refined comfort and seamless booking."
-                   styleClass="login-photo-quote" wrapText="true" maxWidth="360"/>
-        </VBox>
-    </StackPane>
+    <!-- Centered Split Glass Card -->
+    <HBox styleClass="login-split-card"
+          alignment="CENTER_LEFT"
+          maxWidth="880"
+          maxHeight="540"
+          prefWidth="880"
+          prefHeight="540">
+        <padding>
+            <Insets top="16" right="16" bottom="16" left="16"/>
+        </padding>
 
-    <!-- Right: Elevated Authentication Form -->
-    <StackPane HBox.hgrow="ALWAYS" alignment="CENTER" prefHeight="676">
-        <VBox alignment="TOP_CENTER" spacing="16" maxWidth="360" maxHeight="-Infinity" styleClass="card, login-card">
-            <!-- Title & Subtitle -->
-            <VBox alignment="CENTER" spacing="4">
-                <Label text="Welcome back" styleClass="login-card-title" />
-                <Label text="Log in to book and manage your flights" styleClass="login-card-subtitle" />
+        <!-- Left Half: Cape Town window-view photo card -->
+        <StackPane prefWidth="390"
+                   minWidth="390"
+                   maxWidth="390"
+                   prefHeight="508"
+                   maxHeight="508">
+            <clip>
+                <Rectangle width="390" height="508" arcWidth="32" arcHeight="32"/>
+            </clip>
+
+            <ImageView fitWidth="390" fitHeight="508" preserveRatio="false">
+                <image>
+                    <Image url="@../photos/login-side.jpg"/>
+                </image>
+            </ImageView>
+
+            <Region styleClass="login-photo-gradient" prefWidth="390" prefHeight="508"/>
+
+            <VBox alignment="TOP_LEFT">
+                <padding>
+                    <Insets top="28" right="24" bottom="28" left="28"/>
+                </padding>
+
+                <!-- Brand header -->
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <SVGPath content="M1.5 1.5l14 6-6 2-2 6-6-14z" styleClass="brand-icon-gold"/>
+                    <Label text="SKYVOYAGE" styleClass="brand-label"/>
+                </HBox>
+
+                <Region VBox.vgrow="ALWAYS"/>
+
+                <!-- Headline & pagination dots -->
+                <VBox spacing="14" alignment="BOTTOM_LEFT">
+                    <Label text="Your next&#10;horizon is&#10;one seat away."
+                           styleClass="login-hero-headline"
+                           wrapText="true"/>
+
+                    <HBox spacing="6" alignment="CENTER_LEFT">
+                        <Region styleClass="carousel-pill-active"/>
+                        <Region styleClass="carousel-dot"/>
+                        <Region styleClass="carousel-dot"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </StackPane>
+
+        <!-- Right Half: Elevated Authentication Form -->
+        <VBox alignment="CENTER_LEFT"
+              spacing="12"
+              HBox.hgrow="ALWAYS"
+              maxWidth="458">
+            <padding>
+                <Insets top="20" right="28" bottom="20" left="28"/>
+            </padding>
+
+            <!-- Kicker / Overline -->
+            <Label text="WELCOME BACK" styleClass="login-kicker"/>
+
+            <!-- Form Headline -->
+            <Label text="Sign in" styleClass="login-title-serif"/>
+
+            <!-- Subtitle -->
+            <Label text="Manage flights, seats and bookings in one place."
+                   styleClass="login-subtitle"
+                   wrapText="true"/>
+
+            <!-- Email (Username) Field -->
+            <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
+                <Label text="Email" styleClass="login-field-label"/>
+                <TextField fx:id="usernameField"
+                           promptText="david@example.com"
+                           styleClass="text-field"
+                           maxWidth="Infinity"/>
             </VBox>
 
-            <!-- Username Field -->
-            <VBox spacing="4" alignment="TOP_LEFT">
-                <Label text="Username" styleClass="login-field-label" />
-                <TextField fx:id="usernameField" promptText="Username" styleClass="text-field" />
+            <!-- Password Field & Forgot Link -->
+            <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
+                <HBox alignment="CENTER_LEFT" maxWidth="Infinity">
+                    <Label text="Password" styleClass="login-field-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Hyperlink text="Forgot?"
+                               onAction="#handleForgotPassword"
+                               styleClass="login-forgot-link"/>
+                </HBox>
+                <PasswordField fx:id="passwordField"
+                               promptText="Enter your password"
+                               styleClass="password-field"
+                               maxWidth="Infinity"/>
             </VBox>
 
-            <!-- Password Field -->
-            <VBox spacing="4" alignment="TOP_LEFT">
-                <Label text="Password" styleClass="login-field-label" />
-                <PasswordField fx:id="passwordField" promptText="Password" styleClass="password-field" />
-            </VBox>
-
-            <!-- Remember Me CheckBox -->
+            <!-- Keep me signed in CheckBox -->
             <HBox alignment="CENTER_LEFT">
-                <CheckBox fx:id="rememberMeCheckBox" text="Remember me" styleClass="remember-me-checkbox" />
+                <CheckBox fx:id="rememberMeCheckBox"
+                          text="Keep me signed in"
+                          styleClass="glass-checkbox"/>
             </HBox>
 
             <!-- Error Label (hidden until login fails) -->
@@ -72,15 +140,37 @@
                    styleClass="login-error-text"
                    visible="false"
                    managed="false"
-                   wrapText="true" />
+                   wrapText="true"/>
 
-            <!-- Log In Button -->
+            <!-- Sign in Button -->
             <Button fx:id="loginButton"
-                    text="Log In"
+                    text="Sign in"
                     onAction="#handleLogin"
-                    styleClass="btn-gold, login-submit-btn"
-                    maxWidth="Infinity" />
-        </VBox>
-    </StackPane>
+                    styleClass="btn-gold"
+                    maxWidth="Infinity"/>
 
-</HBox>
+            <!-- Sign up Link -->
+            <HBox alignment="CENTER" spacing="4">
+                <Label text="New here?" styleClass="login-muted-text"/>
+                <Hyperlink text="Create an account"
+                           onAction="#handleSignUp"
+                           styleClass="login-signup-link"/>
+            </HBox>
+
+            <!-- Social Sign-in -->
+            <HBox alignment="CENTER" spacing="10" maxWidth="Infinity">
+                <Button text="Google"
+                        onAction="#handleGoogleSignIn"
+                        styleClass="btn-ghost-sm"
+                        HBox.hgrow="ALWAYS"
+                        maxWidth="Infinity"/>
+                <Button text="Apple"
+                        onAction="#handleAppleSignIn"
+                        styleClass="btn-ghost-sm"
+                        HBox.hgrow="ALWAYS"
+                        maxWidth="Infinity"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+</GlassBackground>

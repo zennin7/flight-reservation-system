@@ -234,3 +234,174 @@
     -fx-font-size: 14px;
     -fx-text-fill: -glass-text-muted;
 }
+
+/* -------------------------------------------------------------------
+ * Screen 1: Login Specific Styles
+ * ------------------------------------------------------------------- */
+
+.login-root {
+    -fx-alignment: center;
+}
+
+.login-split-card {
+    -fx-background-color: rgba(11, 18, 32, 0.70);
+    -fx-background-radius: 28px;
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-width: 1px;
+    -fx-border-radius: 28px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.55), 36, 0.0, 0, 14);
+}
+
+.login-photo-gradient {
+    -fx-background-color: linear-gradient(to bottom, rgba(11, 18, 32, 0.40) 0%, rgba(11, 18, 32, 0.05) 30%, rgba(11, 18, 32, 0.25) 60%, rgba(11, 18, 32, 0.90) 100%);
+}
+
+.brand-icon-gold {
+    -fx-fill: #d4a63c;
+}
+
+.brand-label {
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 12px;
+    -fx-text-fill: #ffffff;
+}
+
+.login-hero-headline {
+    -fx-font-family: 'Lora SemiBold';
+    -fx-font-size: 28px;
+    -fx-text-fill: #ffffff;
+    -fx-line-spacing: 4px;
+}
+
+.carousel-pill-active {
+    -fx-background-color: #d4a63c;
+    -fx-background-radius: 999px;
+    -fx-pref-width: 22px;
+    -fx-min-width: 22px;
+    -fx-max-width: 22px;
+    -fx-pref-height: 4px;
+    -fx-min-height: 4px;
+    -fx-max-height: 4px;
+}
+
+.carousel-dot {
+    -fx-background-color: rgba(255, 255, 255, 0.35);
+    -fx-background-radius: 999px;
+    -fx-pref-width: 5px;
+    -fx-min-width: 5px;
+    -fx-max-width: 5px;
+    -fx-pref-height: 4px;
+    -fx-min-height: 4px;
+    -fx-max-height: 4px;
+}
+
+.login-kicker {
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 11px;
+    -fx-text-fill: #d4a63c;
+}
+
+.login-title-serif {
+    -fx-font-family: 'Lora SemiBold';
+    -fx-font-size: 32px;
+    -fx-text-fill: #ffffff;
+}
+
+.login-subtitle {
+    -fx-font-family: 'Inter';
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.65);
+}
+
+.login-field-label {
+    -fx-font-family: 'Inter Medium';
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.85);
+}
+
+.login-forgot-link {
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 12px;
+    -fx-text-fill: #e8c46a;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-underline: false;
+    -fx-cursor: hand;
+}
+
+.login-forgot-link:hover {
+    -fx-text-fill: #f3d98b;
+    -fx-underline: true;
+}
+
+.login-signup-link {
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 13px;
+    -fx-text-fill: #e8c46a;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-underline: false;
+    -fx-cursor: hand;
+}
+
+.login-signup-link:hover {
+    -fx-text-fill: #f3d98b;
+    -fx-underline: true;
+}
+
+.login-muted-text {
+    -fx-font-family: 'Inter';
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+}
+
+.btn-ghost-sm {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-text-fill: #ffffff;
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 12px;
+    -fx-border-color: rgba(255, 255, 255, 0.16);
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 7px 14px;
+    -fx-cursor: hand;
+}
+
+.btn-ghost-sm:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.16);
+    -fx-border-color: rgba(255, 255, 255, 0.30);
+}
+
+.glass-checkbox {
+    -fx-font-family: 'Inter';
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.80);
+    -fx-cursor: hand;
+}
+
+.glass-checkbox .box {
+    -fx-background-color: rgba(15, 23, 42, 0.60);
+    -fx-border-color: rgba(255, 255, 255, 0.25);
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.glass-checkbox:selected .box {
+    -fx-background-color: #d4a63c;
+    -fx-border-color: #f3d98b;
+}
+
+.glass-checkbox:selected .mark {
+    -fx-background-color: #0b1220;
+}
+
+.login-error-text {
+    -fx-font-family: 'Inter';
+    -fx-font-size: 12px;
+    -fx-text-fill: #fca5a5;
+    -fx-background-color: rgba(220, 38, 38, 0.15);
+    -fx-border-color: rgba(248, 113, 113, 0.40);
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 6px 10px;
+}
