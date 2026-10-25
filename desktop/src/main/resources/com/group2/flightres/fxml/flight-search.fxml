@@ -1,74 +1,297 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import com.group2.flightres.config.BrandConfig?>
+<?import com.group2.flightres.util.GlassBackground?>
+<?import com.group2.flightres.util.GlassFlightResultsBridge?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.SVGPath?>
 
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.group2.flightres.controller.FlightSearchController"
-      styleClass="flight-search-root"
-      spacing="16"
-      alignment="TOP_CENTER">
+<GlassBackground xmlns="http://javafx.com/javafx"
+                 xmlns:fx="http://javafx.com/fxml"
+                 fx:controller="com.group2.flightres.controller.FlightSearchController"
+                 photoPath="/com/group2/flightres/photos/home-hero.jpg"
+                 blurRadius="26.0"
+                 darkness="-0.50"
+                 saturation="0.15"
+                 linearOverlay="linear-gradient(to bottom, rgba(11,18,32,0.35) 0%, rgba(11,18,32,0.70) 100%)"
+                 radialGlow="radial-gradient(center 20% 0%, radius 50%, rgba(212,166,60,0.16) 0%, transparent 100%)"
+                 enableSecondaryGlow="false"
+                 stylesheets="@../css/glass.css"
+                 styleClass="flight-search-root"
+                 prefWidth="1280"
+                 prefHeight="860"
+                 minWidth="1280"
+                 minHeight="860">
 
-    <!-- Top: Search Bar Card -->
-    <HBox alignment="BOTTOM_CENTER" spacing="12" styleClass="card, search-bar-card">
-        <!-- FROM -->
-        <VBox spacing="6" HBox.hgrow="ALWAYS" minWidth="180" prefWidth="215">
-            <Label text="FROM" styleClass="form-label" />
-            <ComboBox fx:id="fromCombo" maxWidth="Infinity" />
+    <VBox alignment="TOP_CENTER" spacing="0" prefWidth="1280" prefHeight="860">
+
+        <!-- ===================================================================
+             TOP NAV (64 high, padding 0 56)
+             =================================================================== -->
+        <HBox alignment="CENTER_LEFT" prefHeight="64" minHeight="64" maxHeight="64" styleClass="glass-nav-bar">
+            <!-- Brand row: gold plane icon + APP_NAME -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" styleClass="nav-brand-plane"/>
+                <Label styleClass="nav-brand-text">
+                    <text><BrandConfig fx:constant="APP_NAME"/></text>
+                </Label>
+            </HBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Center nav links: Flights (active), My Bookings, Offers, About, Contact -->
+            <HBox alignment="CENTER" spacing="30" styleClass="glass-nav-links-box">
+                <Button text="Flights" styleClass="glass-nav-link, glass-nav-link-active"/>
+                <Button text="My Bookings" styleClass="glass-nav-link" onAction="#handleComingSoonOffers"/>
+                <Button text="Offers" styleClass="glass-nav-link" onAction="#handleComingSoonOffers"/>
+                <Button text="About" styleClass="glass-nav-link" onAction="#handleComingSoonOffers"/>
+                <Button text="Contact" styleClass="glass-nav-link" onAction="#handleComingSoonOffers"/>
+            </HBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Right avatar circle: 34px diameter, #d4a63c with initials AM -->
+            <StackPane styleClass="glass-avatar-circle" onMouseClicked="#handleComingSoonProfile">
+                <Label text="AM" styleClass="glass-avatar-initials"/>
+            </StackPane>
+        </HBox>
+
+        <!-- ===================================================================
+             MAIN GLASS CARD (margins: left/right 56, top 4, bottom 32; padding 14, gap 14)
+             =================================================================== -->
+        <VBox styleClass="search-main-glass"
+              spacing="14"
+              VBox.vgrow="ALWAYS"
+              prefWidth="1168"
+              maxWidth="1168"
+              prefHeight="760">
+            <VBox.margin>
+                <Insets top="4" right="56" bottom="32" left="56"/>
+            </VBox.margin>
+
+            <!-- ==============================================================-
+                 SEARCH BAR (inner card, 84 high)
+                 ==============================================================- -->
+            <HBox alignment="CENTER_LEFT" prefHeight="84" minHeight="84" maxHeight="84" styleClass="glass-search-bar">
+
+                <!-- FROM Cell -->
+                <VBox alignment="CENTER_LEFT" spacing="3" styleClass="search-cell" HBox.hgrow="ALWAYS" prefWidth="240">
+                    <Label text="From" styleClass="search-cell-muted-label"/>
+                    <Label fx:id="fromCityDisplay" text="Johannesburg" styleClass="search-cell-value-label"/>
+                    <Label fx:id="fromSubDisplay" text="JNB, O.R. Tambo International" styleClass="search-cell-sub-label"/>
+                    <!-- Invisible ComboBox for logic freeze compatibility -->
+                    <ComboBox fx:id="fromCombo" visible="false" managed="false" minHeight="0" prefHeight="0" maxHeight="0"/>
+                </VBox>
+
+                <!-- SWAP Button (32px diameter circle) -->
+                <StackPane>
+                    <HBox.margin>
+                        <Insets left="-16" right="-16"/>
+                    </HBox.margin>
+                    <Button onAction="#handleSwapLocations" styleClass="search-swap-btn">
+                        <graphic>
+                            <SVGPath content="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"
+                                     stroke="WHITE" strokeWidth="2" strokeLineCap="ROUND" strokeLineJoin="ROUND" fill="TRANSPARENT"
+                                     scaleX="0.7" scaleY="0.7"/>
+                        </graphic>
+                    </Button>
+                </StackPane>
+
+                <!-- TO Cell -->
+                <VBox alignment="CENTER_LEFT" spacing="3" styleClass="search-cell, search-cell-border" HBox.hgrow="ALWAYS" prefWidth="240">
+                    <padding>
+                        <Insets top="14" right="18" bottom="14" left="30"/>
+                    </padding>
+                    <Label text="To" styleClass="search-cell-muted-label"/>
+                    <Label fx:id="toCityDisplay" text="Cape Town" styleClass="search-cell-value-label"/>
+                    <Label fx:id="toSubDisplay" text="CPT, Cape Town International" styleClass="search-cell-sub-label"/>
+                    <!-- Invisible ComboBox for logic freeze compatibility -->
+                    <ComboBox fx:id="toCombo" visible="false" managed="false" minHeight="0" prefHeight="0" maxHeight="0"/>
+                </VBox>
+
+                <!-- DEPARTURE Cell -->
+                <VBox alignment="CENTER_LEFT" spacing="3" styleClass="search-cell, search-cell-border" HBox.hgrow="ALWAYS" prefWidth="180">
+                    <Label text="Departure" styleClass="search-cell-muted-label"/>
+                    <Label fx:id="depDateDisplay" text="14 Nov '26" styleClass="search-cell-value-label"/>
+                    <Label fx:id="depDayDisplay" text="Friday" styleClass="search-cell-sub-label"/>
+                    <!-- Invisible DatePicker for logic freeze compatibility -->
+                    <DatePicker fx:id="departureDatePicker" visible="false" managed="false" minHeight="0" prefHeight="0" maxHeight="0"/>
+                </VBox>
+
+                <!-- RETURN Cell -->
+                <VBox alignment="CENTER_LEFT" spacing="3" styleClass="search-cell, search-cell-border" HBox.hgrow="ALWAYS" prefWidth="180"
+                      onMouseClicked="#handleComingSoonReturnDate" style="-fx-cursor: hand;">
+                    <Label text="Return" styleClass="search-cell-muted-label"/>
+                    <Label text="One way" styleClass="search-cell-value-label"/>
+                    <Label text="Tap to add" styleClass="search-cell-sub-label"/>
+                </VBox>
+
+                <!-- TRAVELLERS AND CLASS Cell -->
+                <VBox alignment="CENTER_LEFT" spacing="3" styleClass="search-cell" HBox.hgrow="ALWAYS" prefWidth="200"
+                      onMouseClicked="#handleComingSoonTravellers" style="-fx-cursor: hand;">
+                    <Label text="Travellers and class" styleClass="search-cell-muted-label"/>
+                    <Label text="1 Traveller" styleClass="search-cell-value-label"/>
+                    <Label text="Economy" styleClass="search-cell-sub-label"/>
+                    <!-- Invisible Passengers ComboBox for logic freeze compatibility -->
+                    <ComboBox fx:id="passengersCombo" visible="false" managed="false" minHeight="0" prefHeight="0" maxHeight="0"/>
+                </VBox>
+
+                <!-- GOLD SEARCH BUTTON (84 wide, vertical gradient #d9ac47 to #b98a2e) -->
+                <Button fx:id="searchButton" onAction="#handleSearch" styleClass="search-btn-gold">
+                    <graphic>
+                        <SVGPath content="M11 4.5 A 6.5 6.5 0 1 0 11 17.5 A 6.5 6.5 0 1 0 11 4.5 M 16 16 L 21 21"
+                                 styleClass="search-btn-icon"/>
+                    </graphic>
+                </Button>
+            </HBox>
+
+            <!-- ==============================================================-
+                 BOTTOM WORKSPACE: FILTERS (width 300) + RESULTS (flex-grow)
+                 ==============================================================- -->
+            <HBox spacing="16" VBox.vgrow="ALWAYS" minHeight="0">
+
+                <!-- FILTERS SIDEBAR (width 300) -->
+                <VBox styleClass="filters-panel" minWidth="300" prefWidth="300" maxWidth="300" spacing="10">
+                    <Label text="Filters" styleClass="filters-title"/>
+
+                    <VBox styleClass="filters-card" minWidth="300" prefWidth="300" maxWidth="300" VBox.vgrow="ALWAYS" spacing="16">
+
+                        <!-- Section: Departure (2x2 pills) -->
+                        <VBox spacing="10">
+                            <Label text="Departure" styleClass="filter-section-title"/>
+                            <GridPane hgap="8" vgap="8">
+                                <Button text="Before 6 AM" onAction="#handleFilterDeparture"
+                                        styleClass="pill-button" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                                <Button text="6 AM to 12 PM" onAction="#handleFilterDeparture"
+                                        styleClass="pill-button, pill-button-on" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                                <Button text="12 PM to 6 PM" onAction="#handleFilterDeparture"
+                                        styleClass="pill-button" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                                <Button text="After 6 PM" onAction="#handleFilterDeparture"
+                                        styleClass="pill-button" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                            </GridPane>
+                        </VBox>
+
+                        <!-- Section: Stops (3 pills) -->
+                        <VBox spacing="10">
+                            <Label text="Stops" styleClass="filter-section-title"/>
+                            <HBox spacing="8">
+                                <Button text="Direct" onAction="#handleFilterStops"
+                                        styleClass="pill-button, pill-button-on" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button text="1 stop" onAction="#handleFilterStops"
+                                        styleClass="pill-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button text="2+" onAction="#handleFilterStops"
+                                        styleClass="pill-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                            </HBox>
+                        </VBox>
+
+                        <!-- Section: Price (range slider) -->
+                        <VBox spacing="8">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Price" styleClass="filter-section-title"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="Reset" onAction="#handleResetPrice" styleClass="filter-reset-link"/>
+                            </HBox>
+                            <Slider fx:id="priceSlider" min="990" max="4850" value="3300" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="R 990" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label text="R 4,850" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                            </HBox>
+                        </VBox>
+
+                        <!-- Section: Flight duration (range slider) -->
+                        <VBox spacing="8">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Flight duration" styleClass="filter-section-title"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="Reset" onAction="#handleResetDuration" styleClass="filter-reset-link"/>
+                            </HBox>
+                            <Slider fx:id="durationSlider" min="120" max="400" value="230" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="2h 05m" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label text="6h 40m" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                            </HBox>
+                        </VBox>
+
+                        <!-- Section: Cabin (two circular check items) -->
+                        <VBox spacing="10">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Cabin" styleClass="filter-section-title"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="Reset" onAction="#handleResetCabin" styleClass="filter-reset-link"/>
+                            </HBox>
+                            <VBox spacing="10">
+                                <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleToggleEconomy" styleClass="cabin-check-row">
+                                    <StackPane styleClass="check-circle, check-circle-on">
+                                        <SVGPath content="M5 12l5 5 9-10" styleClass="check-tick-icon"/>
+                                    </StackPane>
+                                    <Label text="Economy" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Label text="R 1,290" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                                </HBox>
+
+                                <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleToggleFirstClass" styleClass="cabin-check-row">
+                                    <StackPane styleClass="check-circle">
+                                        <SVGPath content="M5 12l5 5 9-10" styleClass="check-tick-icon" visible="false"/>
+                                    </StackPane>
+                                    <Label text="First Class" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Label text="R 2,722" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+
+                    </VBox>
+                </VBox>
+
+                <!-- RESULTS COLUMN (flex-grow) -->
+                <VBox spacing="10" HBox.hgrow="ALWAYS" minWidth="824" prefWidth="824" maxWidth="824">
+
+                    <!-- Header Row: Origin to Dest title + showing count -->
+                    <HBox alignment="BASELINE_LEFT" spacing="10" style="-fx-padding: 2px 4px;" minWidth="824" prefWidth="824" maxWidth="824">
+                        <Label fx:id="resultsTitleLabel" text="Flights from Johannesburg to Cape Town" styleClass="results-header-title" minWidth="-Infinity"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="resultsCountLabel" text="Showing 6 flights" styleClass="results-header-count" minWidth="-Infinity"/>
+                    </HBox>
+
+                    <!-- Interactive Glass Result Cards Container -->
+                    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="glass-scroll-pane" minWidth="824" prefWidth="824" maxWidth="824" VBox.vgrow="ALWAYS">
+                        <VBox fx:id="resultsCardsContainer" spacing="10" minWidth="824" prefWidth="824" maxWidth="824">
+                            <!-- Cards built dynamically by GlassFlightResultsBridge -->
+                        </VBox>
+                    </ScrollPane>
+
+                    <!-- TableView Bridge: maintains full compatibility with FlightSearchController.initTable() -->
+                    <GlassFlightResultsBridge fx:id="flightsTable" visible="false" managed="false" minHeight="0" prefHeight="0" maxHeight="0" minWidth="0" prefWidth="0" maxWidth="0" style="-fx-opacity: 0; visibility: hidden; -fx-max-height: 0; -fx-pref-height: 0; -fx-max-width: 0;">
+                        <columns>
+                            <TableColumn fx:id="flightCol" text="FLIGHT"/>
+                            <TableColumn fx:id="departsCol" text="DEPARTS"/>
+                            <TableColumn fx:id="arrivesCol" text="ARRIVES"/>
+                            <TableColumn fx:id="durationCol" text="DURATION"/>
+                            <TableColumn fx:id="fromPriceCol" text="FROM"/>
+                            <TableColumn fx:id="actionCol" text="ACTION"/>
+                        </columns>
+                    </GlassFlightResultsBridge>
+
+                </VBox>
+            </HBox>
+
         </VBox>
 
-        <!-- TO -->
-        <VBox spacing="6" HBox.hgrow="ALWAYS" minWidth="180" prefWidth="215">
-            <Label text="TO" styleClass="form-label" />
-            <ComboBox fx:id="toCombo" maxWidth="Infinity" />
-        </VBox>
-
-        <!-- DEPARTURE DATE -->
-        <VBox spacing="6" HBox.hgrow="ALWAYS" minWidth="140" prefWidth="165">
-            <Label text="DEPARTURE DATE" styleClass="form-label" />
-            <DatePicker fx:id="departureDatePicker" promptText="2026-11-02" maxWidth="Infinity" />
-        </VBox>
-
-        <!-- PASSENGERS -->
-        <VBox spacing="6" minWidth="110" prefWidth="130">
-            <Label text="PASSENGERS" styleClass="form-label" />
-            <ComboBox fx:id="passengersCombo" maxWidth="Infinity" />
-        </VBox>
-
-        <!-- SEARCH BUTTON -->
-        <Button fx:id="searchButton" text="Search" styleClass="btn-gold, search-btn" minWidth="120" prefWidth="120">
-            <graphic>
-                <SVGPath content="M 7 2.5 A 4.5 4.5 0 1 0 7 11.5 A 4.5 4.5 0 1 0 7 2.5 M 10.2 10.2 L 15 15"
-                         stroke="WHITE" strokeWidth="2" strokeLineCap="ROUND" fill="TRANSPARENT" />
-            </graphic>
-        </Button>
-    </HBox>
-
-    <!-- Bottom: Results Card -->
-    <VBox VBox.vgrow="ALWAYS" styleClass="card, flight-results-card" spacing="0">
-        <TableView fx:id="flightsTable" styleClass="flights-table">
-            <columns>
-                <TableColumn fx:id="flightCol" text="FLIGHT" prefWidth="180" />
-                <TableColumn fx:id="departsCol" text="DEPARTS" prefWidth="145" />
-                <TableColumn fx:id="arrivesCol" text="ARRIVES" prefWidth="145" />
-                <TableColumn fx:id="durationCol" text="DURATION" prefWidth="145" />
-                <TableColumn fx:id="fromPriceCol" text="FROM" prefWidth="145" />
-                <TableColumn fx:id="actionCol" text="" prefWidth="170" />
-            </columns>
-        </TableView>
-
-        <Label fx:id="resultsCountLabel"
-               text="4 flights found. Prices are base fares before seat class and demand pricing."
-               styleClass="results-count-label" />
     </VBox>
 
-</VBox>
+</GlassBackground>

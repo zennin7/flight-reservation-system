@@ -243,4 +243,129 @@ public class FlightSearchController implements WizardStepController {
             onNext.run();
         }
     }
+
+    // ===================================================================
+    // Glass Reskin (Phase 2 Screen 02) Additions
+    // ===================================================================
+    public static FlightSearchController currentInstance;
+
+    {
+        currentInstance = this;
+    }
+
+    public void selectFlightFromGlassCard(FlightSearchResult flight) {
+        handleSelectFlight(flight);
+    }
+
+    public void executeSearchFromGlass() {
+        performSearch();
+    }
+
+    @FXML
+    private void handleSwapLocations() {
+        com.group2.flightres.util.GlassFlightResultsBridge bridge =
+                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        if (bridge != null) {
+            bridge.swapLocations();
+        } else if (fromCombo != null && toCombo != null) {
+            String temp = fromCombo.getValue();
+            fromCombo.setValue(toCombo.getValue());
+            toCombo.setValue(temp);
+            performSearch();
+        }
+    }
+
+    @FXML
+    private void handleComingSoonOffers() {
+        showComingSoon("Special Offers", "Special offers aren't available yet.");
+    }
+
+    @FXML
+    private void handleComingSoonReturnDate() {
+        showComingSoon("Return Flights", "Return flight booking isn't available yet.");
+    }
+
+    @FXML
+    private void handleComingSoonTravellers() {
+        showComingSoon("Travellers and Cabin", "Traveller and cabin class selection isn't available yet.");
+    }
+
+    @FXML
+    private void handleComingSoonProfile() {
+        showComingSoon("User Profile", "User profile management isn't available yet.");
+    }
+
+    @FXML
+    private void handleFilterDeparture(javafx.event.ActionEvent event) {
+        if (event.getSource() instanceof Button btn) {
+            com.group2.flightres.util.GlassFlightResultsBridge bridge =
+                    com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+            if (bridge != null) {
+                bridge.setDepartureFilter(btn.getText());
+            }
+        }
+    }
+
+    @FXML
+    private void handleFilterStops(javafx.event.ActionEvent event) {
+        if (event.getSource() instanceof Button btn) {
+            com.group2.flightres.util.GlassFlightResultsBridge bridge =
+                    com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+            if (bridge != null) {
+                bridge.setStopsFilter(btn.getText());
+            }
+        }
+    }
+
+    @FXML
+    private void handleResetPrice() {
+        com.group2.flightres.util.GlassFlightResultsBridge bridge =
+                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        if (bridge != null) {
+            bridge.resetPriceFilter();
+        }
+    }
+
+    @FXML
+    private void handleResetDuration() {
+        com.group2.flightres.util.GlassFlightResultsBridge bridge =
+                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        if (bridge != null) {
+            bridge.resetDurationFilter();
+        }
+    }
+
+    @FXML
+    private void handleResetCabin() {
+        com.group2.flightres.util.GlassFlightResultsBridge bridge =
+                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        if (bridge != null) {
+            bridge.resetCabinFilter();
+        }
+    }
+
+    @FXML
+    private void handleToggleEconomy() {
+        com.group2.flightres.util.GlassFlightResultsBridge bridge =
+                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        if (bridge != null) {
+            bridge.toggleEconomy();
+        }
+    }
+
+    @FXML
+    private void handleToggleFirstClass() {
+        com.group2.flightres.util.GlassFlightResultsBridge bridge =
+                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        if (bridge != null) {
+            bridge.toggleFirstClass();
+        }
+    }
+
+    private void showComingSoon(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, message);
+        alert.setTitle("Coming soon");
+        alert.setHeaderText(title);
+        alert.showAndWait();
+    }
 }

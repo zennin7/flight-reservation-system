@@ -503,3 +503,520 @@
     -fx-background-radius: 8px;
     -fx-padding: 6px 10px;
 }
+
+
+/* ===================================================================
+ * Screen 2: Flight Search (Glass Theme)
+ * =================================================================== */
+
+.flight-search-root {
+    -fx-alignment: top-center;
+}
+
+/* Collapse MainShell outer top wrapper when glass.css is active */
+.shell-root > VBox {
+    -fx-min-height: 0;
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+    -fx-padding: 0;
+    visibility: hidden;
+}
+
+/* Main Glass Card (margins: left/right 56, top 68, bottom 32) */
+.search-main-glass {
+    -fx-background-color: rgba(255, 255, 255, 0.085);
+    -fx-border-color: rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.20) transparent transparent transparent;
+    -fx-border-insets: 0, 1;
+    -fx-border-width: 1px, 1px 0 0 0;
+    -fx-border-radius: 28px, 27px 27px 0 0;
+    -fx-background-radius: 28px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.40), 90, 0.0, 0, 34);
+    -fx-padding: 14px;
+}
+
+/* Top Nav (64 high, padding 0 56) */
+.glass-nav-bar {
+    -fx-min-height: 64px;
+    -fx-pref-height: 64px;
+    -fx-max-height: 64px;
+    -fx-padding: 0 56px;
+    -fx-alignment: center-left;
+}
+
+.nav-brand-plane {
+    -fx-stroke: #d4a63c;
+    -fx-stroke-width: 1.8;
+    -fx-fill: transparent;
+}
+
+.nav-brand-text {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-letter-spacing: 0.14em;
+}
+
+.glass-nav-links-box {
+    -fx-alignment: center;
+    -fx-spacing: 30px;
+}
+
+.glass-nav-link {
+    -fx-background-color: transparent;
+    -fx-font-family: 'Inter Medium', 'Inter', sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #ffffff;
+    -fx-border-width: 0;
+    -fx-padding: 6px 4px;
+    -fx-cursor: hand;
+}
+
+.glass-nav-link:hover {
+    -fx-text-fill: #e8c46a;
+}
+
+.glass-nav-link-active {
+    -fx-text-fill: #e8c46a;
+}
+
+.glass-avatar-circle {
+    -fx-background-color: #d4a63c;
+    -fx-background-radius: 50%;
+    -fx-min-width: 34px;
+    -fx-min-height: 34px;
+    -fx-pref-width: 34px;
+    -fx-pref-height: 34px;
+    -fx-max-width: 34px;
+    -fx-max-height: 34px;
+    -fx-alignment: center;
+    -fx-cursor: hand;
+}
+
+.glass-avatar-initials {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 13px;
+    -fx-text-fill: #0b1220;
+}
+
+/* Search Bar (inner card 84 high) */
+.glass-search-bar {
+    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-min-height: 84px;
+    -fx-pref-height: 84px;
+    -fx-max-height: 84px;
+    -fx-padding: 0 0 0 6px;
+    -fx-alignment: center-left;
+}
+
+.search-cell {
+    -fx-alignment: center-left;
+    -fx-padding: 14px 18px;
+}
+
+.search-cell-border {
+    -fx-border-color: transparent rgba(255, 255, 255, 0.10) transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+}
+
+.search-cell-muted-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.58);
+}
+
+.search-cell-value-label {
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 20px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.search-cell-sub-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(255, 255, 255, 0.58);
+}
+
+/* Swap button 32px */
+.search-swap-btn {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-border-color: rgba(255, 255, 255, 0.20);
+    -fx-border-width: 1px;
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-min-width: 32px;
+    -fx-min-height: 32px;
+    -fx-pref-width: 32px;
+    -fx-pref-height: 32px;
+    -fx-max-width: 32px;
+    -fx-max-height: 32px;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+    -fx-alignment: center;
+}
+
+.search-swap-btn:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.24);
+    -fx-border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Gold search button 84 wide, vertical gradient #d9ac47 to #b98a2e */
+.search-btn-gold {
+    -fx-background-color: linear-gradient(to bottom, #d9ac47, #b98a2e);
+    -fx-border-radius: 0 20px 20px 0;
+    -fx-background-radius: 0 20px 20px 0;
+    -fx-min-width: 84px;
+    -fx-pref-width: 84px;
+    -fx-max-width: 84px;
+    -fx-min-height: 84px;
+    -fx-pref-height: 84px;
+    -fx-max-height: 84px;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+    -fx-alignment: center;
+}
+
+.search-btn-gold:hover {
+    -fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c);
+}
+
+.search-btn-icon {
+    -fx-stroke: #0b1220;
+    -fx-stroke-width: 2.4;
+    -fx-fill: transparent;
+}
+
+/* Filters panel (width 300) */
+.filters-panel {
+    -fx-min-width: 300px;
+    -fx-pref-width: 300px;
+    -fx-max-width: 300px;
+}
+
+.filters-title {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 17px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 2px 4px;
+}
+
+.filters-card {
+    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 16px 18px;
+    -fx-spacing: 16px;
+}
+
+.filter-section-title {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.filter-reset-link {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #e8c46a;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
+}
+
+.filter-reset-link:hover {
+    -fx-underline: true;
+}
+
+/* Pills */
+.pill-button {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-background-radius: 999px;
+    -fx-min-height: 34px;
+    -fx-pref-height: 34px;
+    -fx-max-height: 34px;
+    -fx-font-family: 'Inter Medium', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-text-fill: rgba(255, 255, 255, 0.85);
+    -fx-cursor: hand;
+    -fx-alignment: center;
+    -fx-padding: 0 10px;
+}
+
+.pill-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.16);
+}
+
+.pill-button-on {
+    -fx-background-color: rgba(212, 166, 60, 0.20);
+    -fx-border-color: rgba(212, 166, 60, 0.70);
+    -fx-text-fill: #f3d98b;
+}
+
+.pill-button-on:hover {
+    -fx-background-color: rgba(212, 166, 60, 0.28);
+}
+
+/* Sliders */
+.glass-slider .track {
+    -fx-background-color: linear-gradient(to right, #b98a2e 0%, #e8c46a 60%, rgba(255, 255, 255, 0.12) 60%, rgba(255, 255, 255, 0.12) 100%);
+    -fx-background-radius: 4px;
+}
+
+.glass-slider .thumb {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 10px;
+    -fx-padding: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 8, 0, 0, 2);
+    -fx-cursor: hand;
+}
+
+/* Cabin Check circle */
+.cabin-check-row {
+    -fx-alignment: center-left;
+    -fx-spacing: 10px;
+    -fx-cursor: hand;
+}
+
+.check-circle {
+    -fx-min-width: 18px;
+    -fx-min-height: 18px;
+    -fx-pref-width: 18px;
+    -fx-pref-height: 18px;
+    -fx-max-width: 18px;
+    -fx-max-height: 18px;
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-border-color: rgba(255, 255, 255, 0.40);
+    -fx-border-width: 1.5px;
+    -fx-background-color: transparent;
+    -fx-alignment: center;
+}
+
+.check-circle-on {
+    -fx-background-color: #d4a63c;
+    -fx-border-color: #d4a63c;
+}
+
+.check-tick-icon {
+    -fx-stroke: #0b1220;
+    -fx-stroke-width: 3.5;
+    -fx-fill: transparent;
+}
+
+/* Result Cards */
+.results-header-title {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 17px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.results-header-count {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.58);
+}
+
+.flight-result-card {
+    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 16px 22px 14px 22px;
+}
+
+.flight-result-card:hover {
+    -fx-border-color: rgba(212, 166, 60, 0.30);
+}
+
+.airline-logo-circle {
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-pref-width: 30px;
+    -fx-pref-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-background-color: linear-gradient(to bottom right, #e8c46a, #b98a2e);
+    -fx-alignment: center;
+}
+
+.airline-brand-text {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.flight-number-muted {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.58);
+}
+
+.airport-code-muted {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.58);
+}
+
+.flight-time-bold {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+}
+
+.flight-duration-pill {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+    -fx-background-radius: 999px;
+    -fx-padding: 4px 12px;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-alignment: center;
+}
+
+.flight-path-dot {
+    -fx-background-color: #e8c46a;
+    -fx-background-radius: 50%;
+    -fx-min-width: 7px;
+    -fx-min-height: 7px;
+    -fx-pref-width: 7px;
+    -fx-pref-height: 7px;
+    -fx-max-width: 7px;
+    -fx-max-height: 7px;
+}
+
+.flight-price-bold {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 30px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+    -fx-alignment: center-right;
+}
+
+.card-divider-line {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-min-height: 1px;
+    -fx-pref-height: 1px;
+    -fx-max-height: 1px;
+}
+
+.card-tag-text {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.75);
+}
+
+.flight-details-btn {
+    -fx-background-color: transparent;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #e8c46a;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+    -fx-alignment: center;
+}
+
+.flight-details-btn:hover {
+    -fx-text-fill: #f3d98b;
+}
+
+/* Expanded details box */
+.expanded-details-box {
+    -fx-background-color: rgba(0, 0, 0, 0.22);
+    -fx-background-radius: 16px;
+    -fx-padding: 8px;
+    -fx-spacing: 8px;
+}
+
+.tab-bar-container {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+    -fx-background-radius: 12px;
+    -fx-padding: 3px;
+    -fx-spacing: 4px;
+}
+
+.details-tab-btn {
+    -fx-background-color: transparent;
+    -fx-background-radius: 10px;
+    -fx-min-height: 34px;
+    -fx-pref-height: 34px;
+    -fx-max-height: 34px;
+    -fx-font-family: 'Inter Medium', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 500;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.details-tab-btn:hover {
+    -fx-text-fill: #ffffff;
+}
+
+.details-tab-btn-on {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-text-fill: #ffffff;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-weight: 600;
+}
+
+.layover-pill {
+    -fx-background-color: #2a2f3a;
+    -fx-background-radius: 999px;
+    -fx-padding: 4px 12px;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-alignment: center;
+}
+
+.glass-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-padding: 0;
+}
+
+.glass-scroll-pane > .viewport,
+.glass-scroll-pane .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.glass-scroll-pane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+
+.glass-scroll-pane .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+}
+
+.glass-scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: rgba(255, 255, 255, 0.20);
+    -fx-background-radius: 4px;
+}
