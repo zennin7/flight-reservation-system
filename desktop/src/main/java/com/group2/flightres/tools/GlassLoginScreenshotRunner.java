@@ -31,8 +31,8 @@ import java.nio.file.Path;
 public class GlassLoginScreenshotRunner extends Application {
 
     private static final Logger logger = LoggerFactory.getLogger(GlassLoginScreenshotRunner.class);
-    private static final int WIDTH = 1000;
-    private static final int HEIGHT = 740;
+    private static final int WIDTH = 1280;
+    private static final int HEIGHT = 800;
 
     private static Path getOutputDir() {
         if (new File("..", "docs/screenshots").exists()) {
@@ -57,7 +57,8 @@ public class GlassLoginScreenshotRunner extends Application {
             usernameField.deselect();
         }
 
-        TextField passwordField = (TextField) root.lookup("#passwordField");
+        javafx.scene.control.PasswordField passwordField =
+                (javafx.scene.control.PasswordField) root.lookup("#passwordField");
         if (passwordField != null) {
             passwordField.setText("••••••••••");
             passwordField.deselect();
@@ -66,6 +67,10 @@ public class GlassLoginScreenshotRunner extends Application {
         javafx.scene.control.CheckBox rememberMe = (javafx.scene.control.CheckBox) root.lookup("#rememberMeCheckBox");
         if (rememberMe != null) {
             rememberMe.setSelected(true);
+        }
+
+        if (usernameField != null) {
+            usernameField.requestFocus();
         }
 
         Scene scene = new Scene(root, WIDTH, HEIGHT);

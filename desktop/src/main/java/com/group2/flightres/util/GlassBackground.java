@@ -18,9 +18,9 @@ import java.net.URL;
 
 /**
  * Atmospheric background helper for the Glass UI theme.
- * Composes a full-bleed photo with GaussianBlur and ColorAdjust, a translucent navy overlay,
- * and a top content container. Automatically scales and crops the background image to "cover"
- * the window bounds on resize.
+ * Composes a full-bleed photo with GaussianBlur and ColorAdjust, a translucent navy/gradient overlay,
+ * radial glow accents, and a top content container. Automatically scales and crops the background
+ * image to "cover" the window bounds on resize.
  */
 @DefaultProperty("content")
 public class GlassBackground extends StackPane {
@@ -29,20 +29,32 @@ public class GlassBackground extends StackPane {
 
     public static final double DEFAULT_BLUR_RADIUS = 28.0;
     public static final double DEFAULT_DARKNESS = -0.35; // -35% brightness
+    public static final double DEFAULT_SATURATION = 0.0;
     public static final String DEFAULT_NAVY_OVERLAY_COLOR = "rgba(11, 18, 32, 0.60)";
+    public static final String DEFAULT_RADIAL_GLOW_GOLD =
+            "radial-gradient(center 20% 22%, radius 65%, rgba(212,166,60,0.16) 0%, transparent 100%);";
+    public static final String DEFAULT_RADIAL_GLOW_BLUE =
+            "radial-gradient(center 80% 78%, radius 60%, rgba(79,124,255,0.12) 0%, transparent 100%);";
 
     private final ImageView backgroundImageView = new ImageView();
     private final ColorAdjust colorAdjust = new ColorAdjust();
     private final GaussianBlur gaussianBlur = new GaussianBlur();
     private final Region navyOverlay = new Region();
-    private final Region glowGold = new Region();   // soft gold top-left
-    private final Region glowBlue = new Region();   // soft blue bottom-right
+    private final Region glowGold = new Region();
+    private final Region glowBlue = new Region();
     private final StackPane contentContainer = new StackPane();
     private final Rectangle clipRect = new Rectangle();
+
     private String currentPhotoPath;
+    private double currentBlurRadius = DEFAULT_BLUR_RADIUS;
+    private double currentDarkness = DEFAULT_DARKNESS;
+    private double currentSaturation = DEFAULT_SATURATION;
+    private String currentLinearOverlay = DEFAULT_NAVY_OVERLAY_COLOR;
+    private String currentRadialGlow = DEFAULT_RADIAL_GLOW_GOLD;
+    private boolean enableSecondaryGlow = true;
 
     public GlassBackground() {
-        this("/com/group2/flightres/photos/dest-capetown.jpg", DEFAULT_BLUR_RADIUS, DEFAULT_DARKNESS, null);
+        this("/com/group2/flightres/photos/dest-capetown.jpg");
     }
 
     public GlassBackground(String photoPath) {
@@ -54,6 +66,12 @@ public class GlassBackground extends StackPane {
     }
 
     public GlassBackground(String photoPath, double blurRadius, double darkness, Node content) {
+        this(photoPath, blurRadius, darkness, DEFAULT_SATURATION,
+                DEFAULT_NAVY_OVERLAY_COLOR, DEFAULT_RADIAL_GLOW_GOLD, true, content);
+    }
+
+    public GlassBackground(String photoPath, double blurRadius, double darkness, double saturation,
+                           String linearOverlay, String radialGlow, boolean enableSecondaryGlow, Node content) {
         setAlignment(Pos.CENTER);
 
         // 1. Configure image & effects
@@ -61,31 +79,28 @@ public class GlassBackground extends StackPane {
         backgroundImageView.setSmooth(true);
 
         setDarkness(darkness);
+        setSaturation(saturation);
         setBlurRadius(blurRadius);
         gaussianBlur.setInput(colorAdjust);
         backgroundImageView.setEffect(gaussianBlur);
 
-        // 2. Configure navy overlay
-        navyOverlay.setStyle("-fx-background-color: " + DEFAULT_NAVY_OVERLAY_COLOR + ";");
+        // 2. Configure linear overlay
+        setLinearOverlay(linearOverlay != null ? linearOverlay : DEFAULT_NAVY_OVERLAY_COLOR);
         navyOverlay.prefWidthProperty().bind(widthProperty());
         navyOverlay.prefHeightProperty().bind(heightProperty());
 
-        // 2b. Radial glow accents (sit above navy overlay, below content)
+        // 2b. Primary radial glow accent (sit above navy overlay, below content)
         glowGold.prefWidthProperty().bind(widthProperty());
         glowGold.prefHeightProperty().bind(heightProperty());
         glowGold.setMouseTransparent(true);
-        // Gold glow: centred upper-left, soft radial fade
-        glowGold.setStyle(
-                "-fx-background-color: radial-gradient(center 20% 22%, radius 65%," +
-                " rgba(212,166,60,0.16) 0%, transparent 100%);");
+        setRadialGlow(radialGlow != null ? radialGlow : DEFAULT_RADIAL_GLOW_GOLD);
 
+        // 2c. Secondary radial glow accent (optional)
         glowBlue.prefWidthProperty().bind(widthProperty());
         glowBlue.prefHeightProperty().bind(heightProperty());
         glowBlue.setMouseTransparent(true);
-        // Blue glow: centred lower-right
-        glowBlue.setStyle(
-                "-fx-background-color: radial-gradient(center 80% 78%, radius 60%," +
-                " rgba(79,124,255,0.12) 0%, transparent 100%);");
+        glowBlue.setStyle("-fx-background-color: " + DEFAULT_RADIAL_GLOW_BLUE);
+        setEnableSecondaryGlow(enableSecondaryGlow);
 
         // 3. Configure content container
         contentContainer.setAlignment(Pos.CENTER);
@@ -93,7 +108,7 @@ public class GlassBackground extends StackPane {
             contentContainer.getChildren().add(content);
         }
 
-        // 4. Assemble stack: ImageView (bottom), Navy overlay, Glow accents, Content (top)
+        // 4. Assemble stack: ImageView (bottom), Overlay, Primary Glow, Secondary Glow, Content (top)
         getChildren().addAll(backgroundImageView, navyOverlay, glowGold, glowBlue, contentContainer);
 
         // 5. Constrain blurred bleed using clip
@@ -152,18 +167,63 @@ public class GlassBackground extends StackPane {
         setPhoto(photoPath);
     }
 
-    /**
-     * Updates the blur radius effect on the background image.
-     */
+    public double getBlurRadius() {
+        return currentBlurRadius;
+    }
+
     public void setBlurRadius(double radius) {
+        this.currentBlurRadius = radius;
         gaussianBlur.setRadius(Math.max(0.0, radius));
     }
 
-    /**
-     * Sets the brightness adjustment (-1.0 to 1.0, where -0.5 is 50% darker).
-     */
+    public double getDarkness() {
+        return currentDarkness;
+    }
+
     public void setDarkness(double darkness) {
+        this.currentDarkness = darkness;
         colorAdjust.setBrightness(Math.max(-1.0, Math.min(1.0, darkness)));
+    }
+
+    public double getSaturation() {
+        return currentSaturation;
+    }
+
+    public void setSaturation(double saturation) {
+        this.currentSaturation = saturation;
+        colorAdjust.setSaturation(Math.max(-1.0, Math.min(1.0, saturation)));
+    }
+
+    public String getLinearOverlay() {
+        return currentLinearOverlay;
+    }
+
+    public void setLinearOverlay(String cssBackground) {
+        this.currentLinearOverlay = cssBackground;
+        if (cssBackground != null && !cssBackground.isBlank()) {
+            navyOverlay.setStyle("-fx-background-color: " + cssBackground + ";");
+        }
+    }
+
+    public String getRadialGlow() {
+        return currentRadialGlow;
+    }
+
+    public void setRadialGlow(String cssBackground) {
+        this.currentRadialGlow = cssBackground;
+        if (cssBackground != null && !cssBackground.isBlank()) {
+            glowGold.setStyle("-fx-background-color: " + cssBackground + ";");
+        }
+    }
+
+    public boolean isEnableSecondaryGlow() {
+        return enableSecondaryGlow;
+    }
+
+    public void setEnableSecondaryGlow(boolean enable) {
+        this.enableSecondaryGlow = enable;
+        glowBlue.setVisible(enable);
+        glowBlue.setManaged(enable);
     }
 
     /**
