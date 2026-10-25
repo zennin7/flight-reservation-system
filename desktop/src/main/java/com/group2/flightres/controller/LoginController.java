@@ -95,28 +95,28 @@ public class LoginController implements WizardStepController {
 
     @FXML
     private void handleForgotPassword() {
-        showComingSoon("Password Recovery");
+        showComingSoon("Password Recovery", "Password recovery isn't available yet.");
     }
 
     @FXML
     private void handleSignUp() {
-        showComingSoon("Create Account");
+        showComingSoon("Create Account", "Account registration isn't available yet.");
     }
 
     @FXML
     private void handleGoogleSignIn() {
-        showComingSoon("Google Sign-In");
+        showComingSoon("Google Sign-In", "Sign in with Google isn't available yet.");
     }
 
     @FXML
     private void handleAppleSignIn() {
-        showComingSoon("Apple Sign-In");
+        showComingSoon("Apple Sign-In", "Sign in with Apple isn't available yet.");
     }
 
-    private void showComingSoon(String title) {
+    private void showComingSoon(String title, String message) {
         javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
                 javafx.scene.control.Alert.AlertType.INFORMATION,
-                "Coming soon");
+                message);
         alert.setTitle("Coming soon");
         alert.setHeaderText(title);
         alert.showAndWait();

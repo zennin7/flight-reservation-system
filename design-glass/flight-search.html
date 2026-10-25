@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glass Flight Search</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter','Segoe UI',sans-serif;color:#fff}
+a{color:inherit;text-decoration:none}
+.bgp{position:absolute;inset:-60px;background:url(/_blob/76df9ad8e064b106ebfd68ef0685c078) center/cover no-repeat;filter:blur(26px) brightness(.5) saturate(1.15)}
+.bgs{position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(212,166,60,.16),transparent 50%),linear-gradient(180deg,rgba(11,18,32,.35),rgba(11,18,32,.7))}
+.glass{background:rgba(255,255,255,.085);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(28px) saturate(1.3);backdrop-filter:blur(28px) saturate(1.3);border-radius:28px;box-shadow:0 34px 90px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.2)}
+.inner{background:rgba(8,12,22,.34);border:1px solid rgba(255,255,255,.08);border-radius:20px}
+.mut{color:rgba(255,255,255,.58)}
+.pill{display:flex;align-items:center;justify-content:center;height:34px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);font-size:13px;font-weight:500;color:rgba(255,255,255,.85)}
+.pill.on{background:rgba(212,166,60,.2);border-color:rgba(212,166,60,.7);color:#f3d98b}
+.sec{font-size:15px;font-weight:600}
+.reset{font-size:12px;font-weight:600;color:#e8c46a}
+.trk{position:relative;height:8px;border-radius:999px;background:rgba(255,255,255,.12)}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,#b98a2e,#e8c46a)}
+.knob{position:absolute;top:-5px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+.chk{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chk.on{background:#d4a63c;border-color:#d4a63c}
+.logo{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#e8c46a,#b98a2e);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.price{font-size:30px;font-weight:700;letter-spacing:-.01em}
+.dl{flex-grow:1;border-top:1.5px dashed rgba(255,255,255,.35)}
+.dot{width:7px;height:7px;border-radius:50%;background:#e8c46a;flex-shrink:0}
+.dur{padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.12);font-size:12px;font-weight:600;white-space:nowrap}
+.tag{font-size:13px;color:rgba(255,255,255,.75)}
+.tab{flex:1;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:rgba(255,255,255,.6)}
+.tab.on{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+</style>
+</helmet>
+<div style="position:relative;width:1280px;height:860px;overflow:hidden;background:#0b1220">
+  <div class="bgp"></div><div class="bgs"></div>
+
+  <div style="position:absolute;left:0;right:0;top:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 56px">
+    <div style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:.14em"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a63c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l18-8-6 16-3-7-9-1z"></path></svg>APP_NAME</div>
+    <div style="display:flex;gap:30px;font-size:14px;font-weight:500"><a href="#" style="color:#e8c46a">Flights</a><a href="#">My Bookings</a><a href="#">Offers</a><a href="#">About</a><a href="#">Contact</a></div>
+    <span style="width:34px;height:34px;border-radius:50%;background:#d4a63c;color:#0b1220;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">AM</span>
+  </div>
+
+  <div class="glass" style="position:absolute;left:56px;right:56px;top:68px;bottom:32px;padding:14px;display:flex;flex-direction:column;gap:14px">
+
+    <!-- search bar -->
+    <div class="inner" style="height:84px;flex-shrink:0;display:flex;align-items:stretch;padding:0 0 0 6px">
+      <div style="flex:1.25;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;gap:3px;position:relative"><div class="mut" style="font-size:12px">From</div><div style="font-size:20px;font-weight:600">Johannesburg</div><div class="mut" style="font-size:11px">JNB, O.R. Tambo International</div>
+        <span style="position:absolute;right:-16px;top:26px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;z-index:2"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"></path></svg></span></div>
+      <div style="flex:1.25;padding:14px 18px 14px 30px;display:flex;flex-direction:column;justify-content:center;gap:3px;border-right:1px solid rgba(255,255,255,.1)"><div class="mut" style="font-size:12px">To</div><div style="font-size:20px;font-weight:600">Cape Town</div><div class="mut" style="font-size:11px">CPT, Cape Town International</div></div>
+      <div style="flex:1;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;gap:3px;border-right:1px solid rgba(255,255,255,.1)"><div class="mut" style="font-size:12px">Departure</div><div style="font-size:20px;font-weight:600">14 Nov '26</div><div class="mut" style="font-size:11px">Friday</div></div>
+      <div style="flex:1;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;gap:3px;border-right:1px solid rgba(255,255,255,.1)"><div class="mut" style="font-size:12px">Return</div><div style="font-size:20px;font-weight:600">One way</div><div class="mut" style="font-size:11px">Tap to add</div></div>
+      <div style="flex:1;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;gap:3px"><div class="mut" style="font-size:12px">Travellers and class</div><div style="font-size:20px;font-weight:600">1 Traveller</div><div class="mut" style="font-size:11px">Economy</div></div>
+      <button type="button" aria-label="Search flights" style="width:84px;border:0;border-radius:0 20px 20px 0;background:linear-gradient(180deg,#d9ac47,#b98a2e);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l5 5"></path></svg></button>
+    </div>
+
+    <div style="flex-grow:1;display:flex;gap:16px;min-height:0">
+
+      <!-- filters -->
+      <div style="width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:17px;font-weight:600;padding:2px 4px">Filters</div>
+        <div class="inner" style="flex-grow:1;padding:16px 18px;display:flex;flex-direction:column;gap:16px">
+          <div><div class="sec" style="margin-bottom:10px">Departure</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="pill">Before 6 AM</div><div class="pill on">6 AM to 12 PM</div><div class="pill">12 PM to 6 PM</div><div class="pill">After 6 PM</div></div></div>
+          <div><div class="sec" style="margin-bottom:10px">Stops</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div class="pill on">Direct</div><div class="pill">1 stop</div><div class="pill">2+</div></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:12px"><span class="sec">Price</span><span class="reset">Reset</span></div>
+            <div class="trk"><div class="fill" style="width:46%"></div><span class="knob" style="left:calc(46% - 9px)"></span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:9px" class="mut"><span>R 990</span><span>R 4,850</span></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:12px"><span class="sec">Flight duration</span><span class="reset">Reset</span></div>
+            <div class="trk"><div class="fill" style="width:30%"></div><span class="knob" style="left:calc(30% - 9px)"></span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:9px" class="mut"><span>2h 05m</span><span>6h 40m</span></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span class="sec">Cabin</span><span class="reset">Reset</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+              <div style="display:flex;align-items:center;gap:10px"><span class="chk on"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>Economy<span style="margin-left:auto" class="mut">R 1,290</span></div>
+              <div style="display:flex;align-items:center;gap:10px"><span class="chk"></span>First Class<span style="margin-left:auto" class="mut">R 2,722</span></div>
+            </div></div>
+        </div>
+      </div>
+
+      <!-- results -->
+      <div style="flex-grow:1;min-width:0;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 4px"><span style="font-size:17px;font-weight:600">Flights from Johannesburg to Cape Town</span><span class="mut" style="font-size:13px">Showing 6 flights</span></div>
+
+        <div class="inner" style="padding:16px 22px 14px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600"><span class="logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="#0b1220" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"></path></svg></span>APP_NAME<span class="mut" style="font-weight:400;font-size:12px">FL 204 · Airbus A320</span></div>
+          <div style="display:flex;align-items:center;gap:20px;margin-top:12px">
+            <div style="width:190px"><div class="mut" style="font-size:12px">JNB, O.R. Tambo Intl</div><div style="font-size:26px;font-weight:700;margin-top:3px">06:30</div></div>
+            <div style="flex-grow:1;display:flex;align-items:center;gap:8px"><span class="dot"></span><span class="dl"></span><span class="dur">2h 05m</span><span class="dl"></span><svg width="18" height="18" viewBox="0 0 24 24" fill="#e8c46a" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"></path></svg></div>
+            <div style="width:190px"><div class="mut" style="font-size:12px">CPT, Cape Town Intl</div><div style="font-size:26px;font-weight:700;margin-top:3px">08:35</div></div>
+            <div class="price" style="width:120px;text-align:right">R 1,522</div>
+          </div>
+          <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0 10px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span class="tag">Free meal · 23 kg bag · 18 seats left</span><span style="font-size:13px;font-weight:600;color:#e8c46a;display:flex;align-items:center;gap:6px">Flight details <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e8c46a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></div>
+        </div>
+
+        <div class="inner" style="padding:16px 22px 16px;flex-grow:1;display:flex;flex-direction:column;min-height:0">
+          <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600"><span class="logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="#0b1220" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"></path></svg></span>APP_NAME<span class="mut" style="font-weight:400;font-size:12px">Via Durban</span></div>
+          <div style="display:flex;align-items:center;gap:20px;margin-top:12px">
+            <div style="width:190px"><div class="mut" style="font-size:12px">JNB, O.R. Tambo Intl</div><div style="font-size:26px;font-weight:700;margin-top:3px">09:15</div></div>
+            <div style="flex-grow:1;display:flex;align-items:center;gap:8px"><span class="dot"></span><span class="dl"></span><span class="dur">3h 50m · 1 stop</span><span class="dl"></span><svg width="18" height="18" viewBox="0 0 24 24" fill="#e8c46a" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"></path></svg></div>
+            <div style="width:190px"><div class="mut" style="font-size:12px">CPT, Cape Town Intl</div><div style="font-size:26px;font-weight:700;margin-top:3px">13:05</div></div>
+            <div class="price" style="width:120px;text-align:right">R 1,290</div>
+          </div>
+          <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0 10px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span class="tag">Snack · 23 kg bag · 27 seats left</span><span style="font-size:13px;font-weight:600;color:#e8c46a;display:flex;align-items:center;gap:6px">Flight details <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e8c46a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 15l-6-6-6 6"></path></svg></span></div>
+
+          <div style="margin-top:12px;background:rgba(0,0,0,.22);border-radius:16px;padding:8px;display:flex;flex-direction:column;gap:8px;flex-grow:1;min-height:0">
+            <div style="display:flex;gap:4px;padding:3px;border-radius:12px;background:rgba(255,255,255,.06)"><div class="tab on">Flight information</div><div class="tab">Date details</div><div class="tab">Baggage rules</div><div class="tab">Cancellation rules</div></div>
+            <div style="display:flex;align-items:center;gap:18px;padding:8px 12px">
+              <div style="width:110px"><div style="font-size:13px;font-weight:600">FL 301</div><div class="mut" style="font-size:11px">Airbus A320</div></div>
+              <div style="width:170px"><div class="mut" style="font-size:11px">O.R. Tambo Intl</div><div style="font-size:15px;font-weight:700">JNB · 09:15</div></div>
+              <div style="flex-grow:1;display:flex;align-items:center;gap:8px"><span class="dot"></span><span class="dl"></span><span class="dur">1h 25m</span><span class="dl"></span><svg width="16" height="16" viewBox="0 0 24 24" fill="#e8c46a" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"></path></svg></div>
+              <div style="width:150px;text-align:right"><div class="mut" style="font-size:11px">King Shaka Intl</div><div style="font-size:15px;font-weight:700">DUR · 10:40</div></div>
+            </div>
+            <div style="position:relative;border-top:1.5px dashed rgba(255,255,255,.2);margin:0 12px"><span class="dur" style="position:absolute;left:50%;top:-12px;margin-left:-70px;background:#2a2f3a">1h 10m layover in Durban</span></div>
+            <div style="display:flex;align-items:center;gap:18px;padding:8px 12px">
+              <div style="width:110px"><div style="font-size:13px;font-weight:600">FL 512</div><div class="mut" style="font-size:11px">Airbus A320</div></div>
+              <div style="width:170px"><div class="mut" style="font-size:11px">King Shaka Intl</div><div style="font-size:15px;font-weight:700">DUR · 11:50</div></div>
+              <div style="flex-grow:1;display:flex;align-items:center;gap:8px"><span class="dot"></span><span class="dl"></span><span class="dur">1h 15m</span><span class="dl"></span><svg width="16" height="16" viewBox="0 0 24 24" fill="#e8c46a" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"></path></svg></div>
+              <div style="width:150px;text-align:right"><div class="mut" style="font-size:11px">Cape Town Intl</div><div style="font-size:15px;font-weight:700">CPT · 13:05</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
