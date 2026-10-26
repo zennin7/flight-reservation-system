@@ -51,13 +51,13 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     private Label depDateLabel;
     private Label depDayLabel;
 
-    // Interactive filter state
-    private String selectedDepartureFilter = "6 AM to 12 PM"; // default per mockup
-    private String selectedStopsFilter = "Direct";            // default per mockup
+    // Interactive filter state - default NO filter active
+    private String selectedDepartureFilter = null;
+    private String selectedStopsFilter = null;
     private double maxPriceFilter = 4850.0;
     private double maxDurationMinutes = 400.0; // 6h 40m
     private boolean economySelected = true;
-    private boolean firstClassSelected = false;
+    private boolean firstClassSelected = true;
     private Long expandedFlightId = 2L; // expand 2nd card by default matching mockup
     private String activeDetailsTab = "Flight information";
 
@@ -79,8 +79,10 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         itemsProperty().addListener((obs, oldItems, newItems) -> {
             if (newItems != null) {
                 newItems.addListener((ListChangeListener<FlightSearchResult>) change -> {
+                    resetFiltersToDefault();
                     Platform.runLater(this::refreshCardsView);
                 });
+                resetFiltersToDefault();
                 Platform.runLater(this::refreshCardsView);
             }
         });
@@ -302,9 +304,22 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
     public void resetCabinFilter() {
         this.economySelected = true;
-        this.firstClassSelected = false;
+        this.firstClassSelected = true;
         updateCheckStyles();
         refreshCardsView();
+    }
+
+    public void resetFiltersToDefault() {
+        this.selectedDepartureFilter = null;
+        this.selectedStopsFilter = null;
+        this.maxPriceFilter = 4850.0;
+        this.maxDurationMinutes = 400.0;
+        this.economySelected = true;
+        this.firstClassSelected = true;
+        if (priceSlider != null) priceSlider.setValue(4850.0);
+        if (durationSlider != null) durationSlider.setValue(400.0);
+        updatePillStyles();
+        updateCheckStyles();
     }
 
     private void updatePillStyles() {
@@ -382,16 +397,20 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             filtered.add(flight);
         }
 
-        // If in-memory filters filtered out everything, fall back gracefully to all flights or show count
-        int count = filtered.isEmpty() ? allFlights.size() : filtered.size();
-        List<FlightSearchResult> flightsToRender = filtered.isEmpty() ? allFlights : filtered;
-
+        int count = filtered.size();
         if (resultsCounterLabel != null) {
             resultsCounterLabel.setText("Showing " + count + " flights");
         }
 
+        if (filtered.isEmpty()) {
+            Label noMatch = new Label("No flights match the selected filters.");
+            noMatch.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.58); -fx-padding: 30px;");
+            cardsContainer.getChildren().add(noMatch);
+            return;
+        }
+
         int index = 0;
-        for (FlightSearchResult flight : flightsToRender) {
+        for (FlightSearchResult flight : filtered) {
             boolean isExpanded = flight.getFlightId() != null && flight.getFlightId().equals(expandedFlightId);
             Node cardNode = buildFlightResultCard(flight, index, isExpanded);
             cardsContainer.getChildren().add(cardNode);
@@ -488,6 +507,8 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         HBox pathRow = new HBox(20);
         pathRow.setAlignment(Pos.CENTER_LEFT);
         pathRow.setPadding(new Insets(12, 0, 0, 0));
+        pathRow.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(pathRow, Priority.ALWAYS);
 
         // Origin Block (width 190)
         VBox originBlock = new VBox(3);
@@ -503,22 +524,29 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         // Center flight path graphic (flex-grow)
         HBox flightPath = new HBox(8);
         flightPath.setAlignment(Pos.CENTER);
+        flightPath.setMaxWidth(Double.MAX_VALUE);
+        flightPath.setPrefWidth(220);
         HBox.setHgrow(flightPath, Priority.ALWAYS);
 
         Region dot = new Region();
         dot.getStyleClass().add("flight-path-dot");
 
         Region dashLine1 = new Region();
-        dashLine1.setStyle("-fx-border-color: rgba(255,255,255,0.35) transparent transparent transparent; -fx-border-style: dashed; -fx-border-width: 1.5px 0 0 0; -fx-min-height: 2px;");
+        dashLine1.getStyleClass().add("flight-path-line");
+        dashLine1.setMinWidth(10);
+        dashLine1.setPrefWidth(60);
         dashLine1.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(dashLine1, Priority.ALWAYS);
 
         String durText = (index == 1) ? "3h 50m · 1 stop" : flight.getDuration();
         Label durLabel = new Label(durText);
         durLabel.getStyleClass().add("flight-duration-pill");
+        durLabel.setMinWidth(Region.USE_PREF_SIZE);
 
         Region dashLine2 = new Region();
-        dashLine2.setStyle("-fx-border-color: rgba(255,255,255,0.35) transparent transparent transparent; -fx-border-style: dashed; -fx-border-width: 1.5px 0 0 0; -fx-min-height: 2px;");
+        dashLine2.getStyleClass().add("flight-path-line");
+        dashLine2.setMinWidth(10);
+        dashLine2.setPrefWidth(60);
         dashLine2.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(dashLine2, Priority.ALWAYS);
 
@@ -652,8 +680,9 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
                 // Layover line
                 StackPane layoverLine = new StackPane();
                 layoverLine.setPadding(new Insets(6, 12, 6, 12));
+                layoverLine.setMaxWidth(Double.MAX_VALUE);
                 Region dash = new Region();
-                dash.setStyle("-fx-border-color: rgba(255,255,255,0.20) transparent transparent transparent; -fx-border-style: dashed; -fx-border-width: 1.5px 0 0 0; -fx-min-height: 2px;");
+                dash.getStyleClass().add("flight-path-line");
                 dash.setPrefWidth(Double.MAX_VALUE);
                 dash.setMaxWidth(Double.MAX_VALUE);
                 Label layoverPill = new Label("1h 10m layover in Durban");
@@ -702,7 +731,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         row.setPadding(new Insets(8, 12, 8, 12));
 
         VBox flightBlock = new VBox(2);
-        flightBlock.setPrefWidth(110);
+        flightBlock.setPrefWidth(90);
         Label flLabel = new Label(flNo);
         flLabel.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #ffffff;");
         Label planeLabel = new Label(plane);
@@ -710,7 +739,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         flightBlock.getChildren().addAll(flLabel, planeLabel);
 
         VBox origBlock = new VBox(2);
-        origBlock.setPrefWidth(170);
+        origBlock.setPrefWidth(125);
         Label origAp = new Label(origAirport);
         origAp.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.58);");
         Label origTm = new Label(origTime);
@@ -719,18 +748,25 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         HBox path = new HBox(8);
         path.setAlignment(Pos.CENTER);
+        path.setMaxWidth(Double.MAX_VALUE);
+        path.setPrefWidth(220);
         HBox.setHgrow(path, Priority.ALWAYS);
 
         Region dot = new Region();
         dot.getStyleClass().add("flight-path-dot");
         Region dash1 = new Region();
-        dash1.setStyle("-fx-border-color: rgba(255,255,255,0.35) transparent transparent transparent; -fx-border-style: dashed; -fx-border-width: 1.5px 0 0 0; -fx-min-height: 2px;");
+        dash1.getStyleClass().add("flight-path-line");
+        dash1.setMinWidth(10);
+        dash1.setPrefWidth(60);
         dash1.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(dash1, Priority.ALWAYS);
         Label dur = new Label(duration);
         dur.getStyleClass().add("flight-duration-pill");
+        dur.setMinWidth(Region.USE_PREF_SIZE);
         Region dash2 = new Region();
-        dash2.setStyle("-fx-border-color: rgba(255,255,255,0.35) transparent transparent transparent; -fx-border-style: dashed; -fx-border-width: 1.5px 0 0 0; -fx-min-height: 2px;");
+        dash2.getStyleClass().add("flight-path-line");
+        dash2.setMinWidth(10);
+        dash2.setPrefWidth(60);
         dash2.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(dash2, Priority.ALWAYS);
         SVGPath planeIcon = new SVGPath();
@@ -739,7 +775,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         path.getChildren().addAll(dot, dash1, dur, dash2, planeIcon);
 
         VBox destBlock = new VBox(2);
-        destBlock.setPrefWidth(150);
+        destBlock.setPrefWidth(125);
         destBlock.setAlignment(Pos.CENTER_RIGHT);
         Label destAp = new Label(destAirport);
         destAp.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.58);");

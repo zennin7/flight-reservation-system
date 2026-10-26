@@ -897,6 +897,15 @@
     -fx-alignment: center;
 }
 
+.flight-path-line {
+    -fx-border-color: rgba(255, 255, 255, 0.35) transparent transparent transparent;
+    -fx-border-style: segments(5, 5);
+    -fx-border-width: 1.5px 0 0 0;
+    -fx-min-height: 2px;
+    -fx-pref-height: 2px;
+    -fx-max-height: 2px;
+}
+
 .flight-path-dot {
     -fx-background-color: #e8c46a;
     -fx-background-radius: 50%;

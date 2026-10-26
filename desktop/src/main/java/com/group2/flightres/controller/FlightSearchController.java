@@ -277,7 +277,7 @@ public class FlightSearchController implements WizardStepController {
 
     @FXML
     private void handleComingSoonOffers() {
-        showComingSoon("Special Offers", "Special offers aren't available yet.");
+        showComingSoon("Offers", "Offers aren't available yet.");
     }
 
     @FXML
@@ -293,6 +293,41 @@ public class FlightSearchController implements WizardStepController {
     @FXML
     private void handleComingSoonProfile() {
         showComingSoon("User Profile", "User profile management isn't available yet.");
+    }
+
+    @FXML
+    private void handleComingSoonMyBookings() {
+        showComingSoon("My Bookings", "My Bookings isn't available yet.");
+    }
+
+    @FXML
+    private void handleNavHome() {
+        navigateTo("/com/group2/flightres/fxml/home.fxml", "Home");
+    }
+
+    @FXML
+    private void handleNavFlights() {
+        performSearch();
+    }
+
+    @FXML
+    private void handleNavAbout() {
+        navigateTo("/com/group2/flightres/fxml/about.fxml", "About");
+    }
+
+    @FXML
+    private void handleNavContact() {
+        navigateTo("/com/group2/flightres/fxml/contact.fxml", "Contact");
+    }
+
+    @FXML
+    private void handleNavAvatar() {
+        if (bookingContext != null && bookingContext.getCurrentUser() != null) {
+            bookingContext.setCurrentUser(null);
+            navigateTo("/com/group2/flightres/fxml/home.fxml", "Home");
+        } else {
+            navigateTo("/com/group2/flightres/fxml/login.fxml", "Login / Sign Up");
+        }
     }
 
     @FXML
@@ -367,5 +402,56 @@ public class FlightSearchController implements WizardStepController {
         alert.setTitle("Coming soon");
         alert.setHeaderText(title);
         alert.showAndWait();
+    }
+
+    private void navigateTo(String fxmlPath, String screenName) {
+        javafx.scene.Scene scene = null;
+        if (searchButton != null && searchButton.getScene() != null) {
+            scene = searchButton.getScene();
+        } else if (fromCombo != null && fromCombo.getScene() != null) {
+            scene = fromCombo.getScene();
+        }
+        if (scene == null) return;
+
+        javafx.scene.layout.StackPane contentArea =
+                (javafx.scene.layout.StackPane) scene.lookup("#contentArea");
+        if (contentArea != null) {
+            try {
+                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource(fxmlPath));
+                javafx.scene.Node view = loader.load();
+                contentArea.getChildren().setAll(view);
+                com.group2.flightres.util.Motion.screenTransition(view);
+
+                javafx.scene.layout.VBox stepperWrapper =
+                        (javafx.scene.layout.VBox) scene.lookup("#stepperWrapper");
+                if (stepperWrapper != null) {
+                    stepperWrapper.setVisible(false);
+                    stepperWrapper.setManaged(false);
+                }
+
+                com.group2.flightres.component.NavBar nav =
+                        (com.group2.flightres.component.NavBar) scene.lookup("#navBar");
+                if (nav != null) {
+                    nav.setActiveLink(screenName);
+                }
+
+                Object ctrl = loader.getController();
+                if (ctrl instanceof WizardStepController wz) {
+                    wz.init(bookingContext, () -> navigateTo("/com/group2/flightres/fxml/home.fxml", "Home"));
+                }
+                return;
+            } catch (Exception e) {
+                logger.error("Failed to navigate to screen {} in contentArea", fxmlPath, e);
+            }
+        }
+
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource(fxmlPath));
+            javafx.scene.Parent root = loader.load();
+            scene.setRoot(root);
+            com.group2.flightres.util.ThemeManager.getInstance().applyGlassTheme(scene);
+        } catch (Exception e) {
+            logger.error("Failed to navigate to screen {} as scene root", fxmlPath, e);
+        }
     }
 }

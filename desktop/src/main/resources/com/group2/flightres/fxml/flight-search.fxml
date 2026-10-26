@@ -43,7 +43,7 @@
              =================================================================== -->
         <HBox alignment="CENTER_LEFT" prefHeight="64" minHeight="64" maxHeight="64" styleClass="glass-nav-bar">
             <!-- Brand row: gold plane icon + APP_NAME -->
-            <HBox alignment="CENTER_LEFT" spacing="10">
+            <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleNavHome" style="-fx-cursor: hand;">
                 <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" styleClass="nav-brand-plane"/>
                 <Label styleClass="nav-brand-text">
                     <text><BrandConfig fx:constant="APP_NAME"/></text>
@@ -54,17 +54,17 @@
 
             <!-- Center nav links: Flights (active), My Bookings, Offers, About, Contact -->
             <HBox alignment="CENTER" spacing="30" styleClass="glass-nav-links-box">
-                <Button text="Flights" styleClass="glass-nav-link, glass-nav-link-active"/>
-                <Button text="My Bookings" styleClass="glass-nav-link" onAction="#handleComingSoonOffers"/>
+                <Button text="Flights" styleClass="glass-nav-link, glass-nav-link-active" onAction="#handleNavFlights"/>
+                <Button text="My Bookings" styleClass="glass-nav-link" onAction="#handleComingSoonMyBookings"/>
                 <Button text="Offers" styleClass="glass-nav-link" onAction="#handleComingSoonOffers"/>
-                <Button text="About" styleClass="glass-nav-link" onAction="#handleComingSoonOffers"/>
-                <Button text="Contact" styleClass="glass-nav-link" onAction="#handleComingSoonOffers"/>
+                <Button text="About" styleClass="glass-nav-link" onAction="#handleNavAbout"/>
+                <Button text="Contact" styleClass="glass-nav-link" onAction="#handleNavContact"/>
             </HBox>
 
             <Region HBox.hgrow="ALWAYS"/>
 
             <!-- Right avatar circle: 34px diameter, #d4a63c with initials AM -->
-            <StackPane styleClass="glass-avatar-circle" onMouseClicked="#handleComingSoonProfile">
+            <StackPane styleClass="glass-avatar-circle" onMouseClicked="#handleNavAvatar" style="-fx-cursor: hand;">
                 <Label text="AM" styleClass="glass-avatar-initials"/>
             </StackPane>
         </HBox>
@@ -176,7 +176,7 @@
                                 <Button text="Before 6 AM" onAction="#handleFilterDeparture"
                                         styleClass="pill-button" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                                 <Button text="6 AM to 12 PM" onAction="#handleFilterDeparture"
-                                        styleClass="pill-button, pill-button-on" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                                        styleClass="pill-button" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
                                 <Button text="12 PM to 6 PM" onAction="#handleFilterDeparture"
                                         styleClass="pill-button" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
                                 <Button text="After 6 PM" onAction="#handleFilterDeparture"
@@ -189,7 +189,7 @@
                             <Label text="Stops" styleClass="filter-section-title"/>
                             <HBox spacing="8">
                                 <Button text="Direct" onAction="#handleFilterStops"
-                                        styleClass="pill-button, pill-button-on" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                        styleClass="pill-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                                 <Button text="1 stop" onAction="#handleFilterStops"
                                         styleClass="pill-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                                 <Button text="2+" onAction="#handleFilterStops"
@@ -204,7 +204,7 @@
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button text="Reset" onAction="#handleResetPrice" styleClass="filter-reset-link"/>
                             </HBox>
-                            <Slider fx:id="priceSlider" min="990" max="4850" value="3300" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
+                            <Slider fx:id="priceSlider" min="990" max="4850" value="4850" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
                             <HBox alignment="CENTER_LEFT">
                                 <Label text="R 990" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
                                 <Region HBox.hgrow="ALWAYS"/>
@@ -219,7 +219,7 @@
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button text="Reset" onAction="#handleResetDuration" styleClass="filter-reset-link"/>
                             </HBox>
-                            <Slider fx:id="durationSlider" min="120" max="400" value="230" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
+                            <Slider fx:id="durationSlider" min="120" max="400" value="400" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
                             <HBox alignment="CENTER_LEFT">
                                 <Label text="2h 05m" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
                                 <Region HBox.hgrow="ALWAYS"/>
@@ -245,8 +245,8 @@
                                 </HBox>
 
                                 <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleToggleFirstClass" styleClass="cabin-check-row">
-                                    <StackPane styleClass="check-circle">
-                                        <SVGPath content="M5 12l5 5 9-10" styleClass="check-tick-icon" visible="false"/>
+                                    <StackPane styleClass="check-circle, check-circle-on">
+                                        <SVGPath content="M5 12l5 5 9-10" styleClass="check-tick-icon" visible="true"/>
                                     </StackPane>
                                     <Label text="First Class" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;"/>
                                     <Region HBox.hgrow="ALWAYS"/>
@@ -265,7 +265,7 @@
                     <HBox alignment="BASELINE_LEFT" spacing="10" style="-fx-padding: 2px 4px;" minWidth="824" prefWidth="824" maxWidth="824">
                         <Label fx:id="resultsTitleLabel" text="Flights from Johannesburg to Cape Town" styleClass="results-header-title" minWidth="-Infinity"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="resultsCountLabel" text="Showing 6 flights" styleClass="results-header-count" minWidth="-Infinity"/>
+                        <Label fx:id="resultsCountLabel" text="Showing 4 flights" styleClass="results-header-count" minWidth="-Infinity"/>
                     </HBox>
 
                     <!-- Interactive Glass Result Cards Container -->
