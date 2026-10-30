@@ -1,9 +1,11 @@
 package com.group2.flightres.component;
 
 import com.group2.flightres.model.BookingStep;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 
 import java.util.ArrayList;
@@ -13,13 +15,13 @@ import java.util.List;
  * Reusable SkyVoyage Stepper component showing the 4 booking steps:
  * 1 Search -> 2 Select Seat -> 3 Checkout -> 4 Confirmed.
  * - Done: Green circle with white checkmark
- * - Active: Gold circle with white step number
+ * - Active: Gold circle with navy/white step number
  * - Pending: Grey circle with white step number
+ * Connector lines: 64x2 with 16 margin (green if done, translucent if pending).
  */
 public class StepperBar extends HBox {
 
     private static final String CHECKMARK = "\u2713";
-    private static final String ARROW = "\u2794"; // ➔
 
     private static class StepView {
         final int order;
@@ -43,13 +45,14 @@ public class StepperBar extends HBox {
             this.stepTitleLabel = new Label(title);
             this.stepTitleLabel.getStyleClass().add("step-label");
 
-            this.stepBox = new HBox(6, circle, stepTitleLabel);
+            this.stepBox = new HBox(9, circle, stepTitleLabel);
             this.stepBox.getStyleClass().add("step-item");
             this.stepBox.setAlignment(Pos.CENTER);
         }
     }
 
     private final List<StepView> stepViews = new ArrayList<>();
+    private final List<Region> lineViews = new ArrayList<>();
     private int currentStepOrder = 0;
     private boolean allCompleted = false;
 
@@ -68,9 +71,11 @@ public class StepperBar extends HBox {
             getChildren().add(stepView.stepBox);
 
             if (i < steps.length - 1) {
-                Label arrow = new Label(ARROW);
-                arrow.getStyleClass().add("step-arrow");
-                getChildren().add(arrow);
+                Region line = new Region();
+                line.getStyleClass().addAll("step-arrow", "step-line");
+                HBox.setMargin(line, new Insets(0, 16, 0, 16));
+                lineViews.add(line);
+                getChildren().add(line);
             }
         }
 
@@ -116,6 +121,16 @@ public class StepperBar extends HBox {
                 step.circle.getStyleClass().add("step-circle-pending");
                 step.circleText.setText(String.valueOf(step.order + 1));
                 step.stepTitleLabel.getStyleClass().add("step-label-pending");
+            }
+        }
+
+        for (int i = 0; i < lineViews.size(); i++) {
+            Region line = lineViews.get(i);
+            line.getStyleClass().removeAll("step-line-done", "step-line-pending");
+            if (allCompleted || i < currentStepOrder) {
+                line.getStyleClass().add("step-line-done");
+            } else {
+                line.getStyleClass().add("step-line-pending");
             }
         }
     }

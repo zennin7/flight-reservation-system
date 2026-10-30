@@ -382,4 +382,172 @@ public class SeatMapController implements WizardStepController {
             onBack.run();
         }
     }
+// ===================================================================
+    // Glass Reskin (Phase 2 Screen 03) Additions
+    // ===================================================================
+    @FXML private com.group2.flightres.util.GlassSeatMapBridge glassBridge;
+
+    public void setGlassBridge(com.group2.flightres.util.GlassSeatMapBridge bridge) {
+        this.glassBridge = bridge;
+        if (bridge != null) {
+            bridge.setController(this);
+        }
+    }
+
+    public com.group2.flightres.util.GlassSeatMapBridge getGlassBridge() {
+        return glassBridge;
+    }
+
+    public BookingContext getBookingContext() {
+        return bookingContext;
+    }
+
+    public List<FlightSeat> getSelectedSeatsList() {
+        return Collections.unmodifiableList(selectedSeats);
+    }
+
+    public Map<String, FlightSeat> getSeatsByLabelMap() {
+        return Collections.unmodifiableMap(seatsByLabel);
+    }
+
+    public Map<String, Button> getSeatButtonsMap() {
+        return Collections.unmodifiableMap(seatButtonsByLabel);
+    }
+
+    public void selectSeatByLabel(String label) {
+        handleSeatClick(label);
+    }
+
+    @FXML
+    public void handleReleaseSeat() {
+        if (!selectedSeats.isEmpty()) {
+            FlightSeat seat = selectedSeats.get(0);
+            handleSeatClick(seat.getSeatLabel());
+        }
+    }
+
+    @FXML
+    private void handleComingSoonCabinView() {
+        showComingSoon("Cabin view", "Cabin view isn't available yet.");
+    }
+
+    @FXML
+    private void handleZoomGrid() {
+        if (glassBridge != null) {
+            glassBridge.toggleZoom();
+        }
+    }
+
+    @FXML
+    private void handleSelectSection1() {
+        if (glassBridge != null) glassBridge.setSection(1);
+    }
+
+    @FXML
+    private void handleSelectSection2() {
+        if (glassBridge != null) glassBridge.setSection(2);
+    }
+
+    @FXML
+    private void handleSelectSection3() {
+        if (glassBridge != null) glassBridge.setSection(3);
+    }
+
+    @FXML
+    private void handleNavHome() {
+        navigateTo("/com/group2/flightres/fxml/home.fxml", "Home");
+    }
+
+    @FXML
+    private void handleNavFlights() {
+        navigateTo("/com/group2/flightres/fxml/flight-search.fxml", "Flights");
+    }
+
+    @FXML
+    private void handleComingSoonMyBookings() {
+        showComingSoon("My Bookings", "My Bookings isn't available yet.");
+    }
+
+    @FXML
+    private void handleComingSoonOffers() {
+        showComingSoon("Offers", "Offers aren't available yet.");
+    }
+
+    @FXML
+    private void handleNavAbout() {
+        navigateTo("/com/group2/flightres/fxml/about.fxml", "About");
+    }
+
+    @FXML
+    private void handleNavContact() {
+        navigateTo("/com/group2/flightres/fxml/contact.fxml", "Contact");
+    }
+
+    @FXML
+    private void handleNavAvatar() {
+        if (bookingContext != null && bookingContext.getCurrentUser() != null) {
+            bookingContext.setCurrentUser(null);
+            navigateTo("/com/group2/flightres/fxml/home.fxml", "Home");
+        } else {
+            navigateTo("/com/group2/flightres/fxml/login.fxml", "Login / Sign Up");
+        }
+    }
+
+    private void showComingSoon(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, message);
+        alert.setTitle("Coming soon");
+        alert.setHeaderText(title);
+        alert.showAndWait();
+    }
+
+    private void navigateTo(String fxmlPath, String screenName) {
+        javafx.scene.Scene scene = null;
+        if (continueButton != null && continueButton.getScene() != null) {
+            scene = continueButton.getScene();
+        } else if (cabinContainer != null && cabinContainer.getScene() != null) {
+            scene = cabinContainer.getScene();
+        }
+        if (scene == null) return;
+
+        javafx.scene.layout.StackPane contentArea =
+                (javafx.scene.layout.StackPane) scene.lookup("#contentArea");
+        if (contentArea != null) {
+            try {
+                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource(fxmlPath));
+                javafx.scene.Node view = loader.load();
+                contentArea.getChildren().setAll(view);
+                com.group2.flightres.util.Motion.screenTransition(view);
+
+                javafx.scene.layout.VBox stepperWrapper =
+                        (javafx.scene.layout.VBox) scene.lookup("#stepperWrapper");
+                if (stepperWrapper != null) {
+                    stepperWrapper.setVisible(false);
+                    stepperWrapper.setManaged(false);
+                }
+
+                com.group2.flightres.component.NavBar nav =
+                        (com.group2.flightres.component.NavBar) scene.lookup("#navBar");
+                if (nav != null) {
+                    nav.setActiveLink(screenName);
+                }
+
+                Object ctrl = loader.getController();
+                if (ctrl instanceof WizardStepController wz) {
+                    wz.init(bookingContext, () -> navigateTo("/com/group2/flightres/fxml/home.fxml", "Home"));
+                }
+                return;
+            } catch (Exception e) {
+                logger.error("Failed to navigate to screen {} in contentArea", fxmlPath, e);
+            }
+        }
+
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource(fxmlPath));
+            javafx.scene.Parent root = loader.load();
+            scene.setRoot(root);
+            com.group2.flightres.util.ThemeManager.getInstance().applyGlassTheme(scene);
+        } catch (Exception e) {
+            logger.error("Failed to navigate to screen {} as scene root", fxmlPath, e);
+        }
+    }
 }

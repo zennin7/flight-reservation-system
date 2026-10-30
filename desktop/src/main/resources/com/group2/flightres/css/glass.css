@@ -175,48 +175,55 @@
 }
 
 /* -------------------------------------------------------------------
- * Seat Map Colors
+ * Seat Map Colors (Phase 2 Screen 03)
  * ------------------------------------------------------------------- */
 
 .seat {
-    -fx-background-radius: 6px;
-    -fx-border-radius: 6px;
-    -fx-min-width: 32px;
-    -fx-min-height: 32px;
-    -fx-pref-width: 32px;
-    -fx-pref-height: 32px;
+    -fx-background-radius: 8px 8px 6px 6px;
+    -fx-border-radius: 8px 8px 6px 6px;
+    -fx-min-width: 40px;
+    -fx-min-height: 34px;
+    -fx-pref-width: 40px;
+    -fx-pref-height: 34px;
+    -fx-max-width: 40px;
+    -fx-max-height: 34px;
     -fx-alignment: center;
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-size: 11px;
     -fx-font-weight: 700;
+    -fx-padding: 0;
     -fx-cursor: hand;
 }
 
-.seat-free {
-    -fx-background-color: #16a34a;
-    -fx-text-fill: #ffffff;
-    -fx-border-color: transparent;
+.seat-free, .seat-available {
+    -fx-background-color: rgba(34, 197, 94, 0.30);
+    -fx-border-color: rgba(74, 222, 128, 0.65);
+    -fx-border-width: 1px;
+    -fx-text-fill: rgba(255, 255, 255, 0.70);
 }
 
-.seat-free:hover {
-    -fx-background-color: #22c55e;
-    -fx-effect: dropshadow(gaussian, rgba(34, 197, 94, 0.50), 8, 0.0, 0, 0);
+.seat-free:hover, .seat-available:hover {
+    -fx-background-color: rgba(34, 197, 94, 0.45);
+    -fx-border-color: rgba(74, 222, 128, 0.90);
+    -fx-effect: dropshadow(gaussian, rgba(34, 197, 94, 0.40), 8, 0.0, 0, 0);
 }
 
 .seat-taken {
-    -fx-background-color: rgba(153, 27, 27, 0.45);
-    -fx-border-color: rgba(239, 68, 68, 0.20);
+    -fx-background-color: rgba(220, 38, 38, 0.28);
+    -fx-border-color: rgba(248, 113, 113, 0.50);
     -fx-border-width: 1px;
-    -fx-text-fill: rgba(255, 255, 255, 0.35);
+    -fx-opacity: 0.70;
+    -fx-text-fill: transparent;
     -fx-cursor: default;
 }
 
 .seat-yours, .seat-selected {
-    -fx-background-color: #d4a63c;
+    -fx-background-color: linear-gradient(to bottom, #f0cf74, #d4a63c);
     -fx-text-fill: #0b1220;
     -fx-border-color: #f3d98b;
     -fx-border-width: 1px;
-    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.65), 10, 0.0, 0, 0);
+    -fx-opacity: 1.0;
+    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.55), 18, 0.0, 0, 6);
 }
 
 /* -------------------------------------------------------------------
@@ -1028,4 +1035,237 @@
 .glass-scroll-pane .scroll-bar:vertical .thumb {
     -fx-background-color: rgba(255, 255, 255, 0.20);
     -fx-background-radius: 4px;
+}
+
+
+/* -------------------------------------------------------------------
+ * Screen 03 (Seat Map) Glass UI Additions
+ * ------------------------------------------------------------------- */
+
+.glass-stepper-card {
+    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 0;
+    -fx-alignment: center;
+}
+
+.stepper-container {
+    -fx-alignment: center;
+}
+
+.stepper-container .step-item {
+    -fx-spacing: 9px;
+    -fx-alignment: center;
+}
+
+.stepper-container .step-circle {
+    -fx-min-width: 26px;
+    -fx-min-height: 26px;
+    -fx-pref-width: 26px;
+    -fx-pref-height: 26px;
+    -fx-max-width: 26px;
+    -fx-max-height: 26px;
+    -fx-background-radius: 13px;
+    -fx-border-radius: 13px;
+    -fx-alignment: center;
+}
+
+.stepper-container .step-circle-done {
+    -fx-background-color: #16a34a;
+}
+
+.stepper-container .step-circle-done .step-circle-text {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+}
+
+.stepper-container .step-circle-active {
+    -fx-background-color: #d4a63c;
+}
+
+.stepper-container .step-circle-active .step-circle-text {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0b1220;
+}
+
+.stepper-container .step-circle-pending {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+}
+
+.stepper-container .step-circle-pending .step-circle-text {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(255, 255, 255, 0.70);
+}
+
+.stepper-container .step-label {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+
+.stepper-container .step-label-done, .stepper-container .step-label-active {
+    -fx-text-fill: #ffffff;
+}
+
+.stepper-container .step-label-pending {
+    -fx-text-fill: rgba(255, 255, 255, 0.55);
+}
+
+.stepper-container .step-line, .stepper-container .step-arrow {
+    -fx-min-width: 64px;
+    -fx-pref-width: 64px;
+    -fx-max-width: 64px;
+    -fx-min-height: 2px;
+    -fx-pref-height: 2px;
+    -fx-max-height: 2px;
+    -fx-font-size: 0px;
+    -fx-text-fill: transparent;
+    -fx-padding: 0;
+}
+
+.stepper-container .step-line-done {
+    -fx-background-color: #16a34a;
+}
+
+.stepper-container .step-line-pending {
+    -fx-background-color: rgba(255, 255, 255, 0.20);
+}
+
+.section-tab-bar {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-background-radius: 999px;
+    -fx-padding: 4px;
+    -fx-spacing: 4px;
+    -fx-alignment: CENTER_RIGHT;
+}
+
+.section-tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-padding: 8px 18px;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(255, 255, 255, 0.65);
+    -fx-cursor: hand;
+}
+
+.section-tab-on {
+    -fx-background-color: linear-gradient(to bottom, #d9ac47, #c4952f);
+    -fx-text-fill: #0b1220;
+}
+
+.plane-action-btn {
+    -fx-min-width: 40px;
+    -fx-min-height: 40px;
+    -fx-pref-width: 40px;
+    -fx-pref-height: 40px;
+    -fx-max-width: 40px;
+    -fx-max-height: 40px;
+    -fx-background-radius: 20px;
+    -fx-border-radius: 20px;
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-border-color: rgba(255, 255, 255, 0.16);
+    -fx-border-width: 1px;
+    -fx-alignment: center;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.plane-action-btn:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.18);
+    -fx-border-color: rgba(255, 255, 255, 0.28);
+}
+
+.cabin-view-card {
+    -fx-background-color: linear-gradient(to bottom right, rgba(212, 166, 60, 0.20), rgba(8, 12, 22, 0.50) 70%);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 18px;
+    -fx-cursor: hand;
+}
+
+.cabin-icon-tile {
+    -fx-min-width: 42px;
+    -fx-min-height: 42px;
+    -fx-pref-width: 42px;
+    -fx-pref-height: 42px;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-background-color: linear-gradient(to bottom right, #e8c46a, #b98a2e);
+    -fx-alignment: center;
+}
+
+.seat-col-header {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+    -fx-alignment: center;
+}
+
+.seat-row-letter {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+    -fx-alignment: center;
+}
+
+.selection-chip {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-background-radius: 999px;
+    -fx-padding: 4px 9px;
+    -fx-font-family: 'Inter Medium', sans-serif;
+    -fx-font-size: 11.5px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #ffffff;
+}
+
+.btn-checkout-gold {
+    -fx-background-color: linear-gradient(to bottom, #d9ac47, #c4952f);
+    -fx-background-radius: 14px;
+    -fx-border-radius: 14px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0b1220;
+    -fx-padding: 0 22px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(196, 149, 47, 0.35), 24, 0.0, 0, 10);
+}
+
+.btn-checkout-gold:hover {
+    -fx-background-color: linear-gradient(to bottom, #e0b44f, #cb9c37);
+    -fx-effect: dropshadow(gaussian, rgba(196, 149, 47, 0.50), 28, 0.0, 0, 12);
+}
+
+.btn-release-ghost {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 255, 255, 0.22);
+    -fx-border-radius: 14px;
+    -fx-border-width: 1px;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-cursor: hand;
+}
+
+.btn-release-ghost:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-border-color: rgba(255, 255, 255, 0.32);
 }
