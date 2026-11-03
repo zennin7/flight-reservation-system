@@ -1,6 +1,7 @@
 package com.group2.flightres.dao.impl;
 
 import com.group2.flightres.config.DatabaseConfig;
+import com.group2.flightres.config.SeatHoldPolicy;
 import com.group2.flightres.dao.SeatDao;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
@@ -109,7 +110,7 @@ public class SeatDaoImpl implements SeatDao {
              PreparedStatement stmt = conn.prepareStatement(HOLD_SEAT_QUERY)) {
 
             // Soft-lock for 5 minutes while the passenger is in checkout
-            stmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now().plusMinutes(5)));
+            stmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now().plusSeconds(SeatHoldPolicy.HOLD_SECONDS)));
             stmt.setLong(2, flightSeatId);
 
             int updated = stmt.executeUpdate();

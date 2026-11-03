@@ -79,26 +79,61 @@ public class GlassSeatMapScreenshotRunner extends Application {
         stage.setResizable(false);
         stage.show();
 
-        PauseTransition pause = new PauseTransition(Duration.millis(850));
-        pause.setOnFinished(e -> {
+        PauseTransition p1 = new PauseTransition(Duration.millis(900));
+        p1.setOnFinished(e1 -> {
             root.applyCss();
             root.layout();
+            captureSnapshot(root, "glass-seat-map-s1.png");
+            captureSnapshot(root, "glass-seat-map.png");
 
-            javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
-            WritableImage snapshot = new WritableImage(WIDTH, HEIGHT);
-            snapshot = root.snapshot(params, snapshot);
-            File outputFile = getOutputDir().resolve("glass-seat-map.png").toFile();
-
-            try {
-                saveImageToPng(snapshot, outputFile);
-                logger.info("Successfully saved glass seat map screenshot: {}", outputFile.getAbsolutePath());
-            } catch (IOException ex) {
-                logger.error("Failed to save glass seat map screenshot", ex);
+            // Switch to Section 2 and hold seat 14B
+            controller.selectSeatByLabel("14B");
+            if (controller.getGlassBridge() != null) {
+                controller.getGlassBridge().setSection(2);
             }
 
-            Platform.exit();
+            PauseTransition p2 = new PauseTransition(Duration.millis(700));
+            p2.setOnFinished(e2 -> {
+                root.applyCss();
+                root.layout();
+                captureSnapshot(root, "glass-seat-map-s2.png");
+
+                // Switch to Section 3 and hold seat 22D
+                controller.selectSeatByLabel("22D");
+                if (controller.getGlassBridge() != null) {
+                    controller.getGlassBridge().setSection(3);
+                }
+
+                PauseTransition p3 = new PauseTransition(Duration.millis(700));
+                p3.setOnFinished(e3 -> {
+                    root.applyCss();
+                    root.layout();
+                    captureSnapshot(root, "glass-seat-map-s3.png");
+
+                    // Release seat before exiting so database remains clean
+                    controller.handleReleaseSeat();
+
+                    logger.info("All 3 section screenshots captured successfully.");
+                    Platform.exit();
+                });
+                p3.play();
+            });
+            p2.play();
         });
-        pause.play();
+        p1.play();
+    }
+
+    private static void captureSnapshot(Parent root, String filename) {
+        javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+        WritableImage snapshot = new WritableImage(WIDTH, HEIGHT);
+        snapshot = root.snapshot(params, snapshot);
+        File outputFile = getOutputDir().resolve(filename).toFile();
+        try {
+            saveImageToPng(snapshot, outputFile);
+            logger.info("Successfully saved screenshot: {}", outputFile.getAbsolutePath());
+        } catch (IOException ex) {
+            logger.error("Failed to save screenshot {}", filename, ex);
+        }
     }
 
     private static void saveImageToPng(WritableImage image, File targetFile) throws IOException {

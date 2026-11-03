@@ -36,16 +36,16 @@ SELECT setval('aircraft_types_aircraft_type_id_seq', GREATEST((SELECT MAX(aircra
 -- Display rows 0, 1.
 INSERT INTO seat_templates (aircraft_type_id, seat_row, seat_col, seat_class, display_row, display_col, is_window, is_aisle)
 VALUES
-    -- Row 1 First Class
+    -- Row 1 First Class (A, C, D, F at cols 0, 2, 4, 6)
     (1, 1, 'A', 'FIRST', 0, 0, TRUE,  FALSE),
-    (1, 1, 'B', 'FIRST', 0, 1, FALSE, TRUE),
-    (1, 1, 'C', 'FIRST', 0, 3, FALSE, TRUE),
-    (1, 1, 'D', 'FIRST', 0, 4, TRUE,  FALSE),
-    -- Row 2 First Class
+    (1, 1, 'C', 'FIRST', 0, 2, FALSE, TRUE),
+    (1, 1, 'D', 'FIRST', 0, 4, FALSE, TRUE),
+    (1, 1, 'F', 'FIRST', 0, 6, TRUE,  FALSE),
+    -- Row 2 First Class (A, C, D, F at cols 0, 2, 4, 6)
     (1, 2, 'A', 'FIRST', 1, 0, TRUE,  FALSE),
-    (1, 2, 'B', 'FIRST', 1, 1, FALSE, TRUE),
-    (1, 2, 'C', 'FIRST', 1, 3, FALSE, TRUE),
-    (1, 2, 'D', 'FIRST', 1, 4, TRUE,  FALSE)
+    (1, 2, 'C', 'FIRST', 1, 2, FALSE, TRUE),
+    (1, 2, 'D', 'FIRST', 1, 4, FALSE, TRUE),
+    (1, 2, 'F', 'FIRST', 1, 6, TRUE,  FALSE)
 ON CONFLICT (aircraft_type_id, seat_row, seat_col) DO UPDATE
     SET seat_class = EXCLUDED.seat_class,
         display_row = EXCLUDED.display_row,
@@ -141,8 +141,8 @@ SELECT
     1,
     st.seat_template_id,
     CASE
-        WHEN (st.seat_row = 1 AND st.seat_col = 'B') THEN 'BOOKED'::seat_status
-        WHEN (st.seat_row = 2 AND st.seat_col IN ('C', 'D')) THEN 'BOOKED'::seat_status
+        WHEN (st.seat_row = 1 AND st.seat_col = 'C') THEN 'BOOKED'::seat_status
+        WHEN (st.seat_row = 2 AND st.seat_col IN ('D', 'F')) THEN 'BOOKED'::seat_status
         WHEN (st.seat_row = 6 AND st.seat_col IN ('A', 'B')) THEN 'BOOKED'::seat_status
         WHEN (st.seat_row = 7 AND st.seat_col IN ('C', 'D', 'F')) THEN 'BOOKED'::seat_status
         WHEN (st.seat_row = 8 AND st.seat_col = 'A') THEN 'BOOKED'::seat_status

@@ -1,5 +1,6 @@
 package com.group2.flightres.integration;
 
+import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.dao.impl.BookingDaoImpl;
 import com.group2.flightres.dao.impl.DashboardStatsDaoImpl;
 import com.group2.flightres.dao.impl.FlightDaoImpl;
@@ -15,8 +16,13 @@ import com.group2.flightres.util.DatabaseAssumption;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,12 +32,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Integration tests exercising live PostgreSQL DAO operations.
  * Automatically skips itself when PostgreSQL is offline or app.json is missing.
  */
 class PostgresIntegrationTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(PostgresIntegrationTest.class);
 
     @BeforeEach
     void setUp() {
@@ -81,15 +90,11 @@ class PostgresIntegrationTest {
                 .filter(s -> s.getStatus() == SeatStatus.AVAILABLE)
                 .findFirst();
 
-        if (availableSeat.isEmpty()) {
-            return; // All seats booked, skip booking step
-        }
+        assertTrue(availableSeat.isPresent(), "No available seats found on flight 1 to execute booking integration test");
 
         FlightSeat seat = availableSeat.get();
         boolean held = seatDao.holdSeat(seat.getFlightSeatId());
-        if (!held) {
-            return; // Seat was concurrently held, skip
-        }
+        assertTrue(held, "Failed to hold available seat " + seat.getFlightSeatId() + " on flight 1");
 
         BookingContext ctx = new BookingContext();
         ctx.setFlightId(1L);
@@ -106,12 +111,44 @@ class PostgresIntegrationTest {
         ctx.setSelectedSeats(new ArrayList<>(List.of(seat)));
 
         BookingRecord record = bookingDao.createBooking(ctx);
-        assertNotNull(record);
-        assertNotNull(record.getBookingReference());
-        assertEquals("CONFIRMED", record.getStatus());
+        try {
+            assertNotNull(record);
+            assertNotNull(record.getBookingReference());
+            assertEquals("CONFIRMED", record.getStatus());
 
-        Optional<BookingRecord> fetched = bookingDao.findByReference(record.getBookingReference());
-        assertTrue(fetched.isPresent());
-        assertEquals("Integration Test Passenger", fetched.get().getPassengerName());
+            Optional<BookingRecord> fetched = bookingDao.findByReference(record.getBookingReference());
+            assertTrue(fetched.isPresent());
+            assertEquals("Integration Test Passenger", fetched.get().getPassengerName());
+        } finally {
+            // Teardown: delete test booking records and restore flight seat to AVAILABLE
+            try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
+                conn.setAutoCommit(false);
+                try (PreparedStatement delBS = conn.prepareStatement("DELETE FROM booking_seats WHERE booking_id = ?");
+                     PreparedStatement delPay = conn.prepareStatement("DELETE FROM payments WHERE booking_id = ?");
+                     PreparedStatement delB = conn.prepareStatement("DELETE FROM bookings WHERE booking_id = ?");
+                     PreparedStatement resetSeat = conn.prepareStatement("UPDATE flight_seats SET status = 'AVAILABLE', held_until = NULL WHERE flight_seat_id = ?")) {
+
+                    delBS.setLong(1, record.getBookingId());
+                    delBS.executeUpdate();
+
+                    delPay.setLong(1, record.getBookingId());
+                    delPay.executeUpdate();
+
+                    delB.setLong(1, record.getBookingId());
+                    delB.executeUpdate();
+
+                    resetSeat.setLong(1, seat.getFlightSeatId());
+                    resetSeat.executeUpdate();
+
+                    conn.commit();
+                } catch (SQLException e) {
+                    conn.rollback();
+                    throw e;
+                }
+            } catch (Exception e) {
+                logger.error("Failed to clean up test booking records: {}", e.getMessage(), e);
+                fail("Cleanup failed after testLiveBookingAndLookup: " + e.getMessage(), e);
+            }
+        }
     }
 }

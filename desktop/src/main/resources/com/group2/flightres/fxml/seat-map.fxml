@@ -102,7 +102,7 @@
                         <HBox alignment="TOP_LEFT" prefWidth="752" minWidth="752" maxWidth="752">
                             <VBox spacing="2">
                                 <Label text="Choose your seat" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 19px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
-                                <Label fx:id="planeCardSubtitle" text="JNB to CPT · Fri 14 Nov · Airbus A320" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.60);"/>
+                                <Label fx:id="planeCardSubtitle" text="-" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.60);"/>
                             </VBox>
 
                             <Region HBox.hgrow="ALWAYS"/>
@@ -169,8 +169,7 @@
                         <VBox prefWidth="576" minWidth="576" maxWidth="576" styleClass="glass-card" style="-fx-padding: 16px 18px;" spacing="10" minHeight="0">
                             <!-- Section Title & Legend Row -->
                             <HBox alignment="CENTER_LEFT" spacing="6">
-                                <Label fx:id="sectionHeaderLabel"
-                                       text="Section 1 · First class and front economy · rows 1 to 9"
+                                <Label fx:id="sectionHeaderLabel" text="-"
                                        style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
 
                                 <Region HBox.hgrow="ALWAYS"/>
@@ -215,31 +214,27 @@
 
                         <!-- Seat Number & Price Row -->
                         <HBox alignment="BOTTOM_LEFT">
-                            <Label fx:id="bigSeatLabel" text="9E" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 72px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-line-spacing: 0; -fx-padding: 0;"/>
+                            <Label fx:id="bigSeatLabel" text="�" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 72px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-line-spacing: 0; -fx-padding: 0;"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <VBox alignment="BOTTOM_RIGHT" style="-fx-padding: 0 0 8px 0;">
-                                <Label text="Seat price" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.60); -fx-alignment: CENTER_RIGHT;"/>
-                                <Label fx:id="bigPriceLabel" text="R 1,522" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 26px; -fx-font-weight: 700; -fx-text-fill: #ffffff; -fx-alignment: CENTER_RIGHT;"/>
+                                <Label text="Seat fare, before taxes and fees" style="-fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.60); -fx-alignment: CENTER_RIGHT;"/>
+                                <Label fx:id="bigPriceLabel" text="R 0" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 26px; -fx-font-weight: 700; -fx-text-fill: #ffffff; -fx-alignment: CENTER_RIGHT;"/>
                             </VBox>
                         </HBox>
 
                         <!-- Chips Row -->
-                        <HBox fx:id="chipsContainer" spacing="6" style="-fx-padding: 4px 0 0 0;">
-                            <Label text="Economy" styleClass="selection-chip"/>
-                            <Label text="Middle seat" styleClass="selection-chip"/>
-                            <Label text="Standard legroom" styleClass="selection-chip"/>
-                        </HBox>
+                        <HBox fx:id="chipsContainer" spacing="6" style="-fx-padding: 4px 0 0 0;"/>
 
                         <!-- Hold Countdown Timer Row -->
                         <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 10px 12px; -fx-background-color: rgba(0,0,0,0.25); -fx-background-radius: 14px; -fx-margin: 6px 0 0 0;">
                             <StackPane prefWidth="44" prefHeight="44" minWidth="44" minHeight="44" maxWidth="44" maxHeight="44">
                                 <Circle radius="18" fill="transparent" stroke="rgba(255,255,255,0.14)" strokeWidth="4"/>
-                                <Arc fx:id="timerArc" radiusX="18" radiusY="18" startAngle="90" length="-302" type="OPEN"
+                                <Arc fx:id="timerArc" radiusX="18" radiusY="18" startAngle="90" length="0" type="OPEN"
                                      fill="transparent" stroke="#e8c46a" strokeWidth="4" strokeLineCap="ROUND"/>
                             </StackPane>
-                            <VBox spacing="1">
-                                <Label fx:id="timerLabel" text="08:42" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #ffffff;"/>
-                                <Label text="Held for you. Nobody else can take it." style="-fx-font-family: 'Inter'; -fx-font-size: 11.5px; -fx-text-fill: rgba(255,255,255,0.60);"/>
+                            <VBox spacing="1" HBox.hgrow="ALWAYS">
+                                <Label fx:id="timerLabel" text="--:--" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #ffffff;"/>
+                                <Label text="Held for you. Nobody else can take it." wrapText="true" maxWidth="240" style="-fx-font-family: 'Inter'; -fx-font-size: 11.5px; -fx-text-fill: rgba(255,255,255,0.60);"/>
                             </VBox>
                         </HBox>
 
@@ -275,8 +270,8 @@
                         <!-- Route Row -->
                         <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 4px 0 0 0;">
                             <VBox>
-                                <Label fx:id="flightOriginCode" text="JNB" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 26px; -fx-font-weight: 700; -fx-text-fill: #ffffff; -fx-line-spacing: 0;"/>
-                                <Label fx:id="flightOriginTime" text="06:30" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.60); -fx-padding: 4px 0 0 0;"/>
+                                <Label fx:id="flightOriginCode" text="-" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 26px; -fx-font-weight: 700; -fx-text-fill: #ffffff; -fx-line-spacing: 0;"/>
+                                <Label fx:id="flightOriginTime" text="-" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.60); -fx-padding: 4px 0 0 0;"/>
                             </VBox>
 
                             <!-- Route Connector: Dot -> Dashed Line -> Plane Icon -->
@@ -288,8 +283,8 @@
                             </HBox>
 
                             <VBox alignment="CENTER_RIGHT">
-                                <Label fx:id="flightDestCode" text="CPT" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 26px; -fx-font-weight: 700; -fx-text-fill: #ffffff; -fx-line-spacing: 0; -fx-alignment: CENTER_RIGHT;"/>
-                                <Label fx:id="flightDestTime" text="08:35" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.60); -fx-padding: 4px 0 0 0; -fx-alignment: CENTER_RIGHT;"/>
+                                <Label fx:id="flightDestCode" text="-" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 26px; -fx-font-weight: 700; -fx-text-fill: #ffffff; -fx-line-spacing: 0; -fx-alignment: CENTER_RIGHT;"/>
+                                <Label fx:id="flightDestTime" text="-" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.60); -fx-padding: 4px 0 0 0; -fx-alignment: CENTER_RIGHT;"/>
                             </VBox>
                         </HBox>
 
@@ -298,17 +293,17 @@
                         <!-- Details Rows -->
                         <HBox alignment="CENTER_LEFT">
                             <Label text="Flight" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.60);" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                            <Label fx:id="flightNoLabel" text="FL 204" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                            <Label fx:id="flightNoLabel" text="-" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
                         </HBox>
 
                         <HBox alignment="CENTER_LEFT">
                             <Label text="Duration" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.60);" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                            <Label fx:id="flightDurationLabel" text="2h 05m, direct" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                            <Label fx:id="flightDurationLabel" text="-" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
                         </HBox>
 
                         <HBox alignment="CENTER_LEFT">
                             <Label text="Free seats" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.60);" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                            <Label fx:id="freeSeatsLabel" text="18 of 162" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #4ade80;"/>
+                            <Label fx:id="freeSeatsLabel" text="-" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #4ade80;"/>
                         </HBox>
                     </VBox>
 

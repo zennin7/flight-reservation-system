@@ -27,7 +27,7 @@
             <Label text="Voyage" styleClass="logo-text-voyage"/>
         </HBox>
 
-        <Label fx:id="aboutTitleLabel" text="About SkyVoyage" styleClass="confirmation-title"/>
+        <Label fx:id="aboutTitleLabel" text="About Altitude" styleClass="confirmation-title"/>
         <Label text="A modern flight reservation and booking management system designed for seamless travel experiences."
                styleClass="confirmation-subtitle"
                textAlignment="CENTER"
@@ -49,7 +49,7 @@
 
             <HBox alignment="CENTER_LEFT" styleClass="checkout-row">
                 <Label text="Project" styleClass="checkout-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                <Label fx:id="projectNameLabel" text="SkyVoyage Flight Reservation System" styleClass="checkout-val-medium"/>
+                <Label fx:id="projectNameLabel" text="Altitude Flight Reservation System" styleClass="checkout-val-medium"/>
             </HBox>
 
             <HBox alignment="CENTER_LEFT" styleClass="checkout-row">

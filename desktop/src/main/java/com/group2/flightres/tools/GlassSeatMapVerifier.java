@@ -59,7 +59,7 @@ public class GlassSeatMapVerifier extends Application {
             stmt.executeUpdate("UPDATE flight_seats SET status = 'AVAILABLE', held_until = NULL WHERE flight_id = 1");
             stmt.executeUpdate("UPDATE flight_seats SET status = 'BOOKED' WHERE flight_id = 1 AND flight_seat_id IN " +
                     "(SELECT fs.flight_seat_id FROM flight_seats fs JOIN seat_templates st ON fs.seat_template_id = st.seat_template_id " +
-                    "WHERE fs.flight_id = 1 AND ((st.seat_row = 1 AND st.seat_col = 'B') OR (st.seat_row = 2 AND st.seat_col = 'C') " +
+                    "WHERE fs.flight_id = 1 AND ((st.seat_row = 1 AND st.seat_col = 'C') OR (st.seat_row = 2 AND st.seat_col = 'C') " +
                     "OR (st.seat_row = 6 AND st.seat_col IN ('A','B')) OR (st.seat_row = 7 AND st.seat_col IN ('C','D','F')) " +
                     "OR (st.seat_row = 8 AND st.seat_col = 'A') OR (st.seat_row = 9 AND st.seat_col = 'B') " +
                     "OR (st.seat_row = 10 AND st.seat_col IN ('C','D')) OR (st.seat_row = 11 AND st.seat_col IN ('A','F'))))");
@@ -175,6 +175,7 @@ public class GlassSeatMapVerifier extends Application {
         }
         System.out.println("===================================================================");
 
+        controller.handleReleaseSeat();
         Platform.exit();
     }
 

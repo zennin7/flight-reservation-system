@@ -87,7 +87,7 @@ public class GlassSeatMapBridge extends StackPane {
     // Hold Timer (10 minutes = 600s)
     private Timeline holdTimeline;
     private int remainingSeconds = 600;
-    private static final int TOTAL_HOLD_SECONDS = 600;
+    private static final int TOTAL_HOLD_SECONDS = com.group2.flightres.config.SeatHoldPolicy.HOLD_SECONDS;
 
     public GlassSeatMapBridge() {
         setVisible(false);
@@ -181,6 +181,9 @@ public class GlassSeatMapBridge extends StackPane {
         if (controller != null && controller.getSeatsByLabelMap() != null) {
             seatsByLabel.putAll(controller.getSeatsByLabelMap());
         }
+        if (controller != null && controller.getSeatButtonsMap() != null) {
+            seatButtons.putAll(controller.getSeatButtonsMap());
+        }
 
         for (Node child : cabinContainer.getChildren()) {
             if (child instanceof HBox rowBox) {
@@ -188,16 +191,26 @@ public class GlassSeatMapBridge extends StackPane {
                     if (btnNode instanceof Button btn) {
                         String txt = btn.getText();
                         if (txt != null && txt.matches("\\d+[A-F]")) {
-                            seatButtons.put(txt, btn);
-                            try {
-                                int r = Integer.parseInt(txt.replaceAll("[^0-9]", ""));
-                                if (!distinctRows.contains(r)) {
-                                    distinctRows.add(r);
-                                }
-                            } catch (Exception ignored) {}
+                            seatButtons.putIfAbsent(txt, btn);
                         }
                     }
                 }
+            }
+        }
+
+        for (FlightSeat seat : seatsByLabel.values()) {
+            if (!distinctRows.contains(seat.getSeatRow())) {
+                distinctRows.add(seat.getSeatRow());
+            }
+        }
+        if (distinctRows.isEmpty()) {
+            for (String key : seatButtons.keySet()) {
+                try {
+                    int r = Integer.parseInt(key.replaceAll("[^0-9]", ""));
+                    if (!distinctRows.contains(r)) {
+                        distinctRows.add(r);
+                    }
+                } catch (Exception ignored) {}
             }
         }
 
@@ -225,6 +238,7 @@ public class GlassSeatMapBridge extends StackPane {
         sectionSlices.add(s1);
         sectionSlices.add(s2);
         sectionSlices.add(s3);
+        logger.info("harvestSeats: distinctRows={}, s1={}, s2={}, s3={}", distinctRows, s1, s2, s3);
 
         // Attach taken seat feedback for any seat marked taken/booked
         for (Map.Entry<String, FlightSeat> entry : seatsByLabel.entrySet()) {
@@ -281,16 +295,31 @@ public class GlassSeatMapBridge extends StackPane {
         int sliceIdx = Math.max(0, Math.min(2, currentSection - 1));
         List<Integer> sectionRows = sectionSlices.get(sliceIdx);
 
-        // Update Section Header Label
+        // Update Section Header Label dynamically from seat classes in the section
         if (sectionHeaderLabel != null && !sectionRows.isEmpty()) {
             int minR = sectionRows.get(0);
             int maxR = sectionRows.get(sectionRows.size() - 1);
-            String desc = switch (currentSection) {
-                case 1 -> "First class and front economy";
-                case 2 -> "Mid economy";
-                default -> "Rear economy";
-            };
+            boolean hasFirst = false;
+            boolean hasEconomy = false;
+            for (int r : sectionRows) {
+                for (FlightSeat s : seatsByLabel.values()) {
+                    if (s.getSeatRow() == r) {
+                        if (s.getSeatClass() == SeatClass.FIRST) hasFirst = true;
+                        if (s.getSeatClass() == SeatClass.ECONOMY) hasEconomy = true;
+                    }
+                }
+            }
+            String desc;
+            if (hasFirst && hasEconomy) {
+                desc = "First class and economy";
+            } else if (hasFirst) {
+                desc = "First class";
+            } else {
+                desc = "Economy";
+            }
             sectionHeaderLabel.setText("Section " + currentSection + " · " + desc + " · rows " + minR + " to " + maxR);
+        } else if (sectionHeaderLabel != null) {
+            sectionHeaderLabel.setText("-");
         }
 
         // Render Column Numbers Row
@@ -317,9 +346,39 @@ public class GlassSeatMapBridge extends StackPane {
         // Render Letter Rows
         if (seatGridRowsContainer != null) {
             seatGridRowsContainer.getChildren().clear();
-            char[] letters = {'A', 'B', 'C', '_', 'D', 'E', 'F'};
 
-            for (char letter : letters) {
+            // Find all seat col letters present in this section
+            Set<Character> presentCols = new TreeSet<>();
+            for (int r : sectionRows) {
+                for (FlightSeat s : seatsByLabel.values()) {
+                    if (s.getSeatRow() == r) {
+                        presentCols.add(s.getSeatCol());
+                    }
+                }
+            }
+
+            boolean hasOnlyFirstClassCols = !presentCols.contains('E') && !presentCols.contains('F');
+
+            List<Character> rowLetters = new ArrayList<>();
+            if (hasOnlyFirstClassCols) {
+                // Section only has First Class: rows 1-3 (A, B | aisle | C, D)
+                rowLetters.add('A');
+                rowLetters.add('B');
+                rowLetters.add('_'); // aisle
+                rowLetters.add('C');
+                rowLetters.add('D');
+            } else {
+                // Standard 3-3 rows or mixed section: A, B, C | aisle | D, E, F
+                if (presentCols.contains('A')) rowLetters.add('A');
+                if (presentCols.contains('B')) rowLetters.add('B');
+                if (presentCols.contains('C')) rowLetters.add('C');
+                rowLetters.add('_'); // aisle
+                if (presentCols.contains('D')) rowLetters.add('D');
+                if (presentCols.contains('E')) rowLetters.add('E');
+                if (presentCols.contains('F')) rowLetters.add('F');
+            }
+
+            for (char letter : rowLetters) {
                 if (letter == '_') {
                     Region aisleGap = new Region();
                     aisleGap.setPrefHeight(18);
@@ -342,29 +401,46 @@ public class GlassSeatMapBridge extends StackPane {
                     rowHBox.getChildren().add(letterLabel);
 
                     for (int r : sectionRows) {
-                        // Check if First Class (rows 1 & 2) and (letter == 'B' || letter == 'E')
-                        if (r <= 2 && (letter == 'B' || letter == 'E')) {
+                        // Check if row r is a First Class row
+                        boolean isRowFirstClass = false;
+                        for (FlightSeat s : seatsByLabel.values()) {
+                            if (s.getSeatRow() == r && s.getSeatClass() == SeatClass.FIRST) {
+                                isRowFirstClass = true;
+                                break;
+                            }
+                        }
+
+                        String seatLabel = null;
+                        if (hasOnlyFirstClassCols) {
+                            seatLabel = r + String.valueOf(letter);
+                        } else if (isRowFirstClass) {
+                            // First class 2-2 mapping in 6-row grid (A, C, D, F):
+                            // Top of aisle: A -> rA, B -> empty gap, C -> rC
+                            // Bottom of aisle: D -> rD, E -> empty gap, F -> rF
+                            seatLabel = switch (letter) {
+                                case 'A' -> r + "A";
+                                case 'C' -> r + "C";
+                                case 'D' -> r + "D";
+                                case 'F' -> r + "F";
+                                default -> null;
+                            };
+                        } else {
+                            seatLabel = r + String.valueOf(letter);
+                        }
+
+                        Button btn = (seatLabel != null) ? seatButtons.get(seatLabel) : null;
+                        if (btn != null) {
+                            btn.setPrefSize(40, 34);
+                            btn.setMinSize(40, 34);
+                            btn.setMaxSize(40, 34);
+                            syncButtonVisual(btn, seatLabel);
+                            rowHBox.getChildren().add(btn);
+                        } else {
                             Region gap = new Region();
                             gap.setPrefSize(40, 34);
                             gap.setMinSize(40, 34);
                             gap.setMaxSize(40, 34);
                             rowHBox.getChildren().add(gap);
-                        } else {
-                            String seatLabel = r + String.valueOf(letter);
-                            Button btn = seatButtons.get(seatLabel);
-                            if (btn != null) {
-                                btn.setPrefSize(40, 34);
-                                btn.setMinSize(40, 34);
-                                btn.setMaxSize(40, 34);
-                                syncButtonVisual(btn, seatLabel);
-                                rowHBox.getChildren().add(btn);
-                            } else {
-                                Region gap = new Region();
-                                gap.setPrefSize(40, 34);
-                                gap.setMinSize(40, 34);
-                                gap.setMaxSize(40, 34);
-                                rowHBox.getChildren().add(gap);
-                            }
                         }
                     }
                     seatGridRowsContainer.getChildren().add(rowHBox);
@@ -397,7 +473,14 @@ public class GlassSeatMapBridge extends StackPane {
             String seatLabel = text.split(" ")[0];
             FlightSeat seat = seatsByLabel.get(seatLabel);
 
-            if (bigSeatLabel != null) bigSeatLabel.setText(seatLabel);
+            if (bigSeatLabel != null) {
+                bigSeatLabel.setText(seatLabel);
+                if (seatLabel.length() > 2) {
+                    bigSeatLabel.setStyle("-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 54px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-line-spacing: 0; -fx-padding: 0;");
+                } else {
+                    bigSeatLabel.setStyle("-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 72px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-line-spacing: 0; -fx-padding: 0;");
+                }
+            }
             if (totalPriceLabel != null && bigPriceLabel != null) {
                 bigPriceLabel.setText(totalPriceLabel.getText());
             }
@@ -425,7 +508,7 @@ public class GlassSeatMapBridge extends StackPane {
             // Start countdown timer (10 mins or preselected 08:42 for screenshots)
             int initialSecs = TOTAL_HOLD_SECONDS;
             if (SeatMapController.isPreselectForScreenshots()) {
-                initialSecs = 522; // 08:42 exactly matching design-glass/seat-map.png
+                initialSecs = Math.max(0, TOTAL_HOLD_SECONDS - 18); // demo remaining seconds <= HOLD_SECONDS (04:42)
             }
             startHoldTimer(initialSecs);
         }

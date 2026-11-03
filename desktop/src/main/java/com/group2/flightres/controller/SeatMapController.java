@@ -78,12 +78,19 @@ public class SeatMapController implements WizardStepController {
             this.flightId = context.getFlightId();
         }
         loadSeatMap();
+        if (glassBridge != null) {
+            glassBridge.setController(this);
+            glassBridge.updateFlightCardData();
+        }
     }
 
     @FXML
     public void initialize() {
         if (continueButton != null) {
             com.group2.flightres.util.Motion.attachHoverLift(continueButton);
+        }
+        if (glassBridge != null) {
+            glassBridge.setController(this);
         }
         if (bookingContext == null) {
             loadSeatMap();
@@ -93,6 +100,10 @@ public class SeatMapController implements WizardStepController {
     public void setFlightId(long flightId) {
         this.flightId = flightId;
         loadSeatMap();
+        if (glassBridge != null) {
+            glassBridge.setController(this);
+            glassBridge.updateFlightCardData();
+        }
     }
 
     private void loadSeatMap() {
@@ -166,27 +177,41 @@ public class SeatMapController implements WizardStepController {
     }
 
     private void buildCabinLayout() {
-        // First Class Section Header
-        Label firstHeader = new Label("FIRST CLASS  2 x 2");
-        firstHeader.getStyleClass().add("cabin-section-header");
-        cabinContainer.getChildren().add(firstHeader);
+        Map<Integer, List<FlightSeat>> rowMap = new TreeMap<>();
+        for (FlightSeat s : seatsByLabel.values()) {
+            rowMap.computeIfAbsent(s.getSeatRow(), k -> new ArrayList<>()).add(s);
+        }
 
-        // First Class Rows (1, 2)
-        cabinContainer.getChildren().add(buildRow(1, new String[]{"1A", "1B"}, new String[]{"1C", "1D"}));
-        cabinContainer.getChildren().add(buildRow(2, new String[]{"2A", "2B"}, new String[]{"2C", "2D"}));
+        boolean firstClassHeaderAdded = false;
+        boolean economyHeaderAdded = false;
 
-        // Economy Section Header
-        Label econHeader = new Label("ECONOMY  3 x 3");
-        econHeader.getStyleClass().add("cabin-section-header");
-        VBox.setMargin(econHeader, new javafx.geometry.Insets(6, 0, 0, 0));
-        cabinContainer.getChildren().add(econHeader);
+        for (Map.Entry<Integer, List<FlightSeat>> entry : rowMap.entrySet()) {
+            int rowNum = entry.getKey();
+            List<FlightSeat> rowSeats = entry.getValue();
+            boolean isFirstClass = rowSeats.stream().anyMatch(s -> s.getSeatClass() == SeatClass.FIRST);
 
-        // Economy Rows (6, 7, 8, 9, 10, 11)
-        int[] econRows = {6, 7, 8, 9, 10, 11};
-        for (int r : econRows) {
-            String[] left = {r + "A", r + "B", r + "C"};
-            String[] right = {r + "D", r + "E", r + "F"};
-            cabinContainer.getChildren().add(buildRow(r, left, right));
+            if (isFirstClass && !firstClassHeaderAdded) {
+                Label firstHeader = new Label("FIRST CLASS  2 x 2");
+                firstHeader.getStyleClass().add("cabin-section-header");
+                cabinContainer.getChildren().add(firstHeader);
+                firstClassHeaderAdded = true;
+            } else if (!isFirstClass && !economyHeaderAdded) {
+                Label econHeader = new Label("ECONOMY  3 x 3");
+                econHeader.getStyleClass().add("cabin-section-header");
+                VBox.setMargin(econHeader, new javafx.geometry.Insets(6, 0, 0, 0));
+                cabinContainer.getChildren().add(econHeader);
+                economyHeaderAdded = true;
+            }
+
+            if (isFirstClass) {
+                String[] left = {rowNum + "A", rowNum + "C"};
+                String[] right = {rowNum + "D", rowNum + "F"};
+                cabinContainer.getChildren().add(buildRow(rowNum, left, right));
+            } else {
+                String[] left = {rowNum + "A", rowNum + "B", rowNum + "C"};
+                String[] right = {rowNum + "D", rowNum + "E", rowNum + "F"};
+                cabinContainer.getChildren().add(buildRow(rowNum, left, right));
+            }
         }
     }
 
@@ -400,6 +425,10 @@ public class SeatMapController implements WizardStepController {
 
     public BookingContext getBookingContext() {
         return bookingContext;
+    }
+
+    public long getFlightId() {
+        return flightId;
     }
 
     public List<FlightSeat> getSelectedSeatsList() {
