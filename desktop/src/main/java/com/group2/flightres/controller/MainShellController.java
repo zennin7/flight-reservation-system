@@ -5,6 +5,8 @@ import com.group2.flightres.component.StepperBar;
 import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingStep;
+import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.model.User;
 import com.group2.flightres.model.UserRole;
 import com.group2.flightres.util.Motion;
@@ -28,7 +30,48 @@ public class MainShellController {
     @FXML private StepperBar stepperBar;
     @FXML private StackPane contentArea;
 
-    private final BookingContext bookingContext = new BookingContext();
+    private final SeatMapService seatMapService;
+    private BookingContext bookingContext = new BookingContext();
+
+    public MainShellController() {
+        this(new SeatMapService());
+    }
+
+    public MainShellController(SeatMapService seatMapService) {
+        this.seatMapService = seatMapService;
+    }
+
+    public void resetBookingContext() {
+        if (bookingContext != null) {
+            String ref = bookingContext.getBookingReference();
+            if ((ref == null || ref.isBlank()) && bookingContext.getSelectedSeats() != null) {
+                for (FlightSeat seat : bookingContext.getSelectedSeats()) {
+                    try {
+                        if (seatMapService != null) {
+                            seatMapService.deselectSeat(seat);
+                            logger.info("Released seat hold for seat {} (ID: {}) during context reset",
+                                    seat.getSeatLabel(), seat.getFlightSeatId());
+                        }
+                    } catch (Exception e) {
+                        logger.warn("Failed to release seat during reset: {}", e.getMessage());
+                    }
+                }
+            }
+        }
+        User user = (bookingContext != null) ? bookingContext.getCurrentUser() : null;
+        this.bookingContext = new BookingContext();
+        if (user != null) {
+            this.bookingContext.setCurrentUser(user);
+        }
+    }
+
+    public void setBookingContext(BookingContext bookingContext) {
+        this.bookingContext = bookingContext;
+    }
+
+    public void setContentArea(StackPane contentArea) {
+        this.contentArea = contentArea;
+    }
     private BookingStep currentStep;
 
     @FXML
@@ -44,8 +87,9 @@ public class MainShellController {
         currentStep = step;
 
         if (stepperWrapper != null) {
-            stepperWrapper.setVisible(true);
-            stepperWrapper.setManaged(true);
+            boolean showStepper = (step != BookingStep.CONFIRMATION);
+            stepperWrapper.setVisible(showStepper);
+            stepperWrapper.setManaged(showStepper);
         }
         if (stepperBar != null) {
             stepperBar.setActiveStep(step);
@@ -62,6 +106,9 @@ public class MainShellController {
     }
 
     private void loadStepContent(BookingStep step) {
+        if (contentArea == null) {
+            return;
+        }
         String fxmlPath = step.getFxmlPath();
         URL resource = getClass().getResource(fxmlPath);
         if (resource == null) {
@@ -78,7 +125,14 @@ public class MainShellController {
 
             Object controller = loader.getController();
             if (controller instanceof WizardStepController wizardController) {
-                wizardController.init(bookingContext, () -> goToStep(step.next()), () -> goToStep(step.previous()));
+                if (step == BookingStep.CONFIRMATION) {
+                    wizardController.init(bookingContext, () -> {
+                        resetBookingContext();
+                        handleNavigation("Flights");
+                    }, () -> goToStep(step.previous()));
+                } else {
+                    wizardController.init(bookingContext, () -> goToStep(step.next()), () -> goToStep(step.previous()));
+                }
             }
         } catch (IOException e) {
             logger.error("Failed to load wizard step: {}", step, e);
@@ -93,6 +147,7 @@ public class MainShellController {
                 loadOptionalScreen("/com/group2/flightres/fxml/home.fxml", false, "Home");
                 break;
             case "Flights":
+                resetBookingContext();
                 goToStep(BookingStep.SEARCH);
                 break;
             case "My Bookings":
@@ -152,6 +207,9 @@ public class MainShellController {
     }
 
     private void loadOptionalScreen(String fxmlPath, boolean showStepper, String activeNav) {
+        if (contentArea == null) {
+            return;
+        }
         URL resource = getClass().getResource(fxmlPath);
         if (resource == null) {
             logger.info("Screen FXML does not exist yet: {}. Doing nothing.", fxmlPath);

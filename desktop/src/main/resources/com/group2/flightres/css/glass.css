@@ -1356,6 +1356,7 @@
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-size: 11px;
     -fx-font-weight: 600;
+    -fx-letter-spacing: 0.14em;
 }
 
 .gold-total-text {
@@ -1379,4 +1380,203 @@
     -fx-font-size: 11px;
     -fx-font-weight: 600;
     -fx-text-fill: #e8c46a;
+}
+
+/* ===================================================================
+   SCREEN 5: BOOKING CONFIRMATION GLASS STYLES
+   =================================================================== */
+
+.confirmation-emerald-circle {
+    -fx-min-width: 68px;
+    -fx-min-height: 68px;
+    -fx-max-width: 68px;
+    -fx-max-height: 68px;
+    -fx-background-color: rgba(22, 163, 74, 0.22), #16a34a;
+    -fx-background-insets: 0, 6;
+    -fx-background-radius: 999px, 999px;
+    -fx-alignment: center;
+    -fx-effect: dropshadow(gaussian, rgba(22, 163, 74, 0.45), 18, 0.35, 0, 0);
+}
+
+.confirmation-title-serif {
+    -fx-font-family: 'Lora Medium', 'Lora', Georgia, serif;
+    -fx-font-size: 38px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #ffffff;
+}
+
+.confirmation-subtitle-mut {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: rgba(255, 255, 255, 0.65);
+}
+
+.ref-pill-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.14em;
+    -fx-text-fill: rgba(255, 255, 255, 0.50);
+}
+
+.ref-pill-code {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #e8c46a;
+}
+
+.ticket-card {
+    -fx-background-color: rgba(8, 12, 22, 0.40);
+    -fx-background-radius: 24px;
+    -fx-border-color: rgba(255, 255, 255, 0.12);
+    -fx-border-radius: 24px;
+    -fx-border-width: 1px;
+}
+
+.ticket-cabin-badge {
+    -fx-background-color: rgba(212, 166, 60, 0.20);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(212, 166, 60, 0.60);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-padding: 4px 14px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #f3d98b;
+}
+
+.ticket-airport-code {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 60px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+}
+
+.ticket-city-time {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+}
+
+.ticket-duration-pill {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-background-radius: 999px;
+    -fx-padding: 4px 12px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.ticket-stub-pane {
+    -fx-background-color: radial-gradient(center 100% 0%, radius 60%, rgba(212, 166, 60, 0.26) 0%, transparent 100%);
+    -fx-background-radius: 0 24px 24px 0;
+}
+
+.ticket-seat-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.14em;
+    -fx-text-fill: #d4a63c;
+}
+
+.ticket-seat-value {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 72px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #e8c46a;
+}
+
+.ticket-grid-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.14em;
+    -fx-text-fill: rgba(255, 255, 255, 0.50);
+}
+
+.ticket-grid-value {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.ticket-notch-circle {
+    -fx-fill: #0b1220;
+}
+
+.timeline-dot-green {
+    -fx-background-color: #4ade80;
+    -fx-background-radius: 999px;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-max-width: 10px;
+    -fx-max-height: 10px;
+}
+
+.timeline-dot-gold {
+    -fx-background-color: #e8c46a;
+    -fx-background-radius: 999px;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-max-width: 10px;
+    -fx-max-height: 10px;
+}
+
+.timeline-dot-gray {
+    -fx-background-color: rgba(255, 255, 255, 0.35);
+    -fx-background-radius: 999px;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-max-width: 10px;
+    -fx-max-height: 10px;
+}
+
+.gold-primary-action-btn {
+    -fx-background-color: linear-gradient(to bottom, #d9ac47, #b98a2e);
+    -fx-background-radius: 16px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0b1220;
+    -fx-pref-height: 54px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(185, 138, 46, 0.40), 16, 0.0, 0, 6);
+}
+
+.gold-primary-action-btn:hover {
+    -fx-background-color: linear-gradient(to bottom, #f3d98b, #cfa038);
+    -fx-effect: dropshadow(gaussian, rgba(232, 196, 106, 0.50), 20, 0.0, 0, 8);
+}
+
+.secondary-glass-btn {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 255, 255, 0.22);
+    -fx-border-radius: 14px;
+    -fx-border-width: 1px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-pref-height: 46px;
+    -fx-cursor: hand;
+}
+
+.secondary-glass-btn:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.18);
+    -fx-border-color: rgba(255, 255, 255, 0.35);
+}
+
+.error-glass-card {
+    -fx-background-color: rgba(8, 12, 22, 0.65);
+    -fx-background-radius: 24px;
+    -fx-border-color: rgba(239, 68, 68, 0.35);
+    -fx-border-radius: 24px;
+    -fx-border-width: 1px;
+    -fx-padding: 40px;
 }

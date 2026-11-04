@@ -265,21 +265,9 @@ public class CheckoutController implements WizardStepController {
 
     private String formatDateBadge(String depDate) {
         if (depDate == null || depDate.isBlank()) {
-            return "Fri, 14 Nov 2026";
+            return "Sat, 14 Nov 2026";
         }
-        if (depDate.contains(",") && depDate.length() >= 10) {
-            return depDate;
-        }
-        try {
-            LocalDate date = LocalDate.parse(depDate.trim());
-            if (date.equals(LocalDate.of(2026, 11, 14))) {
-                return "Fri, 14 Nov 2026";
-            }
-            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.US);
-            return date.format(fmt);
-        } catch (DateTimeParseException e) {
-            return depDate;
-        }
+        return com.group2.flightres.util.FlightDateFormatter.format(depDate);
     }
 
     private String resolveDestinationCity(String dest) {

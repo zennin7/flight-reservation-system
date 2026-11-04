@@ -1,5 +1,7 @@
 package com.group2.flightres.util;
 
+import com.group2.flightres.config.BoardingPolicy;
+import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.SeatClass;
 import com.lowagie.text.Document;
@@ -21,9 +23,10 @@ import java.awt.Color;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
- * Utility to generate SkyVoyage Boarding Pass PDFs via OpenPDF.
+ * Utility to generate SkyVoyage / Altitude Boarding Pass PDFs via OpenPDF.
  */
 public final class BoardingPassPdfGenerator {
 
@@ -38,7 +41,7 @@ public final class BoardingPassPdfGenerator {
 
     private BoardingPassPdfGenerator() {}
 
-    private record PassData(
+    public record PassData(
             String passenger,
             String flightNo,
             String origin,
@@ -50,25 +53,44 @@ public final class BoardingPassPdfGenerator {
             String seatClassStr,
             String bookingRef
     ) {
-        static PassData from(BookingContext context) {
-            String passenger = (context != null && context.getPassengerName() != null && !context.getPassengerName().isBlank())
-                    ? context.getPassengerName() : "Valued Passenger";
-            String flightNo = (context != null && context.getFlightNumber() != null && !context.getFlightNumber().isBlank())
-                    ? context.getFlightNumber() : "—";
-            String origin = (context != null && context.getOrigin() != null && !context.getOrigin().isBlank())
-                    ? context.getOrigin() : "—";
-            String destination = (context != null && context.getDestination() != null && !context.getDestination().isBlank())
-                    ? context.getDestination() : "—";
-            String depDate = (context != null && context.getDepartureDate() != null && !context.getDepartureDate().isBlank())
-                    ? context.getDepartureDate() : "—";
-            String depTime = (context != null && context.getDepartureTime() != null && !context.getDepartureTime().isBlank())
-                    ? context.getDepartureTime() : "—";
-            String seat = (context != null && context.getSeatLabel() != null && !context.getSeatLabel().isBlank())
-                    ? context.getSeatLabel() : "—";
-            SeatClass seatCls = (context != null && context.getSeatClass() != null) ? context.getSeatClass() : SeatClass.ECONOMY;
+        public static PassData from(BookingContext context) {
+            if (context == null) {
+                throw new IllegalStateException("BookingContext cannot be null for boarding pass generation.");
+            }
+            String passenger = context.getPassengerName();
+            if (passenger == null || passenger.isBlank()) {
+                throw new IllegalStateException("Passenger name is required for boarding pass generation.");
+            }
+            String flightNo = context.getFlightNumber();
+            if (flightNo == null || flightNo.isBlank()) {
+                throw new IllegalStateException("Flight number is required for boarding pass generation.");
+            }
+            String origin = context.getOrigin();
+            if (origin == null || origin.isBlank()) {
+                throw new IllegalStateException("Origin is required for boarding pass generation.");
+            }
+            String destination = context.getDestination();
+            if (destination == null || destination.isBlank()) {
+                throw new IllegalStateException("Destination is required for boarding pass generation.");
+            }
+            String depDate = context.getDepartureDate();
+            if (depDate == null || depDate.isBlank()) {
+                throw new IllegalStateException("Departure date is required for boarding pass generation.");
+            }
+            String depTime = context.getDepartureTime();
+            if (depTime == null || depTime.isBlank()) {
+                throw new IllegalStateException("Departure time is required for boarding pass generation.");
+            }
+            String seat = context.getSeatLabel();
+            if (seat == null || seat.isBlank() || "—".equals(seat)) {
+                throw new IllegalStateException("Seat label is required for boarding pass generation.");
+            }
+            SeatClass seatCls = (context.getSeatClass() != null) ? context.getSeatClass() : SeatClass.ECONOMY;
             String seatClassStr = (seatCls == SeatClass.FIRST) ? "FIRST CLASS" : "ECONOMY CLASS";
-            String bookingRef = (context != null && context.getBookingReference() != null && !context.getBookingReference().isBlank())
-                    ? context.getBookingReference() : (context != null ? context.generateBookingReference() : "—");
+            String bookingRef = context.getBookingReference();
+            if (bookingRef == null || bookingRef.isBlank()) {
+                throw new IllegalStateException("Booking reference is required for boarding pass generation.");
+            }
             return new PassData(passenger, flightNo, origin, destination, depDate, depTime, seat, seatCls, seatClassStr, bookingRef);
         }
     }
@@ -77,7 +99,13 @@ public final class BoardingPassPdfGenerator {
      * Generates a boarding pass PDF from the provided BookingContext.
      */
     public static void generate(BookingContext context, File targetFile) throws DocumentException, IOException {
+        // Validate input data FIRST before touching the filesystem
+        PassData data = PassData.from(context);
+
         logger.info("Generating boarding pass PDF at: {}", targetFile.getAbsolutePath());
+        if (targetFile.getParentFile() != null) {
+            targetFile.getParentFile().mkdirs();
+        }
 
         Rectangle pageSize = new Rectangle(620f, 290f);
         Document document = new Document(pageSize, 16f, 16f, 16f, 16f);
@@ -86,27 +114,22 @@ public final class BoardingPassPdfGenerator {
             PdfWriter writer = PdfWriter.getInstance(document, fos);
             document.open();
 
-            PassData data = PassData.from(context);
-
             PdfPTable card = new PdfPTable(2);
             card.setWidthPercentage(100f);
             card.setWidths(new float[]{72f, 28f});
 
-            card.addCell(buildMainPassCell(data));
+            card.addCell(buildMainPassCell(data, writer.getDirectContent()));
             card.addCell(buildTearOffStubCell(data));
             document.add(card);
-
-            drawBarcodeStrips(writer.getDirectContent(), data.bookingRef() + data.flightNo() + data.seat());
 
             document.close();
             logger.info("Successfully wrote boarding pass PDF: {} bytes", targetFile.length());
         }
     }
 
-    private static PdfPCell buildMainPassCell(PassData data) {
-        Font fontBrandSky = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.WHITE);
+    private static PdfPCell buildMainPassCell(PassData data, PdfContentByte cb) {
         Font fontBrandVoyage = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, COLOR_GOLD);
-        Font fontPassTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, COLOR_GOLD);
+        Font fontPassTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.WHITE);
         Font fontLabel = FontFactory.getFont(FontFactory.HELVETICA, 8, COLOR_MUTED);
         Font fontValue = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, COLOR_DARK);
         Font fontValueSmall = FontFactory.getFont(FontFactory.HELVETICA, 10, COLOR_DARK);
@@ -131,8 +154,7 @@ public final class BoardingPassPdfGenerator {
         brandCell.setBorder(Rectangle.NO_BORDER);
 
         Phrase brandPhrase = new Phrase();
-        brandPhrase.add(new Phrase("Sky", fontBrandSky));
-        brandPhrase.add(new Phrase("Voyage", fontBrandVoyage));
+        brandPhrase.add(new Phrase(BrandConfig.APP_NAME, fontBrandVoyage));
         brandPhrase.add(new Phrase("   BOARDING PASS", fontPassTitle));
         brandCell.addElement(brandPhrase);
         leftHeader.addCell(brandCell);
@@ -160,8 +182,8 @@ public final class BoardingPassPdfGenerator {
 
         addDetailCell(leftBody, "FROM", data.origin(), fontLabel, fontValueSmall);
         addDetailCell(leftBody, "TO", data.destination(), fontLabel, fontValueSmall);
-        addDetailCell(leftBody, "GATE", "A12", fontLabel, fontValue);
-        addDetailCell(leftBody, "BOARDING", "45m Prior", fontLabel, fontValue);
+        addDetailCell(leftBody, "GATE", BoardingPolicy.GATE_NOTE, fontLabel, fontValueSmall);
+        addDetailCell(leftBody, "BOARDING", BoardingPolicy.formatBoardingTime(data.depTime()), fontLabel, fontValue);
 
         addDetailCell(leftBody, "DATE", data.depDate(), fontLabel, fontValueSmall);
         addDetailCell(leftBody, "DEPARTS", data.depTime(), fontLabel, fontValue);
@@ -170,12 +192,17 @@ public final class BoardingPassPdfGenerator {
 
         PdfPTable barcodeTable = new PdfPTable(1);
         barcodeTable.setWidthPercentage(100f);
-        barcodeTable.setSpacingBefore(10f);
+        barcodeTable.setSpacingBefore(8f);
 
         PdfPCell barcodeCell = new PdfPCell();
         barcodeCell.setBorder(Rectangle.NO_BORDER);
         barcodeCell.setPaddingLeft(12);
-        barcodeCell.setPaddingBottom(10);
+        barcodeCell.setPaddingBottom(8);
+
+        com.lowagie.text.Image barcodeImg = BarcodeGenerator.generatePdfBarcode(cb, data.bookingRef(), 24f);
+        if (barcodeImg != null) {
+            barcodeCell.addElement(barcodeImg);
+        }
 
         Paragraph barcodeCode = new Paragraph("* " + data.bookingRef() + " · " + data.flightNo() + " · " + data.seat() + " *", fontBarcodeCode);
         barcodeCell.addElement(barcodeCode);
@@ -215,7 +242,7 @@ public final class BoardingPassPdfGenerator {
         stubHeader.setBackgroundColor(COLOR_NAVY);
         stubHeader.setPadding(8);
         stubHeader.setBorder(Rectangle.NO_BORDER);
-        Paragraph stubTitle = new Paragraph("PASSENGER RECEIPT", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, COLOR_GOLD));
+        Paragraph stubTitle = new Paragraph(BrandConfig.APP_NAME.toUpperCase(Locale.ROOT) + " RECEIPT", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, COLOR_GOLD));
         stubTitle.setAlignment(Element.ALIGN_CENTER);
         stubHeader.addElement(stubTitle);
         rightHeader.addCell(stubHeader);
@@ -241,38 +268,6 @@ public final class BoardingPassPdfGenerator {
 
         rightCell.addElement(rightContent);
         return rightCell;
-    }
-
-    private static void drawBarcodeStrips(PdfContentByte cb, String seed) {
-        float startX = 36f;
-        float startY = 32f;
-        float barHeight = 24f;
-
-        cb.setColorStroke(Color.BLACK);
-        float currentX = startX;
-        for (int i = 0; i < 65; i++) {
-            char ch = seed.charAt(i % seed.length());
-            float width = ((ch + i * 7) % 3) + 1.0f;
-            cb.setLineWidth(width);
-            cb.moveTo(currentX, startY);
-            cb.lineTo(currentX, startY + barHeight);
-            cb.stroke();
-            currentX += width + ((i % 2 == 0) ? 2.5f : 1.5f);
-            if (currentX > 380f) break;
-        }
-
-        float stubStartX = 460f;
-        float stubCurrentX = stubStartX;
-        for (int i = 0; i < 30; i++) {
-            char ch = seed.charAt((i * 3) % seed.length());
-            float width = ((ch + i) % 2) + 1.0f;
-            cb.setLineWidth(width);
-            cb.moveTo(stubCurrentX, startY);
-            cb.lineTo(stubCurrentX, startY + 16f);
-            cb.stroke();
-            stubCurrentX += width + 2f;
-            if (stubCurrentX > 590f) break;
-        }
     }
 
     private static void addDetailCell(PdfPTable table, String label, String value, Font labelFont, Font valFont) {

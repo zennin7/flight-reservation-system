@@ -31,6 +31,7 @@ public class GlassCheckoutBridge {
     private Timeline countdownTimeline;
     private Label holdTimerLabel;
     private Button confirmButton;
+    private boolean stopped = false;
 
     public GlassCheckoutBridge(CheckoutController controller, BookingContext context) {
         this.controller = controller;
@@ -96,6 +97,7 @@ public class GlassCheckoutBridge {
     public void initCountdownTimer(Label timerLabel, Button confirmBtn, Runnable onExpired) {
         this.holdTimerLabel = timerLabel;
         this.confirmButton = confirmBtn;
+        this.stopped = false;
 
         if (countdownTimeline != null) {
             countdownTimeline.stop();
@@ -113,7 +115,7 @@ public class GlassCheckoutBridge {
     }
 
     private void updateTimerDisplay(Runnable onExpired) {
-        if (bookingContext == null) return;
+        if (stopped || bookingContext == null || (bookingContext.getBookingReference() != null && !bookingContext.getBookingReference().isBlank())) return;
         long remaining = bookingContext.getRemainingHoldSeconds();
         long minutes = remaining / 60;
         long seconds = remaining % 60;
@@ -132,15 +134,21 @@ public class GlassCheckoutBridge {
     }
 
     public void checkHoldExpiry() {
-        if (bookingContext != null) {
-            updateTimerDisplay(controller::handleHoldExpired);
+        if (stopped || bookingContext == null || (bookingContext.getBookingReference() != null && !bookingContext.getBookingReference().isBlank())) {
+            return;
         }
+        updateTimerDisplay(controller::handleHoldExpired);
     }
 
     public void stopTimer() {
+        this.stopped = true;
         if (countdownTimeline != null) {
             countdownTimeline.stop();
             countdownTimeline = null;
         }
+    }
+
+    public boolean isStopped() {
+        return stopped;
     }
 }
