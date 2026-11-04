@@ -78,6 +78,7 @@ class SeatHoldRaceTest {
             s.setSeatCol('E');
             s.setSeatClass(SeatClass.ECONOMY);
             s.setStatus(isBooked.get() ? SeatStatus.BOOKED : (isHeld.get() ? SeatStatus.HELD : SeatStatus.AVAILABLE));
+            if (isHeld.get()) { s.setHeldUntil(java.time.Instant.now().plusSeconds(300)); }
             return Optional.of(s);
         }
 

@@ -24,11 +24,12 @@ public class SeatDaoImpl implements SeatDao {
     private static final Logger logger = LoggerFactory.getLogger(SeatDaoImpl.class);
 
     private static final String SEAT_MAP_QUERY = """
-        SELECT flight_seat_id, flight_id, seat_row, seat_col, seat_class,
-               display_row, display_col, status, calculated_price
-        FROM seat_pricing_view
-        WHERE flight_id = ?
-        ORDER BY display_row, display_col
+        SELECT spv.flight_seat_id, spv.flight_id, spv.seat_row, spv.seat_col, spv.seat_class,
+               spv.display_row, spv.display_col, spv.status, spv.calculated_price, fs.held_until
+        FROM seat_pricing_view spv
+        JOIN flight_seats fs ON fs.flight_seat_id = spv.flight_seat_id
+        WHERE spv.flight_id = ?
+        ORDER BY spv.display_row, spv.display_col
         """;
 
     // Optimistic concurrency: only holds if the seat is still AVAILABLE.
@@ -58,10 +59,11 @@ public class SeatDaoImpl implements SeatDao {
         """;
 
     private static final String FIND_SEAT_BY_ID_QUERY = """
-        SELECT flight_seat_id, flight_id, seat_row, seat_col, seat_class,
-               display_row, display_col, status, calculated_price
-        FROM seat_pricing_view
-        WHERE flight_seat_id = ?
+        SELECT spv.flight_seat_id, spv.flight_id, spv.seat_row, spv.seat_col, spv.seat_class,
+               spv.display_row, spv.display_col, spv.status, spv.calculated_price, fs.held_until
+        FROM seat_pricing_view spv
+        JOIN flight_seats fs ON fs.flight_seat_id = spv.flight_seat_id
+        WHERE spv.flight_seat_id = ?
         """;
 
     @Override
@@ -175,6 +177,11 @@ public class SeatDaoImpl implements SeatDao {
         seat.setDisplayCol(rs.getInt("display_col"));
         seat.setStatus(SeatStatus.valueOf(rs.getString("status")));
         seat.setCalculatedPrice(rs.getBigDecimal("calculated_price"));
+
+        Timestamp heldUntilTs = rs.getTimestamp("held_until");
+        if (heldUntilTs != null) {
+            seat.setHeldUntil(heldUntilTs.toInstant());
+        }
         return seat;
     }
 }

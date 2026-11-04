@@ -107,8 +107,10 @@ class PostgresIntegrationTest {
         ctx.setPassengerName("Integration Test Passenger");
         ctx.setPassengerEmail("test.passenger@skyvoyage.com");
         ctx.setPassportNumber("TEST998877");
+        ctx.setDateOfBirth(LocalDate.of(1995, 5, 20));
         ctx.setBaseFare(seat.getCalculatedPrice() != null ? seat.getCalculatedPrice() : new BigDecimal("1200.00"));
         ctx.setSelectedSeats(new ArrayList<>(List.of(seat)));
+        ctx.setPaymentResult(new com.group2.flightres.service.PaymentResult(true, "TXN-IT-9988", "VISA", "4242", null));
 
         BookingRecord record = bookingDao.createBooking(ctx);
         try {

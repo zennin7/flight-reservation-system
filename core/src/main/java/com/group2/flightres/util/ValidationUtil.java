@@ -84,6 +84,27 @@ public final class ValidationUtil {
     }
 
     /**
+     * Validates passenger date of birth (not in the future, age 0 to 120).
+     */
+    public static LocalDate validateDateOfBirth(LocalDate dob) {
+        if (dob == null) {
+            logger.warn("Validation failed: Date of birth is null");
+            throw new ValidationException("dateOfBirth", "Date of birth is required.");
+        }
+        LocalDate now = LocalDate.now();
+        if (dob.isAfter(now)) {
+            logger.warn("Validation failed: Date of birth {} is in the future", dob);
+            throw new ValidationException("dateOfBirth", "Date of birth cannot be in the future.");
+        }
+        int age = java.time.Period.between(dob, now).getYears();
+        if (age < 0 || age > 120) {
+            logger.warn("Validation failed: Age {} is out of valid range 0-120", age);
+            throw new ValidationException("dateOfBirth", "Age must be between 0 and 120 years.");
+        }
+        return dob;
+    }
+
+    /**
      * Validates flight search criteria (origin, destination, departure date).
      */
     public static void validateFlightSearch(String origin, String destination, LocalDate departureDate) {

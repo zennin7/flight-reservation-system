@@ -7,6 +7,7 @@ import com.group2.flightres.model.FlightSeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -50,7 +51,13 @@ public class SeatMapService {
             throw new SeatUnavailableException(
                     "Seat " + seat.getSeatLabel() + " was just taken by another user. Please choose a different seat.");
         }
-        logger.info("Seat {} (ID: {}) held successfully for 5 minutes", seat.getSeatLabel(), seat.getFlightSeatId());
+        seatDao.findSeatById(seat.getFlightSeatId()).ifPresent(fresh -> {
+            seat.setHeldUntil(fresh.getHeldUntil());
+        });
+        if (seat.getHeldUntil() == null) {
+            throw new IllegalStateException("Seat " + seat.getSeatLabel() + " (ID: " + seat.getFlightSeatId() + ") was held successfully but held_until is null in database.");
+        }
+        logger.info("Seat {} (ID: {}) held successfully until {}", seat.getSeatLabel(), seat.getFlightSeatId(), seat.getHeldUntil());
     }
 
     /**
@@ -59,6 +66,7 @@ public class SeatMapService {
     public void deselectSeat(FlightSeat seat) {
         if (seat == null) return;
         boolean released = seatDao.releaseSeat(seat.getFlightSeatId());
+        seat.setHeldUntil(null);
         logger.info("Released hold for seat {} (ID: {}): {}", seat.getSeatLabel(), seat.getFlightSeatId(), released);
     }
 

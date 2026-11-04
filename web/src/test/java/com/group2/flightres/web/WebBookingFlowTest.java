@@ -92,6 +92,7 @@ class WebBookingFlowTest {
             FlightSeat s = seats.get(flightSeatId);
             if (s != null && s.getStatus() == SeatStatus.AVAILABLE) {
                 s.setStatus(SeatStatus.HELD);
+                s.setHeldUntil(java.time.Instant.now().plusSeconds(300));
                 return true;
             }
             return false;
@@ -102,6 +103,7 @@ class WebBookingFlowTest {
             FlightSeat s = seats.get(flightSeatId);
             if (s != null && s.getStatus() == SeatStatus.HELD) {
                 s.setStatus(SeatStatus.AVAILABLE);
+                s.setHeldUntil(null);
                 return true;
             }
             return false;

@@ -297,6 +297,10 @@ public class SeatMapController implements WizardStepController {
                 if (!isSampleData) {
                     seatMapService.deselectSeat(seat);
                 }
+                seat.setHeldUntil(null);
+                if (bookingContext != null) {
+                    bookingContext.setHoldExpiresAt(null);
+                }
                 selectedSeats.remove(seat);
                 if (btn != null) {
                     btn.getStyleClass().remove("seat-selected");
@@ -308,6 +312,7 @@ public class SeatMapController implements WizardStepController {
                     if (!isSampleData) {
                         seatMapService.deselectSeat(prev);
                     }
+                    prev.setHeldUntil(null);
                     Button prevBtn = seatButtonsByLabel.get(prev.getSeatLabel());
                     if (prevBtn != null) {
                         prevBtn.getStyleClass().remove("seat-selected");
@@ -315,12 +320,20 @@ public class SeatMapController implements WizardStepController {
                     }
                 }
                 selectedSeats.clear();
+                if (bookingContext != null) {
+                    bookingContext.setHoldExpiresAt(null);
+                }
 
                 // Real logic call: hold/select (when connected to real database)
                 if (!isSampleData) {
                     seatMapService.selectSeat(seat);
+                } else {
+                    seat.setHeldUntil(java.time.Instant.now().plusSeconds(com.group2.flightres.config.SeatHoldPolicy.HOLD_SECONDS));
                 }
                 selectedSeats.add(seat);
+                if (bookingContext != null) {
+                    bookingContext.setHoldExpiresAt(seat.getHeldUntil());
+                }
                 if (btn != null) {
                     btn.getStyleClass().remove("seat-available");
                     btn.getStyleClass().add("seat-selected");
@@ -393,6 +406,9 @@ public class SeatMapController implements WizardStepController {
                 bookingContext.setDemandPricing(new BigDecimal("180"));
                 bookingContext.setTaxesAndFees(new BigDecimal("142"));
                 bookingContext.recalculateTotals();
+                if (bookingContext.getHoldExpiresAt() == null && seat.getHeldUntil() != null) {
+                    bookingContext.setHoldExpiresAt(seat.getHeldUntil());
+                }
             }
         }
         if (onNext != null) {

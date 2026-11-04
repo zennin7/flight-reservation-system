@@ -7,6 +7,7 @@ import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
+import com.group2.flightres.service.PaymentResult;
 import com.group2.flightres.util.PasswordUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,7 +130,10 @@ public class BookingDaoImpl implements BookingDao {
         try (PreparedStatement stmt = conn.prepareStatement(INSERT_BOOKING_QUERY)) {
             stmt.setString(1, pnr);
             stmt.setLong(2, userId);
-            stmt.setLong(3, context.getFlightId() != null ? context.getFlightId() : 1L);
+            if (context.getFlightId() == null) {
+                throw new IllegalStateException("Flight ID is required to create a booking.");
+            }
+            stmt.setLong(3, context.getFlightId());
             stmt.setBigDecimal(4, context.getTotalPrice() != null ? context.getTotalPrice() : BigDecimal.ZERO);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -148,9 +152,18 @@ public class BookingDaoImpl implements BookingDao {
     private void persistBookingSeats(Connection conn, long bookingId, BookingContext context)
             throws SQLException, SeatUnavailableException {
         List<FlightSeat> seats = context.getSelectedSeats();
-        String passengerName = context.getPassengerName() != null ? context.getPassengerName() : "Valued Passenger";
-        String passport = context.getPassportNumber() != null ? context.getPassportNumber() : "PA999999";
-        LocalDate dob = LocalDate.of(1990, 1, 1);
+        String passengerName = context.getPassengerName();
+        if (passengerName == null || passengerName.isBlank()) {
+            throw new IllegalStateException("Passenger name is required to create a booking.");
+        }
+        String passport = context.getPassportNumber();
+        if (passport == null || passport.isBlank()) {
+            throw new IllegalStateException("Passport number is required to create a booking.");
+        }
+        LocalDate dob = context.getDateOfBirth();
+        if (dob == null) {
+            throw new IllegalStateException("Passenger date of birth is required to create a booking.");
+        }
 
         for (FlightSeat seat : seats) {
             // Optimistic check: must be HELD or AVAILABLE
@@ -178,19 +191,69 @@ public class BookingDaoImpl implements BookingDao {
         }
     }
 
+    private static volatile Boolean paymentsHasCardMeta = null;
+
+    private boolean checkPaymentsHasCardMeta(Connection conn) {
+        if (paymentsHasCardMeta != null) {
+            return paymentsHasCardMeta;
+        }
+        try {
+            var meta = conn.getMetaData();
+            try (ResultSet rs = meta.getColumns(null, null, "payments", "card_brand")) {
+                paymentsHasCardMeta = rs.next();
+                return paymentsHasCardMeta;
+            }
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    // TODO: Remove column-exists check after migration_payments_card_meta.sql is applied to team DB
     private void persistPayment(Connection conn, long bookingId, String pnr, BookingContext context)
             throws SQLException {
-        try (PreparedStatement stmt = conn.prepareStatement(INSERT_PAYMENT_QUERY)) {
+        PaymentResult payResult = context.getPaymentResult();
+        if (payResult == null) {
+            throw new IllegalStateException("PaymentResult is required to persist payment.");
+        }
+        String txnRef = payResult.getTransactionReference();
+        if (txnRef == null || txnRef.isBlank()) {
+            throw new IllegalStateException("Payment transaction reference is required to persist payment.");
+        }
+        String brand = payResult.getCardBrand();
+        if (brand == null || brand.isBlank()) {
+            throw new IllegalStateException("Payment card brand is required to persist payment.");
+        }
+        String last4 = payResult.getCardLast4();
+        if (last4 == null || last4.isBlank()) {
+            throw new IllegalStateException("Payment card last 4 digits are required to persist payment.");
+        }
+
+        boolean hasCardMeta = checkPaymentsHasCardMeta(conn);
+        String sql = hasCardMeta
+                ? "INSERT INTO payments (booking_id, amount, method, status, transaction_ref, card_brand, card_last4) VALUES (?, ?, 'CARD', 'COMPLETED'::payment_status, ?, ?, ?)"
+                : "INSERT INTO payments (booking_id, amount, method, status, transaction_ref) VALUES (?, ?, 'CARD', 'COMPLETED'::payment_status, ?)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, bookingId);
             stmt.setBigDecimal(2, context.getTotalPrice() != null ? context.getTotalPrice() : BigDecimal.ZERO);
-            stmt.setString(3, "TXN-" + pnr);
+            stmt.setString(3, txnRef);
+            if (hasCardMeta) {
+                stmt.setString(4, brand);
+                stmt.setString(5, last4);
+            }
             stmt.executeUpdate();
         }
     }
 
     private BookingRecord buildBookingRecord(BookingHeader header, String pnr, long userId, BookingContext context) {
-        String passengerName = context.getPassengerName() != null ? context.getPassengerName() : "Valued Passenger";
-        String passport = context.getPassportNumber() != null ? context.getPassportNumber() : "PA999999";
+        String passengerName = context.getPassengerName();
+        if (passengerName == null || passengerName.isBlank()) {
+            throw new IllegalStateException("Passenger name is required to build booking record.");
+        }
+        String passport = context.getPassportNumber();
+        if (passport == null || passport.isBlank()) {
+            throw new IllegalStateException("Passport number is required to build booking record.");
+        }
 
         BookingRecord record = new BookingRecord();
         record.setBookingId(header.bookingId());
@@ -259,8 +322,11 @@ public class BookingDaoImpl implements BookingDao {
             return context.getCurrentUser().getUserId();
         }
 
-        String email = (context.getPassengerEmail() != null && !context.getPassengerEmail().isBlank())
-                ? context.getPassengerEmail().trim().toLowerCase(Locale.ROOT) : "guest@skyvoyage.com";
+        String email = context.getPassengerEmail();
+        if (email == null || email.isBlank()) {
+            throw new IllegalStateException("Passenger email is required to create a booking.");
+        }
+        email = email.trim().toLowerCase(Locale.ROOT);
 
         // Check if user already exists
         try (PreparedStatement stmt = conn.prepareStatement(FIND_USER_BY_EMAIL)) {
@@ -273,7 +339,10 @@ public class BookingDaoImpl implements BookingDao {
         }
 
         // Create on-the-fly customer user
-        String fullName = context.getPassengerName() != null ? context.getPassengerName() : "Valued Passenger";
+        String fullName = context.getPassengerName();
+        if (fullName == null || fullName.isBlank()) {
+            throw new IllegalStateException("Passenger name is required to create a booking.");
+        }
         String username = "cust_" + System.currentTimeMillis() + "_" + RANDOM.nextInt(1000);
         String dummyHash = PasswordUtil.hash(username);
 

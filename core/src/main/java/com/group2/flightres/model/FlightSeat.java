@@ -1,6 +1,7 @@
 package com.group2.flightres.model;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Objects;
 
 public class FlightSeat {
@@ -14,6 +15,7 @@ public class FlightSeat {
     private int displayCol;
     private SeatStatus status;
     private BigDecimal calculatedPrice;
+    private Instant heldUntil;
 
     public String getSeatLabel() {
         return seatRow + String.valueOf(seatCol);
@@ -45,6 +47,9 @@ public class FlightSeat {
 
     public BigDecimal getCalculatedPrice() { return calculatedPrice; }
     public void setCalculatedPrice(BigDecimal calculatedPrice) { this.calculatedPrice = calculatedPrice; }
+
+    public Instant getHeldUntil() { return heldUntil; }
+    public void setHeldUntil(Instant heldUntil) { this.heldUntil = heldUntil; }
 
     @Override
     public boolean equals(Object o) {

@@ -47,6 +47,9 @@ public class BookingService {
         if (context.getPassportNumber() != null && !context.getPassportNumber().isBlank()) {
             ValidationUtil.validatePassportNumber(context.getPassportNumber());
         }
+        if (context.getDateOfBirth() != null) {
+            ValidationUtil.validateDateOfBirth(context.getDateOfBirth());
+        }
 
         if (context.getSelectedSeats() == null || context.getSelectedSeats().isEmpty()) {
             throw new IllegalStateException("At least one seat must be selected to complete a booking.");

@@ -1,6 +1,10 @@
 package com.group2.flightres.model;
 
+import com.group2.flightres.service.PaymentResult;
+
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +34,11 @@ public class BookingContext {
     private String passengerEmail;
     private String passportNumber;
     private String bookingReference;
+    private LocalDate dateOfBirth;
+    private Instant holdExpiresAt;
+    private String cardBrand;
+    private String cardLast4;
+    private PaymentResult paymentResult;
 
     private User currentUser;
 
@@ -101,6 +110,46 @@ public class BookingContext {
 
     public User getCurrentUser() { return currentUser; }
     public void setCurrentUser(User currentUser) { this.currentUser = currentUser; }
+
+    public LocalDate getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+
+    public Instant getHoldExpiresAt() {
+        if (holdExpiresAt != null) {
+            return holdExpiresAt;
+        }
+        if (selectedSeats != null && !selectedSeats.isEmpty()) {
+            FlightSeat primary = selectedSeats.get(0);
+            if (primary != null && primary.getHeldUntil() != null) {
+                return primary.getHeldUntil();
+            }
+        }
+        return null;
+    }
+
+    public void setHoldExpiresAt(Instant holdExpiresAt) { this.holdExpiresAt = holdExpiresAt; }
+
+    public long getRemainingHoldSeconds() {
+        Instant exp = getHoldExpiresAt();
+        if (exp == null) return 0;
+        long rem = java.time.Duration.between(Instant.now(), exp).toSeconds();
+        return Math.max(0, rem);
+    }
+
+    public String getCardBrand() { return cardBrand; }
+    public void setCardBrand(String cardBrand) { this.cardBrand = cardBrand; }
+
+    public String getCardLast4() { return cardLast4; }
+    public void setCardLast4(String cardLast4) { this.cardLast4 = cardLast4; }
+
+    public PaymentResult getPaymentResult() { return paymentResult; }
+    public void setPaymentResult(PaymentResult paymentResult) {
+        this.paymentResult = paymentResult;
+        if (paymentResult != null) {
+            this.cardBrand = paymentResult.getCardBrand();
+            this.cardLast4 = paymentResult.getCardLast4();
+        }
+    }
 
     /**
      * Recalculates total price from baseFare, classMultiplier, demandPricing and taxesAndFees

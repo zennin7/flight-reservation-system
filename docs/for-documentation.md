@@ -490,3 +490,12 @@ mvn -pl web exec:java
   `scripts\generate_dark_web_screenshots.cmd`
 - **Boarding Pass PDF Render:**  
   `powershell -ExecutionPolicy Bypass -File scripts\render_pdf.ps1`
+
+
+---
+
+## 10. Integration Notes & Merge Blockers
+
+> [!IMPORTANT]
+> BLOCKER before merge to team repo: web must collect date of birth and use PaymentService; BookingDaoImpl is now strict.
+
