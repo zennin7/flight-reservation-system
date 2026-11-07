@@ -13,10 +13,12 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -60,6 +62,19 @@ public class FlightDaoImpl implements FlightDao {
         JOIN airports dest ON dest.airport_id = f.dest_airport_id
         JOIN aircraft_types act ON act.aircraft_type_id = f.aircraft_type_id
         WHERE f.flight_id = ?
+        """;
+
+    private static final String FIND_NEXT_AVAILABLE_DATE_QUERY = """
+        SELECT f.departure_time, orig.timezone
+        FROM flights f
+        JOIN airports orig ON orig.airport_id = f.origin_airport_id
+        JOIN airports dest ON dest.airport_id = f.dest_airport_id
+        WHERE (orig.iata_code = ? OR UPPER(orig.city) LIKE UPPER(?) OR UPPER(orig.name) LIKE UPPER(?))
+          AND (dest.iata_code = ? OR UPPER(dest.city) LIKE UPPER(?) OR UPPER(dest.name) LIKE UPPER(?))
+          AND f.status = 'SCHEDULED'
+          AND f.departure_time >= ?
+        ORDER BY f.departure_time ASC
+        LIMIT 1
         """;
 
     @Override
@@ -123,6 +138,49 @@ public class FlightDaoImpl implements FlightDao {
         return Optional.empty();
     }
 
+    @Override
+    public Optional<LocalDate> findNextAvailableDate(String origin, String destination, LocalDate fromDate, Instant minDepartureInstant) {
+        String normOrigin = ValidationUtil.extractAirportCodeOrCity(origin);
+        String normDest = ValidationUtil.extractAirportCodeOrCity(destination);
+
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(FIND_NEXT_AVAILABLE_DATE_QUERY)) {
+
+            stmt.setString(1, normOrigin.toUpperCase(Locale.ROOT));
+            stmt.setString(2, "%" + normOrigin + "%");
+            stmt.setString(3, "%" + normOrigin + "%");
+
+            stmt.setString(4, normDest.toUpperCase(Locale.ROOT));
+            stmt.setString(5, "%" + normDest + "%");
+            stmt.setString(6, "%" + normDest + "%");
+
+            Instant threshold = minDepartureInstant;
+            if (fromDate != null) {
+                Instant fromInstant = fromDate.atStartOfDay(ZoneOffset.UTC).toInstant();
+                if (threshold == null || fromInstant.isAfter(threshold)) {
+                    threshold = fromInstant;
+                }
+            }
+            if (threshold == null) {
+                threshold = Instant.now();
+            }
+
+            stmt.setTimestamp(7, Timestamp.from(threshold));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    OffsetDateTime odt = rs.getObject("departure_time", OffsetDateTime.class);
+                    String tz = rs.getString("timezone");
+                    ZoneId zone = ZoneId.of(tz != null ? tz : "Africa/Johannesburg");
+                    return Optional.of(odt.atZoneSameInstant(zone).toLocalDate());
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to query next available flight date: {}", e.getMessage(), e);
+        }
+        return Optional.empty();
+    }
+
     private FlightSearchResult mapRow(ResultSet rs) throws SQLException {
         long id = rs.getLong("flight_id");
         String number = rs.getString("flight_number");
@@ -165,5 +223,51 @@ public class FlightDaoImpl implements FlightDao {
                 aircraftModel,
                 availableSeats
         );
+    }
+
+    private static final String FIND_AIRPORT_NAME_QUERY =
+            "SELECT name FROM airports WHERE UPPER(iata_code) = UPPER(?) OR UPPER(city) = UPPER(?) LIMIT 1";
+
+    private static final String FIND_AIRPORT_CITY_QUERY =
+            "SELECT city FROM airports WHERE UPPER(iata_code) = UPPER(?) OR UPPER(city) = UPPER(?) LIMIT 1";
+
+    @Override
+    public Optional<String> findAirportName(String code, String city) {
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement(FIND_AIRPORT_NAME_QUERY)) {
+            ps.setString(1, code != null ? code.trim() : "");
+            ps.setString(2, city != null ? city.trim() : "");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String name = rs.getString(1);
+                    if (name != null && !name.isBlank()) {
+                        return Optional.of(name.trim());
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding airport name for code='{}', city='{}'", code, city, e);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<String> findAirportCity(String code) {
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement(FIND_AIRPORT_CITY_QUERY)) {
+            ps.setString(1, code != null ? code.trim() : "");
+            ps.setString(2, code != null ? code.trim() : "");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String city = rs.getString(1);
+                    if (city != null && !city.isBlank()) {
+                        return Optional.of(city.trim());
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding airport city for code='{}'", code, e);
+        }
+        return Optional.empty();
     }
 }

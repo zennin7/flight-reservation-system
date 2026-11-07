@@ -262,9 +262,13 @@ public class BookingDaoImpl implements BookingDao {
         record.setFlightId(context.getFlightId());
         record.setFlightNumber(context.getFlightNumber());
         record.setOrigin(context.getOrigin());
+        record.setOriginCity(context.getOriginCity());
         record.setDestination(context.getDestination());
+        record.setDestinationCity(context.getDestinationCity());
         record.setDepartureTime(context.getDepartureTime());
         record.setArrivalTime(context.getArrivalTime());
+        record.setDepartureInstant(context.getDepartureInstant());
+        record.setArrivalInstant(context.getArrivalInstant());
         record.setStatus("CONFIRMED");
         record.setTotalAmount(context.getTotalPrice());
         record.setCreatedAt(header.createdAt());
@@ -395,13 +399,26 @@ public class BookingDaoImpl implements BookingDao {
         rec.setFlightNumber(rs.getString("flight_number"));
 
         Timestamp depTs = rs.getTimestamp("departure_time");
-        rec.setDepartureTime(depTs != null ? depTs.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm")) : "—");
+        if (depTs != null) {
+            rec.setDepartureInstant(depTs.toInstant());
+            rec.setDepartureTime(depTs.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+            rec.setDepartureDate(depTs.toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        } else {
+            rec.setDepartureTime("—");
+        }
 
         Timestamp arrTs = rs.getTimestamp("arrival_time");
-        rec.setArrivalTime(arrTs != null ? arrTs.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm")) : "—");
+        if (arrTs != null) {
+            rec.setArrivalInstant(arrTs.toInstant());
+            rec.setArrivalTime(arrTs.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+        } else {
+            rec.setArrivalTime("—");
+        }
 
         rec.setOrigin(rs.getString("origin_city") + " (" + rs.getString("origin_code") + ")");
+        rec.setOriginCity(rs.getString("origin_city"));
         rec.setDestination(rs.getString("dest_city") + " (" + rs.getString("dest_code") + ")");
+        rec.setDestinationCity(rs.getString("dest_city"));
 
         rec.setUserId(rs.getLong("user_id"));
         rec.setPassengerName(rs.getString("passenger_name"));

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CheckoutControllerTest {
@@ -153,5 +154,42 @@ class CheckoutControllerTest {
         String txnRef = ctx.getPaymentResult().getTransactionReference();
         assertTrue(txnRef != null && !txnRef.isBlank(), "Transaction reference should be set");
         assertTrue(gateway.isRefunded(txnRef), "Transaction " + txnRef + " must be marked refunded");
+    }
+
+    @Test
+    @DisplayName("Destination city is populated from BookingContext destinationCity")
+    void testDestinationCityFromContext() throws Exception {
+        BookingService dummyService = new BookingService();
+        SimulatedPaymentGateway gateway = new SimulatedPaymentGateway();
+        CheckoutController controller = new CheckoutController(dummyService, gateway);
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/checkout.fxml"));
+        loader.setControllerFactory(t -> controller);
+        loader.load();
+
+        BookingContext ctx = createTestContext();
+        ctx.setDestinationCity("Durban");
+        controller.init(ctx, () -> {}, () -> {});
+
+        assertEquals("Durban", controller.getTripOriginDestLabel().getText());
+    }
+
+    @Test
+    @DisplayName("Destination city returns airport code unchanged if destinationCity is blank")
+    void testDestinationCityBlankReturnsCode() throws Exception {
+        BookingService dummyService = new BookingService();
+        SimulatedPaymentGateway gateway = new SimulatedPaymentGateway();
+        CheckoutController controller = new CheckoutController(dummyService, gateway);
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/checkout.fxml"));
+        loader.setControllerFactory(t -> controller);
+        loader.load();
+
+        BookingContext ctx = createTestContext();
+        ctx.setDestination("DUR");
+        ctx.setDestinationCity(null);
+        controller.init(ctx, () -> {}, () -> {});
+
+        assertEquals("DUR", controller.getTripOriginDestLabel().getText());
     }
 }

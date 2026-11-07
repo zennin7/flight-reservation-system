@@ -2,6 +2,10 @@ package com.group2.flightres.model;
 
 import com.group2.flightres.config.BoardingPolicy;
 import com.group2.flightres.util.FlightDateFormatter;
+import com.group2.flightres.util.FlightTimes;
+
+import java.time.Duration;
+import java.time.Instant;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -57,12 +61,19 @@ public record TicketData(
         String cabin = (seatCls == SeatClass.FIRST) ? "First Class" : "Economy";
 
         String originCode = extractCode(originStr, "JNB");
-        String originCity = extractCity(originStr, originCode);
+        String originCity = (context.getOriginCity() != null && !context.getOriginCity().isBlank())
+                ? context.getOriginCity() : extractCity(originStr, originCode);
         String destCode = extractCode(destStr, "CPT");
-        String destCity = extractCity(destStr, destCode);
+        String destCity = (context.getDestinationCity() != null && !context.getDestinationCity().isBlank())
+                ? context.getDestinationCity() : extractCity(destStr, destCode);
 
         String formattedDate = FlightDateFormatter.format(depDate);
-        String duration = calculateDuration(depTime, arrTime);
+        Instant dep = context.getDepartureInstant();
+        Instant arr = context.getArrivalInstant();
+        if (dep == null || arr == null) {
+            throw new IllegalStateException("Departure and arrival instants are required to compute duration.");
+        }
+        String duration = FlightTimes.formatDuration(dep, arr);
         String boardingTime = BoardingPolicy.formatBoardingTime(depTime);
         String bagDropTime = BoardingPolicy.formatBagDropTime(depTime, originCity);
 
@@ -112,12 +123,19 @@ public record TicketData(
         String cabin = (seatCls == SeatClass.FIRST) ? "First Class" : "Economy";
 
         String originCode = extractCode(originStr, "JNB");
-        String originCity = extractCity(originStr, originCode);
+        String originCity = (record.getOriginCity() != null && !record.getOriginCity().isBlank())
+                ? record.getOriginCity() : extractCity(originStr, originCode);
         String destCode = extractCode(destStr, "CPT");
-        String destCity = extractCity(destStr, destCode);
+        String destCity = (record.getDestinationCity() != null && !record.getDestinationCity().isBlank())
+                ? record.getDestinationCity() : extractCity(destStr, destCode);
 
         String formattedDate = FlightDateFormatter.format(depDate);
-        String duration = calculateDuration(depTime, arrTime);
+        Instant dep = record.getDepartureInstant();
+        Instant arr = record.getArrivalInstant();
+        if (dep == null || arr == null) {
+            throw new IllegalStateException("Departure and arrival instants are required to compute duration.");
+        }
+        String duration = FlightTimes.formatDuration(dep, arr);
         String boardingTime = BoardingPolicy.formatBoardingTime(depTime);
         String bagDropTime = BoardingPolicy.formatBagDropTime(depTime, originCity);
 
@@ -167,23 +185,7 @@ public record TicketData(
         if (openParen > 0) {
             return str.substring(0, openParen).trim();
         }
-        if ("JNB".equalsIgnoreCase(code)) return "Johannesburg";
-        if ("CPT".equalsIgnoreCase(code)) return "Cape Town";
-        if ("DUR".equalsIgnoreCase(code)) return "Durban";
         return str.trim();
     }
 
-    private static String calculateDuration(String depTime, String arrTime) {
-        try {
-            LocalTime d = LocalTime.parse(depTime.trim(), DateTimeFormatter.ofPattern("HH:mm"));
-            LocalTime a = LocalTime.parse(arrTime.trim(), DateTimeFormatter.ofPattern("HH:mm"));
-            long minutes = ChronoUnit.MINUTES.between(d, a);
-            if (minutes < 0) minutes += 24 * 60;
-            long hours = minutes / 60;
-            long remMin = minutes % 60;
-            return String.format(Locale.ENGLISH, "%dh %02dm", hours, remMin);
-        } catch (Exception e) {
-            return "2h 05m";
-        }
-    }
 }

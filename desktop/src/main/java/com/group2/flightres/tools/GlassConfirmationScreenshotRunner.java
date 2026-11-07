@@ -8,6 +8,7 @@ import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.util.FontLoader;
 import com.group2.flightres.util.ThemeManager;
 import javafx.animation.PauseTransition;
+import java.time.Instant;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -88,6 +89,8 @@ public class GlassConfirmationScreenshotRunner extends Application {
         ctx.setDestination("Cape Town (CPT)");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setDepartureDate("2026-11-14");
         ctx.setPassengerName("Amahle Mokoena");
         ctx.setPassengerEmail("amahle@example.com");

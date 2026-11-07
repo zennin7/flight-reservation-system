@@ -81,8 +81,8 @@
                            style="-fx-background-color: rgba(239, 68, 68, 0.20); -fx-background-radius: 999px; -fx-border-color: rgba(239, 68, 68, 0.50); -fx-border-radius: 999px;">
                     <Label text="!" style="-fx-font-size: 32px; -fx-font-weight: 700; -fx-text-fill: #ef4444;"/>
                 </StackPane>
-                <Label text="We couldn't find your booking" styleClass="confirmation-title-serif"/>
-                <Label text="No confirmed reservation details were found in this session. Please search and select a flight."
+                <Label fx:id="errorTitleLabel" text="We couldn't find your booking" styleClass="confirmation-title-serif"/>
+                <Label fx:id="errorMessageLabel" text="No confirmed reservation details were found in this session. Please search and select a flight."
                        styleClass="confirmation-subtitle-mut" style="-fx-font-size: 15px;"/>
                 <Button fx:id="errorBackButton" text="Back to Flight Search" onAction="#handleBackToHome"
                         styleClass="gold-primary-action-btn" prefWidth="240"/>

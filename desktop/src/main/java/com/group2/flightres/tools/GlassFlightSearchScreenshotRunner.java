@@ -11,6 +11,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelReader;
@@ -26,14 +28,15 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Renders the Phase 2 Glass Flight Search screen at 1280x800 and captures:
- * 1) docs/screenshots/glass-flight-search.png (4 real DB cards)
+ * 1) docs/screenshots/glass-flight-search.png (real DB cards)
  * 2) docs/screenshots/glass-flight-search-error.png (error state with Retry button)
- * Also prints the scene graph label texts for all 4 cards to stdout.
+ * Also prints the scene graph label texts for cards to stdout.
  */
 public class GlassFlightSearchScreenshotRunner extends Application {
 
@@ -54,6 +57,18 @@ public class GlassFlightSearchScreenshotRunner extends Application {
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/flight-search.fxml"));
         Parent root = loader.load();
+        FlightSearchController controller = loader.getController();
+
+        // Optional search date from CLI arg (--date=YYYY-MM-DD); otherwise DB's next available date is used by controller
+        LocalDate customDate = null;
+        for (String arg : getParameters().getRaw()) {
+            if (arg.startsWith("--date=")) {
+                customDate = LocalDate.parse(arg.substring("--date=".length()).trim());
+            }
+        }
+        if (customDate != null && controller != null) {
+            controller.setSearchDate(customDate);
+        }
 
         Scene scene = new Scene(root, WIDTH, HEIGHT);
         ThemeManager.getInstance().applyGlassTheme(scene);
@@ -69,10 +84,42 @@ public class GlassFlightSearchScreenshotRunner extends Application {
             root.applyCss();
             root.layout();
 
+            // Verify flights are present; exit non-zero if none found
+            VBox cardsContainer = (VBox) root.lookup("#resultsCardsContainer");
+            long cardCount = 0;
+            if (cardsContainer != null) {
+                cardCount = cardsContainer.getChildren().stream()
+                        .filter(child -> child.getStyleClass().contains("flight-result-card"))
+                        .count();
+            }
+
+            if (cardCount == 0) {
+                ComboBox<?> fromCombo = (ComboBox<?>) root.lookup("#fromAirportCombo");
+                ComboBox<?> toCombo = (ComboBox<?>) root.lookup("#toAirportCombo");
+                DatePicker depDatePicker = (DatePicker) root.lookup("#departureDatePicker");
+
+                String from = (fromCombo != null && fromCombo.getValue() != null) ? fromCombo.getValue().toString() : "JNB";
+                String to = (toCombo != null && toCombo.getValue() != null) ? toCombo.getValue().toString() : "CPT";
+                String fromCode = (from.contains("(") && from.contains(")"))
+                        ? from.substring(from.indexOf('(') + 1, from.indexOf(')'))
+                        : from;
+                String toCode = (to.contains("(") && to.contains(")"))
+                        ? to.substring(to.indexOf('(') + 1, to.indexOf(')'))
+                        : to;
+                String date = (depDatePicker != null && depDatePicker.getValue() != null)
+                        ? depDatePicker.getValue().toString()
+                        : "unknown";
+
+                System.err.println("no flights for " + fromCode + "-" + toCode + " on " + date + "; run core/sql/seed_flights_relative.sql");
+                Platform.exit();
+                System.exit(1);
+                return;
+            }
+
             // Print card label texts directly from scene graph
             printCardLabelTexts(root);
 
-            // Snapshot 1: Normal 4 cards (snapshot entire 1280x800 scene without window border offset)
+            // Snapshot 1: Normal cards (snapshot entire 1280x800 scene without window border offset)
             WritableImage snapshot1 = scene.snapshot(null);
             File outputFile1 = getOutputDir().resolve("glass-flight-search.png").toFile();
 

@@ -24,6 +24,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,8 @@ public class BoardingPassPdfGeneratorTest {
         ctx.setDepartureDate("2026-11-14");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setPassengerName("Amahle Mokoena");
 
         FlightSeat seat = new FlightSeat();

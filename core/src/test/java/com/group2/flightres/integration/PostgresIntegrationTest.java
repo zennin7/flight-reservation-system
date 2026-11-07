@@ -12,6 +12,7 @@ import com.group2.flightres.model.FlightSearchResult;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
+import com.group2.flightres.service.BookingService;
 import com.group2.flightres.util.DatabaseAssumption;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -141,6 +142,11 @@ class PostgresIntegrationTest {
         boolean held = seatDao.holdSeat(seat.getFlightSeatId());
         assertTrue(held, "Failed to hold available seat " + seat.getFlightSeatId() + " on flight 1");
 
+        FlightDaoImpl flightDao = new FlightDaoImpl();
+        Optional<FlightSearchResult> flightOpt = flightDao.findById(1L);
+        assertTrue(flightOpt.isPresent(), "Flight 1 must exist for integration test");
+        FlightSearchResult flight = flightOpt.get();
+
         BookingContext ctx = new BookingContext();
         ctx.setFlightId(1L);
         ctx.setFlightNumber("GRP 204");
@@ -149,6 +155,8 @@ class PostgresIntegrationTest {
         ctx.setDepartureDate("2026-11-02");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:40");
+        ctx.setDepartureInstant(flight.getDeparture());
+        ctx.setArrivalInstant(flight.getArrival());
         ctx.setPassengerName("Integration Test Passenger");
         ctx.setPassengerEmail("test.passenger@skyvoyage.com");
         ctx.setPassportNumber("TEST998877");
@@ -166,6 +174,10 @@ class PostgresIntegrationTest {
             Optional<BookingRecord> fetched = bookingDao.findByReference(record.getBookingReference());
             assertTrue(fetched.isPresent());
             assertEquals("Integration Test Passenger", fetched.get().getPassengerName());
+            assertNotNull(fetched.get().getDepartureInstant(), "Departure instant must not be null");
+            assertNotNull(fetched.get().getArrivalInstant(), "Arrival instant must not be null");
+            assertEquals(flight.getDeparture(), fetched.get().getDepartureInstant(), "Fetched departure instant must equal flight departure");
+            assertEquals(flight.getArrival(), fetched.get().getArrivalInstant(), "Fetched arrival instant must equal flight arrival");
         } finally {
             // Teardown: delete test booking records and restore flight seat to AVAILABLE
             try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
@@ -197,5 +209,43 @@ class PostgresIntegrationTest {
                 fail("Cleanup failed after testLiveBookingAndLookup: " + e.getMessage(), e);
             }
         }
+    }
+
+    @Test
+    @DisplayName("FlightDao and BookingService resolve airport name from code or city")
+    void testResolveAirportName() {
+        FlightDaoImpl flightDao = new FlightDaoImpl();
+        BookingService bookingService = new BookingService(new BookingDaoImpl(), flightDao);
+
+        Optional<String> jnbName = bookingService.findAirportName("JNB", "Johannesburg");
+        assertTrue(jnbName.isPresent());
+        assertTrue(jnbName.get().contains("Tambo"));
+
+        Optional<String> cptName = bookingService.findAirportName("CPT", "");
+        assertTrue(cptName.isPresent());
+        assertTrue(cptName.get().contains("Cape Town"));
+
+        Optional<String> durName = bookingService.findAirportName("DUR", "Durban");
+        assertTrue(durName.isPresent());
+        assertTrue(durName.get().contains("King Shaka"));
+    }
+
+    @Test
+    @DisplayName("FlightDao and BookingService resolve airport city from code")
+    void testResolveAirportCity() {
+        FlightDaoImpl flightDao = new FlightDaoImpl();
+        BookingService bookingService = new BookingService(new BookingDaoImpl(), flightDao);
+
+        Optional<String> jnbCity = bookingService.findAirportCity("JNB");
+        assertTrue(jnbCity.isPresent());
+        assertEquals("Johannesburg", jnbCity.get());
+
+        Optional<String> cptCity = bookingService.findAirportCity("CPT");
+        assertTrue(cptCity.isPresent());
+        assertEquals("Cape Town", cptCity.get());
+
+        Optional<String> durCity = bookingService.findAirportCity("DUR");
+        assertTrue(durCity.isPresent());
+        assertEquals("Durban", durCity.get());
     }
 }

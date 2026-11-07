@@ -1,10 +1,11 @@
 package com.group2.flightres.model;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 /**
- * Domain record representing a confirmed flight booking with passenger and seat details.
+ * Persisted booking record mapped from database schema.
  */
 public class BookingRecord {
 
@@ -15,8 +16,12 @@ public class BookingRecord {
     private String flightNumber;
     private String origin;
     private String destination;
+    private String originCity;
+    private String destinationCity;
     private String departureTime;
     private String arrivalTime;
+    private Instant departureInstant;
+    private Instant arrivalInstant;
     private String status;
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
@@ -51,11 +56,24 @@ public class BookingRecord {
     public String getDestination() { return destination; }
     public void setDestination(String destination) { this.destination = destination; }
 
+    public String getOriginCity() { return originCity; }
+    public void setOriginCity(String originCity) { this.originCity = originCity; }
+
+    public String getDestinationCity() { return destinationCity; }
+    public void setDestinationCity(String destinationCity) { this.destinationCity = destinationCity; }
+
     public String getDepartureTime() { return departureTime; }
     public void setDepartureTime(String departureTime) { this.departureTime = departureTime; }
 
     public String getArrivalTime() { return arrivalTime; }
     public void setArrivalTime(String arrivalTime) { this.arrivalTime = arrivalTime; }
+
+    public Instant getDepartureInstant() { return departureInstant; }
+    public void setDepartureInstant(Instant departureInstant) { this.departureInstant = departureInstant; }
+
+    public Instant getArrivalInstant() { return arrivalInstant; }
+    public void setArrivalInstant(Instant arrivalInstant) { this.arrivalInstant = arrivalInstant; }
+
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

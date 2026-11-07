@@ -49,4 +49,15 @@ public class IcsCalendarGeneratorTest {
         BookingContext ctx = new BookingContext();
         assertThrows(IllegalStateException.class, () -> IcsCalendarGenerator.generateIcsContent(ctx));
     }
+
+    @Test
+    void testMissingDepartureDateThrowsIllegalArgumentException() {
+        BookingContext ctx = new BookingContext();
+        ctx.setBookingReference("K7QX2M");
+        ctx.setFlightNumber("FL 204");
+        ctx.setDepartureTime("06:30");
+        ctx.setDepartureDate(null);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> IcsCalendarGenerator.generateIcsContent(ctx));
+        assertTrue(ex.getMessage().contains("Departure date is required"));
+    }
 }

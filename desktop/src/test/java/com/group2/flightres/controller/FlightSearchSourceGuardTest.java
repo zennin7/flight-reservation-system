@@ -31,7 +31,8 @@ class FlightSearchSourceGuardTest {
             "GRP" + " 318",
             "GRP" + " 422",
             "GRP" + " 507",
-            "Via" + " Durban"
+            "Via" + " Durban",
+            "LocalDate" + ".of(2026"
     );
 
     // Words with legitimate hits guarded by file + pattern + maxCount allowlist
@@ -40,12 +41,17 @@ class FlightSearchSourceGuardTest {
             "King" + " Shaka",
             "lay" + "over",
             "23" + " kg",
-            "Airbus" + " A320"
+            "Airbus" + " A320",
+            "4," + "850",
+            "48" + "50",
+            "2h" + " 05m",
+            "6h" + " 40m",
+            "1," + "290",
+            "2," + "722"
     );
 
     // Explicit allowlist of legitimate occurrences in desktop/src/main (no line numbers)
     static final List<AllowlistEntry> ALLOWLIST = List.of(
-            new AllowlistEntry("CheckoutController.java", "Durban", 1, "checkout", "Airport code to city name mapping ('DUR' -> 'Durban') in checkout"),
             new AllowlistEntry("FlightSearchController.java", "Durban", 2, "TODO(B2)", "Origin and destination airport dropdown combo options"),
             new AllowlistEntry("HomeController.java", "Durban", 2, "TODO(B2)", "Home screen origin and destination search combo options"),
             new AllowlistEntry("GlassConfirmationVerifier.java", "Durban", 1, "verifier", "Verification test fixture synthetic destination"),
@@ -53,7 +59,15 @@ class FlightSearchSourceGuardTest {
             new AllowlistEntry("GlassFlightResultsBridge.java", "King Shaka", 2, "TODO(B2)", "Search bar header origin/dest sublabel bindings"),
             new AllowlistEntry("GlassSeatMapBridge.java", "Airbus A320", 1, "seatmap", "Screen 3 Seat map header fallback aircraft label"),
             new AllowlistEntry("glass.css", "layover", 1, "TODO(B2)", "CSS style class definition .layover-pill for badge styling"),
-            new AllowlistEntry("checkout.fxml", "23 kg", 1, "checkout", "Screen 5 Checkout screen static baggage allowance label")
+            new AllowlistEntry("checkout.fxml", "23 kg", 1, "checkout", "Screen 5 Checkout screen static baggage allowance label"),
+            new AllowlistEntry("checkout.fxml", "2h 05m", 1, "checkout", "Screen 5 Checkout screen static duration placeholder"),
+            new AllowlistEntry("flight-search.fxml", "2h 05m", 1, "TODO(B2)", "Screen 2 Flight search duration filter label"),
+            new AllowlistEntry("flight-search.fxml", "6h 40m", 1, "TODO(B2)", "Screen 2 Flight search duration filter label"),
+            new AllowlistEntry("flight-search.fxml", "1,290", 1, "TODO(B2)", "Screen 2 Flight search price label"),
+            new AllowlistEntry("flight-search.fxml", "2,722", 1, "TODO(B2)", "Screen 2 Flight search price label"),
+            new AllowlistEntry("flight-search.fxml", "4,850", 1, "TODO(B2)", "Screen 2 Flight search price filter label"),
+            new AllowlistEntry("flight-search.fxml", "4850", 2, "TODO(B2)", "Screen 2 Flight search price slider max/value"),
+            new AllowlistEntry("GlassFlightResultsBridge.java", "4850", 5, "TODO(B2)", "Screen 2 price filter slider default value")
     );
 
     static List<String> checkFileContent(String fileName, List<String> lines,

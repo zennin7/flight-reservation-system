@@ -229,8 +229,11 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
                 depDateLabel.setText(date.format(dFmt));
                 if (depDayLabel != null) depDayLabel.setText(date.format(dayFmt));
             } else {
-                depDateLabel.setText("2 Nov '26");
-                if (depDayLabel != null) depDayLabel.setText("Monday");
+                LocalDate now = LocalDate.now();
+                DateTimeFormatter dFmt = DateTimeFormatter.ofPattern("d MMM ''yy", Locale.ENGLISH);
+                DateTimeFormatter dayFmt = DateTimeFormatter.ofPattern("EEEE", Locale.ENGLISH);
+                depDateLabel.setText(now.format(dFmt));
+                if (depDayLabel != null) depDayLabel.setText(now.format(dayFmt));
             }
         }
     }
@@ -393,6 +396,65 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     }
 
     /**
+     * Displays an honest empty state card when no open scheduled flights exist on the selected date.
+     */
+    public void showEmptyState(Runnable nextDateAction) {
+        if (cardsContainer == null) {
+            initUiBindings();
+        }
+        if (resultsCounterLabel != null) {
+            resultsCounterLabel.setText("No flights available for this date");
+        }
+        if (cardsContainer == null) return;
+
+        cardsContainer.getChildren().clear();
+
+        VBox emptyBox = new VBox(14);
+        emptyBox.setAlignment(Pos.CENTER);
+        emptyBox.getStyleClass().addAll("inner", "flight-search-error-card");
+
+        Label msgLabel = new Label("No flights available for this date");
+        msgLabel.getStyleClass().add("flight-search-error-text");
+        msgLabel.setWrapText(true);
+
+        Button nextDateBtn = new Button("Next available date");
+        nextDateBtn.getStyleClass().addAll("btn-gold", "search-retry-btn");
+        if (nextDateAction != null) {
+            nextDateBtn.setOnAction(e -> nextDateAction.run());
+        }
+        Motion.attachHoverLift(nextDateBtn);
+
+        emptyBox.getChildren().addAll(msgLabel, nextDateBtn);
+        cardsContainer.getChildren().add(emptyBox);
+    }
+
+    /**
+     * Displays a message when no upcoming flights exist on the route.
+     */
+    public void showNoUpcomingFlightsState() {
+        if (cardsContainer == null) {
+            initUiBindings();
+        }
+        if (resultsCounterLabel != null) {
+            resultsCounterLabel.setText("No upcoming flights available on this route.");
+        }
+        if (cardsContainer == null) return;
+
+        cardsContainer.getChildren().clear();
+
+        VBox emptyBox = new VBox(14);
+        emptyBox.setAlignment(Pos.CENTER);
+        emptyBox.getStyleClass().addAll("inner", "flight-search-error-card");
+
+        Label msgLabel = new Label("No upcoming flights available on this route.");
+        msgLabel.getStyleClass().add("flight-search-error-text");
+        msgLabel.setWrapText(true);
+
+        emptyBox.getChildren().add(msgLabel);
+        cardsContainer.getChildren().add(emptyBox);
+    }
+
+    /**
      * Renders result cards according to in-memory filter criteria.
      */
     public void refreshCardsView() {
@@ -415,12 +477,11 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         ObservableList<FlightSearchResult> allFlights = getItems();
         if (allFlights == null || allFlights.isEmpty()) {
-            if (resultsCounterLabel != null) {
-                resultsCounterLabel.setText("No flights found");
-            }
-            Label emptyLbl = new Label("No flights found for selected route and date.");
-            emptyLbl.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.58); -fx-padding: 30px;");
-            cardsContainer.getChildren().add(emptyLbl);
+            showEmptyState(() -> {
+                if (FlightSearchController.currentInstance != null) {
+                    FlightSearchController.currentInstance.handleNextAvailableDate();
+                }
+            });
             return;
         }
 

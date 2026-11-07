@@ -263,6 +263,8 @@ public class GlassConfirmationVerifier extends Application {
         ctx.setDepartureDate("2026-11-14");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setSelectedSeats(List.of(seat));
         ctx.setPassengerName("Amahle Mokoena");
         ctx.setPassengerEmail("amahle@example.com");
@@ -409,6 +411,8 @@ public class GlassConfirmationVerifier extends Application {
         ctx.setDepartureDate("2026-11-14");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setPassengerName("Amahle Mokoena");
 
         FlightSeat seat = new FlightSeat();
@@ -471,6 +475,8 @@ public class GlassConfirmationVerifier extends Application {
         ctx.setDepartureDate("2026-11-14");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setPassengerName("Amahle Mokoena");
 
         FlightSeat seat = new FlightSeat();
@@ -580,6 +586,8 @@ public class GlassConfirmationVerifier extends Application {
                 ctx.setDestination("CPT");
                 ctx.setDepartureTime("06:30");
                 ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
                 ctx.setDepartureDate("2026-11-14");
                 ctx.setPassengerName("Amahle Mokoena");
                 ctx.setPassengerEmail("amahle@example.com");
@@ -771,6 +779,8 @@ public class GlassConfirmationVerifier extends Application {
         ctx.setDepartureDate("2026-11-14");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setPassengerName("Amahle Mokoena");
 
         FlightSeat seat = new FlightSeat();
@@ -829,6 +839,8 @@ public class GlassConfirmationVerifier extends Application {
         record.setDestination("Durban (DUR)");
         record.setDepartureDate("2026-11-14");
         record.setDepartureTime("09:15");
+        record.setDepartureInstant(Instant.parse("2026-11-14T07:15:00Z"));
+        record.setArrivalInstant(Instant.parse("2026-11-14T09:20:00Z"));
         record.setArrivalTime("10:25");
         record.setSeatLabel("4B");
         record.setSeatClass(SeatClass.FIRST);
@@ -878,6 +890,8 @@ public class GlassConfirmationVerifier extends Application {
         ctx.setDepartureDate("2026-11-14");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setPassengerName("Amahle Mokoena");
         FlightSeat seat = new FlightSeat();
         seat.setSeatRow(9);
@@ -923,6 +937,8 @@ public class GlassConfirmationVerifier extends Application {
         record.setDestination("Nowhere (XYZ)");
         record.setDepartureDate("2026-11-14");
         record.setDepartureTime("14:00");
+        record.setDepartureInstant(Instant.parse("2026-11-14T12:00:00Z"));
+        record.setArrivalInstant(Instant.parse("2026-11-14T14:05:00Z"));
         record.setArrivalTime("16:00");
         record.setSeatLabel("12F");
         record.setSeatClass(SeatClass.ECONOMY);
@@ -970,6 +986,8 @@ public class GlassConfirmationVerifier extends Application {
         ctx.setDepartureDate("2026-11-14");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setPassengerName("Amahle Mokoena");
         FlightSeat seat = new FlightSeat();
         seat.setSeatRow(9);
@@ -1058,6 +1076,8 @@ public class GlassConfirmationVerifier extends Application {
         ctx.setDepartureDate("2026-11-14");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setPassengerName("Amahle Mokoena");
         FlightSeat seat = new FlightSeat();
         seat.setSeatRow(9);
@@ -1123,6 +1143,8 @@ public class GlassConfirmationVerifier extends Application {
         ctx.setDepartureDate("2026-11-14");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setPassengerName("Amahle Mokoena");
         ctx.setPassengerEmail("amahle@example.com");
         FlightSeat seat = new FlightSeat();
@@ -1590,6 +1612,8 @@ public class GlassConfirmationVerifier extends Application {
         ctx.setDepartureDate("2026-11-14");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setPassengerName("Amahle Mokoena");
         FlightSeat seat = new FlightSeat();
         seat.setSeatRow(9);
@@ -1683,6 +1707,8 @@ public class GlassConfirmationVerifier extends Application {
         ctx.setDepartureDate("2026-11-14");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
+        ctx.setDepartureInstant(Instant.parse("2026-11-14T04:30:00Z"));
+        ctx.setArrivalInstant(Instant.parse("2026-11-14T06:35:00Z"));
         ctx.setPassengerName("Amahle Mokoena");
         FlightSeat seat = new FlightSeat();
         seat.setSeatRow(9);

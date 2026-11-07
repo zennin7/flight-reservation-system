@@ -1,10 +1,12 @@
 package com.group2.flightres.service;
 
 import com.group2.flightres.dao.BookingDao;
+import com.group2.flightres.dao.FlightDao;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.exception.ValidationException;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
+import com.group2.flightres.model.FlightSearchResult;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
@@ -12,7 +14,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +32,24 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BookingTransactionTest {
+
+    private static final Clock TEST_CLOCK = Clock.fixed(Instant.parse("2026-11-01T00:00:00Z"), ZoneOffset.UTC);
+    private static final FlightDao MOCK_FLIGHT_DAO = new FlightDao() {
+        @Override
+        public List<FlightSearchResult> searchFlights(String origin, String destination, LocalDate departureDate) {
+            return List.of();
+        }
+
+        @Override
+        public Optional<FlightSearchResult> findById(long flightId) {
+            return Optional.of(new FlightSearchResult(
+                    1L, "GRP 204", "JNB", "O. R. Tambo Intl", "Johannesburg", ZoneId.of("Africa/Johannesburg"),
+                    "CPT", "Cape Town Intl", "Cape Town", ZoneId.of("Africa/Johannesburg"),
+                    Instant.parse("2026-11-02T04:30:00Z"), Instant.parse("2026-11-02T06:40:00Z"),
+                    new BigDecimal("1200"), "Airbus A320", 149
+            ));
+        }
+    };
 
     private static class MockBookingDao implements BookingDao {
         private final Map<String, BookingRecord> store = new HashMap<>();
@@ -78,7 +103,7 @@ class BookingTransactionTest {
     @DisplayName("Create booking transaction succeeds, marks seat BOOKED and sets 6-char PNR")
     void testBookingTransactionSuccess() {
         MockBookingDao dao = new MockBookingDao();
-        BookingService service = new BookingService(dao);
+        BookingService service = new BookingService(dao, MOCK_FLIGHT_DAO, TEST_CLOCK);
 
         BookingContext context = new BookingContext();
         context.setFlightId(1L);
@@ -114,7 +139,7 @@ class BookingTransactionTest {
     void testBookingTransactionRollbackOnSeatConflict() {
         MockBookingDao dao = new MockBookingDao();
         dao.setSeatConflictSimulated(true);
-        BookingService service = new BookingService(dao);
+        BookingService service = new BookingService(dao, MOCK_FLIGHT_DAO, TEST_CLOCK);
 
         BookingContext context = new BookingContext();
         context.setFlightId(1L);
@@ -136,7 +161,7 @@ class BookingTransactionTest {
     @DisplayName("Invalid passenger inputs throw ValidationException before attempting transaction")
     void testBookingValidationRejection() {
         MockBookingDao dao = new MockBookingDao();
-        BookingService service = new BookingService(dao);
+        BookingService service = new BookingService(dao, MOCK_FLIGHT_DAO, TEST_CLOCK);
 
         BookingContext context = new BookingContext();
         context.setPassengerName(""); // Invalid

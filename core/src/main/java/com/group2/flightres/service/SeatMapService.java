@@ -1,13 +1,16 @@
 package com.group2.flightres.service;
 
+import com.group2.flightres.dao.FlightDao;
 import com.group2.flightres.dao.SeatDao;
+import com.group2.flightres.dao.impl.FlightDaoImpl;
 import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.exception.SeatUnavailableException;
+import com.group2.flightres.model.FlightSearchResult;
 import com.group2.flightres.model.FlightSeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
+import java.time.Clock;
 import java.util.List;
 
 /**
@@ -19,13 +22,25 @@ public class SeatMapService {
     private static final Logger logger = LoggerFactory.getLogger(SeatMapService.class);
 
     private final SeatDao seatDao;
+    private final FlightDao flightDao;
+    private final Clock clock;
 
     public SeatMapService() {
-        this(new SeatDaoImpl());
+        this(new SeatDaoImpl(), new FlightDaoImpl(), Clock.systemUTC());
     }
 
     public SeatMapService(SeatDao seatDao) {
+        this(seatDao, new FlightDaoImpl(), Clock.systemUTC());
+    }
+
+    public SeatMapService(SeatDao seatDao, FlightDao flightDao) {
+        this(seatDao, flightDao, Clock.systemUTC());
+    }
+
+    public SeatMapService(SeatDao seatDao, FlightDao flightDao, Clock clock) {
         this.seatDao = seatDao;
+        this.flightDao = flightDao != null ? flightDao : new FlightDaoImpl();
+        this.clock = clock != null ? clock : Clock.systemUTC();
     }
 
     /**
@@ -38,12 +53,26 @@ public class SeatMapService {
 
     /**
      * Attempts an optimistic hold on the specified seat.
+     * Enforces FlightSalesPolicy: throws IllegalStateException if flight sales are closed.
      * Throws SeatUnavailableException if the seat was already taken or held by someone else.
      */
     public void selectSeat(FlightSeat seat) {
         if (seat == null) {
             throw new IllegalArgumentException("Cannot select null seat.");
         }
+
+        long flightId = seat.getFlightId();
+        if (flightId <= 0) {
+            flightId = seatDao.findSeatById(seat.getFlightSeatId()).map(FlightSeat::getFlightId).orElse(0L);
+        }
+        if (flightId > 0) {
+            FlightSearchResult flight = flightDao.findById(flightId).orElse(null);
+            if (flight != null && !FlightSalesPolicy.isOpen(flight.getDeparture(), clock)) {
+                logger.warn("Seat hold rejected: Flight {} is closed for sales", flight.getFlightNumber());
+                throw new IllegalStateException("Flight " + flight.getFlightNumber() + " is closed for sales (sales close 60 minutes before departure).");
+            }
+        }
+
         boolean success = seatDao.holdSeat(seat.getFlightSeatId());
         if (!success) {
             logger.warn("Seat hold failed: Seat {} (ID: {}) was just taken by another user",

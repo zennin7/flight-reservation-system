@@ -30,6 +30,8 @@ public class BookingContext {
     private String departureDate;
     private String departureTime;
     private String arrivalTime;
+    private Instant departureInstant;
+    private Instant arrivalInstant;
 
     private List<FlightSeat> selectedSeats = new ArrayList<>();
     private BigDecimal baseFare = BigDecimal.ZERO;
@@ -94,6 +96,13 @@ public class BookingContext {
 
     public String getArrivalTime() { return arrivalTime; }
     public void setArrivalTime(String arrivalTime) { this.arrivalTime = arrivalTime; }
+
+    public Instant getDepartureInstant() { return departureInstant; }
+    public void setDepartureInstant(Instant departureInstant) { this.departureInstant = departureInstant; }
+
+    public Instant getArrivalInstant() { return arrivalInstant; }
+    public void setArrivalInstant(Instant arrivalInstant) { this.arrivalInstant = arrivalInstant; }
+
 
     public List<FlightSeat> getSelectedSeats() { return selectedSeats; }
     public void setSelectedSeats(List<FlightSeat> selectedSeats) {

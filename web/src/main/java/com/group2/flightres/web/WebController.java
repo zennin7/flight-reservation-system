@@ -72,9 +72,9 @@ public class WebController {
         LocalDate date;
         try {
             date = LocalDate.parse(dateStr);
-        } catch (DateTimeParseException e) {
-            date = LocalDate.of(2026, 11, 2);
-            model.put("date", "2026-11-02");
+        } catch (Exception e) {
+            date = flightService.nextAvailableDate(origin, destination, LocalDate.now()).orElse(LocalDate.now());
+            model.put("date", date.toString());
         }
 
         List<FlightSearchResult> flights = Collections.emptyList();

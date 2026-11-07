@@ -1,8 +1,10 @@
 package com.group2.flightres.component;
 
 import com.group2.flightres.model.FlightSearchResult;
+import com.group2.flightres.util.FontLoader;
 import com.group2.flightres.util.GlassFlightResultsBridge;
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -10,6 +12,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +22,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -34,9 +38,11 @@ class GlassFlightCardTest {
         System.setProperty("altitude.testing", "true");
         try {
             Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {
-            // Already initialized
-        }
+        } catch (IllegalStateException ignored) {}
+        Platform.setImplicitExit(false);
+        try {
+            FontLoader.loadFonts();
+        } catch (Throwable ignored) {}
     }
 
     @Test
@@ -109,7 +115,20 @@ class GlassFlightCardTest {
     @Test
     @DisplayName("Glass card: Expanded flight information leg labels do not truncate at 1280x800")
     void testExpandedFlightInfoNoTruncation() throws Exception {
-        FlightSearchResult flight = new FlightSearchResult(
+        FlightSearchResult flight = createTestFlight();
+        verifyCardAtWidth(flight, 1280, 800, 824);
+    }
+
+    @Test
+    @DisplayName("Glass card: Expanded flight information leg labels do not truncate or overflow at 1100x700 and 900x680")
+    void testExpandedFlightInfoResponsiveWidths() throws Exception {
+        FlightSearchResult flight = createTestFlight();
+        verifyCardAtWidth(flight, 1100, 700, 644);
+        verifyCardAtWidth(flight, 900, 680, 444);
+    }
+
+    private FlightSearchResult createTestFlight() {
+        return new FlightSearchResult(
                 2L,
                 "GRP 310",
                 "JNB",
@@ -126,50 +145,99 @@ class GlassFlightCardTest {
                 "Airbus A320",
                 147
         );
+    }
 
-        AtomicReference<Node> cardRef = new AtomicReference<>();
-        AtomicReference<List<String>> truncationsRef = new AtomicReference<>(new ArrayList<>());
+    private void verifyCardAtWidth(FlightSearchResult flight, double sceneWidth, double sceneHeight, double resultsWidth) throws Exception {
+        AtomicReference<List<String>> violationsRef = new AtomicReference<>(new ArrayList<>());
+        AtomicReference<Throwable> errorRef = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
 
         Platform.runLater(() -> {
+            Stage stage = new Stage();
             try {
                 GlassFlightResultsBridge bridge = new GlassFlightResultsBridge();
                 Node card = bridge.buildFlightResultCard(flight, true); // expanded = true
-                cardRef.set(card);
 
-                // Place in layout container at 824px results width within 1280x800 scene
                 VBox container = new VBox(card);
-                container.setPrefWidth(824);
-                Scene scene = new Scene(container, 1280, 800);
+                container.setPrefWidth(resultsWidth);
+                container.setMaxWidth(resultsWidth);
+                container.setMinWidth(resultsWidth);
+
+                Scene scene = new Scene(container, sceneWidth, sceneHeight);
                 String cssUrl = getClass().getResource("/com/group2/flightres/css/glass.css").toExternalForm();
                 scene.getStylesheets().add(cssUrl);
-                container.applyCss();
-                container.layout();
 
-                // Reusing Check 16 truncation detection technique from GlassConfirmationVerifier
-                List<Labeled> labeledNodes = new ArrayList<>();
-                collectLabeledNodes(card, labeledNodes);
+                stage.setScene(scene);
+                stage.setWidth(sceneWidth);
+                stage.setHeight(sceneHeight);
+                stage.show();
 
-                List<String> truncations = new ArrayList<>();
-                for (Labeled l : labeledNodes) {
-                    if (l.getText() == null || l.getText().isEmpty()) continue;
-                    Text textNode = (Text) l.lookup(".text");
-                    if (textNode != null && textNode.getText() != null && !textNode.getText().isEmpty()) {
-                        String rendered = textNode.getText();
-                        String expected = l.getText();
-                        if (rendered.contains("\u2026") || rendered.endsWith("...") || !rendered.equals(expected)) {
-                            truncations.add("Truncated label [" + l.getText() + "]: rendered='" + rendered + "' expected='" + expected + "'");
+                // Wait for layout pulse via Platform.runLater twice
+                Platform.runLater(() -> {
+                    Platform.runLater(() -> {
+                        try {
+                            container.applyCss();
+                            container.layout();
+
+                            List<Labeled> labeledNodes = new ArrayList<>();
+                            collectLabeledNodes(card, labeledNodes);
+
+                            Bounds cardBounds = card.localToScene(card.getBoundsInLocal());
+                            double cardMaxX = cardBounds.getMaxX();
+
+                            List<String> violations = new ArrayList<>();
+                            for (Labeled l : labeledNodes) {
+                                if (l.getText() == null || l.getText().isEmpty()) continue;
+                                if (!l.isVisible()) continue;
+
+                                // 1. Ellipsis check on underlying Text node
+                                Text textNode = (Text) l.lookup(".text");
+                                if (textNode != null && textNode.getText() != null && !textNode.getText().isEmpty()) {
+                                    String rendered = textNode.getText();
+                                    String expected = l.getText();
+                                    if (rendered.contains("\u2026") || rendered.endsWith("...") || !rendered.equals(expected)) {
+                                        violations.add("Truncated label [" + l.getText() + "]: rendered='" + rendered + "' expected='" + expected + "'");
+                                    }
+                                }
+
+                                // 2. Assertion (i): label width >= label.prefWidth(-1) - 0.5
+                                double prefW = l.prefWidth(-1);
+                                double actualW = l.getWidth();
+                                if (actualW < prefW - 0.5) {
+                                    violations.add("Label [" + l.getText() + "] width " + String.format(Locale.US, "%.1f", actualW)
+                                            + " < prefWidth " + String.format(Locale.US, "%.1f", prefW) + " - 0.5");
+                                }
+
+                                // 3. Assertion (ii): label's scene bounds maxX <= card's scene bounds maxX + 0.5
+                                Bounds labelBounds = l.localToScene(l.getBoundsInLocal());
+                                double labelMaxX = labelBounds.getMaxX();
+                                if (labelMaxX > cardMaxX + 0.5) {
+                                    violations.add("Label [" + l.getText() + "] scene maxX " + String.format(Locale.US, "%.1f", labelMaxX)
+                                            + " > card maxX " + String.format(Locale.US, "%.1f", cardMaxX) + " + 0.5");
+                                }
+                            }
+                            violationsRef.set(violations);
+                        } catch (Throwable t) {
+                            errorRef.set(t);
+                        } finally {
+                            stage.hide();
+                            latch.countDown();
                         }
-                    }
-                }
-                truncationsRef.set(truncations);
-            } finally {
+                    });
+                });
+            } catch (Throwable t) {
+                errorRef.set(t);
+                stage.hide();
                 latch.countDown();
             }
         });
 
-        assertTrue(latch.await(15, TimeUnit.SECONDS), "Timed out waiting for JavaFX thread");
-        assertTrue(truncationsRef.get().isEmpty(), "No label in expanded card should be truncated:\n" + String.join("\n", truncationsRef.get()));
+        assertTrue(latch.await(15, TimeUnit.SECONDS), "Timed out waiting for JavaFX pulse");
+        if (errorRef.get() != null) {
+            throw new RuntimeException("Error during card layout verification", errorRef.get());
+        }
+        List<String> violations = violationsRef.get();
+        assertTrue(violations.isEmpty(), "Violations at sceneWidth " + sceneWidth + " (resultsWidth " + resultsWidth + "):\n" + String.join("\n", violations));
     }
 
     private void collectLabelTexts(Node node, List<String> list) {

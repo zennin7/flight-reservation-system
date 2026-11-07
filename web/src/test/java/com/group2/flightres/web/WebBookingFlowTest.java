@@ -183,9 +183,10 @@ class WebBookingFlowTest {
         MockSeatDao mockSeatDao = new MockSeatDao();
         MockBookingDao mockBookingDao = new MockBookingDao();
 
-        FlightService flightService = new FlightService(mockFlightDao);
-        SeatMapService seatMapService = new SeatMapService(mockSeatDao);
-        BookingService bookingService = new BookingService(mockBookingDao);
+        java.time.Clock testClock = java.time.Clock.fixed(java.time.Instant.parse("2026-11-01T00:00:00Z"), java.time.ZoneOffset.UTC);
+        FlightService flightService = new FlightService(mockFlightDao, testClock);
+        SeatMapService seatMapService = new SeatMapService(mockSeatDao, mockFlightDao, testClock);
+        BookingService bookingService = new BookingService(mockBookingDao, mockFlightDao, testClock);
         AuthService authService = new AuthService();
 
         webApp = new WebApplication(flightService, seatMapService, bookingService, authService);

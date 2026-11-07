@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Controller for SkyVoyage Screen 03 Flight Search.
@@ -98,7 +99,13 @@ public class FlightSearchController implements WizardStepController {
                     return (string != null && !string.isBlank()) ? LocalDate.parse(string, DATE_FORMATTER) : null;
                 }
             });
-            departureDatePicker.setValue(LocalDate.of(2026, 11, 2));
+            LocalDate initialDate = LocalDate.now();
+            try {
+                String from = (fromCombo != null && fromCombo.getValue() != null) ? fromCombo.getValue() : "Johannesburg (JNB)";
+                String to = (toCombo != null && toCombo.getValue() != null) ? toCombo.getValue() : "Cape Town (CPT)";
+                initialDate = flightService.nextAvailableDate(from, to, LocalDate.now()).orElse(LocalDate.now());
+            } catch (Exception ignored) {}
+            departureDatePicker.setValue(initialDate);
         }
         // TODO(B2): Connect passenger/traveller counts to dynamic ticket capacity
         if (passengersCombo != null) {
@@ -183,7 +190,9 @@ public class FlightSearchController implements WizardStepController {
     private void performSearch() {
         String from = (fromCombo != null && fromCombo.getValue() != null) ? fromCombo.getValue() : "Johannesburg (JNB)";
         String to = (toCombo != null && toCombo.getValue() != null) ? toCombo.getValue() : "Cape Town (CPT)";
-        LocalDate date = (departureDatePicker != null) ? departureDatePicker.getValue() : LocalDate.of(2026, 11, 2);
+        LocalDate date = (departureDatePicker != null && departureDatePicker.getValue() != null)
+                ? departureDatePicker.getValue()
+                : LocalDate.now();
 
         flightList.clear();
         try {
@@ -195,8 +204,11 @@ public class FlightSearchController implements WizardStepController {
                 }
             } else {
                 if (resultsCountLabel != null) {
-                    String dStr = (date != null) ? date.format(DATE_FORMATTER) : "selected date";
-                    resultsCountLabel.setText("No flights found for " + from + " -> " + to + " on " + dStr + ".");
+                    resultsCountLabel.setText("No flights available for this date");
+                }
+                GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+                if (bridge != null) {
+                    bridge.showEmptyState(this::handleNextAvailableDate);
                 }
             }
         } catch (Exception e) {
@@ -210,6 +222,46 @@ public class FlightSearchController implements WizardStepController {
                 bridge.showErrorState(this::performSearch);
             }
         }
+    }
+
+    public void handleNextAvailableDate() {
+        String from = (fromCombo != null && fromCombo.getValue() != null) ? fromCombo.getValue() : "Johannesburg (JNB)";
+        String to = (toCombo != null && toCombo.getValue() != null) ? toCombo.getValue() : "Cape Town (CPT)";
+        LocalDate currentDate = (departureDatePicker != null && departureDatePicker.getValue() != null)
+                ? departureDatePicker.getValue()
+                : LocalDate.now();
+
+        Optional<LocalDate> nextDateOpt = flightService.nextAvailableDate(from, to, currentDate);
+        if (nextDateOpt.isPresent()) {
+            LocalDate nextDate = nextDateOpt.get();
+            if (departureDatePicker != null) {
+                departureDatePicker.setValue(nextDate);
+            }
+            GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+            if (bridge != null) {
+                bridge.updateLocationLabels();
+            }
+            performSearch();
+        } else {
+            if (resultsCountLabel != null) {
+                resultsCountLabel.setText("No upcoming flights available on this route.");
+            }
+            GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+            if (bridge != null) {
+                bridge.showNoUpcomingFlightsState();
+            }
+        }
+    }
+
+    public void setSearchDate(LocalDate date) {
+        if (departureDatePicker != null) {
+            departureDatePicker.setValue(date);
+        }
+        GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+        if (bridge != null) {
+            bridge.updateLocationLabels();
+        }
+        performSearch();
     }
 
     @FXML
@@ -255,6 +307,8 @@ public class FlightSearchController implements WizardStepController {
 
             bookingContext.setDepartureTime(flight.getDepartureTime());
             bookingContext.setArrivalTime(flight.getArrivalTime());
+            bookingContext.setDepartureInstant(flight.getDeparture());
+            bookingContext.setArrivalInstant(flight.getArrival());
             bookingContext.setBaseFare(flight.getBasePrice());
             bookingContext.recalculateTotals();
         }

@@ -4,8 +4,8 @@ import com.group2.flightres.config.BoardingPolicy;
 import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.component.TicketView;
 import com.group2.flightres.model.TicketData;
+import com.group2.flightres.service.BookingService;
 import com.group2.flightres.util.FlightDateFormatter;
-import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.util.BarcodeGenerator;
@@ -43,9 +43,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -62,8 +59,20 @@ public class BookingConfirmationController implements WizardStepController {
     // Containers
     @FXML private StackPane cardMarginWrapper;
     @FXML private VBox errorContainer;
+    @FXML private Label errorTitleLabel;
+    @FXML private Label errorMessageLabel;
     @FXML private VBox confirmedContainer;
     @FXML private Button errorBackButton;
+
+    private final BookingService bookingService;
+
+    public BookingConfirmationController() {
+        this(new BookingService());
+    }
+
+    public BookingConfirmationController(BookingService bookingService) {
+        this.bookingService = bookingService != null ? bookingService : new BookingService();
+    }
     @FXML private ScrollPane confirmationScrollPane;
     @FXML private StackPane scrollContentRoot;
     @FXML private HBox twoColumnBox;
@@ -155,21 +164,59 @@ public class BookingConfirmationController implements WizardStepController {
         bottomNotch.setTranslateY(14);
     }
 
+    private void showNotFoundErrorState() {
+        if (errorTitleLabel != null) {
+            errorTitleLabel.setText("We couldn't find your booking");
+        }
+        if (errorMessageLabel != null) {
+            errorMessageLabel.setText("No confirmed reservation details were found in this session. Please search and select a flight.");
+        }
+        if (errorContainer != null) {
+            errorContainer.setVisible(true);
+            errorContainer.setManaged(true);
+        }
+        if (confirmedContainer != null) {
+            confirmedContainer.setVisible(false);
+            confirmedContainer.setManaged(false);
+        }
+    }
+
+    private void showIncompleteDataErrorState(String bookingRef) {
+        String ref = (bookingRef != null && !bookingRef.isBlank()) ? bookingRef.trim().toUpperCase(Locale.ROOT) : "";
+        if (errorTitleLabel != null) {
+            errorTitleLabel.setText("We couldn't display this ticket");
+        }
+        if (errorMessageLabel != null) {
+            errorMessageLabel.setText("Your booking " + ref + " is saved. Please contact support.");
+        }
+        if (errorContainer != null) {
+            errorContainer.setVisible(true);
+            errorContainer.setManaged(true);
+        }
+        if (confirmedContainer != null) {
+            confirmedContainer.setVisible(false);
+            confirmedContainer.setManaged(false);
+        }
+    }
+
+    private void showErrorState() {
+        showNotFoundErrorState();
+    }
+
     private void populateData() {
         // 1. Error state check: null context or null/blank booking reference
-        boolean hasBooking = (bookingContext != null
-                && bookingContext.getBookingReference() != null
-                && !bookingContext.getBookingReference().isBlank());
+        if (bookingContext == null
+                || bookingContext.getBookingReference() == null
+                || bookingContext.getBookingReference().isBlank()) {
+            showNotFoundErrorState();
+            return;
+        }
 
-        if (!hasBooking) {
-            if (errorContainer != null) {
-                errorContainer.setVisible(true);
-                errorContainer.setManaged(true);
-            }
-            if (confirmedContainer != null) {
-                confirmedContainer.setVisible(false);
-                confirmedContainer.setManaged(false);
-            }
+        String pnr = bookingContext.getBookingReference().trim().toUpperCase(Locale.ROOT);
+
+        // 2. Ticket data incomplete check: instants are null
+        if (bookingContext.getDepartureInstant() == null || bookingContext.getArrivalInstant() == null) {
+            showIncompleteDataErrorState(pnr);
             return;
         }
 
@@ -184,7 +231,6 @@ public class BookingConfirmationController implements WizardStepController {
         }
 
         // 2. Populate Header
-        String pnr = bookingContext.getBookingReference().trim().toUpperCase(Locale.ROOT);
         if (bookingRefLabel != null) {
             bookingRefLabel.setText(pnr);
         }
@@ -216,6 +262,8 @@ public class BookingConfirmationController implements WizardStepController {
                 ticketView.setBooking(TicketData.from(bookingContext));
             } catch (Exception e) {
                 logger.error("Failed to populate TicketView from context", e);
+                showIncompleteDataErrorState(pnr);
+                return;
             }
         }
 
@@ -284,20 +332,9 @@ public class BookingConfirmationController implements WizardStepController {
     }
 
     private String resolveAirportName(String code, String raw) {
-        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT name FROM airports WHERE UPPER(iata_code) = UPPER(?) OR UPPER(city) = UPPER(?) LIMIT 1")) {
-            ps.setString(1, code != null ? code.trim() : "");
-            String cityPart = (raw != null && raw.contains("(")) ? raw.substring(0, raw.indexOf('(')).trim() : (raw != null ? raw.trim() : "");
-            ps.setString(2, cityPart);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    String name = rs.getString(1);
-                    if (name != null && !name.isBlank()) return name;
-                }
-            }
-        } catch (Exception ignored) {}
-        return "O. R. Tambo International Airport";
+        String cityPart = (raw != null && raw.contains("(")) ? raw.substring(0, raw.indexOf('(')).trim() : (raw != null ? raw.trim() : "");
+        return bookingService.findAirportName(code, cityPart)
+                .orElse("O. R. Tambo International Airport");
     }
 
     private String resolveCityName(String raw, String code) {
@@ -305,41 +342,14 @@ public class BookingConfirmationController implements WizardStepController {
             String cityPart = raw.substring(0, raw.indexOf('(')).trim();
             if (!cityPart.isBlank()) return cityPart;
         }
-        // Query airports DB table
-        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT city FROM airports WHERE UPPER(iata_code) = UPPER(?) OR UPPER(city) = UPPER(?) LIMIT 1")) {
-            ps.setString(1, code);
-            ps.setString(2, code);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    String c = rs.getString(1);
-                    if (c != null && !c.isBlank()) return c;
-                }
-            }
-        } catch (Exception ignored) {}
-        return code;
+        return bookingService.findAirportCity(code)
+                .orElse(code != null ? code : "");
     }
 
-    private String calculateDuration(String depTimeStr, String arrTimeStr) {
-        try {
-            LocalTime dep = BoardingPolicy.parseTime(depTimeStr);
-            LocalTime arr = BoardingPolicy.parseTime(arrTimeStr);
-            java.time.Duration dur = java.time.Duration.between(dep, arr);
-            if (dur.isNegative()) {
-                dur = dur.plusDays(1);
-            }
-            long hours = dur.toHours();
-            long mins = dur.toMinutesPart();
-            return String.format(Locale.ROOT, "%dh %02dm", hours, mins);
-        } catch (Exception e) {
-            return "2h 05m";
-        }
-    }
 
     private String formatDateBadge(String depDate) {
         if (depDate == null || depDate.isBlank()) {
-            return "Fri, 14 Nov 2026";
+            throw new IllegalStateException("Departure date is required for flight badge.");
         }
         if (depDate.contains(",") && depDate.length() >= 10) {
             return depDate;
@@ -773,4 +783,7 @@ public class BookingConfirmationController implements WizardStepController {
     public HBox getTwoColumnBox() { return twoColumnBox; }
     public VBox getSingleColumnBox() { return singleColumnBox; }
     public StackPane getCardMarginWrapper() { return cardMarginWrapper; }
+
+    public Label getErrorTitleLabel() { return errorTitleLabel; }
+    public Label getErrorMessageLabel() { return errorMessageLabel; }
 }

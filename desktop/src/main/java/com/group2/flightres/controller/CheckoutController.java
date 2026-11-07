@@ -290,30 +290,17 @@ public class CheckoutController implements WizardStepController {
     }
 
     private String resolveDestinationCity(String dest) {
+        if (bookingContext != null && bookingContext.getDestinationCity() != null && !bookingContext.getDestinationCity().isBlank()) {
+            return bookingContext.getDestinationCity();
+        }
         if (dest == null || dest.isBlank()) {
-            return "Cape Town";
+            return "";
         }
         String clean = dest.trim();
         int paren = clean.indexOf('(');
         if (paren > 0) {
             return clean.substring(0, paren).trim();
         }
-        if ("CPT".equalsIgnoreCase(clean)) return "Cape Town";
-        if ("JNB".equalsIgnoreCase(clean)) return "Johannesburg";
-        if ("DUR".equalsIgnoreCase(clean)) return "Durban";
-        if ("PLZ".equalsIgnoreCase(clean)) return "Gqeberha";
-        try (java.sql.Connection conn = com.group2.flightres.config.DatabaseConfig.getDataSource().getConnection();
-             java.sql.PreparedStatement ps = conn.prepareStatement(
-                     "SELECT city FROM airports WHERE UPPER(iata_code) = UPPER(?) OR UPPER(city) = UPPER(?) LIMIT 1")) {
-            ps.setString(1, clean);
-            ps.setString(2, clean);
-            try (java.sql.ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    String city = rs.getString(1);
-                    if (city != null && !city.isBlank()) return city;
-                }
-            }
-        } catch (Exception ignored) {}
         return clean;
     }
 
@@ -595,6 +582,7 @@ public class CheckoutController implements WizardStepController {
     public PasswordField getCvvField() { return cvvField; }
     public Button getConfirmBookingButton() { return confirmBookingButton; }
     public Label getHoldTimerLabel() { return holdTimerLabel; }
+    public Label getTripOriginDestLabel() { return tripOriginDestLabel; }
 
     private String extractAirportCode(String dest) {
         if (dest == null || dest.isBlank()) return "";

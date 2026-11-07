@@ -1,6 +1,7 @@
 package com.group2.flightres.controller;
 
 import com.group2.flightres.model.BookingContext;
+import java.time.LocalDate;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -45,6 +46,9 @@ public class HomeController implements WizardStepController {
             passengersCombo.getItems().addAll("1 Adult", "2 Adults", "3 Adults", "4 Adults");
             passengersCombo.setValue("1 Adult");
         }
+        if (departureDatePicker != null) {
+            departureDatePicker.setValue(LocalDate.now().plusDays(1));
+        }
         if (searchFlightsButton != null) {
             searchFlightsButton.setOnAction(e -> handleSearch());
             com.group2.flightres.util.Motion.attachHoverLift(searchFlightsButton);
@@ -61,6 +65,10 @@ public class HomeController implements WizardStepController {
             if (toCombo != null && toCombo.getValue() != null) {
                 bookingContext.setDestination(toCombo.getValue());
             }
+            LocalDate depDate = (departureDatePicker != null && departureDatePicker.getValue() != null)
+                    ? departureDatePicker.getValue()
+                    : LocalDate.now().plusDays(1);
+            bookingContext.setDepartureDate(depDate.toString());
         }
         if (onNext != null) {
             onNext.run();

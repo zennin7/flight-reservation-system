@@ -7,9 +7,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +28,7 @@ class FlightServiceTest {
     private static final Instant ARR1 = Instant.parse("2026-11-02T06:40:00Z");
     private static final Instant DEP2 = Instant.parse("2026-11-02T07:15:00Z");
     private static final Instant ARR2 = Instant.parse("2026-11-02T09:25:00Z");
+    private static final Clock TEST_CLOCK = Clock.fixed(Instant.parse("2026-11-01T00:00:00Z"), ZoneOffset.UTC);
 
     private static final FlightSearchResult FLIGHT_1 = new FlightSearchResult(
             1L, "GRP 204", "JNB", "O. R. Tambo International Airport", "Johannesburg", SAST,
@@ -55,12 +58,20 @@ class FlightServiceTest {
             }
             return Optional.empty();
         }
+
+        @Override
+        public Optional<LocalDate> findNextAvailableDate(String origin, String destination, LocalDate fromDate, Instant minDepartureInstant) {
+            if ("JNB".equals(origin) || origin.contains("Johannesburg")) {
+                return Optional.of(LocalDate.of(2026, 11, 2));
+            }
+            return Optional.empty();
+        }
     }
 
     @Test
     @DisplayName("Search flights returns matching list when flights exist")
     void testSearchFlightsReturnsResults() {
-        FlightService service = new FlightService(new MockFlightDao());
+        FlightService service = new FlightService(new MockFlightDao(), TEST_CLOCK);
         List<FlightSearchResult> results = service.searchFlights("Johannesburg (JNB)", "Cape Town (CPT)", LocalDate.of(2026, 11, 2));
 
         assertNotNull(results);
@@ -74,7 +85,7 @@ class FlightServiceTest {
     @Test
     @DisplayName("Search flights returns empty list when no flights exist")
     void testSearchFlightsHandlesNoResults() {
-        FlightService service = new FlightService(new MockFlightDao());
+        FlightService service = new FlightService(new MockFlightDao(), TEST_CLOCK);
         List<FlightSearchResult> results = service.searchFlights("Durban (DUR)", "Cape Town (CPT)", LocalDate.of(2026, 11, 2));
 
         assertNotNull(results);
@@ -84,9 +95,18 @@ class FlightServiceTest {
     @Test
     @DisplayName("Search flights validates input and rejects same origin and destination")
     void testSearchFlightsValidatesRoute() {
-        FlightService service = new FlightService(new MockFlightDao());
+        FlightService service = new FlightService(new MockFlightDao(), TEST_CLOCK);
         assertThrows(ValidationException.class, () ->
                 service.searchFlights("JNB", "JNB", LocalDate.of(2026, 11, 2))
         );
+    }
+
+    @Test
+    @DisplayName("nextAvailableDate returns earliest date with open flights")
+    void testNextAvailableDate() {
+        FlightService service = new FlightService(new MockFlightDao(), TEST_CLOCK);
+        Optional<LocalDate> next = service.nextAvailableDate("JNB", "CPT", LocalDate.of(2026, 11, 1));
+        assertTrue(next.isPresent());
+        assertEquals(LocalDate.of(2026, 11, 2), next.get());
     }
 }

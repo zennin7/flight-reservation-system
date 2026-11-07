@@ -39,8 +39,10 @@ public final class IcsCalendarGenerator {
         String depTimeStr = context.getDepartureTime();
         String arrTimeStr = context.getArrivalTime();
         String depDateStr = context.getDepartureDate();
-
-        LocalDate depDate = BoardingPolicy.parseDate(depDateStr != null ? depDateStr : "2026-11-14");
+        if (depDateStr == null || depDateStr.isBlank()) {
+            throw new IllegalArgumentException("Departure date is required for calendar invite.");
+        }
+        LocalDate depDate = BoardingPolicy.parseDate(depDateStr);
         LocalTime depTime = (depTimeStr != null && !depTimeStr.isBlank())
                 ? BoardingPolicy.parseTime(depTimeStr) : LocalTime.of(6, 30);
         LocalTime arrTime = (arrTimeStr != null && !arrTimeStr.isBlank())
