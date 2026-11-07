@@ -103,24 +103,17 @@ public class BoardingPassPdfGeneratorTest {
 
             assertEquals("K7QX2M", decodedRef, "Decoded barcode text must match booking reference");
 
-            // 4. Save rendered page to docs/screenshots/boarding-pass-pdf.png if docs dir exists
-            Path docsDir = Paths.get("..", "docs", "screenshots");
-            if (!Files.exists(docsDir)) {
-                docsDir = Paths.get("docs", "screenshots");
+            // 4. Save rendered page and sample PDF to target/ instead of docs/
+            Path targetDir = Paths.get("target");
+            if (!Files.exists(targetDir)) {
+                targetDir = Paths.get("core", "target");
             }
-            if (Files.exists(docsDir)) {
-                File pngOut = docsDir.resolve("boarding-pass-pdf.png").toFile();
+            if (Files.exists(targetDir)) {
+                File pngOut = targetDir.resolve("boarding-pass-pdf.png").toFile();
                 ImageIO.write(pageImage, "PNG", pngOut);
                 System.out.println("Wrote rendered PDF screenshot to: " + pngOut.getAbsolutePath());
-            }
 
-            // Save sample docs/boarding-pass.pdf
-            Path sampleDocs = Paths.get("..", "docs");
-            if (!Files.exists(sampleDocs)) {
-                sampleDocs = Paths.get("docs");
-            }
-            if (Files.exists(sampleDocs)) {
-                File samplePdfOut = sampleDocs.resolve("boarding-pass.pdf").toFile();
+                File samplePdfOut = targetDir.resolve("boarding-pass.pdf").toFile();
                 Files.copy(targetPdf.toPath(), samplePdfOut.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 System.out.println("Wrote sample PDF to: " + samplePdfOut.getAbsolutePath());
             }

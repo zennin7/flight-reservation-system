@@ -2,16 +2,20 @@ package com.group2.flightres.tools;
 
 import com.group2.flightres.controller.FlightSearchController;
 import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.util.GlassFlightResultsBridge;
 import com.group2.flightres.util.ThemeManager;
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.slf4j.Logger;
@@ -22,16 +26,20 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Renders the Phase 2 Glass Flight Search screen at 1280x860 and captures
- * docs/screenshots/glass-flight-search.png for visual verification.
+ * Renders the Phase 2 Glass Flight Search screen at 1280x800 and captures:
+ * 1) docs/screenshots/glass-flight-search.png (4 real DB cards)
+ * 2) docs/screenshots/glass-flight-search-error.png (error state with Retry button)
+ * Also prints the scene graph label texts for all 4 cards to stdout.
  */
 public class GlassFlightSearchScreenshotRunner extends Application {
 
     private static final Logger logger = LoggerFactory.getLogger(GlassFlightSearchScreenshotRunner.class);
     private static final int WIDTH = 1280;
-    private static final int HEIGHT = 860;
+    private static final int HEIGHT = 800;
 
     private static Path getOutputDir() {
         if (new File("..", "docs/screenshots").exists()) {
@@ -47,8 +55,6 @@ public class GlassFlightSearchScreenshotRunner extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/flight-search.fxml"));
         Parent root = loader.load();
 
-        FlightSearchController controller = loader.getController();
-
         Scene scene = new Scene(root, WIDTH, HEIGHT);
         ThemeManager.getInstance().applyGlassTheme(scene);
 
@@ -58,26 +64,85 @@ public class GlassFlightSearchScreenshotRunner extends Application {
         stage.setResizable(false);
         stage.show();
 
-        PauseTransition pause = new PauseTransition(Duration.millis(750));
-        pause.setOnFinished(e -> {
+        PauseTransition pause1 = new PauseTransition(Duration.millis(800));
+        pause1.setOnFinished(e1 -> {
             root.applyCss();
             root.layout();
 
-            javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
-            WritableImage snapshot = new WritableImage(WIDTH, HEIGHT);
-            snapshot = root.snapshot(params, snapshot);
-            File outputFile = getOutputDir().resolve("glass-flight-search.png").toFile();
+            // Print card label texts directly from scene graph
+            printCardLabelTexts(root);
+
+            // Snapshot 1: Normal 4 cards (snapshot entire 1280x800 scene without window border offset)
+            WritableImage snapshot1 = scene.snapshot(null);
+            File outputFile1 = getOutputDir().resolve("glass-flight-search.png").toFile();
 
             try {
-                saveImageToPng(snapshot, outputFile);
-                logger.info("Successfully saved glass flight search screenshot: {}", outputFile.getAbsolutePath());
+                saveImageToPng(snapshot1, outputFile1);
+                logger.info("Successfully saved glass flight search screenshot: {}", outputFile1.getAbsolutePath());
             } catch (IOException ex) {
                 logger.error("Failed to save glass flight search screenshot", ex);
             }
 
-            Platform.exit();
+            // Trigger Error State for Snapshot 2
+            GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+            if (bridge != null) {
+                bridge.showErrorState(() -> logger.info("Retry button clicked"));
+            }
+
+            PauseTransition pause2 = new PauseTransition(Duration.millis(500));
+            pause2.setOnFinished(e2 -> {
+                root.applyCss();
+                root.layout();
+
+                WritableImage snapshot2 = scene.snapshot(null);
+                File outputFile2 = getOutputDir().resolve("glass-flight-search-error.png").toFile();
+
+                try {
+                    saveImageToPng(snapshot2, outputFile2);
+                    logger.info("Successfully saved glass flight search error screenshot: {}", outputFile2.getAbsolutePath());
+                } catch (IOException ex) {
+                    logger.error("Failed to save glass flight search error screenshot", ex);
+                }
+
+                Platform.exit();
+            });
+            pause2.play();
         });
-        pause.play();
+        pause1.play();
+    }
+
+    private static void printCardLabelTexts(Parent root) {
+        VBox cardsContainer = (VBox) root.lookup("#resultsCardsContainer");
+        if (cardsContainer == null) {
+            System.out.println("No cardsContainer found in scene");
+            return;
+        }
+
+        System.out.println("=== SCENE GRAPH CARD LABELS ===");
+        int cardIdx = 1;
+        for (Node child : cardsContainer.getChildren()) {
+            if (child.getStyleClass().contains("flight-result-card")) {
+                List<String> labels = new ArrayList<>();
+                collectLabels(child, labels);
+                System.out.println("--- CARD " + cardIdx + " ---");
+                for (String lbl : labels) {
+                    System.out.println("  " + lbl);
+                }
+                cardIdx++;
+            }
+        }
+        System.out.println("===============================");
+    }
+
+    private static void collectLabels(Node node, List<String> list) {
+        if (node instanceof Label lbl && lbl.getText() != null && !lbl.getText().isBlank()) {
+            list.add(lbl.getText());
+        }
+        if (node instanceof Parent p) {
+            for (Node c : p.getChildrenUnmodifiable()) {
+                collectLabels(c, list);
+            }
+        }
     }
 
     private static void saveImageToPng(WritableImage image, File targetFile) throws IOException {

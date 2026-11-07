@@ -26,7 +26,8 @@ CREATE TABLE airports (
     iata_code       CHAR(3) UNIQUE NOT NULL,
     name            VARCHAR(120) NOT NULL,
     city            VARCHAR(80)  NOT NULL,
-    country         VARCHAR(80)  NOT NULL
+    country         VARCHAR(80)  NOT NULL,
+    timezone        VARCHAR(50)  NOT NULL
 );
 
 -- ---------- SEAT CLASS PRICING MULTIPLIERS ----------

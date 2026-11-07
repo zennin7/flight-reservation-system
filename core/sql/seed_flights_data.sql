@@ -14,10 +14,10 @@
 BEGIN;
 
 -- 1. Airports
-INSERT INTO airports (iata_code, name, city, country)
+INSERT INTO airports (iata_code, name, city, country, timezone)
 VALUES
-    ('JNB', 'O. R. Tambo International Airport', 'Johannesburg', 'South Africa'),
-    ('CPT', 'Cape Town International Airport', 'Cape Town', 'South Africa')
+    ('JNB', 'O. R. Tambo International Airport', 'Johannesburg', 'South Africa', 'Africa/Johannesburg'),
+    ('CPT', 'Cape Town International Airport', 'Cape Town', 'South Africa', 'Africa/Johannesburg')
 ON CONFLICT (iata_code) DO NOTHING;
 
 -- 2. Aircraft Type: Boeing 737-800

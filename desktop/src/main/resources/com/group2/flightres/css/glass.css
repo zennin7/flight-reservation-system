@@ -1676,3 +1676,29 @@
     -fx-opacity: 0;
     -fx-padding: 0;
 }
+
+/* ===================================================================
+   FLIGHT SEARCH ERROR STATE
+   =================================================================== */
+.flight-search-error-card {
+    -fx-alignment: center;
+    -fx-padding: 32px 24px 32px 24px;
+    -fx-pref-width: 824px;
+    -fx-max-width: infinity;
+}
+
+.flight-search-error-text {
+    -fx-font-family: 'Inter';
+    -fx-font-size: 14px;
+    -fx-text-fill: rgba(255, 255, 255, 0.75);
+    -fx-alignment: center;
+}
+
+.search-retry-btn {
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-background-radius: 999px;
+    -fx-padding: 8px 24px;
+    -fx-cursor: hand;
+}

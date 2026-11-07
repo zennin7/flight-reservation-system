@@ -7,7 +7,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -19,14 +21,29 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FlightServiceTest {
 
+    private static final ZoneId SAST = ZoneId.of("Africa/Johannesburg");
+    private static final Instant DEP1 = Instant.parse("2026-11-02T04:30:00Z");
+    private static final Instant ARR1 = Instant.parse("2026-11-02T06:40:00Z");
+    private static final Instant DEP2 = Instant.parse("2026-11-02T07:15:00Z");
+    private static final Instant ARR2 = Instant.parse("2026-11-02T09:25:00Z");
+
+    private static final FlightSearchResult FLIGHT_1 = new FlightSearchResult(
+            1L, "GRP 204", "JNB", "O. R. Tambo International Airport", "Johannesburg", SAST,
+            "CPT", "Cape Town International Airport", "Cape Town", SAST,
+            DEP1, ARR1, new BigDecimal("1200"), "Airbus A320", 149
+    );
+
+    private static final FlightSearchResult FLIGHT_2 = new FlightSearchResult(
+            2L, "GRP 310", "JNB", "O. R. Tambo International Airport", "Johannesburg", SAST,
+            "CPT", "Cape Town International Airport", "Cape Town", SAST,
+            DEP2, ARR2, new BigDecimal("1450"), "Airbus A320", 147
+    );
+
     private static class MockFlightDao implements FlightDao {
         @Override
         public List<FlightSearchResult> searchFlights(String origin, String destination, LocalDate departureDate) {
             if ("JNB".equals(origin) || origin.contains("Johannesburg")) {
-                return List.of(
-                        new FlightSearchResult(1L, "GRP 204", "06:30", "08:40", "2h 10m", new BigDecimal("1200"), "R 1,200"),
-                        new FlightSearchResult(2L, "GRP 310", "09:15", "11:25", "2h 10m", new BigDecimal("1450"), "R 1,450")
-                );
+                return List.of(FLIGHT_1, FLIGHT_2);
             }
             return Collections.emptyList();
         }
@@ -34,7 +51,7 @@ class FlightServiceTest {
         @Override
         public Optional<FlightSearchResult> findById(long flightId) {
             if (flightId == 1L) {
-                return Optional.of(new FlightSearchResult(1L, "GRP 204", "06:30", "08:40", "2h 10m", new BigDecimal("1200"), "R 1,200"));
+                return Optional.of(FLIGHT_1);
             }
             return Optional.empty();
         }
@@ -49,6 +66,9 @@ class FlightServiceTest {
         assertNotNull(results);
         assertEquals(2, results.size());
         assertEquals("GRP 204", results.get(0).getFlightNumber());
+        assertEquals("06:30", results.get(0).getDepartureTime());
+        assertEquals("08:40", results.get(0).getArrivalTime());
+        assertEquals("2h 10m", results.get(0).getDuration());
     }
 
     @Test

@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -45,6 +46,50 @@ class PostgresIntegrationTest {
     @BeforeEach
     void setUp() {
         DatabaseAssumption.assumeDatabaseAvailable();
+    }
+
+    @Test
+    @DisplayName("PostgreSQL: Query live flights with JVM in America/Los_Angeles verifies timezone resilience")
+    void testLiveFlightSearchTimezoneResilience() throws SQLException {
+        java.util.TimeZone originalTz = java.util.TimeZone.getDefault();
+        try {
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("America/Los_Angeles"));
+
+            FlightDaoImpl flightDao = new FlightDaoImpl();
+            List<FlightSearchResult> flights = flightDao.searchFlights("JNB", "CPT", LocalDate.of(2026, 11, 2));
+            assertNotNull(flights);
+            assertEquals(4, flights.size(), "Should return all 4 scheduled flights for JNB -> CPT on 2026-11-02");
+
+            FlightSearchResult grp204 = flights.stream()
+                    .filter(f -> "GRP 204".equals(f.getFlightNumber()))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Flight GRP 204 not found"));
+
+            assertEquals("06:30", grp204.getDepartureTime());
+            assertEquals("08:40", grp204.getArrivalTime());
+            assertEquals("2h 10m", grp204.getDuration());
+            assertEquals("JNB", grp204.getOriginCode());
+            assertEquals("O. R. Tambo International Airport", grp204.getOriginAirportName());
+            assertEquals("Johannesburg", grp204.getOriginCity());
+            assertEquals("CPT", grp204.getDestCode());
+            assertEquals("Cape Town International Airport", grp204.getDestAirportName());
+            assertEquals("Cape Town", grp204.getDestCity());
+            assertEquals("Airbus A320", grp204.getAircraftModel());
+
+            int independentAvailableCount = 0;
+            try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(
+                         "SELECT COUNT(*) FROM flight_seats WHERE flight_id = 1 AND (status = 'AVAILABLE' OR (status = 'HELD' AND held_until < NOW()))")) {
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        independentAvailableCount = rs.getInt(1);
+                    }
+                }
+            }
+            assertEquals(independentAvailableCount, grp204.getAvailableSeats());
+        } finally {
+            java.util.TimeZone.setDefault(originalTz);
+        }
     }
 
     @Test

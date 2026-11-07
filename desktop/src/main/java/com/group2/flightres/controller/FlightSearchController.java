@@ -3,6 +3,7 @@ package com.group2.flightres.controller;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.FlightSearchResult;
 import com.group2.flightres.service.FlightService;
+import com.group2.flightres.util.GlassFlightResultsBridge;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -16,7 +17,6 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -75,14 +75,17 @@ public class FlightSearchController implements WizardStepController {
     }
 
     private void initSearchControls() {
+        // TODO(B2): Populate origin combo options dynamically from database airports
         if (fromCombo != null) {
             fromCombo.getItems().addAll("Johannesburg (JNB)", "Cape Town (CPT)", "Durban (DUR)");
             fromCombo.setValue("Johannesburg (JNB)");
         }
+        // TODO(B2): Populate destination combo options dynamically from database airports
         if (toCombo != null) {
             toCombo.getItems().addAll("Cape Town (CPT)", "Johannesburg (JNB)", "Durban (DUR)");
             toCombo.setValue("Cape Town (CPT)");
         }
+        // TODO(B2): Dynamically compute initial departure date rather than hardcoding 2026-11-02
         if (departureDatePicker != null) {
             departureDatePicker.setConverter(new StringConverter<>() {
                 @Override
@@ -97,6 +100,7 @@ public class FlightSearchController implements WizardStepController {
             });
             departureDatePicker.setValue(LocalDate.of(2026, 11, 2));
         }
+        // TODO(B2): Connect passenger/traveller counts to dynamic ticket capacity
         if (passengersCombo != null) {
             passengersCombo.getItems().addAll("1 Adult", "2 Adults", "3 Adults", "4 Adults");
             passengersCombo.setValue("1 Adult");
@@ -196,20 +200,15 @@ public class FlightSearchController implements WizardStepController {
                 }
             }
         } catch (Exception e) {
-            logger.warn("Could not query flights from database; falling back to sample flights: {}", e.getMessage());
-            loadSampleFlightsFallback();
-        }
-    }
-
-    private void loadSampleFlightsFallback() {
-        flightList.clear();
-        flightList.add(new FlightSearchResult(1L, "GRP 204", "06:30", "08:40", "2h 10m", new BigDecimal("1200"), "R 1,200"));
-        flightList.add(new FlightSearchResult(2L, "GRP 318", "09:15", "11:25", "2h 10m", new BigDecimal("1450"), "R 1,450"));
-        flightList.add(new FlightSearchResult(3L, "GRP 422", "13:00", "15:10", "2h 10m", new BigDecimal("1090"), "R 1,090"));
-        flightList.add(new FlightSearchResult(4L, "GRP 507", "17:45", "19:55", "2h 10m", new BigDecimal("1680"), "R 1,680"));
-
-        if (resultsCountLabel != null) {
-            resultsCountLabel.setText("Showing sample flights, database unavailable.");
+            logger.error("Could not query flights from database", e);
+            flightList.clear();
+            if (resultsCountLabel != null) {
+                resultsCountLabel.setText("Error loading flights");
+            }
+            GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+            if (bridge != null) {
+                bridge.showErrorState(this::performSearch);
+            }
         }
     }
 
@@ -224,16 +223,36 @@ public class FlightSearchController implements WizardStepController {
         if (bookingContext != null) {
             bookingContext.setFlightId(flight.getFlightId());
             bookingContext.setFlightNumber(flight.getFlightNumber());
-            if (fromCombo != null && fromCombo.getValue() != null) {
-                bookingContext.setOrigin(fromCombo.getValue());
-            }
-            if (toCombo != null && toCombo.getValue() != null) {
-                bookingContext.setDestination(toCombo.getValue());
-            }
-            if (departureDatePicker != null && departureDatePicker.getValue() != null) {
+
+            // Source route, airports, and flight metadata strictly from the selected FlightSearchResult
+            String origCity = (flight.getOriginCity() != null && !flight.getOriginCity().isBlank())
+                    ? flight.getOriginCity() : "Johannesburg";
+            String origCode = (flight.getOriginCode() != null && !flight.getOriginCode().isBlank())
+                    ? flight.getOriginCode() : "JNB";
+            String dstCity = (flight.getDestCity() != null && !flight.getDestCity().isBlank())
+                    ? flight.getDestCity() : "Cape Town";
+            String dstCode = (flight.getDestCode() != null && !flight.getDestCode().isBlank())
+                    ? flight.getDestCode() : "CPT";
+
+            bookingContext.setOrigin(origCity + " (" + origCode + ")");
+            bookingContext.setDestination(dstCity + " (" + dstCode + ")");
+            bookingContext.setOriginCode(origCode);
+            bookingContext.setOriginAirport(flight.getOriginAirportName());
+            bookingContext.setOriginCity(origCity);
+            bookingContext.setDestinationCode(dstCode);
+            bookingContext.setDestinationAirport(flight.getDestAirportName());
+            bookingContext.setDestinationCity(dstCity);
+            bookingContext.setDuration(flight.getDuration());
+            bookingContext.setAircraftModel(flight.getAircraftModel());
+
+            if (flight.getDeparture() != null && flight.getOriginZone() != null) {
+                DateTimeFormatter dFmt = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH);
+                bookingContext.setDepartureDate(flight.getDeparture().atZone(flight.getOriginZone()).format(dFmt));
+            } else if (departureDatePicker != null && departureDatePicker.getValue() != null) {
                 DateTimeFormatter dFmt = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH);
                 bookingContext.setDepartureDate(departureDatePicker.getValue().format(dFmt));
             }
+
             bookingContext.setDepartureTime(flight.getDepartureTime());
             bookingContext.setArrivalTime(flight.getArrivalTime());
             bookingContext.setBaseFare(flight.getBasePrice());
@@ -263,8 +282,7 @@ public class FlightSearchController implements WizardStepController {
 
     @FXML
     private void handleSwapLocations() {
-        com.group2.flightres.util.GlassFlightResultsBridge bridge =
-                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
         if (bridge != null) {
             bridge.swapLocations();
         } else if (fromCombo != null && toCombo != null) {
@@ -333,8 +351,7 @@ public class FlightSearchController implements WizardStepController {
     @FXML
     private void handleFilterDeparture(javafx.event.ActionEvent event) {
         if (event.getSource() instanceof Button btn) {
-            com.group2.flightres.util.GlassFlightResultsBridge bridge =
-                    com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+            GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
             if (bridge != null) {
                 bridge.setDepartureFilter(btn.getText());
             }
@@ -344,8 +361,7 @@ public class FlightSearchController implements WizardStepController {
     @FXML
     private void handleFilterStops(javafx.event.ActionEvent event) {
         if (event.getSource() instanceof Button btn) {
-            com.group2.flightres.util.GlassFlightResultsBridge bridge =
-                    com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+            GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
             if (bridge != null) {
                 bridge.setStopsFilter(btn.getText());
             }
@@ -354,8 +370,8 @@ public class FlightSearchController implements WizardStepController {
 
     @FXML
     private void handleResetPrice() {
-        com.group2.flightres.util.GlassFlightResultsBridge bridge =
-                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        // TODO(B2): Dynamic reset based on current search result min/max prices
+        GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
         if (bridge != null) {
             bridge.resetPriceFilter();
         }
@@ -363,8 +379,8 @@ public class FlightSearchController implements WizardStepController {
 
     @FXML
     private void handleResetDuration() {
-        com.group2.flightres.util.GlassFlightResultsBridge bridge =
-                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        // TODO(B2): Dynamic reset based on current search result min/max durations
+        GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
         if (bridge != null) {
             bridge.resetDurationFilter();
         }
@@ -372,8 +388,8 @@ public class FlightSearchController implements WizardStepController {
 
     @FXML
     private void handleResetCabin() {
-        com.group2.flightres.util.GlassFlightResultsBridge bridge =
-                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        // TODO(B2): Dynamic reset based on available cabin classes
+        GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
         if (bridge != null) {
             bridge.resetCabinFilter();
         }
@@ -381,8 +397,8 @@ public class FlightSearchController implements WizardStepController {
 
     @FXML
     private void handleToggleEconomy() {
-        com.group2.flightres.util.GlassFlightResultsBridge bridge =
-                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        // TODO(B2): Connect cabin toggle to real seat class filtering
+        GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
         if (bridge != null) {
             bridge.toggleEconomy();
         }
@@ -390,8 +406,8 @@ public class FlightSearchController implements WizardStepController {
 
     @FXML
     private void handleToggleFirstClass() {
-        com.group2.flightres.util.GlassFlightResultsBridge bridge =
-                com.group2.flightres.util.GlassFlightResultsBridge.getInstance();
+        // TODO(B2): Connect cabin toggle to real seat class filtering
+        GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
         if (bridge != null) {
             bridge.toggleFirstClass();
         }

@@ -13,11 +13,10 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,31 +26,39 @@ import java.util.Optional;
 public class FlightDaoImpl implements FlightDao {
 
     private static final Logger logger = LoggerFactory.getLogger(FlightDaoImpl.class);
-    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
     private static final String SEARCH_FLIGHTS_QUERY = """
         SELECT f.flight_id, f.flight_number,
-               origin_ap.iata_code AS origin_code, origin_ap.city AS origin_city,
-               dest_ap.iata_code AS dest_code, dest_ap.city AS dest_city,
-               f.departure_time, f.arrival_time, f.base_price, f.status
+               orig.iata_code AS origin_code, orig.name AS origin_name, orig.city AS origin_city, orig.timezone AS origin_timezone,
+               dest.iata_code AS dest_code, dest.name AS dest_name, dest.city AS dest_city, dest.timezone AS dest_timezone,
+               f.departure_time, f.arrival_time, f.base_price, f.status,
+               act.model AS aircraft_model,
+               (SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW()))) AS available_seats
         FROM flights f
-        JOIN airports origin_ap ON origin_ap.airport_id = f.origin_airport_id
-        JOIN airports dest_ap ON dest_ap.airport_id = f.dest_airport_id
-        WHERE (origin_ap.iata_code = ? OR UPPER(origin_ap.city) LIKE UPPER(?) OR UPPER(origin_ap.name) LIKE UPPER(?))
-          AND (dest_ap.iata_code = ? OR UPPER(dest_ap.city) LIKE UPPER(?) OR UPPER(dest_ap.name) LIKE UPPER(?))
-          AND (?::date IS NULL OR CAST(f.departure_time AS DATE) = ?)
+        JOIN airports orig ON orig.airport_id = f.origin_airport_id
+        JOIN airports dest ON dest.airport_id = f.dest_airport_id
+        JOIN aircraft_types act ON act.aircraft_type_id = f.aircraft_type_id
+        WHERE (orig.iata_code = ? OR UPPER(orig.city) LIKE UPPER(?) OR UPPER(orig.name) LIKE UPPER(?))
+          AND (dest.iata_code = ? OR UPPER(dest.city) LIKE UPPER(?) OR UPPER(dest.name) LIKE UPPER(?))
+          AND (?::date IS NULL OR (
+              f.departure_time >= (?::date)::timestamp AT TIME ZONE orig.timezone
+              AND f.departure_time < ((?::date) + 1)::timestamp AT TIME ZONE orig.timezone
+          ))
           AND f.status = 'SCHEDULED'
         ORDER BY f.departure_time ASC
         """;
 
     private static final String FIND_BY_ID_QUERY = """
         SELECT f.flight_id, f.flight_number,
-               origin_ap.iata_code AS origin_code, origin_ap.city AS origin_city,
-               dest_ap.iata_code AS dest_code, dest_ap.city AS dest_city,
-               f.departure_time, f.arrival_time, f.base_price, f.status
+               orig.iata_code AS origin_code, orig.name AS origin_name, orig.city AS origin_city, orig.timezone AS origin_timezone,
+               dest.iata_code AS dest_code, dest.name AS dest_name, dest.city AS dest_city, dest.timezone AS dest_timezone,
+               f.departure_time, f.arrival_time, f.base_price, f.status,
+               act.model AS aircraft_model,
+               (SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW()))) AS available_seats
         FROM flights f
-        JOIN airports origin_ap ON origin_ap.airport_id = f.origin_airport_id
-        JOIN airports dest_ap ON dest_ap.airport_id = f.dest_airport_id
+        JOIN airports orig ON orig.airport_id = f.origin_airport_id
+        JOIN airports dest ON dest.airport_id = f.dest_airport_id
+        JOIN aircraft_types act ON act.aircraft_type_id = f.aircraft_type_id
         WHERE f.flight_id = ?
         """;
 
@@ -78,9 +85,11 @@ public class FlightDaoImpl implements FlightDao {
                 Date sqlDate = Date.valueOf(departureDate);
                 stmt.setDate(7, sqlDate);
                 stmt.setDate(8, sqlDate);
+                stmt.setDate(9, sqlDate);
             } else {
                 stmt.setNull(7, java.sql.Types.DATE);
                 stmt.setNull(8, java.sql.Types.DATE);
+                stmt.setNull(9, java.sql.Types.DATE);
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -117,23 +126,44 @@ public class FlightDaoImpl implements FlightDao {
     private FlightSearchResult mapRow(ResultSet rs) throws SQLException {
         long id = rs.getLong("flight_id");
         String number = rs.getString("flight_number");
-        Timestamp depTs = rs.getTimestamp("departure_time");
-        Timestamp arrTs = rs.getTimestamp("arrival_time");
+
+        String originCode = rs.getString("origin_code");
+        String originName = rs.getString("origin_name");
+        String originCity = rs.getString("origin_city");
+        String originTz = rs.getString("origin_timezone");
+        ZoneId originZone = ZoneId.of(originTz != null ? originTz : "Africa/Johannesburg");
+
+        String destCode = rs.getString("dest_code");
+        String destName = rs.getString("dest_name");
+        String destCity = rs.getString("dest_city");
+        String destTz = rs.getString("dest_timezone");
+        ZoneId destZone = ZoneId.of(destTz != null ? destTz : "Africa/Johannesburg");
+
+        OffsetDateTime depOdt = rs.getObject("departure_time", OffsetDateTime.class);
+        OffsetDateTime arrOdt = rs.getObject("arrival_time", OffsetDateTime.class);
+        Instant depInstant = depOdt != null ? depOdt.toInstant() : Instant.EPOCH;
+        Instant arrInstant = arrOdt != null ? arrOdt.toInstant() : Instant.EPOCH;
+
         BigDecimal basePrice = rs.getBigDecimal("base_price");
+        String aircraftModel = rs.getString("aircraft_model");
+        int availableSeats = rs.getInt("available_seats");
 
-        LocalDateTime depLdt = depTs.toLocalDateTime();
-        LocalDateTime arrLdt = arrTs.toLocalDateTime();
-
-        String depTimeStr = depLdt.toLocalTime().format(TIME_FORMAT);
-        String arrTimeStr = arrLdt.toLocalTime().format(TIME_FORMAT);
-
-        Duration duration = Duration.between(depLdt, arrLdt);
-        long hours = duration.toHours();
-        long minutes = duration.toMinutesPart();
-        String durationStr = hours + "h " + minutes + "m";
-
-        String priceFormatted = String.format(Locale.US, "R %,d", basePrice.longValue());
-
-        return new FlightSearchResult(id, number, depTimeStr, arrTimeStr, durationStr, basePrice, priceFormatted);
+        return new FlightSearchResult(
+                id,
+                number,
+                originCode,
+                originName,
+                originCity,
+                originZone,
+                destCode,
+                destName,
+                destCity,
+                destZone,
+                depInstant,
+                arrInstant,
+                basePrice,
+                aircraftModel,
+                availableSeats
+        );
     }
 }

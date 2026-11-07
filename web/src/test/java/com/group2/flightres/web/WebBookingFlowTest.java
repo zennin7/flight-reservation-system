@@ -50,23 +50,29 @@ class WebBookingFlowTest {
 
     // --- Mock DAOs ---
 
+    private static final java.time.ZoneId SAST = java.time.ZoneId.of("Africa/Johannesburg");
+    private static final java.time.Instant MOCK_DEP = java.time.Instant.parse("2026-11-02T04:30:00Z");
+    private static final java.time.Instant MOCK_ARR = java.time.Instant.parse("2026-11-02T06:40:00Z");
+    private static final FlightSearchResult MOCK_FLIGHT = new FlightSearchResult(
+            1L, "GRP 204", "JNB", "O. R. Tambo International Airport", "Johannesburg", SAST,
+            "CPT", "Cape Town International Airport", "Cape Town", SAST,
+            MOCK_DEP, MOCK_ARR, new java.math.BigDecimal("1200"), "Airbus A320", 149
+    );
+
     private static class MockFlightDao implements FlightDao {
         @Override
-        public List<FlightSearchResult> searchFlights(String origin, String destination, LocalDate departureDate) {
-            return List.of(new FlightSearchResult(1L, "GRP 204", "06:30", "08:40", "2h 10m",
-                    new BigDecimal("1200"), "R 1,200"));
+        public List<FlightSearchResult> searchFlights(String origin, String destination, java.time.LocalDate departureDate) {
+            return List.of(MOCK_FLIGHT);
         }
 
         @Override
         public Optional<FlightSearchResult> findById(long flightId) {
             if (flightId == 1L) {
-                return Optional.of(new FlightSearchResult(1L, "GRP 204", "06:30", "08:40", "2h 10m",
-                        new BigDecimal("1200"), "R 1,200"));
+                return Optional.of(MOCK_FLIGHT);
             }
             return Optional.empty();
         }
     }
-
     private static class MockSeatDao implements SeatDao {
         private final Map<Long, FlightSeat> seats = new HashMap<>();
 

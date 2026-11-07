@@ -34,7 +34,6 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             "M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z";
     private static final String SVG_CHEVRON_DOWN = "M6 9l6 6 6-6";
     private static final String SVG_CHEVRON_UP = "M18 15l-6-6-6 6";
-    private static final String SVG_CHECK_TICK = "M5 12l5 5 9-10";
 
     // References to UI containers
     private VBox cardsContainer;
@@ -54,8 +53,10 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     // Interactive filter state - default NO filter active
     private String selectedDepartureFilter = null;
     private String selectedStopsFilter = null;
+    // TODO(B2): Dynamically compute slider min/max from search results
     private double maxPriceFilter = 4850.0;
-    private double maxDurationMinutes = 400.0; // 6h 40m
+    // TODO(B2): Dynamically compute duration min/max from search results
+    private double maxDurationMinutes = 400.0;
     private boolean economySelected = true;
     private boolean firstClassSelected = true;
     private Long expandedFlightId = 2L; // expand 2nd card by default matching mockup
@@ -181,6 +182,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
      * Synchronizes From / To / Departure date display labels.
      */
     public void updateLocationLabels() {
+        // TODO(B2): Bind location display labels dynamically to database airport entities
         if (fromComboBox != null && fromCityLabel != null) {
             String val = fromComboBox.getValue();
             if (val == null || val.isBlank()) val = "Johannesburg (JNB)";
@@ -199,6 +201,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             }
         }
 
+        // TODO(B2): Bind destination display labels dynamically to database airport entities
         if (toComboBox != null && toCityLabel != null) {
             String val = toComboBox.getValue();
             if (val == null || val.isBlank()) val = "Cape Town (CPT)";
@@ -217,6 +220,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             }
         }
 
+        // TODO(B2): Synchronize departure date labels with interactive calendar picker
         if (departureDatePickerNode != null && depDateLabel != null) {
             LocalDate date = departureDatePickerNode.getValue();
             if (date != null) {
@@ -225,8 +229,8 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
                 depDateLabel.setText(date.format(dFmt));
                 if (depDayLabel != null) depDayLabel.setText(date.format(dayFmt));
             } else {
-                depDateLabel.setText("14 Nov '26");
-                if (depDayLabel != null) depDayLabel.setText("Friday");
+                depDateLabel.setText("2 Nov '26");
+                if (depDayLabel != null) depDayLabel.setText("Monday");
             }
         }
     }
@@ -274,6 +278,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     }
 
     public void resetPriceFilter() {
+        // TODO(B2): Dynamic price reset based on result set bounds
         this.maxPriceFilter = 4850.0;
         if (priceSlider != null) priceSlider.setValue(4850.0);
         refreshCardsView();
@@ -285,24 +290,28 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     }
 
     public void resetDurationFilter() {
+        // TODO(B2): Dynamic duration reset based on result set bounds
         this.maxDurationMinutes = 400.0;
         if (durationSlider != null) durationSlider.setValue(400.0);
         refreshCardsView();
     }
 
     public void toggleEconomy() {
+        // TODO(B2): Connect cabin toggle to real seat class filtering
         this.economySelected = !this.economySelected;
         updateCheckStyles();
         refreshCardsView();
     }
 
     public void toggleFirstClass() {
+        // TODO(B2): Connect cabin toggle to real seat class filtering
         this.firstClassSelected = !this.firstClassSelected;
         updateCheckStyles();
         refreshCardsView();
     }
 
     public void resetCabinFilter() {
+        // TODO(B2): Dynamic cabin reset
         this.economySelected = true;
         this.firstClassSelected = true;
         updateCheckStyles();
@@ -310,6 +319,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     }
 
     public void resetFiltersToDefault() {
+        // TODO(B2): Dynamically compute initial filter bounds from DB results
         this.selectedDepartureFilter = null;
         this.selectedStopsFilter = null;
         this.maxPriceFilter = 4850.0;
@@ -349,6 +359,40 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     }
 
     /**
+     * Displays an error card in the results area when a search query fails,
+     * including a retry button.
+     */
+    public void showErrorState(Runnable retryAction) {
+        if (cardsContainer == null) {
+            initUiBindings();
+        }
+        if (resultsCounterLabel != null) {
+            resultsCounterLabel.setText("Unable to load flights");
+        }
+        if (cardsContainer == null) return;
+
+        cardsContainer.getChildren().clear();
+
+        VBox errorBox = new VBox(14);
+        errorBox.setAlignment(Pos.CENTER);
+        errorBox.getStyleClass().addAll("inner", "flight-search-error-card");
+
+        Label msgLabel = new Label("We couldn't load flights. Please check your connection and try again.");
+        msgLabel.getStyleClass().add("flight-search-error-text");
+        msgLabel.setWrapText(true);
+
+        Button retryBtn = new Button("Retry");
+        retryBtn.getStyleClass().addAll("btn-gold", "search-retry-btn");
+        if (retryAction != null) {
+            retryBtn.setOnAction(e -> retryAction.run());
+        }
+        Motion.attachHoverLift(retryBtn);
+
+        errorBox.getChildren().addAll(msgLabel, retryBtn);
+        cardsContainer.getChildren().add(errorBox);
+    }
+
+    /**
      * Renders result cards according to in-memory filter criteria.
      */
     public void refreshCardsView() {
@@ -380,9 +424,15 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             return;
         }
 
-        // Update results header
-        String originCity = (fromCityLabel != null && !fromCityLabel.getText().isBlank()) ? fromCityLabel.getText() : "Johannesburg";
-        String destCity = (toCityLabel != null && !toCityLabel.getText().isBlank()) ? toCityLabel.getText() : "Cape Town";
+        // Update results header using first flight or display labels
+        FlightSearchResult firstFlight = allFlights.get(0);
+        String originCity = (firstFlight.getOriginCity() != null && !firstFlight.getOriginCity().isBlank())
+                ? firstFlight.getOriginCity()
+                : ((fromCityLabel != null && !fromCityLabel.getText().isBlank()) ? fromCityLabel.getText() : "Johannesburg");
+        String destCity = (firstFlight.getDestCity() != null && !firstFlight.getDestCity().isBlank())
+                ? firstFlight.getDestCity()
+                : ((toCityLabel != null && !toCityLabel.getText().isBlank()) ? toCityLabel.getText() : "Cape Town");
+
         if (resultsTitleLabel != null) {
             resultsTitleLabel.setText("Flights from " + originCity + " to " + destCity);
         }
@@ -409,12 +459,10 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             return;
         }
 
-        int index = 0;
         for (FlightSearchResult flight : filtered) {
             boolean isExpanded = flight.getFlightId() != null && flight.getFlightId().equals(expandedFlightId);
-            Node cardNode = buildFlightResultCard(flight, index, isExpanded);
+            Node cardNode = buildFlightResultCard(flight, isExpanded);
             cardsContainer.getChildren().add(cardNode);
-            index++;
         }
     }
 
@@ -438,12 +486,8 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
     private boolean matchesStops(FlightSearchResult flight) {
         if (selectedStopsFilter == null) return true;
-        // In our database all scheduled flights are direct flights;
-        // If "1 stop" is selected and flight duration > 3h, treat as 1 stop
-        boolean isStop = flight.getDuration() != null && flight.getDuration().contains("3h");
-        if ("Direct".equals(selectedStopsFilter)) return !isStop;
-        if ("1 stop".equals(selectedStopsFilter)) return isStop;
-        return true;
+        // All scheduled flights in the system are nonstop direct flights
+        return "Direct".equals(selectedStopsFilter);
     }
 
     private boolean matchesPrice(FlightSearchResult flight) {
@@ -454,7 +498,6 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     private boolean matchesDuration(FlightSearchResult flight) {
         String dur = flight.getDuration();
         if (dur == null) return true;
-        // Parse "2h 10m"
         try {
             int h = 0, m = 0;
             if (dur.contains("h")) {
@@ -472,16 +515,16 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     }
 
     /**
-     * Builds a single flight result card matching design-glass/flight-search.html.
+     * Builds a single flight result card bound strictly to FlightSearchResult data.
      */
-    private Node buildFlightResultCard(FlightSearchResult flight, int index, boolean isExpanded) {
+    public Node buildFlightResultCard(FlightSearchResult flight, boolean isExpanded) {
         VBox card = new VBox();
         card.getStyleClass().addAll("inner", "flight-result-card");
         card.setPadding(new Insets(16, 22, isExpanded ? 16 : 14, 22));
         card.setMaxWidth(Double.MAX_VALUE);
         card.setPrefWidth(824);
 
-        // 1. Header Row: Logo circle + Brand + flight number/aircraft
+        // 1. Header Row: Logo circle + Brand + flight number / aircraft
         HBox headerRow = new HBox(10);
         headerRow.setAlignment(Pos.CENTER_LEFT);
 
@@ -495,9 +538,9 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         Label brandLabel = new Label(BrandConfig.APP_NAME);
         brandLabel.getStyleClass().add("airline-brand-text");
 
-        String flightMeta = index == 1
-                ? "Via Durban"
-                : (flight.getFlightNumber() + " · Airbus A320");
+        String aircraft = (flight.getAircraftModel() != null && !flight.getAircraftModel().isBlank())
+                ? flight.getAircraftModel() : "Aircraft";
+        String flightMeta = flight.getFlightNumber() + " · " + aircraft;
         Label metaLabel = new Label(flightMeta);
         metaLabel.getStyleClass().add("flight-number-muted");
 
@@ -515,7 +558,10 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         originBlock.setPrefWidth(190);
         originBlock.setMinWidth(190);
         originBlock.setMaxWidth(190);
-        Label originName = new Label("JNB, O.R. Tambo Intl");
+        String origShort = AirportNames.shortName(flight.getOriginAirportName());
+        String originTitle = (flight.getOriginCode() != null ? flight.getOriginCode() : "")
+                + (!origShort.isBlank() ? ", " + origShort : "");
+        Label originName = new Label(originTitle);
         originName.getStyleClass().add("airport-code-muted");
         Label originTime = new Label(flight.getDepartureTime());
         originTime.getStyleClass().add("flight-time-bold");
@@ -538,7 +584,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         dashLine1.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(dashLine1, Priority.ALWAYS);
 
-        String durText = (index == 1) ? "3h 50m · 1 stop" : flight.getDuration();
+        String durText = flight.getDuration() + " · Direct";
         Label durLabel = new Label(durText);
         durLabel.getStyleClass().add("flight-duration-pill");
         durLabel.setMinWidth(Region.USE_PREF_SIZE);
@@ -561,7 +607,10 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         destBlock.setPrefWidth(190);
         destBlock.setMinWidth(190);
         destBlock.setMaxWidth(190);
-        Label destName = new Label("CPT, Cape Town Intl");
+        String destShort = AirportNames.shortName(flight.getDestAirportName());
+        String destTitle = (flight.getDestCode() != null ? flight.getDestCode() : "")
+                + (!destShort.isBlank() ? ", " + destShort : "");
+        Label destName = new Label(destTitle);
         destName.getStyleClass().add("airport-code-muted");
         Label destTime = new Label(flight.getArrivalTime());
         destTime.getStyleClass().add("flight-time-bold");
@@ -586,9 +635,10 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         HBox footerRow = new HBox();
         footerRow.setAlignment(Pos.CENTER_LEFT);
 
-        String tagText = (index == 1)
-                ? "Snack · 23 kg bag · 27 seats left"
-                : "Free meal · 23 kg bag · 18 seats left";
+        int seats = flight.getAvailableSeats();
+        String tagText = (seats <= 20)
+                ? "Only " + seats + " seats left"
+                : "Direct · " + seats + " seats available";
         Label tags = new Label(tagText);
         tags.getStyleClass().add("card-tag-text");
 
@@ -620,7 +670,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         // 5. Expanded details box if active
         if (isExpanded) {
-            Node expandedBox = buildExpandedDetailsBox(flight, index);
+            Node expandedBox = buildExpandedDetailsBox(flight);
             card.getChildren().add(expandedBox);
         }
 
@@ -636,9 +686,9 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     }
 
     /**
-     * Builds the expanded flight details box with 4 tabs and leg rows.
+     * Builds the expanded flight details box with 4 tabs and leg row.
      */
-    private Node buildExpandedDetailsBox(FlightSearchResult flight, int index) {
+    private Node buildExpandedDetailsBox(FlightSearchResult flight) {
         VBox box = new VBox(8);
         box.getStyleClass().add("expanded-details-box");
         VBox.setMargin(box, new Insets(12, 0, 0, 0));
@@ -675,48 +725,53 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         switch (activeDetailsTab) {
             case "Flight information" -> {
-                // Leg 1
-                HBox leg1 = buildLegRow("FL 301", "Airbus A320", "O.R. Tambo Intl", "JNB · 09:15", "1h 25m", "King Shaka Intl", "DUR · 10:40");
-                // Layover line
-                StackPane layoverLine = new StackPane();
-                layoverLine.setPadding(new Insets(6, 12, 6, 12));
-                layoverLine.setMaxWidth(Double.MAX_VALUE);
-                Region dash = new Region();
-                dash.getStyleClass().add("flight-path-line");
-                dash.setPrefWidth(Double.MAX_VALUE);
-                dash.setMaxWidth(Double.MAX_VALUE);
-                Label layoverPill = new Label("1h 10m layover in Durban");
-                layoverPill.getStyleClass().add("layover-pill");
-                layoverLine.getChildren().addAll(dash, layoverPill);
-                // Leg 2
-                HBox leg2 = buildLegRow("FL 512", "Airbus A320", "King Shaka Intl", "DUR · 11:50", "1h 15m", "Cape Town Intl", "CPT · 13:05");
-                contentBox.getChildren().addAll(leg1, layoverLine, leg2);
+                String origZoneAbbr = FlightTimes.zoneAbbreviation(flight.getOriginZone(), flight.getDeparture());
+                String destZoneAbbr = FlightTimes.zoneAbbreviation(flight.getDestZone(), flight.getArrival());
+                String origTimeWithZone = flight.getOriginCode() + " · " + flight.getDepartureTime()
+                        + (origZoneAbbr.isEmpty() ? "" : " " + origZoneAbbr);
+                String destTimeWithZone = flight.getDestCode() + " · " + flight.getArrivalTime()
+                        + (destZoneAbbr.isEmpty() ? "" : " " + destZoneAbbr);
+
+                HBox leg = buildLegRow(
+                        flight.getFlightNumber(),
+                        flight.getAircraftModel() != null ? flight.getAircraftModel() : "Aircraft",
+                        AirportNames.shortName(flight.getOriginAirportName()),
+                        origTimeWithZone,
+                        flight.getDuration(),
+                        AirportNames.shortName(flight.getDestAirportName()),
+                        destTimeWithZone
+                );
+                contentBox.getChildren().add(leg);
             }
             case "Date details" -> {
-                String depDate = (depDateLabel != null && !depDateLabel.getText().isBlank()) ? depDateLabel.getText() : "14 Nov '26";
-                String depDay = (depDayLabel != null && !depDayLabel.getText().isBlank()) ? depDayLabel.getText() : "Friday";
+                String depDateStr;
+                if (flight.getDeparture() != null && flight.getOriginZone() != null) {
+                    DateTimeFormatter dFmt = DateTimeFormatter.ofPattern("d MMM ''yy (EEEE)", Locale.ENGLISH);
+                    depDateStr = flight.getDeparture().atZone(flight.getOriginZone()).format(dFmt);
+                } else {
+                    String depDate = (depDateLabel != null && !depDateLabel.getText().isBlank()) ? depDateLabel.getText() : "2 Nov '26";
+                    String depDay = (depDayLabel != null && !depDayLabel.getText().isBlank()) ? depDayLabel.getText() : "Monday";
+                    depDateStr = depDate + " (" + depDay + ")";
+                }
+                String origZoneAbbr = FlightTimes.zoneAbbreviation(flight.getOriginZone(), flight.getDeparture());
+                String destZoneAbbr = FlightTimes.zoneAbbreviation(flight.getDestZone(), flight.getArrival());
+
                 contentBox.getChildren().addAll(
-                        buildRuleRow("Departure Date", depDate + " (" + depDay + ")"),
-                        buildRuleRow("Departure Time", flight.getDepartureTime() + " SAST"),
-                        buildRuleRow("Arrival Time", flight.getArrivalTime() + " SAST"),
-                        buildRuleRow("Return Date", "Not provided")
+                        buildRuleRow("Departure Date", depDateStr),
+                        buildRuleRow("Departure Time", flight.getDepartureTime() + (origZoneAbbr.isEmpty() ? "" : " " + origZoneAbbr)),
+                        buildRuleRow("Arrival Time", flight.getArrivalTime() + (destZoneAbbr.isEmpty() ? "" : " " + destZoneAbbr)),
+                        buildRuleRow("Return Date", "One way")
                 );
             }
             case "Baggage rules" -> {
-                contentBox.getChildren().addAll(
-                        buildRuleRow("Cabin Baggage", "1 carry-on bag (up to 7 kg) + 1 personal item included"),
-                        buildRuleRow("Checked Baggage", "1 checked bag (up to 23 kg) included free of charge"),
-                        buildRuleRow("Oversized Bags", "Available for purchase at check-in counter"),
-                        buildRuleRow("Sports Equipment", "Not provided")
-                );
+                for (FarePolicy.PolicyRule r : FarePolicy.getBaggageRules()) {
+                    contentBox.getChildren().add(buildRuleRow(r.label(), r.value()));
+                }
             }
             case "Cancellation rules" -> {
-                contentBox.getChildren().addAll(
-                        buildRuleRow("Free Cancellation", "Within 24 hours of booking for full refund"),
-                        buildRuleRow("Flight Changes", "Permitted up to 2 hours before departure (fare difference applies)"),
-                        buildRuleRow("No-Show Policy", "Ticket non-refundable if not cancelled prior to departure"),
-                        buildRuleRow("Refund Method", "Original payment method within 5-7 business days")
-                );
+                for (FarePolicy.PolicyRule r : FarePolicy.getCancellationRules()) {
+                    contentBox.getChildren().add(buildRuleRow(r.label(), r.value()));
+                }
             }
         }
 
@@ -732,32 +787,39 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         VBox flightBlock = new VBox(2);
         flightBlock.setPrefWidth(90);
+        flightBlock.setMinWidth(Region.USE_PREF_SIZE);
         Label flLabel = new Label(flNo);
         flLabel.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #ffffff;");
+        flLabel.setMinWidth(Region.USE_PREF_SIZE);
         Label planeLabel = new Label(plane);
         planeLabel.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.58);");
+        planeLabel.setMinWidth(Region.USE_PREF_SIZE);
         flightBlock.getChildren().addAll(flLabel, planeLabel);
 
         VBox origBlock = new VBox(2);
-        origBlock.setPrefWidth(125);
+        origBlock.setPrefWidth(140);
+        origBlock.setMinWidth(Region.USE_PREF_SIZE);
         Label origAp = new Label(origAirport);
         origAp.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.58);");
+        origAp.setMinWidth(Region.USE_PREF_SIZE);
         Label origTm = new Label(origTime);
         origTm.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #ffffff;");
+        origTm.setMinWidth(Region.USE_PREF_SIZE);
         origBlock.getChildren().addAll(origAp, origTm);
 
         HBox path = new HBox(8);
         path.setAlignment(Pos.CENTER);
         path.setMaxWidth(Double.MAX_VALUE);
-        path.setPrefWidth(220);
+        path.setPrefWidth(120);
+        path.setMinWidth(50);
         HBox.setHgrow(path, Priority.ALWAYS);
 
         Region dot = new Region();
         dot.getStyleClass().add("flight-path-dot");
         Region dash1 = new Region();
         dash1.getStyleClass().add("flight-path-line");
-        dash1.setMinWidth(10);
-        dash1.setPrefWidth(60);
+        dash1.setMinWidth(6);
+        dash1.setPrefWidth(24);
         dash1.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(dash1, Priority.ALWAYS);
         Label dur = new Label(duration);
@@ -765,8 +827,8 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         dur.setMinWidth(Region.USE_PREF_SIZE);
         Region dash2 = new Region();
         dash2.getStyleClass().add("flight-path-line");
-        dash2.setMinWidth(10);
-        dash2.setPrefWidth(60);
+        dash2.setMinWidth(6);
+        dash2.setPrefWidth(24);
         dash2.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(dash2, Priority.ALWAYS);
         SVGPath planeIcon = new SVGPath();
@@ -775,12 +837,15 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         path.getChildren().addAll(dot, dash1, dur, dash2, planeIcon);
 
         VBox destBlock = new VBox(2);
-        destBlock.setPrefWidth(125);
+        destBlock.setPrefWidth(140);
+        destBlock.setMinWidth(Region.USE_PREF_SIZE);
         destBlock.setAlignment(Pos.CENTER_RIGHT);
         Label destAp = new Label(destAirport);
         destAp.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.58);");
+        destAp.setMinWidth(Region.USE_PREF_SIZE);
         Label destTm = new Label(destTime);
         destTm.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: #ffffff;");
+        destTm.setMinWidth(Region.USE_PREF_SIZE);
         destBlock.getChildren().addAll(destAp, destTm);
 
         row.getChildren().addAll(flightBlock, origBlock, path, destBlock);

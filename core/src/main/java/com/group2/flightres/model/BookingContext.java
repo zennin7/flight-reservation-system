@@ -19,6 +19,14 @@ public class BookingContext {
     private String flightNumber;
     private String origin;
     private String destination;
+    private String originCode;
+    private String originAirport;
+    private String originCity;
+    private String destinationCode;
+    private String destinationAirport;
+    private String destinationCity;
+    private String duration;
+    private String aircraftModel;
     private String departureDate;
     private String departureTime;
     private String arrivalTime;
@@ -53,6 +61,30 @@ public class BookingContext {
 
     public String getDestination() { return destination; }
     public void setDestination(String destination) { this.destination = destination; }
+
+    public String getOriginCode() { return originCode; }
+    public void setOriginCode(String originCode) { this.originCode = originCode; }
+
+    public String getOriginAirport() { return originAirport; }
+    public void setOriginAirport(String originAirport) { this.originAirport = originAirport; }
+
+    public String getOriginCity() { return originCity; }
+    public void setOriginCity(String originCity) { this.originCity = originCity; }
+
+    public String getDestinationCode() { return destinationCode; }
+    public void setDestinationCode(String destinationCode) { this.destinationCode = destinationCode; }
+
+    public String getDestinationAirport() { return destinationAirport; }
+    public void setDestinationAirport(String destinationAirport) { this.destinationAirport = destinationAirport; }
+
+    public String getDestinationCity() { return destinationCity; }
+    public void setDestinationCity(String destinationCity) { this.destinationCity = destinationCity; }
+
+    public String getDuration() { return duration; }
+    public void setDuration(String duration) { this.duration = duration; }
+
+    public String getAircraftModel() { return aircraftModel; }
+    public void setAircraftModel(String aircraftModel) { this.aircraftModel = aircraftModel; }
 
     public String getDepartureDate() { return departureDate; }
     public void setDepartureDate(String departureDate) { this.departureDate = departureDate; }
