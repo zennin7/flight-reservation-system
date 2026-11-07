@@ -44,7 +44,7 @@ public class GlassSeatMapScreenshotRunner extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        System.setProperty("skyvoyage.screenshots", "true");
+        System.setProperty("altitude.screenshots", "true");
         FontLoader.loadFonts();
 
         BookingContext ctx = new BookingContext();

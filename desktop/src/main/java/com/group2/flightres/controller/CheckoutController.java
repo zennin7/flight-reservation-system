@@ -10,6 +10,7 @@ import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.PaymentResult;
 import com.group2.flightres.service.PaymentService;
 import com.group2.flightres.service.SimulatedPaymentGateway;
+import com.group2.flightres.util.DestinationPhotos;
 import com.group2.flightres.util.GlassCheckoutBridge;
 import com.group2.flightres.util.ValidationUtil;
 import javafx.application.Platform;
@@ -19,6 +20,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +83,9 @@ public class CheckoutController implements WizardStepController {
     @FXML private Label tripSeatLabel;
 
     @FXML private StepperBar stepperBar;
+    @FXML private ImageView tripHeroImageView;
+    @FXML private Label tripOriginSubLabel;
+    @FXML private Label tripDestSubLabel;
 
     private final BookingService bookingService;
     private final PaymentService paymentService;
@@ -155,31 +160,45 @@ public class CheckoutController implements WizardStepController {
             tripOriginDestLabel.setText(resolveDestinationCity(dest));
         }
 
+        // Sub-labels for Origin and Destination
+        if (tripOriginSubLabel != null) {
+            tripOriginSubLabel.setText(bookingContext.getOrigin() != null ? bookingContext.getOrigin() : "");
+        }
+        if (tripDestSubLabel != null) {
+            tripDestSubLabel.setText(bookingContext.getDestination() != null ? bookingContext.getDestination() : "");
+        }
+
         // Times
         String depTime = bookingContext.getDepartureTime();
         if (tripDepTimeLabel != null) {
-            tripDepTimeLabel.setText((depTime != null && !depTime.isBlank()) ? depTime : "06:30");
+            tripDepTimeLabel.setText((depTime != null && !depTime.isBlank()) ? depTime : "");
         }
         String arrTime = bookingContext.getArrivalTime();
         if (tripArrTimeLabel != null) {
-            tripArrTimeLabel.setText((arrTime != null && !arrTime.isBlank()) ? arrTime : "08:35");
+            tripArrTimeLabel.setText((arrTime != null && !arrTime.isBlank()) ? arrTime : "");
+        }
+
+        // Trip Hero Photo
+        if (tripHeroImageView != null) {
+            String destCode = extractAirportCode(dest);
+            DestinationPhotos.getImage(destCode).ifPresent(tripHeroImageView::setImage);
         }
 
         // Flight number
         String flightNo = bookingContext.getFlightNumber();
         if (tripFlightLabel != null) {
-            tripFlightLabel.setText((flightNo != null && !flightNo.isBlank()) ? flightNo : "FL 204");
+            tripFlightLabel.setText((flightNo != null && !flightNo.isBlank()) ? flightNo : "");
         }
 
         // Seat label
         String seatDisp = bookingContext.getSeatDisplay();
         if (tripSeatLabel != null) {
             tripSeatLabel.setText((seatDisp != null && !seatDisp.isBlank() && !"None".equals(seatDisp))
-                    ? seatDisp : "9E · Economy");
+                    ? seatDisp : "");
         }
         if (orderSummaryBadge != null) {
             orderSummaryBadge.setText((seatDisp != null && !seatDisp.isBlank() && !"None".equals(seatDisp))
-                    ? "Seat " + seatDisp : "Seat 9E · Economy");
+                    ? "Seat " + seatDisp : "");
         }
 
         // Baseline preserved labels
@@ -189,12 +208,12 @@ public class CheckoutController implements WizardStepController {
     }
 
     private void populatePriceSummary() {
-        BigDecimal base = bookingContext.getBaseFare() != null ? bookingContext.getBaseFare() : new BigDecimal("1200");
+        BigDecimal base = bookingContext.getBaseFare() != null ? bookingContext.getBaseFare() : BigDecimal.ZERO;
         if (bookingContext.getClassMultiplier() != null && bookingContext.getClassMultiplier().compareTo(BigDecimal.ONE) > 0) {
             base = base.multiply(bookingContext.getClassMultiplier());
         }
-        BigDecimal demand = bookingContext.getDemandPricing() != null ? bookingContext.getDemandPricing() : new BigDecimal("180");
-        BigDecimal taxes = bookingContext.getTaxesAndFees() != null ? bookingContext.getTaxesAndFees() : new BigDecimal("142");
+        BigDecimal demand = bookingContext.getDemandPricing() != null ? bookingContext.getDemandPricing() : BigDecimal.ZERO;
+        BigDecimal taxes = bookingContext.getTaxesAndFees() != null ? bookingContext.getTaxesAndFees() : BigDecimal.ZERO;
         BigDecimal total = bookingContext.getTotalPrice() != null && bookingContext.getTotalPrice().compareTo(BigDecimal.ZERO) > 0
                 ? bookingContext.getTotalPrice() : base.add(demand).add(taxes);
 
@@ -317,6 +336,11 @@ public class CheckoutController implements WizardStepController {
 
     @FXML
     public void handleConfirm() {
+        if (bookingContext == null || bookingContext.getFlightId() == null
+                || bookingContext.getSelectedSeats() == null || bookingContext.getSelectedSeats().isEmpty()) {
+            showAlert("Incomplete Booking", "No flight or seat selected. Please return to flight search.");
+            return;
+        }
         // 1. Resolve passenger details
         String first = (firstNameField != null && firstNameField.getText() != null)
                 ? firstNameField.getText().trim() : "";
@@ -485,7 +509,7 @@ public class CheckoutController implements WizardStepController {
     private void showAlert(String header, String message) {
         this.lastAlertMessage = message;
         logger.warn("Checkout Alert [{}]: {}", header, message);
-        if (!Boolean.getBoolean("skyvoyage.testing") && !Boolean.getBoolean("skyvoyage.screenshots")) {
+        if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
             Alert alert = new Alert(Alert.AlertType.WARNING, message);
             alert.setHeaderText(header);
             alert.showAndWait();
@@ -571,4 +595,16 @@ public class CheckoutController implements WizardStepController {
     public PasswordField getCvvField() { return cvvField; }
     public Button getConfirmBookingButton() { return confirmBookingButton; }
     public Label getHoldTimerLabel() { return holdTimerLabel; }
+
+    private String extractAirportCode(String dest) {
+        if (dest == null || dest.isBlank()) return "";
+        int open = dest.lastIndexOf('(');
+        int close = dest.lastIndexOf(')');
+        if (open >= 0 && close > open) {
+            return dest.substring(open + 1, close).trim().toUpperCase();
+        }
+        return dest.trim().toUpperCase();
+    }
+
+    public ImageView getTripHeroImageView() { return tripHeroImageView; }
 }

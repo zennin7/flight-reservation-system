@@ -29,7 +29,7 @@ class CheckoutControllerTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyvoyage.testing", "true");
+        System.setProperty("altitude.testing", "true");
         try {
             Platform.startup(() -> {});
         } catch (IllegalStateException ignored) {

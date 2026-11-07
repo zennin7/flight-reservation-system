@@ -26,6 +26,7 @@ public class BookingRecord {
     private String passportNumber;
     private String seatLabel;
     private SeatClass seatClass;
+    private String departureDate;
 
     public BookingRecord() {}
 
@@ -79,4 +80,7 @@ public class BookingRecord {
 
     public SeatClass getSeatClass() { return seatClass; }
     public void setSeatClass(SeatClass seatClass) { this.seatClass = seatClass; }
+
+    public String getDepartureDate() { return departureDate; }
+    public void setDepartureDate(String departureDate) { this.departureDate = departureDate; }
 }

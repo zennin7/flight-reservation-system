@@ -42,17 +42,24 @@ public final class BarcodeGenerator {
         barcode.setX(moduleWidth);
 
         java.awt.Image awtImg = barcode.createAwtImage(barColor, bgColor);
-        int rawW = awtImg.getWidth(null);
-        int rawH = awtImg.getHeight(null);
-        if (rawW <= 0 || rawH <= 0) {
-            rawW = (int) (105 * moduleWidth);
-            rawH = barHeight;
+        int barModules = awtImg.getWidth(null);
+        if (barModules <= 0) {
+            barModules = 101;
         }
 
-        // Standard Code 128 requires a quiet zone margin (min 10 modules) on both ends
-        int quietZone = (int) Math.ceil(10 * moduleWidth);
-        int totalW = rawW + (2 * quietZone);
-        int totalH = rawH;
+        int scaledBarsW = (int) Math.round(barModules * moduleWidth);
+
+        // Standard Code 128 requires quiet zone (min 10 modules) on both ends,
+        // while ensuring bars fill >= 85% of total strip width.
+        float targetRatio = 0.858f;
+        int totalW = (int) Math.ceil(scaledBarsW / targetRatio);
+        int quietZone = (totalW - scaledBarsW) / 2;
+        int minQuietZone = (int) Math.ceil(10 * Math.min(moduleWidth, 2.0f));
+        if (quietZone < minQuietZone) {
+            quietZone = minQuietZone;
+            totalW = scaledBarsW + (2 * quietZone);
+        }
+        int totalH = barHeight;
 
         BufferedImage bimg = new BufferedImage(totalW, totalH, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = bimg.createGraphics();
@@ -62,7 +69,7 @@ public final class BarcodeGenerator {
         }
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g2.drawImage(awtImg, quietZone, 0, null);
+        g2.drawImage(awtImg, quietZone, 0, scaledBarsW, totalH, null);
         g2.dispose();
         return bimg;
     }

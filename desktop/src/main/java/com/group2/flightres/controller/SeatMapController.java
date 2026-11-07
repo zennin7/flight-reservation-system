@@ -50,7 +50,7 @@ public class SeatMapController implements WizardStepController {
     }
 
     public static boolean isPreselectForScreenshots() {
-        return preselectForScreenshots || Boolean.getBoolean("skyvoyage.screenshots");
+        return preselectForScreenshots || Boolean.getBoolean("altitude.screenshots");
     }
 
     private final SeatMapService seatMapService = new SeatMapService();

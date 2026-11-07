@@ -1449,14 +1449,14 @@
 
 .ticket-airport-code {
     -fx-font-family: 'Inter', sans-serif;
-    -fx-font-size: 60px;
+    -fx-font-size: 48px;
     -fx-font-weight: 700;
     -fx-text-fill: #ffffff;
 }
 
 .ticket-city-time {
     -fx-font-family: 'Inter', sans-serif;
-    -fx-font-size: 14px;
+    -fx-font-size: 12px;
     -fx-text-fill: rgba(255, 255, 255, 0.60);
 }
 
@@ -1579,4 +1579,100 @@
     -fx-border-radius: 24px;
     -fx-border-width: 1px;
     -fx-padding: 40px;
+}
+
+/* =============================================================================
+   REUSABLE TICKET VIEW COMPONENT (Screen 05 Confirmation & Screen 06 Boarding Pass)
+   ============================================================================= */
+
+.ticket-view-root {
+    -fx-alignment: center-left;
+}
+
+.ticket-photo-panel {
+    -fx-background-radius: 24px 0 0 24px;
+    -fx-background-color: #0b1220;
+}
+
+.ticket-photo-gradient {
+    -fx-background-color: linear-gradient(to bottom, rgba(11, 18, 32, 0.15) 0%, rgba(11, 18, 32, 0.88) 100%);
+    -fx-background-radius: 24px 0 0 24px;
+}
+
+.ticket-photo-gradient-fallback {
+    -fx-background-color: linear-gradient(to bottom, #0b1220 0%, #151e30 60%, rgba(212, 166, 60, 0.20) 100%);
+    -fx-background-radius: 24px 0 0 24px;
+}
+
+.ticket-brand-plane {
+    -fx-fill: none;
+    -fx-stroke: #d4a63c;
+    -fx-stroke-width: 1.8px;
+}
+
+.ticket-brand-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.14em;
+    -fx-text-fill: #ffffff;
+}
+
+.ticket-welcome-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 10px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.18em;
+    -fx-text-fill: rgba(255, 255, 255, 0.75);
+}
+
+.ticket-welcome-city {
+    -fx-font-family: 'Lora Medium', 'Lora SemiBold', 'Lora', Georgia, serif;
+    -fx-font-size: 21px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #ffffff;
+}
+
+
+.ticket-barcode-strip {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 6px;
+    -fx-padding: 0;
+    -fx-alignment: center;
+}
+
+/* Responsive ScrollPane for Confirmation Screen */
+.confirmation-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.confirmation-scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.confirmation-scroll-pane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+
+.confirmation-scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: rgba(255, 255, 255, 0.25);
+    -fx-background-radius: 4px;
+}
+
+.confirmation-scroll-pane .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: rgba(212, 166, 60, 0.50);
+}
+
+.confirmation-scroll-pane .scroll-bar:vertical .track,
+.confirmation-scroll-pane .scroll-bar:vertical .increment-button,
+.confirmation-scroll-pane .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-opacity: 0;
+    -fx-padding: 0;
 }

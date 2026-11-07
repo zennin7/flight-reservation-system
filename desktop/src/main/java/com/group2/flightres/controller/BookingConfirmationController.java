@@ -2,6 +2,8 @@ package com.group2.flightres.controller;
 
 import com.group2.flightres.config.BoardingPolicy;
 import com.group2.flightres.config.BrandConfig;
+import com.group2.flightres.component.TicketView;
+import com.group2.flightres.model.TicketData;
 import com.group2.flightres.util.FlightDateFormatter;
 import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.model.BookingContext;
@@ -13,6 +15,10 @@ import com.group2.flightres.util.IcsCalendarGenerator;
 import com.group2.flightres.util.Motion;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -20,6 +26,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -53,9 +60,18 @@ public class BookingConfirmationController implements WizardStepController {
     private static final Logger logger = LoggerFactory.getLogger(BookingConfirmationController.class);
 
     // Containers
+    @FXML private StackPane cardMarginWrapper;
     @FXML private VBox errorContainer;
     @FXML private VBox confirmedContainer;
     @FXML private Button errorBackButton;
+    @FXML private ScrollPane confirmationScrollPane;
+    @FXML private StackPane scrollContentRoot;
+    @FXML private HBox twoColumnBox;
+    @FXML private VBox singleColumnBox;
+    @FXML private VBox sidebarContainer;
+    @FXML private VBox paymentBox;
+    @FXML private VBox nextStepsBox;
+    @FXML private HBox buttonRow;
 
     // Header controls
     @FXML private Label confirmationTitleLabel;
@@ -64,6 +80,7 @@ public class BookingConfirmationController implements WizardStepController {
     @FXML private Label avatarInitialsLabel;
 
     // Ticket controls
+    @FXML private TicketView ticketView;
     @FXML private StackPane ticketWrapperPane;
     @FXML private HBox ticketCardBox;
     @FXML private Label cabinBadgeLabel;
@@ -118,11 +135,10 @@ public class BookingConfirmationController implements WizardStepController {
         if (downloadPdfButton != null) Motion.attachHoverLift(downloadPdfButton);
         if (addToCalendarButton != null) Motion.attachHoverLift(addToCalendarButton);
         if (errorBackButton != null) Motion.attachHoverLift(errorBackButton);
+        setupResponsiveListeners();
 
         // Position ticket perforation notches dynamically on stub width
-        if (ticketWrapperPane != null && stubBox != null) {
-            ticketWrapperPane.widthProperty().addListener((obs, oldVal, newVal) -> updateNotchPositions());
-        }
+        // Notches managed inside TicketView
     }
 
     private void updateNotchPositions() {
@@ -194,72 +210,19 @@ public class BookingConfirmationController implements WizardStepController {
             cabinBadgeLabel.setText(seatCls == SeatClass.FIRST ? "First Class" : "Economy");
         }
 
-        String originStr = bookingContext.getOrigin();
-        String destStr = bookingContext.getDestination();
-        String originCode = extractAirportCode(originStr, "JNB");
-        String destCode = extractAirportCode(destStr, "CPT");
-        String originCity = resolveCityName(originStr, originCode);
-        String destCity = resolveCityName(destStr, destCode);
-
-        String depTime = bookingContext.getDepartureTime() != null ? bookingContext.getDepartureTime() : "06:30";
-        String arrTime = bookingContext.getArrivalTime() != null ? bookingContext.getArrivalTime() : "08:35";
-
-        if (originCodeLabel != null) originCodeLabel.setText(originCode);
-        if (originCityTimeLabel != null) originCityTimeLabel.setText(originCity + " · " + depTime);
-
-        if (destCodeLabel != null) destCodeLabel.setText(destCode);
-        if (destCityTimeLabel != null) destCityTimeLabel.setText(destCity + " · " + arrTime);
-
-        if (durationLabel != null) {
-            durationLabel.setText(calculateDuration(depTime, arrTime));
-        }
-
-        // Grid fields
-        if (passengerNameLabel != null) {
-            passengerNameLabel.setText(passengerName != null && !passengerName.isBlank() ? passengerName : "Passenger");
-        }
-        if (flightNumberLabel != null) {
-            String fn = bookingContext.getFlightNumber();
-            flightNumberLabel.setText(fn != null && !fn.isBlank() ? fn : "FL 204");
-        }
-        if (flightDateLabel != null) {
-            flightDateLabel.setText(FlightDateFormatter.format(bookingContext.getDepartureDate()));
-        }
-        if (boardingTimeLabel != null) {
-            boardingTimeLabel.setText(BoardingPolicy.formatBoardingTime(depTime));
-        }
-
-        // Real Code 128 Barcode Image: crisp, no smoothing blur, filling ticket-body width
-        if (barcodeImageView != null) {
+        // 3. Populate Reusable TicketView Component
+        if (ticketView != null && bookingContext != null) {
             try {
-                if (barcodeImageView.getParent() instanceof Region parentRegion) {
-                    barcodeImageView.fitWidthProperty().bind(parentRegion.widthProperty());
-                }
-                BufferedImage bimg = BarcodeGenerator.generateCode128Image(pnr, 48, 4.0f, Color.WHITE, new Color(0, 0, 0, 0));
-                if (bimg != null) {
-                    barcodeImageView.setImage(toFXImage(bimg));
-                }
-            } catch (Exception bex) {
-                logger.warn("Could not generate barcode image: {}", bex.getMessage());
+                ticketView.setBooking(TicketData.from(bookingContext));
+            } catch (Exception e) {
+                logger.error("Failed to populate TicketView from context", e);
             }
         }
 
-        // 4. Populate Ticket Stub (SEAT top, GATE/note middle, note bottom)
-        String seat = bookingContext.getSeatLabel();
-        if (stubSeatLabel != null) {
-            stubSeatLabel.setText(seat != null && !seat.isBlank() ? seat : "9E");
-        }
-        if (gateValueLabel != null) {
-            gateValueLabel.setText("Shown at the airport");
-        }
-        if (gateNoteLabel != null) {
-            gateNoteLabel.setText(BoardingPolicy.GATE_NOTE + ".");
-        }
-
         // 5. Populate Payment Summary: THREE rows (Base fare, Demand pricing, Taxes and fees) then Paid
-        BigDecimal base = bookingContext.getBaseFare() != null ? bookingContext.getBaseFare() : new BigDecimal("1200.00");
-        BigDecimal demand = bookingContext.getDemandPricing() != null ? bookingContext.getDemandPricing() : new BigDecimal("180.00");
-        BigDecimal taxes = bookingContext.getTaxesAndFees() != null ? bookingContext.getTaxesAndFees() : new BigDecimal("142.00");
+        BigDecimal base = bookingContext.getBaseFare() != null ? bookingContext.getBaseFare() : BigDecimal.ZERO;
+        BigDecimal demand = bookingContext.getDemandPricing() != null ? bookingContext.getDemandPricing() : BigDecimal.ZERO;
+        BigDecimal taxes = bookingContext.getTaxesAndFees() != null ? bookingContext.getTaxesAndFees() : BigDecimal.ZERO;
         BigDecimal total = bookingContext.getTotalPrice() != null ? bookingContext.getTotalPrice() : base.add(demand).add(taxes);
 
         if (baseFareLabel != null) baseFareLabel.setText(formatExactPrice(base));
@@ -268,8 +231,13 @@ public class BookingConfirmationController implements WizardStepController {
         if (totalPaidLabel != null) totalPaidLabel.setText(formatTotalText(total));
 
         // 6. Populate What Happens Next Timeline: Bag drop uses airport NAME from DB
+        String seat = bookingContext.getSeatLabel();
+        String depTime = bookingContext.getDepartureTime();
+        String originStr = bookingContext.getOrigin();
+        String originCode = extractAirportCode(originStr, "");
+
         if (timelineSeatConfirmedLabel != null) {
-            timelineSeatConfirmedLabel.setText("Seat " + (seat != null ? seat : "9E") + " is yours");
+            timelineSeatConfirmedLabel.setText(seat != null && !seat.isBlank() ? "Seat " + seat + " is yours" : "");
         }
         if (timelineCheckinLabel != null) {
             timelineCheckinLabel.setText(BoardingPolicy.formatCheckinOpens(bookingContext.getDepartureDate(), depTime));
@@ -421,7 +389,7 @@ public class BookingConfirmationController implements WizardStepController {
             successAlert.setTitle("Boarding Pass Downloaded");
             successAlert.setHeaderText("Success!");
             successAlert.setContentText("Boarding pass successfully saved to:\n" + targetFile.getAbsolutePath());
-            if (!Boolean.getBoolean("skyvoyage.testing") && !Boolean.getBoolean("skyvoyage.screenshots")) {
+            if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
                 successAlert.show();
             }
 
@@ -439,7 +407,7 @@ public class BookingConfirmationController implements WizardStepController {
             errorAlert.setTitle("Download Failed");
             errorAlert.setHeaderText("Error Generating PDF");
             errorAlert.setContentText("Could not create boarding pass: " + e.getMessage());
-            if (!Boolean.getBoolean("skyvoyage.testing") && !Boolean.getBoolean("skyvoyage.screenshots")) {
+            if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
                 errorAlert.showAndWait();
             }
         }
@@ -474,7 +442,7 @@ public class BookingConfirmationController implements WizardStepController {
             successAlert.setTitle("Calendar Event Saved");
             successAlert.setHeaderText("Success!");
             successAlert.setContentText("Calendar event successfully saved to:\n" + targetFile.getAbsolutePath());
-            if (!Boolean.getBoolean("skyvoyage.testing") && !Boolean.getBoolean("skyvoyage.screenshots")) {
+            if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
                 successAlert.show();
             }
 
@@ -484,7 +452,7 @@ public class BookingConfirmationController implements WizardStepController {
             errorAlert.setTitle("Calendar Export Failed");
             errorAlert.setHeaderText("Error Creating Calendar Event");
             errorAlert.setContentText("Could not create .ics file: " + e.getMessage());
-            if (!Boolean.getBoolean("skyvoyage.testing") && !Boolean.getBoolean("skyvoyage.screenshots")) {
+            if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
                 errorAlert.showAndWait();
             }
         }
@@ -510,7 +478,7 @@ public class BookingConfirmationController implements WizardStepController {
     private void showComingSoonAlert(String feature) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, feature + " isn't available yet.");
         alert.setHeaderText("Coming soon");
-        if (!Boolean.getBoolean("skyvoyage.testing") && !Boolean.getBoolean("skyvoyage.screenshots")) {
+        if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
             alert.showAndWait();
         }
     }
@@ -520,14 +488,289 @@ public class BookingConfirmationController implements WizardStepController {
     public VBox getErrorContainer() { return errorContainer; }
     public VBox getConfirmedContainer() { return confirmedContainer; }
     public Label getBookingRefLabel() { return bookingRefLabel; }
-    public Label getPassengerNameLabel() { return passengerNameLabel; }
-    public Label getStubSeatLabel() { return stubSeatLabel; }
+    public Label getPassengerNameLabel() { return ticketView != null ? ticketView.getPassengerNameLabel() : null; }
+    public Label getStubSeatLabel() { return ticketView != null ? ticketView.getStubSeatLabel() : null; }
     public Label getDemandPricingLabel() { return demandPricingLabel; }
     public Label getTotalPaidLabel() { return totalPaidLabel; }
-    public Label getGateValueLabel() { return gateValueLabel; }
-    public Label getGateNoteLabel() { return gateNoteLabel; }
-    public ImageView getBarcodeImageView() { return barcodeImageView; }
+    public Label getGateValueLabel() { return ticketView != null ? ticketView.getGateValueLabel() : null; }
+    public Label getGateNoteLabel() { return ticketView != null ? ticketView.getGateNoteLabel() : null; }
+    public TicketView getTicketView() { return ticketView; }
+    public ImageView getBarcodeImageView() { return ticketView != null ? ticketView.getBarcodeImageView() : null; }
     public Button getDownloadPdfButton() { return downloadPdfButton; }
     public Button getAddToCalendarButton() { return addToCalendarButton; }
     public Button getManageBookingButton() { return manageBookingButton; }
+
+    private boolean updatingLayout = false;
+
+    private void setupResponsiveListeners() {
+        if (confirmationScrollPane != null) {
+            confirmationScrollPane.viewportBoundsProperty().addListener((obs, oldVp, newVp) -> {
+                if (newVp != null && newVp.getWidth() > 0 && newVp.getHeight() > 0) {
+                    Scene sc = confirmationScrollPane.getScene();
+                    double sw = sc != null ? sc.getWidth() : newVp.getWidth();
+                    double sh = sc != null ? sc.getHeight() : newVp.getHeight();
+                    updateResponsiveLayout(sw, sh);
+                }
+            });
+        }
+        if (confirmedContainer != null) {
+            confirmedContainer.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                if (newScene != null) {
+                    newScene.widthProperty().addListener((o, oldW, newW) ->
+                            updateResponsiveLayout(newW.doubleValue(), newScene.getHeight()));
+                    newScene.heightProperty().addListener((o, oldH, newH) ->
+                            updateResponsiveLayout(newScene.getWidth(), newH.doubleValue()));
+                    Platform.runLater(() -> updateResponsiveLayout(newScene.getWidth(), newScene.getHeight()));
+                }
+            });
+        }
+    }
+
+    /**
+     * Updates the layout dynamically:
+     * - width >= 1100: Two-column layout (ticket left, sidebar right).
+     * - width < 1100: Single-column layout (sidebar stacked under ticket, scrollable).
+     * Sizes everything from scrollPane.viewportBounds, reserving a 16px gutter so the
+     * scrollbar never overlaps content. In TWO_COLUMN mode:
+     * scale = clamp(min(widthFit, heightFit), 0.90, 1.25), and sidebarContainer is no taller than ticket.
+     */
+    public void updateResponsiveLayout(double sceneWidth, double sceneHeight) {
+        if (sceneWidth <= 0 || updatingLayout) return;
+        updatingLayout = true;
+        try {
+            boolean isTwoColumn = sceneWidth >= 1100.0;
+            double outerMarginH = (sceneWidth < 1200.0) ? 14.0 : 28.0;
+            double cardPadH = (sceneWidth < 1200.0) ? 14.0 : 24.0;
+            double cardPadV = (sceneHeight < 750.0) ? 8.0 : 16.0;
+            double cardMarginV = (sceneHeight < 750.0) ? 4.0 : 12.0;
+            double cardSpacing = (sceneHeight < 750.0) ? 8.0 : 12.0;
+
+            if (cardMarginWrapper != null) {
+                VBox.setMargin(cardMarginWrapper, new Insets(2, outerMarginH, cardMarginV, outerMarginH));
+            }
+            if (confirmedContainer != null) {
+                confirmedContainer.setStyle(String.format(Locale.US, "-fx-padding: %.0f %.0f %.0f %.0f;", cardPadV, cardPadH, cardPadV, cardPadH));
+                confirmedContainer.setSpacing(cardSpacing);
+            }
+
+            double GUTTER = 16.0;
+            double vpWidth = -1;
+            double vpHeight = -1;
+
+            if (confirmationScrollPane != null && confirmationScrollPane.getViewportBounds() != null) {
+                vpWidth = confirmationScrollPane.getViewportBounds().getWidth();
+                vpHeight = confirmationScrollPane.getViewportBounds().getHeight();
+            }
+
+            if (vpWidth <= 0) {
+                vpWidth = sceneWidth - (outerMarginH * 2.0) - (cardPadH * 2.0);
+            }
+            if (vpHeight <= 0) {
+                vpHeight = sceneHeight - 64.0 - 2.0 - cardMarginV - (cardPadV * 2.0) - 64.0 - cardSpacing;
+            }
+
+            double availWidth = Math.max(300.0, vpWidth - GUTTER);
+            boolean isLarge = sceneWidth >= 1600.0;
+
+            if (isTwoColumn) {
+                double sidebarW = isLarge ? 400.0 : ((availWidth < 1050.0) ? 295.0 : 310.0);
+                double gap = isLarge ? 22.0 : ((availWidth < 1050.0) ? 14.0 : 18.0);
+                double availForTicketW = Math.max(300.0, availWidth - sidebarW - gap);
+                double widthFit = availForTicketW / TicketView.DESIGN_WIDTH;
+                double availForTicketH = Math.max(300.0, vpHeight - 6.0);
+                double heightFit = availForTicketH / TicketView.DESIGN_HEIGHT;
+
+                double rawScale = Math.min(widthFit, heightFit);
+                double scale = Math.max(0.90, Math.min(1.25, rawScale));
+
+                if (ticketView != null) {
+                    ticketView.setCardScale(scale);
+                }
+
+                double scaledTicketW = scale * TicketView.DESIGN_WIDTH;
+                double scaledTicketH = scale * TicketView.DESIGN_HEIGHT;
+
+                double spareH = vpHeight - scaledTicketH;
+                if (scrollContentRoot != null) {
+                    scrollContentRoot.setAlignment(spareH > 2.0 ? Pos.CENTER : Pos.TOP_CENTER);
+                }
+
+                double spacing = isLarge ? 10.0 : 8.0;
+                if (sidebarContainer != null) {
+                    sidebarContainer.setPrefWidth(sidebarW);
+                    sidebarContainer.setMinWidth(sidebarW);
+                    sidebarContainer.setMaxWidth(sidebarW);
+                    sidebarContainer.setPrefHeight(scaledTicketH);
+                    sidebarContainer.setMinHeight(scaledTicketH);
+                    sidebarContainer.setMaxHeight(scaledTicketH);
+                    sidebarContainer.setSpacing(spacing);
+                }
+
+                if (paymentBox != null) {
+                    paymentBox.setStyle(isLarge ? "-fx-padding: 14 20;" : "-fx-padding: 8 14;");
+                    paymentBox.setSpacing(isLarge ? 6.0 : 4.0);
+                }
+                if (baseFareLabel != null) {
+                    baseFareLabel.setStyle(isLarge
+                            ? "-fx-font-family: 'Inter Medium'; -fx-font-size: 15px; -fx-text-fill: #ffffff;"
+                            : "-fx-font-family: 'Inter Medium'; -fx-font-size: 14px; -fx-text-fill: #ffffff;");
+                }
+                if (demandPricingLabel != null) {
+                    demandPricingLabel.setStyle(isLarge
+                            ? "-fx-font-family: 'Inter Medium'; -fx-font-size: 15px; -fx-text-fill: #ffffff;"
+                            : "-fx-font-family: 'Inter Medium'; -fx-font-size: 14px; -fx-text-fill: #ffffff;");
+                }
+                if (taxesFeesLabel != null) {
+                    taxesFeesLabel.setStyle(isLarge
+                            ? "-fx-font-family: 'Inter Medium'; -fx-font-size: 15px; -fx-text-fill: #ffffff;"
+                            : "-fx-font-family: 'Inter Medium'; -fx-font-size: 14px; -fx-text-fill: #ffffff;");
+                }
+                if (totalPaidLabel != null) {
+                    totalPaidLabel.setStyle(isLarge ? "-fx-font-size: 28px;" : "-fx-font-size: 26px;");
+                }
+
+                double dlBtnH = isLarge ? 46.0 : 40.0;
+                if (downloadPdfButton != null) {
+                    downloadPdfButton.setPrefHeight(dlBtnH);
+                    downloadPdfButton.setMinHeight(dlBtnH);
+                    downloadPdfButton.setMaxHeight(dlBtnH);
+                    downloadPdfButton.setStyle(isLarge ? "-fx-font-size: 14.5px;" : "");
+                }
+                double btnRowH = isLarge ? 42.0 : 36.0;
+                if (buttonRow != null) {
+                    buttonRow.setPrefHeight(btnRowH);
+                    buttonRow.setMinHeight(btnRowH);
+                    buttonRow.setMaxHeight(btnRowH);
+                }
+                if (addToCalendarButton != null) {
+                    addToCalendarButton.setStyle(isLarge ? "-fx-font-size: 13.5px;" : "");
+                }
+
+                double payH = isLarge ? 172.0 : 141.6;
+                double fixedH = payH + dlBtnH + btnRowH + (3.0 * spacing);
+                double flexNextStepsH = Math.max(160.0, scaledTicketH - fixedH);
+
+                if (nextStepsBox != null) {
+                    VBox.setVgrow(nextStepsBox, Priority.ALWAYS);
+                    nextStepsBox.setStyle(isLarge ? "-fx-padding: 12 18;" : "-fx-padding: 8 14;");
+                    nextStepsBox.setSpacing(isLarge ? 8.0 : 6.0);
+                    nextStepsBox.setMinHeight(160.0);
+                    nextStepsBox.setPrefHeight(flexNextStepsH);
+                    nextStepsBox.setMaxHeight(flexNextStepsH);
+                }
+
+                if (twoColumnBox != null && singleColumnBox != null && ticketView != null && sidebarContainer != null) {
+                    twoColumnBox.setAlignment(Pos.CENTER_LEFT);
+                    twoColumnBox.setSpacing(gap);
+                    double totalTwoColW = scaledTicketW + gap + sidebarW;
+                    twoColumnBox.setPrefWidth(totalTwoColW);
+                    twoColumnBox.setMinWidth(totalTwoColW);
+                    twoColumnBox.setMaxWidth(totalTwoColW);
+                    twoColumnBox.setPrefHeight(scaledTicketH);
+                    twoColumnBox.setMinHeight(scaledTicketH);
+                    twoColumnBox.setMaxHeight(scaledTicketH);
+
+                    if (!twoColumnBox.getChildren().contains(ticketView)) {
+                        singleColumnBox.getChildren().clear();
+                        singleColumnBox.setVisible(false);
+                        singleColumnBox.setManaged(false);
+                        twoColumnBox.getChildren().setAll(ticketView, sidebarContainer);
+                        twoColumnBox.setVisible(true);
+                        twoColumnBox.setManaged(true);
+                    }
+                }
+            } else {
+                if (scrollContentRoot != null) {
+                    scrollContentRoot.setAlignment(Pos.TOP_CENTER);
+                }
+
+                // Reserve 32px so centered single-column box has at least 16px left and 16px right margin
+                // ensuring node.maxX <= vpWidth - 16 and node.maxX < vbar.minX - 4
+                availWidth = Math.max(300.0, vpWidth - 32.0);
+
+                if (ticketView != null) {
+                    ticketView.scaleToAvailableWidth(availWidth);
+                }
+
+                double ticketScaledW = ticketView != null ? (ticketView.getCardScale() * TicketView.DESIGN_WIDTH) : 780.0;
+                double singleColW = Math.min(availWidth, ticketScaledW);
+
+                double spacing = 8.0;
+                if (sidebarContainer != null) {
+                    sidebarContainer.setPrefWidth(singleColW);
+                    sidebarContainer.setMinWidth(300.0);
+                    sidebarContainer.setMaxWidth(singleColW);
+                    sidebarContainer.setPrefHeight(Region.USE_COMPUTED_SIZE);
+                    sidebarContainer.setMinHeight(Region.USE_COMPUTED_SIZE);
+                    sidebarContainer.setMaxHeight(Double.MAX_VALUE);
+                    sidebarContainer.setSpacing(spacing);
+                }
+                if (paymentBox != null) {
+                    paymentBox.setStyle("-fx-padding: 8 16;");
+                    paymentBox.setSpacing(4.0);
+                }
+                if (baseFareLabel != null) {
+                    baseFareLabel.setStyle("-fx-font-family: 'Inter Medium'; -fx-font-size: 14px; -fx-text-fill: #ffffff;");
+                }
+                if (demandPricingLabel != null) {
+                    demandPricingLabel.setStyle("-fx-font-family: 'Inter Medium'; -fx-font-size: 14px; -fx-text-fill: #ffffff;");
+                }
+                if (taxesFeesLabel != null) {
+                    taxesFeesLabel.setStyle("-fx-font-family: 'Inter Medium'; -fx-font-size: 14px; -fx-text-fill: #ffffff;");
+                }
+                if (totalPaidLabel != null) {
+                    totalPaidLabel.setStyle("-fx-font-size: 26px;");
+                }
+                if (nextStepsBox != null) {
+                    nextStepsBox.setStyle("-fx-padding: 8 16;");
+                    nextStepsBox.setSpacing(6.0);
+                    nextStepsBox.setMinHeight(160.0);
+                    nextStepsBox.setPrefHeight(Region.USE_COMPUTED_SIZE);
+                    nextStepsBox.setMaxHeight(Double.MAX_VALUE);
+                }
+                if (downloadPdfButton != null) {
+                    downloadPdfButton.setPrefHeight(40.0);
+                    downloadPdfButton.setMinHeight(36.0);
+                    downloadPdfButton.setMaxHeight(44.0);
+                    downloadPdfButton.setStyle("");
+                }
+                if (buttonRow != null) {
+                    buttonRow.setPrefHeight(36.0);
+                    buttonRow.setMinHeight(32.0);
+                    buttonRow.setMaxHeight(40.0);
+                }
+                if (addToCalendarButton != null) {
+                    addToCalendarButton.setStyle("");
+                }
+
+                if (twoColumnBox != null && singleColumnBox != null && ticketView != null && sidebarContainer != null) {
+                    singleColumnBox.setAlignment(Pos.TOP_CENTER);
+                    singleColumnBox.setSpacing(12.0);
+                    singleColumnBox.setPadding(new Insets(0, 0, 16, 0));
+                    singleColumnBox.setPrefWidth(singleColW);
+                    singleColumnBox.setMaxWidth(singleColW);
+
+                    if (!singleColumnBox.getChildren().contains(ticketView)) {
+                        twoColumnBox.getChildren().clear();
+                        twoColumnBox.setVisible(false);
+                        twoColumnBox.setManaged(false);
+                        singleColumnBox.getChildren().setAll(ticketView, sidebarContainer);
+                        singleColumnBox.setVisible(true);
+                        singleColumnBox.setManaged(true);
+                    }
+                }
+            }
+        } finally {
+            updatingLayout = false;
+        }
+    }
+
+    // Additional Getters for Verifier and Testing
+    public VBox getSidebarContainer() { return sidebarContainer; }
+    public VBox getPaymentBox() { return paymentBox; }
+    public VBox getNextStepsBox() { return nextStepsBox; }
+    public ScrollPane getConfirmationScrollPane() { return confirmationScrollPane; }
+    public HBox getTwoColumnBox() { return twoColumnBox; }
+    public VBox getSingleColumnBox() { return singleColumnBox; }
+    public StackPane getCardMarginWrapper() { return cardMarginWrapper; }
 }

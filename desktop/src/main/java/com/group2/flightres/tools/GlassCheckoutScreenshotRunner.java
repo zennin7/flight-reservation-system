@@ -56,14 +56,14 @@ public class GlassCheckoutScreenshotRunner extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        System.setProperty("skyvoyage.screenshots", "true");
+        System.setProperty("altitude.screenshots", "true");
         FontLoader.loadFonts();
 
         BookingContext ctx = new BookingContext();
         ctx.setFlightId(1L);
-        ctx.setFlightNumber("FL 204");
-        ctx.setOrigin("JNB");
-        ctx.setDestination("CPT");
+        ctx.setFlightNumber("GRP 204");
+        ctx.setOrigin("Johannesburg (JNB)");
+        ctx.setDestination("Cape Town (CPT)");
         ctx.setDepartureTime("06:30");
         ctx.setArrivalTime("08:35");
         ctx.setDepartureDate("2026-11-14");

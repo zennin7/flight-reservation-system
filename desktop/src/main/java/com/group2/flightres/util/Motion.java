@@ -10,14 +10,14 @@ import javafx.util.Duration;
 /**
  * Central animation and transition helper for SkyVoyage JavaFX.
  * Conforms to the timing and easing rules of the javafx-motion skill.
- * Automatically disabled during ScreenshotRunner or when skyvoyage.motion=false.
+ * Automatically disabled during ScreenshotRunner or when altitude.motion=false.
  */
 public final class Motion {
 
-    private static boolean enabled = !Boolean.getBoolean("skyvoyage.screenshots");
+    private static boolean enabled = !Boolean.getBoolean("altitude.screenshots");
 
     public static boolean isEnabled() {
-        return enabled && !"false".equalsIgnoreCase(System.getProperty("skyvoyage.motion"));
+        return enabled && !"false".equalsIgnoreCase(System.getProperty("altitude.motion"));
     }
 
     public static void setEnabled(boolean value) {

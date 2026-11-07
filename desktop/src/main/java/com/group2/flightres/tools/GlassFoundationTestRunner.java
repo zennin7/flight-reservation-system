@@ -125,7 +125,7 @@ public class GlassFoundationTestRunner extends Application {
         glassPanel.getChildren().addAll(headline, subheadline, glassCard);
 
         // 2. Wrap inside GlassBackground with Cape Town photo
-        GlassBackground glassBg = new GlassBackground("/com/group2/flightres/photos/dest-capetown.jpg", glassPanel);
+        GlassBackground glassBg = new GlassBackground("/images/destinations/cpt.jpg", glassPanel);
 
         Scene scene = new Scene(glassBg, WIDTH, HEIGHT);
         ThemeManager.getInstance().applyGlassTheme(scene);

@@ -54,7 +54,7 @@ public class GlassBackground extends StackPane {
     private boolean enableSecondaryGlow = true;
 
     public GlassBackground() {
-        this("/com/group2/flightres/photos/dest-capetown.jpg");
+        this("/images/destinations/cpt.jpg");
     }
 
     public GlassBackground(String photoPath) {

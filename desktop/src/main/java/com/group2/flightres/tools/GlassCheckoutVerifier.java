@@ -150,7 +150,7 @@ public class GlassCheckoutVerifier extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        System.setProperty("skyvoyage.testing", "true");
+        System.setProperty("altitude.testing", "true");
         FontLoader.loadFonts();
 
         System.out.println("===================================================================");
