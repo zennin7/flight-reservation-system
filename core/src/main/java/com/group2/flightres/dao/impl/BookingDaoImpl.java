@@ -8,6 +8,7 @@ import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.service.PaymentResult;
+import com.group2.flightres.util.FlightTimes;
 import com.group2.flightres.util.PasswordUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,8 +71,8 @@ public class BookingDaoImpl implements BookingDao {
     private static final String BOOKING_SELECT_FROM = """
         SELECT b.booking_id, b.booking_ref, b.status AS booking_status, b.total_amount, b.created_at,
                f.flight_id, f.flight_number, f.departure_time, f.arrival_time,
-               origin_ap.city AS origin_city, origin_ap.iata_code AS origin_code,
-               dest_ap.city AS dest_city, dest_ap.iata_code AS dest_code,
+               origin_ap.city AS origin_city, origin_ap.iata_code AS origin_code, origin_ap.timezone AS origin_timezone,
+               dest_ap.city AS dest_city, dest_ap.iata_code AS dest_code, dest_ap.timezone AS dest_timezone,
                u.user_id, u.email AS user_email,
                bs.passenger_name, bs.passport_number,
                st.seat_row, st.seat_col, st.seat_class
@@ -398,19 +402,27 @@ public class BookingDaoImpl implements BookingDao {
         rec.setFlightId(rs.getLong("flight_id"));
         rec.setFlightNumber(rs.getString("flight_number"));
 
-        Timestamp depTs = rs.getTimestamp("departure_time");
-        if (depTs != null) {
-            rec.setDepartureInstant(depTs.toInstant());
-            rec.setDepartureTime(depTs.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm")));
-            rec.setDepartureDate(depTs.toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        String origTz = rs.getString("origin_timezone");
+        ZoneId origZone = (origTz != null && !origTz.isBlank()) ? ZoneId.of(origTz) : ZoneId.of("UTC");
+        String destTz = rs.getString("dest_timezone");
+        ZoneId destZone = (destTz != null && !destTz.isBlank()) ? ZoneId.of(destTz) : ZoneId.of("UTC");
+
+        OffsetDateTime depOdt = rs.getObject("departure_time", OffsetDateTime.class);
+        if (depOdt != null) {
+            Instant depInstant = depOdt.toInstant();
+            rec.setDepartureInstant(depInstant);
+            rec.setDepartureTime(FlightTimes.formatLocalTime(depInstant, origZone));
+            rec.setDepartureDate(FlightTimes.formatLocalDate(depInstant, origZone));
         } else {
             rec.setDepartureTime("—");
+            rec.setDepartureDate("—");
         }
 
-        Timestamp arrTs = rs.getTimestamp("arrival_time");
-        if (arrTs != null) {
-            rec.setArrivalInstant(arrTs.toInstant());
-            rec.setArrivalTime(arrTs.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+        OffsetDateTime arrOdt = rs.getObject("arrival_time", OffsetDateTime.class);
+        if (arrOdt != null) {
+            Instant arrInstant = arrOdt.toInstant();
+            rec.setArrivalInstant(arrInstant);
+            rec.setArrivalTime(FlightTimes.formatLocalTime(arrInstant, destZone));
         } else {
             rec.setArrivalTime("—");
         }

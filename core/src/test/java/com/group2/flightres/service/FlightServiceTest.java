@@ -2,7 +2,10 @@ package com.group2.flightres.service;
 
 import com.group2.flightres.dao.FlightDao;
 import com.group2.flightres.exception.ValidationException;
+import com.group2.flightres.dao.AirportDao;
+import com.group2.flightres.model.Airport;
 import com.group2.flightres.model.FlightSearchResult;
+import com.group2.flightres.model.Route;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -33,13 +36,13 @@ class FlightServiceTest {
     private static final FlightSearchResult FLIGHT_1 = new FlightSearchResult(
             1L, "GRP 204", "JNB", "O. R. Tambo International Airport", "Johannesburg", SAST,
             "CPT", "Cape Town International Airport", "Cape Town", SAST,
-            DEP1, ARR1, new BigDecimal("1200"), "Airbus A320", 149
+            DEP1, ARR1, new BigDecimal("1200"), "Airbus A320", 149, 137, 12
     );
 
     private static final FlightSearchResult FLIGHT_2 = new FlightSearchResult(
             2L, "GRP 310", "JNB", "O. R. Tambo International Airport", "Johannesburg", SAST,
             "CPT", "Cape Town International Airport", "Cape Town", SAST,
-            DEP2, ARR2, new BigDecimal("1450"), "Airbus A320", 147
+            DEP2, ARR2, new BigDecimal("1450"), "Airbus A320", 147, 135, 12
     );
 
     private static class MockFlightDao implements FlightDao {
@@ -108,5 +111,69 @@ class FlightServiceTest {
         Optional<LocalDate> next = service.nextAvailableDate("JNB", "CPT", LocalDate.of(2026, 11, 1));
         assertTrue(next.isPresent());
         assertEquals(LocalDate.of(2026, 11, 2), next.get());
+    }
+
+    @Test
+    @DisplayName("defaultRoute returns route of earliest open flight")
+    void testDefaultRouteWithOpenFlight() {
+        Airport ap1 = new Airport("JNB", "O. R. Tambo Intl", "Johannesburg", "South Africa", SAST);
+        Airport ap2 = new Airport("CPT", "Cape Town Intl", "Cape Town", "South Africa", SAST);
+        Route expectedRoute = new Route(ap1, ap2);
+
+        FlightDao mockFlightDao = new MockFlightDao() {
+            @Override
+            public Optional<Route> findEarliestOpenFlightRoute(Instant minDepartureInstant) {
+                return Optional.of(expectedRoute);
+            }
+        };
+        AirportDao mockAirportDao = () -> List.of(ap2, ap1);
+
+        FlightService service = new FlightService(mockFlightDao, mockAirportDao, TEST_CLOCK);
+        Optional<Route> routeOpt = service.defaultRoute();
+
+        assertTrue(routeOpt.isPresent());
+        assertEquals("JNB", routeOpt.get().origin().code());
+        assertEquals("CPT", routeOpt.get().destination().code());
+    }
+
+    @Test
+    @DisplayName("defaultRoute falls back to first two airports by city when no open flight")
+    void testDefaultRouteFallbackToAirports() {
+        Airport cpt = new Airport("CPT", "Cape Town Intl", "Cape Town", "South Africa", SAST);
+        Airport dur = new Airport("DUR", "King Shaka Intl", "Durban", "South Africa", SAST);
+        Airport jnb = new Airport("JNB", "O. R. Tambo Intl", "Johannesburg", "South Africa", SAST);
+
+        FlightDao mockFlightDao = new MockFlightDao() {
+            @Override
+            public Optional<Route> findEarliestOpenFlightRoute(Instant minDepartureInstant) {
+                return Optional.empty();
+            }
+        };
+        AirportDao mockAirportDao = () -> List.of(cpt, dur, jnb);
+
+        FlightService service = new FlightService(mockFlightDao, mockAirportDao, TEST_CLOCK);
+        Optional<Route> routeOpt = service.defaultRoute();
+
+        assertTrue(routeOpt.isPresent());
+        assertEquals("CPT", routeOpt.get().origin().code());
+        assertEquals("DUR", routeOpt.get().destination().code());
+    }
+
+    @Test
+    @DisplayName("defaultRoute returns empty when fewer than 2 airports exist and no open flight")
+    void testDefaultRouteEmptyWhenLessThanTwoAirports() {
+        Airport cpt = new Airport("CPT", "Cape Town Intl", "Cape Town", "South Africa", SAST);
+        FlightDao mockFlightDao = new MockFlightDao() {
+            @Override
+            public Optional<Route> findEarliestOpenFlightRoute(Instant minDepartureInstant) {
+                return Optional.empty();
+            }
+        };
+        AirportDao mockAirportDao = () -> List.of(cpt);
+
+        FlightService service = new FlightService(mockFlightDao, mockAirportDao, TEST_CLOCK);
+        Optional<Route> routeOpt = service.defaultRoute();
+
+        assertTrue(routeOpt.isEmpty());
     }
 }

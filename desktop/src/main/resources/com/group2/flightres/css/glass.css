@@ -808,8 +808,8 @@
     -fx-pref-height: 18px;
     -fx-max-width: 18px;
     -fx-max-height: 18px;
-    -fx-border-radius: 50%;
-    -fx-background-radius: 50%;
+    -fx-border-radius: 999px;
+    -fx-background-radius: 999px;
     -fx-border-color: rgba(255, 255, 255, 0.40);
     -fx-border-width: 1.5px;
     -fx-background-color: transparent;
@@ -821,10 +821,17 @@
     -fx-border-color: #d4a63c;
 }
 
-.check-tick-icon {
+.check-circle .check-tick-icon {
     -fx-stroke: #0b1220;
     -fx-stroke-width: 3.5;
     -fx-fill: transparent;
+    visibility: hidden;
+    -fx-opacity: 0;
+}
+
+.check-circle-on .check-tick-icon {
+    visibility: visible;
+    -fx-opacity: 1;
 }
 
 /* Result Cards */
@@ -1000,16 +1007,7 @@
     -fx-font-weight: 600;
 }
 
-.layover-pill {
-    -fx-background-color: #2a2f3a;
-    -fx-background-radius: 999px;
-    -fx-padding: 4px 12px;
-    -fx-font-family: 'Inter SemiBold', sans-serif;
-    -fx-font-size: 12px;
-    -fx-font-weight: 600;
-    -fx-text-fill: #ffffff;
-    -fx-alignment: center;
-}
+
 
 .glass-scroll-pane {
     -fx-background-color: transparent;
@@ -1678,22 +1676,30 @@
 }
 
 /* ===================================================================
-   FLIGHT SEARCH ERROR STATE
+   FLIGHT SEARCH EMPTY & ERROR STATE CARDS
    =================================================================== */
+.flight-search-state-card,
 .flight-search-error-card {
     -fx-alignment: center;
-    -fx-padding: 32px 24px 32px 24px;
+    -fx-padding: 36px 24px 36px 24px;
     -fx-pref-width: 824px;
     -fx-max-width: infinity;
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.10);
+    -fx-border-radius: 16px;
+    -fx-border-width: 1px;
 }
 
+.flight-search-state-text,
 .flight-search-error-text {
     -fx-font-family: 'Inter';
     -fx-font-size: 14px;
-    -fx-text-fill: rgba(255, 255, 255, 0.75);
+    -fx-text-fill: #E2E8F0;
     -fx-alignment: center;
 }
 
+.flight-search-state-btn,
 .search-retry-btn {
     -fx-font-family: 'Inter SemiBold';
     -fx-font-size: 13px;

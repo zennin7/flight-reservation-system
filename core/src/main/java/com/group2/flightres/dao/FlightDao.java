@@ -52,4 +52,11 @@ public interface FlightDao {
     default Optional<String> findAirportCity(String code) {
         return Optional.empty();
     }
+
+    /**
+     * Finds the route of the earliest scheduled flight departing on or after minDepartureInstant.
+     */
+    default Optional<com.group2.flightres.model.Route> findEarliestOpenFlightRoute(Instant minDepartureInstant) {
+        return Optional.empty();
+    }
 }

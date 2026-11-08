@@ -12,6 +12,7 @@ import java.util.Locale;
 public final class FlightTimes {
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH);
     private static final DateTimeFormatter ZONE_FORMATTER = DateTimeFormatter.ofPattern("zzz", Locale.ENGLISH);
 
     private FlightTimes() {}
@@ -24,6 +25,16 @@ public final class FlightTimes {
             return "";
         }
         return instant.atZone(zone).format(TIME_FORMATTER);
+    }
+
+    /**
+     * Formats an absolute instant to local date "yyyy-MM-dd" in the given airport time zone.
+     */
+    public static String formatLocalDate(Instant instant, ZoneId zone) {
+        if (instant == null || zone == null) {
+            return "";
+        }
+        return instant.atZone(zone).format(DATE_FORMATTER);
     }
 
     /**

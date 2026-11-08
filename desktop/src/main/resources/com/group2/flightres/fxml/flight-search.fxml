@@ -11,6 +11,7 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Priority?>
@@ -33,10 +34,10 @@
                  styleClass="flight-search-root"
                  prefWidth="1280"
                  prefHeight="860"
-                 minWidth="1280"
-                 minHeight="860">
+                 minWidth="900"
+                 minHeight="680">
 
-    <VBox alignment="TOP_CENTER" spacing="0" prefWidth="1280" prefHeight="860">
+    <VBox alignment="TOP_CENTER" spacing="0" VBox.vgrow="ALWAYS">
 
         <!-- ===================================================================
              TOP NAV (64 high, padding 0 56)
@@ -74,10 +75,7 @@
              =================================================================== -->
         <VBox styleClass="search-main-glass"
               spacing="14"
-              VBox.vgrow="ALWAYS"
-              prefWidth="1168"
-              maxWidth="1168"
-              prefHeight="760">
+              VBox.vgrow="ALWAYS">
             <VBox.margin>
                 <Insets top="4" right="56" bottom="32" left="56"/>
             </VBox.margin>
@@ -90,8 +88,8 @@
                 <!-- FROM Cell -->
                 <VBox alignment="CENTER_LEFT" spacing="3" styleClass="search-cell" HBox.hgrow="ALWAYS" prefWidth="240">
                     <Label text="From" styleClass="search-cell-muted-label"/>
-                    <Label fx:id="fromCityDisplay" text="Johannesburg" styleClass="search-cell-value-label"/>
-                    <Label fx:id="fromSubDisplay" text="JNB, O.R. Tambo International" styleClass="search-cell-sub-label"/>
+                    <Label fx:id="fromCityDisplay" text="" styleClass="search-cell-value-label"/>
+                    <Label fx:id="fromSubDisplay" text="" styleClass="search-cell-sub-label"/>
                     <!-- Invisible ComboBox for logic freeze compatibility -->
                     <ComboBox fx:id="fromCombo" visible="false" managed="false" minHeight="0" prefHeight="0" maxHeight="0"/>
                 </VBox>
@@ -116,8 +114,8 @@
                         <Insets top="14" right="18" bottom="14" left="30"/>
                     </padding>
                     <Label text="To" styleClass="search-cell-muted-label"/>
-                    <Label fx:id="toCityDisplay" text="Cape Town" styleClass="search-cell-value-label"/>
-                    <Label fx:id="toSubDisplay" text="CPT, Cape Town International" styleClass="search-cell-sub-label"/>
+                    <Label fx:id="toCityDisplay" text="" styleClass="search-cell-value-label"/>
+                    <Label fx:id="toSubDisplay" text="" styleClass="search-cell-sub-label"/>
                     <!-- Invisible ComboBox for logic freeze compatibility -->
                     <ComboBox fx:id="toCombo" visible="false" managed="false" minHeight="0" prefHeight="0" maxHeight="0"/>
                 </VBox>
@@ -125,25 +123,23 @@
                 <!-- DEPARTURE Cell -->
                 <VBox alignment="CENTER_LEFT" spacing="3" styleClass="search-cell, search-cell-border" HBox.hgrow="ALWAYS" prefWidth="180">
                     <Label text="Departure" styleClass="search-cell-muted-label"/>
-                    <Label fx:id="depDateDisplay" text="14 Nov '26" styleClass="search-cell-value-label"/>
-                    <Label fx:id="depDayDisplay" text="Friday" styleClass="search-cell-sub-label"/>
+                    <Label fx:id="depDateDisplay" text="" styleClass="search-cell-value-label"/>
+                    <Label fx:id="depDayDisplay" text="" styleClass="search-cell-sub-label"/>
                     <!-- Invisible DatePicker for logic freeze compatibility -->
                     <DatePicker fx:id="departureDatePicker" visible="false" managed="false" minHeight="0" prefHeight="0" maxHeight="0"/>
                 </VBox>
 
                 <!-- RETURN Cell -->
-                <VBox alignment="CENTER_LEFT" spacing="3" styleClass="search-cell, search-cell-border" HBox.hgrow="ALWAYS" prefWidth="180"
-                      onMouseClicked="#handleComingSoonReturnDate" style="-fx-cursor: hand;">
+                <VBox fx:id="returnCard" alignment="CENTER_LEFT" spacing="3" styleClass="search-cell, search-cell-border" HBox.hgrow="ALWAYS" prefWidth="180">
                     <Label text="Return" styleClass="search-cell-muted-label"/>
-                    <Label text="One way" styleClass="search-cell-value-label"/>
-                    <Label text="Tap to add" styleClass="search-cell-sub-label"/>
+                    <Label fx:id="returnValueDisplay" text="One way" styleClass="search-cell-value-label"/>
+                    <Label text="One-way trips only" styleClass="search-cell-sub-label"/>
                 </VBox>
 
                 <!-- TRAVELLERS AND CLASS Cell -->
-                <VBox alignment="CENTER_LEFT" spacing="3" styleClass="search-cell" HBox.hgrow="ALWAYS" prefWidth="200"
-                      onMouseClicked="#handleComingSoonTravellers" style="-fx-cursor: hand;">
+                <VBox fx:id="travellersCard" alignment="CENTER_LEFT" spacing="3" styleClass="search-cell" HBox.hgrow="ALWAYS" prefWidth="200">
                     <Label text="Travellers and class" styleClass="search-cell-muted-label"/>
-                    <Label text="1 Traveller" styleClass="search-cell-value-label"/>
+                    <Label fx:id="travellersValueDisplay" text="1 Traveller" styleClass="search-cell-value-label"/>
                     <Label text="Economy" styleClass="search-cell-sub-label"/>
                     <!-- Invisible Passengers ComboBox for logic freeze compatibility -->
                     <ComboBox fx:id="passengersCombo" visible="false" managed="false" minHeight="0" prefHeight="0" maxHeight="0"/>
@@ -165,9 +161,9 @@
 
                 <!-- FILTERS SIDEBAR (width 300) -->
                 <VBox styleClass="filters-panel" minWidth="300" prefWidth="300" maxWidth="300" spacing="10">
-                    <Label text="Filters" styleClass="filters-title"/>
+                    <Label fx:id="filtersTitleLabel" text="Filters" styleClass="filters-title"/>
 
-                    <VBox styleClass="filters-card" minWidth="300" prefWidth="300" maxWidth="300" VBox.vgrow="ALWAYS" spacing="16">
+                    <VBox fx:id="filtersCard" styleClass="filters-card" minWidth="300" prefWidth="300" maxWidth="300" VBox.vgrow="ALWAYS" spacing="16">
 
                         <!-- Section: Departure (2x2 pills) -->
                         <VBox spacing="10">
@@ -184,50 +180,31 @@
                             </GridPane>
                         </VBox>
 
-                        <!-- Section: Stops (3 pills) -->
-                        <VBox spacing="10">
-                            <Label text="Stops" styleClass="filter-section-title"/>
-                            <HBox spacing="8">
-                                <Button text="Direct" onAction="#handleFilterStops"
-                                        styleClass="pill-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                                <Button text="1 stop" onAction="#handleFilterStops"
-                                        styleClass="pill-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                                <Button text="2+" onAction="#handleFilterStops"
-                                        styleClass="pill-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                            </HBox>
-                        </VBox>
-
                         <!-- Section: Price (range slider) -->
-                        <VBox spacing="8">
+                        <VBox fx:id="priceFilterSection" spacing="8">
                             <HBox alignment="CENTER_LEFT">
                                 <Label text="Price" styleClass="filter-section-title"/>
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button text="Reset" onAction="#handleResetPrice" styleClass="filter-reset-link"/>
                             </HBox>
-                            <Slider fx:id="priceSlider" min="990" max="4850" value="4850" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
-                            <HBox alignment="CENTER_LEFT">
-                                <Label text="R 990" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
-                                <Region HBox.hgrow="ALWAYS"/>
-                                <Label text="R 4,850" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
-                            </HBox>
+                            <Label fx:id="priceFilterValueLabel" text="Max price: R 0" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.75);"/>
+                            <Slider fx:id="priceSlider" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
+                            <Label fx:id="priceSingleValueLabel" text="" visible="false" managed="false" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;"/>
                         </VBox>
 
                         <!-- Section: Flight duration (range slider) -->
-                        <VBox spacing="8">
+                        <VBox fx:id="durationFilterSection" spacing="8">
                             <HBox alignment="CENTER_LEFT">
                                 <Label text="Flight duration" styleClass="filter-section-title"/>
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button text="Reset" onAction="#handleResetDuration" styleClass="filter-reset-link"/>
                             </HBox>
-                            <Slider fx:id="durationSlider" min="120" max="400" value="400" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
-                            <HBox alignment="CENTER_LEFT">
-                                <Label text="2h 05m" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
-                                <Region HBox.hgrow="ALWAYS"/>
-                                <Label text="6h 40m" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
-                            </HBox>
+                            <Label fx:id="durationFilterValueLabel" text="Max duration: 0h 00m" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.75);"/>
+                            <Slider fx:id="durationSlider" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
+                            <Label fx:id="durationSingleValueLabel" text="" visible="false" managed="false" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;"/>
                         </VBox>
 
-                        <!-- Section: Cabin (two circular check items) -->
+                        <!-- Section: Cabin (two rows) -->
                         <VBox spacing="10">
                             <HBox alignment="CENTER_LEFT">
                                 <Label text="Cabin" styleClass="filter-section-title"/>
@@ -235,22 +212,18 @@
                                 <Button text="Reset" onAction="#handleResetCabin" styleClass="filter-reset-link"/>
                             </HBox>
                             <VBox spacing="10">
-                                <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleToggleEconomy" styleClass="cabin-check-row">
-                                    <StackPane styleClass="check-circle, check-circle-on">
+                                <HBox fx:id="economyCabinRow" alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleCabinRowEconomy" styleClass="cabin-check-row">
+                                    <StackPane fx:id="economyCheckCircle" styleClass="check-circle">
                                         <SVGPath content="M5 12l5 5 9-10" styleClass="check-tick-icon"/>
                                     </StackPane>
-                                    <Label text="Economy" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;"/>
-                                    <Region HBox.hgrow="ALWAYS"/>
-                                    <Label text="R 1,290" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                                    <Label fx:id="economyCabinLabel" text="Economy · 0 flights" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;"/>
                                 </HBox>
 
-                                <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleToggleFirstClass" styleClass="cabin-check-row">
-                                    <StackPane styleClass="check-circle, check-circle-on">
-                                        <SVGPath content="M5 12l5 5 9-10" styleClass="check-tick-icon" visible="true"/>
+                                <HBox fx:id="firstCabinRow" alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleCabinRowFirst" styleClass="cabin-check-row">
+                                    <StackPane fx:id="firstClassCheckCircle" styleClass="check-circle">
+                                        <SVGPath content="M5 12l5 5 9-10" styleClass="check-tick-icon"/>
                                     </StackPane>
-                                    <Label text="First Class" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;"/>
-                                    <Region HBox.hgrow="ALWAYS"/>
-                                    <Label text="R 2,722" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                                    <Label fx:id="firstCabinLabel" text="First Class · 0 flights" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;"/>
                                 </HBox>
                             </VBox>
                         </VBox>
@@ -259,18 +232,18 @@
                 </VBox>
 
                 <!-- RESULTS COLUMN (flex-grow) -->
-                <VBox spacing="10" HBox.hgrow="ALWAYS" minWidth="824" prefWidth="824" maxWidth="824">
+                <VBox spacing="10" HBox.hgrow="ALWAYS">
 
                     <!-- Header Row: Origin to Dest title + showing count -->
-                    <HBox alignment="BASELINE_LEFT" spacing="10" style="-fx-padding: 2px 4px;" minWidth="824" prefWidth="824" maxWidth="824">
-                        <Label fx:id="resultsTitleLabel" text="Flights from Johannesburg to Cape Town" styleClass="results-header-title" minWidth="-Infinity"/>
+                    <HBox alignment="BASELINE_LEFT" spacing="10" style="-fx-padding: 2px 4px;" HBox.hgrow="ALWAYS">
+                        <Label fx:id="resultsTitleLabel" text="Flights" styleClass="results-header-title" minWidth="-Infinity"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="resultsCountLabel" text="Showing 4 flights" styleClass="results-header-count" minWidth="-Infinity"/>
+                        <Label fx:id="resultsCountLabel" text="" styleClass="results-header-count" minWidth="-Infinity" visible="false"/>
                     </HBox>
 
                     <!-- Interactive Glass Result Cards Container -->
-                    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="glass-scroll-pane" minWidth="824" prefWidth="824" maxWidth="824" VBox.vgrow="ALWAYS">
-                        <VBox fx:id="resultsCardsContainer" spacing="10" minWidth="824" prefWidth="824" maxWidth="824">
+                    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="glass-scroll-pane" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
+                        <VBox fx:id="resultsCardsContainer" spacing="10" HBox.hgrow="ALWAYS">
                             <!-- Cards built dynamically by GlassFlightResultsBridge -->
                         </VBox>
                     </ScrollPane>

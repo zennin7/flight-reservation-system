@@ -46,7 +46,7 @@ class BookingTransactionTest {
                     1L, "GRP 204", "JNB", "O. R. Tambo Intl", "Johannesburg", ZoneId.of("Africa/Johannesburg"),
                     "CPT", "Cape Town Intl", "Cape Town", ZoneId.of("Africa/Johannesburg"),
                     Instant.parse("2026-11-02T04:30:00Z"), Instant.parse("2026-11-02T06:40:00Z"),
-                    new BigDecimal("1200"), "Airbus A320", 149
+                    new BigDecimal("1200"), "Airbus A320", 149, 137, 12
             ));
         }
     };

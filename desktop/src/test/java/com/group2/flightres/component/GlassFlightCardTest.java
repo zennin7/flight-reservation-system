@@ -63,7 +63,9 @@ class GlassFlightCardTest {
                 Instant.parse("2026-11-02T11:15:00Z"),
                 new BigDecimal("3500"),
                 "Boeing 777-300ER",
-                45
+                45,
+                35,
+                10
         );
 
         AtomicReference<Node> cardRef = new AtomicReference<>();
@@ -143,7 +145,9 @@ class GlassFlightCardTest {
                 Instant.parse("2026-11-02T09:25:00Z"),
                 new BigDecimal("1450"),
                 "Airbus A320",
-                147
+                147,
+                135,
+                12
         );
     }
 

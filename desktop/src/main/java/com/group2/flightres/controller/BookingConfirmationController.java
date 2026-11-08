@@ -333,8 +333,9 @@ public class BookingConfirmationController implements WizardStepController {
 
     private String resolveAirportName(String code, String raw) {
         String cityPart = (raw != null && raw.contains("(")) ? raw.substring(0, raw.indexOf('(')).trim() : (raw != null ? raw.trim() : "");
+        String fallback = !cityPart.isBlank() ? cityPart : (code != null ? code : "");
         return bookingService.findAirportName(code, cityPart)
-                .orElse("O. R. Tambo International Airport");
+                .orElse(fallback);
     }
 
     private String resolveCityName(String raw, String code) {

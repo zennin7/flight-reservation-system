@@ -56,7 +56,7 @@ class WebBookingFlowTest {
     private static final FlightSearchResult MOCK_FLIGHT = new FlightSearchResult(
             1L, "GRP 204", "JNB", "O. R. Tambo International Airport", "Johannesburg", SAST,
             "CPT", "Cape Town International Airport", "Cape Town", SAST,
-            MOCK_DEP, MOCK_ARR, new java.math.BigDecimal("1200"), "Airbus A320", 149
+            MOCK_DEP, MOCK_ARR, new java.math.BigDecimal("1200"), "Airbus A320", 149, 137, 12
     );
 
     private static class MockFlightDao implements FlightDao {

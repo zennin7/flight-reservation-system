@@ -29,6 +29,45 @@ public class FlightSearchResult {
     private final BigDecimal basePrice;
     private final String aircraftModel;
     private final int availableSeats;
+    private final int availableEconomy;
+    private final int availableFirst;
+
+    public FlightSearchResult(
+            Long flightId,
+            String flightNumber,
+            String originCode,
+            String originAirportName,
+            String originCity,
+            ZoneId originZone,
+            String destCode,
+            String destAirportName,
+            String destCity,
+            ZoneId destZone,
+            Instant departure,
+            Instant arrival,
+            BigDecimal basePrice,
+            String aircraftModel,
+            int availableSeats,
+            int availableEconomy,
+            int availableFirst) {
+        this.flightId = flightId;
+        this.flightNumber = flightNumber;
+        this.originCode = originCode;
+        this.originAirportName = originAirportName;
+        this.originCity = originCity;
+        this.originZone = originZone;
+        this.destCode = destCode;
+        this.destAirportName = destAirportName;
+        this.destCity = destCity;
+        this.destZone = destZone;
+        this.departure = departure;
+        this.arrival = arrival;
+        this.basePrice = basePrice;
+        this.aircraftModel = aircraftModel;
+        this.availableSeats = availableSeats;
+        this.availableEconomy = availableEconomy;
+        this.availableFirst = availableFirst;
+    }
 
     public FlightSearchResult(
             Long flightId,
@@ -46,21 +85,9 @@ public class FlightSearchResult {
             BigDecimal basePrice,
             String aircraftModel,
             int availableSeats) {
-        this.flightId = flightId;
-        this.flightNumber = flightNumber;
-        this.originCode = originCode;
-        this.originAirportName = originAirportName;
-        this.originCity = originCity;
-        this.originZone = originZone;
-        this.destCode = destCode;
-        this.destAirportName = destAirportName;
-        this.destCity = destCity;
-        this.destZone = destZone;
-        this.departure = departure;
-        this.arrival = arrival;
-        this.basePrice = basePrice;
-        this.aircraftModel = aircraftModel;
-        this.availableSeats = availableSeats;
+        this(flightId, flightNumber, originCode, originAirportName, originCity, originZone,
+                destCode, destAirportName, destCity, destZone, departure, arrival, basePrice, aircraftModel,
+                availableSeats, availableSeats, 0);
     }
 
     public Long getFlightId() { return flightId; }
@@ -78,6 +105,8 @@ public class FlightSearchResult {
     public BigDecimal getBasePrice() { return basePrice; }
     public String getAircraftModel() { return aircraftModel; }
     public int getAvailableSeats() { return availableSeats; }
+    public int getAvailableEconomy() { return availableEconomy; }
+    public int getAvailableFirst() { return availableFirst; }
 
     // Derived getters via FlightTimes for backward compatibility and formatted presentation
     public String getDepartureTime() {
@@ -104,6 +133,8 @@ public class FlightSearchResult {
         if (o == null || getClass() != o.getClass()) return false;
         FlightSearchResult that = (FlightSearchResult) o;
         return availableSeats == that.availableSeats
+                && availableEconomy == that.availableEconomy
+                && availableFirst == that.availableFirst
                 && Objects.equals(flightId, that.flightId)
                 && Objects.equals(flightNumber, that.flightNumber)
                 && Objects.equals(originCode, that.originCode)
@@ -123,6 +154,7 @@ public class FlightSearchResult {
     @Override
     public int hashCode() {
         return Objects.hash(flightId, flightNumber, originCode, originAirportName, originCity, originZone,
-                destCode, destAirportName, destCity, destZone, departure, arrival, basePrice, aircraftModel, availableSeats);
+                destCode, destAirportName, destCity, destZone, departure, arrival, basePrice, aircraftModel,
+                availableSeats, availableEconomy, availableFirst);
     }
 }

@@ -2,7 +2,9 @@ package com.group2.flightres.dao.impl;
 
 import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.dao.FlightDao;
+import com.group2.flightres.model.Airport;
 import com.group2.flightres.model.FlightSearchResult;
+import com.group2.flightres.model.Route;
 import com.group2.flightres.util.ValidationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +37,9 @@ public class FlightDaoImpl implements FlightDao {
                dest.iata_code AS dest_code, dest.name AS dest_name, dest.city AS dest_city, dest.timezone AS dest_timezone,
                f.departure_time, f.arrival_time, f.base_price, f.status,
                act.model AS aircraft_model,
-               (SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW()))) AS available_seats
+               (SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW()))) AS available_seats,
+               (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW())) AND st.seat_class = 'ECONOMY') AS available_economy,
+               (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW())) AND st.seat_class = 'FIRST') AS available_first
         FROM flights f
         JOIN airports orig ON orig.airport_id = f.origin_airport_id
         JOIN airports dest ON dest.airport_id = f.dest_airport_id
@@ -56,7 +60,9 @@ public class FlightDaoImpl implements FlightDao {
                dest.iata_code AS dest_code, dest.name AS dest_name, dest.city AS dest_city, dest.timezone AS dest_timezone,
                f.departure_time, f.arrival_time, f.base_price, f.status,
                act.model AS aircraft_model,
-               (SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW()))) AS available_seats
+               (SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW()))) AS available_seats,
+               (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW())) AND st.seat_class = 'ECONOMY') AS available_economy,
+               (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW())) AND st.seat_class = 'FIRST') AS available_first
         FROM flights f
         JOIN airports orig ON orig.airport_id = f.origin_airport_id
         JOIN airports dest ON dest.airport_id = f.dest_airport_id
@@ -205,6 +211,8 @@ public class FlightDaoImpl implements FlightDao {
         BigDecimal basePrice = rs.getBigDecimal("base_price");
         String aircraftModel = rs.getString("aircraft_model");
         int availableSeats = rs.getInt("available_seats");
+        int availableEconomy = rs.getInt("available_economy");
+        int availableFirst = rs.getInt("available_first");
 
         return new FlightSearchResult(
                 id,
@@ -221,8 +229,58 @@ public class FlightDaoImpl implements FlightDao {
                 arrInstant,
                 basePrice,
                 aircraftModel,
-                availableSeats
+                availableSeats,
+                availableEconomy,
+                availableFirst
         );
+    }
+
+    private static final String FIND_EARLIEST_OPEN_FLIGHT_QUERY = """
+        SELECT orig.iata_code AS origin_code, orig.name AS origin_name, orig.city AS origin_city, orig.country AS origin_country, orig.timezone AS origin_timezone,
+               dest.iata_code AS dest_code, dest.name AS dest_name, dest.city AS dest_city, dest.country AS dest_country, dest.timezone AS dest_timezone
+        FROM flights f
+        JOIN airports orig ON orig.airport_id = f.origin_airport_id
+        JOIN airports dest ON dest.airport_id = f.dest_airport_id
+        WHERE f.status = 'SCHEDULED'
+          AND f.departure_time >= ?
+        ORDER BY f.departure_time ASC
+        LIMIT 1
+        """;
+
+    @Override
+    public Optional<Route> findEarliestOpenFlightRoute(Instant minDepartureInstant) {
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(FIND_EARLIEST_OPEN_FLIGHT_QUERY)) {
+            stmt.setObject(1, minDepartureInstant != null ? minDepartureInstant.atOffset(ZoneOffset.UTC) : OffsetDateTime.now(ZoneOffset.UTC));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String origTz = rs.getString("origin_timezone");
+                    ZoneId origZone = origTz != null && !origTz.isBlank() ? ZoneId.of(origTz) : ZoneId.of("Africa/Johannesburg");
+                    Airport origin = new Airport(
+                            rs.getString("origin_code"),
+                            rs.getString("origin_name"),
+                            rs.getString("origin_city"),
+                            rs.getString("origin_country"),
+                            origZone
+                    );
+
+                    String destTz = rs.getString("dest_timezone");
+                    ZoneId destZone = destTz != null && !destTz.isBlank() ? ZoneId.of(destTz) : ZoneId.of("Africa/Johannesburg");
+                    Airport destination = new Airport(
+                            rs.getString("dest_code"),
+                            rs.getString("dest_name"),
+                            rs.getString("dest_city"),
+                            rs.getString("dest_country"),
+                            destZone
+                    );
+
+                    return Optional.of(new Route(origin, destination));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to query earliest open flight route: {}", e.getMessage(), e);
+        }
+        return Optional.empty();
     }
 
     private static final String FIND_AIRPORT_NAME_QUERY =

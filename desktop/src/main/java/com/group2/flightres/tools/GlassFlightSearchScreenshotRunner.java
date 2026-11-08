@@ -8,6 +8,7 @@ import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -29,13 +30,17 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Renders the Phase 2 Glass Flight Search screen at 1280x800 and captures:
- * 1) docs/screenshots/glass-flight-search.png (real DB cards)
- * 2) docs/screenshots/glass-flight-search-error.png (error state with Retry button)
+ * 1) docs/screenshots/glass-flight-search.png (default route and date, 2nd card expanded)
+ * 2) docs/screenshots/glass-flight-search-dur.png (JNB to DUR tomorrow, proves the airport name comes from data)
+ * 3) docs/screenshots/glass-flight-search-empty.png (empty state, 40 days ahead)
+ * 4) docs/screenshots/glass-flight-search-error.png (error state with Retry button)
  * Also prints the scene graph label texts for cards to stdout.
  */
 public class GlassFlightSearchScreenshotRunner extends Application {
@@ -58,17 +63,6 @@ public class GlassFlightSearchScreenshotRunner extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/flight-search.fxml"));
         Parent root = loader.load();
         FlightSearchController controller = loader.getController();
-
-        // Optional search date from CLI arg (--date=YYYY-MM-DD); otherwise DB's next available date is used by controller
-        LocalDate customDate = null;
-        for (String arg : getParameters().getRaw()) {
-            if (arg.startsWith("--date=")) {
-                customDate = LocalDate.parse(arg.substring("--date=".length()).trim());
-            }
-        }
-        if (customDate != null && controller != null) {
-            controller.setSearchDate(customDate);
-        }
 
         Scene scene = new Scene(root, WIDTH, HEIGHT);
         ThemeManager.getInstance().applyGlassTheme(scene);
@@ -94,8 +88,8 @@ public class GlassFlightSearchScreenshotRunner extends Application {
             }
 
             if (cardCount == 0) {
-                ComboBox<?> fromCombo = (ComboBox<?>) root.lookup("#fromAirportCombo");
-                ComboBox<?> toCombo = (ComboBox<?>) root.lookup("#toAirportCombo");
+                ComboBox<?> fromCombo = (ComboBox<?>) root.lookup("#fromCombo");
+                ComboBox<?> toCombo = (ComboBox<?>) root.lookup("#toCombo");
                 DatePicker depDatePicker = (DatePicker) root.lookup("#departureDatePicker");
 
                 String from = (fromCombo != null && fromCombo.getValue() != null) ? fromCombo.getValue().toString() : "JNB";
@@ -116,13 +110,46 @@ public class GlassFlightSearchScreenshotRunner extends Application {
                 return;
             }
 
-            // Print card label texts directly from scene graph
+            // Ensure card is expanded for leg inspection (2nd card if available, else 1st card)
+            GlassFlightResultsBridge bridgeInstance = GlassFlightResultsBridge.getInstance();
+            if (bridgeInstance != null) {
+                if (cardCount > 1) {
+                    bridgeInstance.setExpandedCardIndex(1);
+                } else if (cardCount == 1) {
+                    bridgeInstance.setExpandedCardIndex(0);
+                }
+                root.applyCss();
+                root.layout();
+            }
+
+            // Print card label texts directly from scene graph (Default Route)
+            System.out.println("=== SCENE GRAPH CARD LABELS (DEFAULT ROUTE) ===");
             printCardLabelTexts(root);
 
-            // Snapshot 1: Normal cards (snapshot entire 1280x800 scene without window border offset)
+            // Check baseline Y of the 3 search bar value labels
+            Label depDate = (Label) root.lookup("#depDateDisplay");
+            Label retVal = (Label) root.lookup("#returnValueDisplay");
+            Label travVal = (Label) root.lookup("#travellersValueDisplay");
+            if (depDate != null && retVal != null && travVal != null) {
+                double depY = depDate.localToScene(depDate.getBoundsInLocal()).getMinY();
+                double retY = retVal.localToScene(retVal.getBoundsInLocal()).getMinY();
+                double travY = travVal.localToScene(travVal.getBoundsInLocal()).getMinY();
+                System.out.printf(Locale.US, "=== SEARCH BAR VALUE LABELS SCENE GRAPH Y ===%n"
+                                + "Departure: %.2f%n"
+                                + "Return: %.2f%n"
+                                + "Travellers: %.2f%n"
+                                + "Within 1px: %b%n"
+                                + "==============================================%n",
+                        depY, retY, travY,
+                        Math.abs(depY - retY) <= 1.0 && Math.abs(depY - travY) <= 1.0);
+            }
+
+            // Measure right padding of expanded leg at 1280
+            measureAndPrintLegPadding(root, 1280);
+
+            // Snapshot 1: Default route and date, 2nd card expanded
             WritableImage snapshot1 = scene.snapshot(null);
             File outputFile1 = getOutputDir().resolve("glass-flight-search.png").toFile();
-
             try {
                 saveImageToPng(snapshot1, outputFile1);
                 logger.info("Successfully saved glass flight search screenshot: {}", outputFile1.getAbsolutePath());
@@ -130,28 +157,103 @@ public class GlassFlightSearchScreenshotRunner extends Application {
                 logger.error("Failed to save glass flight search screenshot", ex);
             }
 
-            // Trigger Error State for Snapshot 2
-            GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
-            if (bridge != null) {
-                bridge.showErrorState(() -> logger.info("Retry button clicked"));
+            // Measure at 1100
+            stage.setWidth(1100);
+            stage.setHeight(700);
+            root.applyCss();
+            root.layout();
+            measureAndPrintLegPadding(root, 1100);
+
+            // Produce glass-flight-search-900.png at 900x680
+            stage.setWidth(900);
+            stage.setHeight(680);
+            root.applyCss();
+            root.layout();
+            measureAndPrintLegPadding(root, 900);
+
+            WritableImage snapshot900 = scene.snapshot(null);
+            File outputFile900 = getOutputDir().resolve("glass-flight-search-900.png").toFile();
+            try {
+                saveImageToPng(snapshot900, outputFile900);
+                logger.info("Successfully saved glass flight search 900 screenshot: {}", outputFile900.getAbsolutePath());
+            } catch (IOException ex) {
+                logger.error("Failed to save glass flight search 900 screenshot", ex);
             }
 
-            PauseTransition pause2 = new PauseTransition(Duration.millis(500));
+            // Restore stage to 1280x800 for subsequent snapshots
+            stage.setWidth(WIDTH);
+            stage.setHeight(HEIGHT);
+            root.applyCss();
+            root.layout();
+
+            // Transition to Snapshot 2: JNB to DUR tomorrow
+            LocalDate tomorrow = LocalDate.now(ZoneId.of("Africa/Johannesburg")).plusDays(1);
+            if (controller != null) {
+                controller.setSearchRoute("JNB", "DUR", tomorrow);
+            }
+
+            PauseTransition pause2 = new PauseTransition(Duration.millis(700));
             pause2.setOnFinished(e2 -> {
                 root.applyCss();
                 root.layout();
 
-                WritableImage snapshot2 = scene.snapshot(null);
-                File outputFile2 = getOutputDir().resolve("glass-flight-search-error.png").toFile();
+                System.out.println("=== SCENE GRAPH CARD LABELS (JNB -> DUR) ===");
+                printCardLabelTexts(root);
 
+                WritableImage snapshot2 = scene.snapshot(null);
+                File outputFile2 = getOutputDir().resolve("glass-flight-search-dur.png").toFile();
                 try {
                     saveImageToPng(snapshot2, outputFile2);
-                    logger.info("Successfully saved glass flight search error screenshot: {}", outputFile2.getAbsolutePath());
+                    logger.info("Successfully saved glass flight search DUR screenshot: {}", outputFile2.getAbsolutePath());
                 } catch (IOException ex) {
-                    logger.error("Failed to save glass flight search error screenshot", ex);
+                    logger.error("Failed to save glass flight search DUR screenshot", ex);
                 }
 
-                Platform.exit();
+                // Transition to Snapshot 3: Empty state (40 days ahead)
+                LocalDate emptyDate = LocalDate.now(ZoneId.of("Africa/Johannesburg")).plusDays(40);
+                if (controller != null) {
+                    controller.setSearchDate(emptyDate);
+                }
+
+                PauseTransition pause3 = new PauseTransition(Duration.millis(700));
+                pause3.setOnFinished(e3 -> {
+                    root.applyCss();
+                    root.layout();
+
+                    WritableImage snapshot3 = scene.snapshot(null);
+                    File outputFile3 = getOutputDir().resolve("glass-flight-search-empty.png").toFile();
+                    try {
+                        saveImageToPng(snapshot3, outputFile3);
+                        logger.info("Successfully saved glass flight search empty screenshot: {}", outputFile3.getAbsolutePath());
+                    } catch (IOException ex) {
+                        logger.error("Failed to save glass flight search empty screenshot", ex);
+                    }
+
+                    // Transition to Snapshot 4: Error state with Retry button
+                    GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+                    if (bridge != null) {
+                        bridge.showErrorState(() -> logger.info("Retry button clicked"));
+                    }
+
+                    PauseTransition pause4 = new PauseTransition(Duration.millis(500));
+                    pause4.setOnFinished(e4 -> {
+                        root.applyCss();
+                        root.layout();
+
+                        WritableImage snapshot4 = scene.snapshot(null);
+                        File outputFile4 = getOutputDir().resolve("glass-flight-search-error.png").toFile();
+                        try {
+                            saveImageToPng(snapshot4, outputFile4);
+                            logger.info("Successfully saved glass flight search error screenshot: {}", outputFile4.getAbsolutePath());
+                        } catch (IOException ex) {
+                            logger.error("Failed to save glass flight search error screenshot", ex);
+                        }
+
+                        Platform.exit();
+                    });
+                    pause4.play();
+                });
+                pause3.play();
             });
             pause2.play();
         });
@@ -188,6 +290,28 @@ public class GlassFlightSearchScreenshotRunner extends Application {
         if (node instanceof Parent p) {
             for (Node c : p.getChildrenUnmodifiable()) {
                 collectLabels(c, list);
+            }
+        }
+    }
+
+    private static void measureAndPrintLegPadding(Parent root, int sceneWidth) {
+        VBox cardsContainer = (VBox) root.lookup("#resultsCardsContainer");
+        if (cardsContainer != null) {
+            for (Node card : cardsContainer.getChildren()) {
+                if (card.getStyleClass().contains("flight-result-card")) {
+                    Node leg = card.lookup(".expanded-leg-row");
+                    if (leg != null) {
+                        Bounds cardBounds = card.localToScene(card.getBoundsInLocal());
+                        Bounds legBounds = leg.localToScene(leg.getBoundsInLocal());
+                        double leftPad = legBounds.getMinX() - cardBounds.getMinX();
+                        double rightPad = cardBounds.getMaxX() - legBounds.getMaxX();
+                        double totalRightPadding = rightPad + 12.0;
+                        double totalLeftPadding = leftPad + 12.0;
+                        System.out.printf(Locale.US, "Expanded leg right padding at %d: %.1f px (left padding: %.1f px)%n",
+                                sceneWidth, totalRightPadding, totalLeftPadding);
+                        break;
+                    }
+                }
             }
         }
     }

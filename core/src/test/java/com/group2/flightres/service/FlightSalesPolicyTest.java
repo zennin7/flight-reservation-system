@@ -46,7 +46,9 @@ class FlightSalesPolicyTest {
             DEPARTURE.plusSeconds(7200),
             new BigDecimal("1200"),
             "Airbus A320",
-            100
+            100,
+            90,
+            10
     );
 
     @Test

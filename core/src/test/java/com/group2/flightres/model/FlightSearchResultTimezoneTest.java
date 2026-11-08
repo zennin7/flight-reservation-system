@@ -33,7 +33,9 @@ class FlightSearchResultTimezoneTest {
                     Instant.parse("2026-11-02T06:40:00Z"),
                     new BigDecimal("1200.00"),
                     "Airbus A320",
-                    149
+                    149,
+                    137,
+                    12
             );
 
             // Synthetic JNB -> DXB (dep 11:00Z in Africa/Johannesburg = 13:00 SAST, arr 19:15Z in Asia/Dubai = 23:15 GST, 8h 15m)
@@ -52,7 +54,9 @@ class FlightSearchResultTimezoneTest {
                     Instant.parse("2026-11-02T19:15:00Z"),
                     new BigDecimal("4500.00"),
                     "Boeing 777-300ER",
-                    50
+                    50,
+                    40,
+                    10
             );
 
             // 1. Verify under America/Los_Angeles
