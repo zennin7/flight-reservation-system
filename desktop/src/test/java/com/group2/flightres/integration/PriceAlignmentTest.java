@@ -19,9 +19,12 @@ import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.service.PaymentResult;
 import com.group2.flightres.service.PricingService;
+import com.group2.flightres.model.TicketData;
+import com.group2.flightres.util.BoardingPassPdfGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -96,7 +99,7 @@ class PriceAlignmentTest {
         SeatDao seatDao = new SeatDaoImpl();
         FlightDao flightDao = new FlightDaoImpl();
         PricingService pricingService = new PricingService(seatDao, clock);
-        BookingDao bookingDao = new BookingDaoImpl();
+        BookingDaoImpl bookingDao = new BookingDaoImpl();
 
         FlightSearchResult flight = flightDao.findById(1L).orElseThrow();
         List<FlightSeat> seats = seatDao.getSeatMapForFlight(flight.getFlightId());
@@ -125,60 +128,69 @@ class PriceAlignmentTest {
         ctx.setSelectedSeats(new ArrayList<>(List.of(seat)));
         ctx.setPaymentResult(new PaymentResult(true, "TXN-RECON-7788", "VISA", "4242", null));
 
-        // Create booking in database
-        BookingRecord record = bookingDao.createBooking(ctx);
-        try {
-            assertNotNull(record);
-            BigDecimal confirmedTotal = record.getTotalAmount();
+        // Create booking in database inside a rolled-back transaction
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                BookingRecord createdRecord = bookingDao.createBookingInTransaction(conn, ctx);
+                assertNotNull(createdRecord);
+                assertNotNull(createdRecord.getBookingReference());
 
-            // Reconcile 1: payments.amount from DB
-            BigDecimal paymentAmount;
-            try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-                 PreparedStatement stmt = conn.prepareStatement("SELECT amount FROM payments WHERE booking_id = ?")) {
-                stmt.setLong(1, record.getBookingId());
-                try (ResultSet rs = stmt.executeQuery()) {
-                    assertTrue(rs.next(), "Payment row must exist");
-                    paymentAmount = rs.getBigDecimal("amount");
+                // Read booking back through real joins using Connection in the same transaction
+                Optional<BookingRecord> fetchedOpt = bookingDao.findByReference(conn, createdRecord.getBookingReference());
+                assertTrue(fetchedOpt.isPresent(), "Booking must be found by reference within the transaction");
+                BookingRecord record = fetchedOpt.get();
+
+                BigDecimal confirmedTotal = record.getTotalAmount();
+
+                // Reconcile 1: payments.amount from DB in same transaction
+                BigDecimal paymentAmount;
+                try (PreparedStatement stmt = conn.prepareStatement("SELECT amount FROM payments WHERE booking_id = ?")) {
+                    stmt.setLong(1, record.getBookingId());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        assertTrue(rs.next(), "Payment row must exist");
+                        paymentAmount = rs.getBigDecimal("amount");
+                    }
                 }
-            }
 
-            // Reconcile 2: Confirmation screen lines (base + demand + timing)
-            BigDecimal confirmationBase = ctx.getPriceQuotes().stream().map(PriceQuote::classFare).reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal confirmationDemand = ctx.getPriceQuotes().stream().map(PriceQuote::demandAdjustment).reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal confirmationTiming = ctx.getPriceQuotes().stream().map(PriceQuote::timingAdjustment).reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal confirmationTotal = confirmationBase.add(confirmationDemand).add(confirmationTiming);
+                // Reconcile 2: Confirmation screen lines (base + demand + timing)
+                BigDecimal confirmationBase = ctx.getPriceQuotes().stream().map(PriceQuote::classFare).reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal confirmationDemand = ctx.getPriceQuotes().stream().map(PriceQuote::demandAdjustment).reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal confirmationTiming = ctx.getPriceQuotes().stream().map(PriceQuote::timingAdjustment).reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal confirmationTotal = confirmationBase.add(confirmationDemand).add(confirmationTiming);
 
-            // PROVE: confirmed total == payments.amount == quote total
-            assertEquals(0, quote.total().compareTo(confirmedTotal),
-                    "Confirmed total must equal quote total");
-            assertEquals(0, quote.total().compareTo(paymentAmount),
-                    "Database payments.amount must equal quote total");
-            assertEquals(0, quote.total().compareTo(confirmationTotal),
-                    "Confirmation screen breakdown total must equal quote total");
-            assertEquals(confirmedTotal, paymentAmount,
-                    "Confirmed total must equal payment amount");
+                // Reconcile 3: TicketData built from the real record queried from DB joins
+                TicketData ticketData = TicketData.from(record);
+                assertNotNull(ticketData.totalPrice(), "TicketData must carry authoritative totalPrice");
+                assertNotNull(ticketData.departureDate(), "Departure date on ticket must come from DB");
+                assertFalse(ticketData.departureDate().isBlank(), "Departure date on ticket must not be blank");
+                assertNotNull(ticketData.departureTime(), "Departure time on ticket must come from DB");
+                assertFalse(ticketData.departureTime().isBlank(), "Departure time on ticket must not be blank");
+                assertNotNull(ticketData.arrivalTime(), "Arrival time on ticket must come from DB");
+                assertFalse(ticketData.arrivalTime().isBlank(), "Arrival time on ticket must not be blank");
 
-        } finally {
-            // Teardown test booking
-            try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
-                conn.setAutoCommit(false);
-                try (PreparedStatement delBS = conn.prepareStatement("DELETE FROM booking_seats WHERE booking_id = ?");
-                     PreparedStatement delPay = conn.prepareStatement("DELETE FROM payments WHERE booking_id = ?");
-                     PreparedStatement delB = conn.prepareStatement("DELETE FROM bookings WHERE booking_id = ?");
-                     PreparedStatement resetSeat = conn.prepareStatement("UPDATE flight_seats SET status = 'AVAILABLE', held_until = NULL WHERE flight_seat_id = ?")) {
-                    delBS.setLong(1, record.getBookingId());
-                    delBS.executeUpdate();
-                    delPay.setLong(1, record.getBookingId());
-                    delPay.executeUpdate();
-                    delB.setLong(1, record.getBookingId());
-                    delB.executeUpdate();
-                    resetSeat.setLong(1, seat.getFlightSeatId());
-                    resetSeat.executeUpdate();
-                    conn.commit();
-                } catch (SQLException e) {
-                    conn.rollback();
-                    throw e;
-                }
+                // Reconcile 4: PDF boarding pass generation
+                File tempPdf = File.createTempFile("boarding-pass-recon", ".pdf");
+                tempPdf.deleteOnExit();
+                BoardingPassPdfGenerator.generate(ticketData, tempPdf);
+                assertTrue(tempPdf.length() > 0, "Boarding pass PDF generated successfully");
+
+                // PROVE: confirmed total == payments.amount == quote total == ticketData.totalPrice
+                assertEquals(0, quote.total().compareTo(confirmedTotal),
+                        "Confirmed total must equal quote total");
+                assertEquals(0, quote.total().compareTo(paymentAmount),
+                        "Database payments.amount must equal quote total");
+                assertEquals(0, quote.total().compareTo(confirmationTotal),
+                        "Confirmation screen breakdown total must equal quote total");
+                assertEquals(confirmedTotal, paymentAmount,
+                        "Confirmed total must equal payment amount");
+                assertEquals(0, ticketData.totalPrice().compareTo(paymentAmount),
+                        "TicketData total price must equal payments.amount");
+            } catch (Exception e) {
+                throw new RuntimeException("Error during transaction verification", e);
+            } finally {
+                // ALWAYS roll back transaction - zero persisted DB changes, NO DELETE statements!
+                conn.rollback();
             }
         }
     }

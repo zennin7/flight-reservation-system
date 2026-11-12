@@ -412,9 +412,19 @@ public class SeatMapController implements WizardStepController {
         }
     }
 
+    public void releaseHeldSeats() {
+        if (seatMapService != null && selectedSeats != null && !selectedSeats.isEmpty()) {
+            for (FlightSeat seat : new ArrayList<>(selectedSeats)) {
+                seatMapService.deselectSeat(seat);
+            }
+            selectedSeats.clear();
+        }
+    }
+
     @FXML
     private void handleBack() {
         logger.info("Going back to flight search.");
+        releaseHeldSeats();
         if (onBack != null) {
             onBack.run();
         }
@@ -575,6 +585,7 @@ public class SeatMapController implements WizardStepController {
     }
 
     private void navigateTo(String fxmlPath, String screenName) {
+        releaseHeldSeats();
         javafx.scene.Scene scene = null;
         if (continueButton != null && continueButton.getScene() != null) {
             scene = continueButton.getScene();

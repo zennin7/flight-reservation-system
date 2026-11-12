@@ -155,7 +155,7 @@
                             <VBox spacing="6">
                                 <Label text="Select your seat" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 17px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
                                 <Label text="Choose your preferred seat on the map. Legroom and seat amenities vary by cabin class."
-                                       wrapText="true"
+                                       wrapText="true" prefWidth="168"
                                        style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.60); -fx-line-spacing: 2px;"/>
                             </VBox>
                         </VBox>
@@ -260,7 +260,7 @@
                             </StackPane>
                             <VBox spacing="1" HBox.hgrow="ALWAYS">
                                 <Label fx:id="timerLabel" text="--:--" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #ffffff;"/>
-                                <Label text="Held for you. Nobody else can take it." wrapText="true" maxWidth="240" style="-fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.60);"/>
+                                <Label text="Held for you. Nobody else can take it." wrapText="true" prefWidth="204" maxWidth="240" style="-fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.60);"/>
                             </VBox>
                         </HBox>
 

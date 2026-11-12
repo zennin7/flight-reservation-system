@@ -151,14 +151,12 @@ class SeatMapAndCheckoutLayoutTest {
                                     }
                                 }
 
-                                // 2. Assertion (i): label width >= label.prefWidth(-1) - 0.5 (for unwrapped single-line labels)
-                                if (!l.isWrapText()) {
-                                    double prefW = l.prefWidth(-1);
-                                    double actualW = l.getWidth();
-                                    if (actualW < prefW - 0.5) {
-                                        violations.add("Label [" + l.getText() + "] width " + String.format(Locale.US, "%.1f", actualW)
-                                                + " < prefWidth " + String.format(Locale.US, "%.1f", prefW) + " - 0.5");
-                                    }
+                                // 2. Assertion (i): label width >= label.prefWidth(-1) - 0.5
+                                double prefW = l.prefWidth(-1);
+                                double actualW = l.getWidth();
+                                if (actualW < prefW - 0.5) {
+                                    violations.add("Label [" + l.getText() + "] width " + String.format(Locale.US, "%.1f", actualW)
+                                            + " < prefWidth " + String.format(Locale.US, "%.1f", prefW) + " - 0.5");
                                 }
 
                                 // 3. Assertion (ii): label's scene bounds maxX <= root scene bounds maxX + 0.5

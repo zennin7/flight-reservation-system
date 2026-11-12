@@ -4,6 +4,7 @@ import com.group2.flightres.config.BoardingPolicy;
 import com.group2.flightres.util.FlightDateFormatter;
 import com.group2.flightres.util.FlightTimes;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -32,8 +33,36 @@ public record TicketData(
         String seatLabel,
         String cabin,
         String bookingReference,
-        SeatClass seatClass
+        SeatClass seatClass,
+        BigDecimal totalPrice
 ) {
+
+    public TicketData(
+            String passenger,
+            String flightNumber,
+            String originCode,
+            String originCity,
+            String destinationCode,
+            String destinationCity,
+            String formattedDate,
+            String departureTime,
+            String arrivalTime,
+            String duration,
+            String boardingTime,
+            String bagDropCloseTime,
+            String seatLabel,
+            String cabin,
+            String bookingReference,
+            SeatClass seatClass
+    ) {
+        this(passenger, flightNumber, originCode, originCity, destinationCode, destinationCity,
+                formattedDate, departureTime, arrivalTime, duration, boardingTime, bagDropCloseTime,
+                seatLabel, cabin, bookingReference, seatClass, null);
+    }
+
+    public String departureDate() {
+        return formattedDate;
+    }
 
     /**
      * Builds a TicketData record from an in-flight BookingContext.
@@ -76,6 +105,7 @@ public record TicketData(
         String duration = FlightTimes.formatDuration(dep, arr);
         String boardingTime = BoardingPolicy.formatBoardingTime(depTime);
         String bagDropTime = BoardingPolicy.formatBagDropTime(depTime, originCity);
+        BigDecimal totalPrice = context.getTotalPrice();
 
         return new TicketData(
                 passenger,
@@ -93,7 +123,8 @@ public record TicketData(
                 seat,
                 cabin,
                 ref,
-                seatCls
+                seatCls,
+                totalPrice
         );
     }
 
@@ -138,6 +169,7 @@ public record TicketData(
         String duration = FlightTimes.formatDuration(dep, arr);
         String boardingTime = BoardingPolicy.formatBoardingTime(depTime);
         String bagDropTime = BoardingPolicy.formatBagDropTime(depTime, originCity);
+        BigDecimal totalPrice = record.getTotalAmount();
 
         return new TicketData(
                 passenger,
@@ -155,7 +187,8 @@ public record TicketData(
                 seat,
                 cabin,
                 ref,
-                seatCls
+                seatCls,
+                totalPrice
         );
     }
 

@@ -1,6 +1,7 @@
 package com.group2.flightres.controller;
 
 import com.group2.flightres.component.StepperBar;
+import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.exception.ValidationException;
 import com.group2.flightres.config.BaggagePolicy;
@@ -9,9 +10,11 @@ import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.BookingStep;
+import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.PaymentResult;
 import com.group2.flightres.service.PaymentService;
+import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.service.SimulatedPaymentGateway;
 import com.group2.flightres.util.DestinationPhotos;
 import com.group2.flightres.util.GlassCheckoutBridge;
@@ -95,6 +98,7 @@ public class CheckoutController implements WizardStepController {
 
     private final BookingService bookingService;
     private final PaymentService paymentService;
+    private final SeatMapService seatMapService;
     private BookingContext bookingContext;
     private Runnable onNext;
     private Runnable onBack;
@@ -102,12 +106,17 @@ public class CheckoutController implements WizardStepController {
     private GlassCheckoutBridge glassBridge;
 
     public CheckoutController() {
-        this(new BookingService(), new SimulatedPaymentGateway());
+        this(new BookingService(), new SimulatedPaymentGateway(), new SeatMapService(new SeatDaoImpl()));
     }
 
     public CheckoutController(BookingService bookingService, PaymentService paymentService) {
+        this(bookingService, paymentService, new SeatMapService(new SeatDaoImpl()));
+    }
+
+    public CheckoutController(BookingService bookingService, PaymentService paymentService, SeatMapService seatMapService) {
         this.bookingService = bookingService;
         this.paymentService = paymentService;
+        this.seatMapService = seatMapService;
     }
 
     @Override
@@ -563,8 +572,17 @@ public class CheckoutController implements WizardStepController {
         if (cardTabButton != null) cardTabButton.getStyleClass().add("tab-btn-active");
     }
 
+    public void releaseHeldSeats() {
+        if (seatMapService != null && bookingContext != null && bookingContext.getSelectedSeats() != null) {
+            for (FlightSeat seat : bookingContext.getSelectedSeats()) {
+                seatMapService.deselectSeat(seat);
+            }
+        }
+    }
+
     @FXML
     private void handleNavHome() {
+        releaseHeldSeats();
         navigateTo("/com/group2/flightres/fxml/home.fxml", "Home");
     }
 

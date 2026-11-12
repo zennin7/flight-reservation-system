@@ -1,12 +1,16 @@
 package com.group2.flightres.tools;
 
 import com.group2.flightres.controller.CheckoutController;
+import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
+import com.group2.flightres.service.PricingService;
+import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.util.TestFlightFinder;
 import com.group2.flightres.util.ThemeManager;
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
@@ -30,19 +34,18 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Renders the Phase 2 Glass Checkout screen at 1280x860 and captures
- * docs/screenshots/glass-checkout.png with real data matching design-glass/checkout.html.
+ * Renders the Glass Checkout screen at 1280x800 and 900x680
+ * with real data on an open ALT flight.
  */
 public class GlassCheckoutScreenshotRunner extends Application {
 
     private static final Logger logger = LoggerFactory.getLogger(GlassCheckoutScreenshotRunner.class);
-    private static final int WIDTH = 1280;
-    private static final int HEIGHT = 860;
 
     private static Path getOutputDir() {
         File shadowDocs = new File("c:/Users/tttttttttttttttttttt/Desktop/flight-reservation-system-shadow/docs/screenshots");
@@ -60,30 +63,35 @@ public class GlassCheckoutScreenshotRunner extends Application {
         System.setProperty("altitude.screenshots", "true");
         FontLoader.loadFonts();
 
+        TestFlightFinder.OpenAltFlight flight = TestFlightFinder.findEarliestOpenAltFlight();
+        SeatMapService seatMapService = new SeatMapService(new SeatDaoImpl());
+        PricingService pricingService = new PricingService();
+        PriceQuote quote = pricingService.quote(flight.flightId(), SeatClass.ECONOMY, Clock.systemUTC());
+
+        FlightSeat selectedSeat = flight.availableSeats().stream()
+                .filter(s -> s.getSeatRow() >= 7 && s.getSeatClass() == SeatClass.ECONOMY)
+                .findFirst()
+                .orElse(flight.availableSeats().get(0));
+
+        seatMapService.selectSeat(selectedSeat);
+
         BookingContext ctx = new BookingContext();
-        ctx.setFlightId(1L);
-        ctx.setFlightNumber("GRP 204");
-        ctx.setOrigin("Johannesburg (JNB)");
-        ctx.setDestination("Cape Town (CPT)");
-        ctx.setDepartureTime("06:30");
-        ctx.setArrivalTime("08:35");
-        ctx.setDepartureDate("2026-11-14");
-        ctx.setBaseFare(new BigDecimal("1200"));
+        ctx.setFlightId(flight.flightId());
+        ctx.setFlightNumber(flight.flightNumber());
+        ctx.setOrigin(flight.originAirportName());
+        ctx.setDestination(flight.destAirportName());
+        ctx.setDepartureTime(flight.departureTime());
+        ctx.setArrivalTime(flight.arrivalTime());
+        ctx.setDepartureDate(flight.departureDate());
+        ctx.setDepartureInstant(flight.departureInstant());
+        ctx.setArrivalInstant(flight.arrivalInstant());
+        ctx.setAircraftModel(flight.aircraftModel());
+        ctx.setDuration(flight.duration());
+        ctx.setBaseFare(flight.basePrice());
 
-        // 9E held seat matching target design
-        FlightSeat seat9E = new FlightSeat();
-        seat9E.setFlightId(1L);
-        seat9E.setSeatRow(9);
-        seat9E.setSeatCol('E');
-        seat9E.setSeatClass(SeatClass.ECONOMY);
-        seat9E.setStatus(SeatStatus.HELD);
-        seat9E.setCalculatedPrice(new BigDecimal("1380"));
-
-        List<FlightSeat> seats = new ArrayList<>();
-        seats.add(seat9E);
-        ctx.setSelectedSeats(seats);
-
-        PriceQuote quote = PriceQuote.calculate(new BigDecimal("1200.00"), BigDecimal.ONE, 0.0, 100.0);
+        selectedSeat.setStatus(SeatStatus.HELD);
+        selectedSeat.setCalculatedPrice(quote.total());
+        ctx.setSelectedSeats(new ArrayList<>(List.of(selectedSeat)));
         ctx.setPriceQuotes(List.of(quote));
         ctx.setTotalPrice(quote.total());
 
@@ -96,7 +104,7 @@ public class GlassCheckoutScreenshotRunner extends Application {
         CheckoutController controller = loader.getController();
         controller.init(ctx, () -> {}, () -> {});
 
-        // Populate fields with sample passenger matching design-glass/checkout.html
+        // Populate fields with sample passenger matching design
         if (controller.getFirstNameField() != null) controller.getFirstNameField().setText("Amahle");
         if (controller.getLastNameField() != null) controller.getLastNameField().setText("Mokoena");
         if (controller.getPassportField() != null) controller.getPassportField().setText("A91827364");
@@ -107,43 +115,55 @@ public class GlassCheckoutScreenshotRunner extends Application {
         if (controller.getExpiryField() != null) controller.getExpiryField().setText("08 / 28");
         if (controller.getCvvField() != null) controller.getCvvField().setText("123");
 
-        Scene scene = new Scene(root, WIDTH, HEIGHT);
+        Scene scene = new Scene(root, 1280, 800);
         ThemeManager.getInstance().applyGlassTheme(scene);
 
-        stage.setTitle("SkyVoyage Glass Checkout Preview");
+        stage.setTitle("Altitude Glass Checkout Preview");
         stage.setScene(scene);
-        stage.sizeToScene();
-        stage.setResizable(false);
+        stage.setWidth(1280);
+        stage.setHeight(800);
         stage.show();
 
         PauseTransition pause = new PauseTransition(Duration.millis(900));
         pause.setOnFinished(e -> {
             root.applyCss();
             root.layout();
-            captureSnapshot(root, "glass-checkout.png");
-            logger.info("Checkout screenshot capture completed successfully.");
-            Platform.exit();
+            captureSnapshot(root, "glass-checkout.png", 1280, 800);
+
+            // Resize to 900x680
+            stage.setWidth(900);
+            stage.setHeight(680);
+
+            PauseTransition p2 = new PauseTransition(Duration.millis(700));
+            p2.setOnFinished(e2 -> {
+                root.applyCss();
+                root.layout();
+                captureSnapshot(root, "glass-checkout-900.png", 900, 680);
+
+                // Release seat before exiting
+                seatMapService.deselectSeat(selectedSeat);
+                logger.info("Checkout screenshots captured successfully at 1280 and 900.");
+                Platform.exit();
+            });
+            p2.play();
         });
         pause.play();
     }
 
-    private static void captureSnapshot(Parent root, String filename) {
+    private static void captureSnapshot(Parent root, String filename, int w, int h) {
         javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
-        WritableImage snapshot = new WritableImage(WIDTH, HEIGHT);
+        WritableImage snapshot = new WritableImage(w, h);
         snapshot = root.snapshot(params, snapshot);
         File outputFile = getOutputDir().resolve(filename).toFile();
         try {
             saveImageToPng(snapshot, outputFile);
             logger.info("Successfully saved screenshot: {}", outputFile.getAbsolutePath());
 
-            // Also copy to artifact directory if present
             Path brainArtifact = Path.of("C:\\Users\\tttttttttttttttttttt\\.gemini\\antigravity\\brain\\dd68c2a6-b6fe-4136-9f98-988170ed66c9", filename);
             try {
                 Files.copy(outputFile.toPath(), brainArtifact, StandardCopyOption.REPLACE_EXISTING);
                 logger.info("Copied screenshot to artifact directory: {}", brainArtifact.toAbsolutePath());
-            } catch (Exception ex) {
-                logger.warn("Could not copy to brain artifact dir: {}", ex.getMessage());
-            }
+            } catch (Exception ignored) {}
         } catch (IOException ex) {
             logger.error("Failed to save screenshot {}", filename, ex);
         }

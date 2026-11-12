@@ -411,6 +411,23 @@ public final class BoardingPassPdfGenerator {
         refCell.addElement(refVal);
         stub.addCell(refCell);
 
+        if (data.totalPrice() != null) {
+            PdfPCell s3 = new PdfPCell();
+            s3.setBorder(Rectangle.NO_BORDER);
+            s3.setFixedHeight(12f);
+            stub.addCell(s3);
+
+            PdfPCell fareCell = new PdfPCell();
+            fareCell.setBorder(Rectangle.NO_BORDER);
+            fareCell.setPadding(0);
+            Paragraph fareLabel = new Paragraph("TOTAL FARE", fontInterBold(8.5f, COLOR_MUTED));
+            fareCell.addElement(fareLabel);
+            Paragraph fareVal = new Paragraph(String.format(java.util.Locale.US, "R %,d", data.totalPrice().longValue()), fontInterBold(14f, COLOR_GOLD_LIGHT));
+            fareVal.setSpacingBefore(2f);
+            fareCell.addElement(fareVal);
+            stub.addCell(fareCell);
+        }
+
         cell.addElement(stub);
         return cell;
     }

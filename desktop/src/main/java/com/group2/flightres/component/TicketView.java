@@ -78,6 +78,8 @@ public class TicketView extends StackPane {
     @FXML private Label gateValueLabel;
     @FXML private Label gateNoteLabel;
     @FXML private Label stubReferenceLabel;
+    @FXML private VBox stubFareContainer;
+    @FXML private Label stubFareLabel;
 
     @FXML private Circle topNotch;
     @FXML private Circle bottomNotch;
@@ -237,6 +239,16 @@ public class TicketView extends StackPane {
         if (stubReferenceLabel != null) {
             stubReferenceLabel.setText(ticketData.bookingReference());
         }
+        if (stubFareContainer != null && stubFareLabel != null) {
+            if (ticketData.totalPrice() != null) {
+                stubFareLabel.setText(String.format(java.util.Locale.US, "R %,d", ticketData.totalPrice().longValue()));
+                stubFareContainer.setVisible(true);
+                stubFareContainer.setManaged(true);
+            } else {
+                stubFareContainer.setVisible(false);
+                stubFareContainer.setManaged(false);
+            }
+        }
 
         updateNotches();
     }
@@ -363,6 +375,8 @@ public class TicketView extends StackPane {
     public Label getGateValueLabel() { return gateValueLabel; }
     public Label getGateNoteLabel() { return gateNoteLabel; }
     public Label getStubReferenceLabel() { return stubReferenceLabel; }
+    public VBox getStubFareContainer() { return stubFareContainer; }
+    public Label getStubFareLabel() { return stubFareLabel; }
 
     /**
      * Sets the uniform scale of the ticket, clamped to [0.90, 1.25],

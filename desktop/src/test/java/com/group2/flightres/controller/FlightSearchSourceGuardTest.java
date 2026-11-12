@@ -50,10 +50,8 @@ class FlightSearchSourceGuardTest {
             "2h" + " 05m"
     );
 
-    // Explicit allowlist of legitimate occurrences in desktop/src/main (all checkout, seatmap or verifier owned)
-    static final List<AllowlistEntry> ALLOWLIST = List.of(
-            new AllowlistEntry("GlassConfirmationVerifier.java", "Durban", 1, "verifier", "Verification test fixture synthetic destination")
-    );
+    // Explicit allowlist of legitimate occurrences in desktop/src/main (empty: all tools moved to src/test)
+    static final List<AllowlistEntry> ALLOWLIST = List.of();
 
     // Banned literals specific to seat-map and checkout UI and controllers
     static final java.util.Set<String> SEATMAP_CHECKOUT_SOURCES = java.util.Set.of(

@@ -23,6 +23,13 @@ public interface BookingDao {
     Optional<BookingRecord> findByReference(String bookingRef);
 
     /**
+     * Looks up a booking within an existing connection/transaction.
+     */
+    default Optional<BookingRecord> findByReference(java.sql.Connection conn, String bookingRef) throws java.sql.SQLException {
+        return findByReference(bookingRef);
+    }
+
+    /**
      * Retrieves all bookings for a user.
      */
     List<BookingRecord> findByUserId(long userId);

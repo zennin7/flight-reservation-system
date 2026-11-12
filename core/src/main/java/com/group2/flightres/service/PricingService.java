@@ -59,15 +59,15 @@ public class PricingService {
         """;
 
     public PricingService() {
-        this(new SeatDaoImpl(), Clock.systemDefaultZone());
+        this(new SeatDaoImpl(), Clock.systemUTC());
     }
 
     public PricingService(Clock clock) {
-        this(new SeatDaoImpl(), clock);
+        this(new SeatDaoImpl(), clock != null ? clock : Clock.systemUTC());
     }
 
     public PricingService(SeatDao seatDao) {
-        this(seatDao, Clock.systemDefaultZone());
+        this(seatDao, Clock.systemUTC());
     }
 
     public PricingService(SeatDao seatDao, Clock clock) {
@@ -103,7 +103,14 @@ public class PricingService {
                 if (rs.next()) {
                     BigDecimal basePrice = rs.getBigDecimal("base_price");
                     Timestamp depTs = rs.getTimestamp("departure_time");
-                    Instant departureTime = depTs != null ? depTs.toInstant() : effectiveClock.instant();
+                    if (depTs == null) {
+                        throw new IllegalStateException("Flight " + flightId + " has no departure time.");
+                    }
+                    Instant departureTime = depTs.toInstant();
+                    if (!departureTime.isAfter(effectiveClock.instant())) {
+                        throw new IllegalStateException("Flight " + flightId + " has already departed at "
+                                + departureTime + " (current time: " + effectiveClock.instant() + ")");
+                    }
                     long totalSeats = rs.getLong("total_seats");
                     long occupiedSeats = rs.getLong("occupied_seats");
 
@@ -154,16 +161,20 @@ public class PricingService {
                     long fId = rs.getLong("flight_id");
                     BigDecimal basePrice = rs.getBigDecimal("base_price");
                     Timestamp depTs = rs.getTimestamp("departure_time");
-                    Instant departureTime = depTs != null ? depTs.toInstant() : effectiveClock.instant();
-                    long totalSeats = rs.getLong("total_seats");
-                    long occupiedSeats = rs.getLong("occupied_seats");
+                    if (depTs != null) {
+                        Instant departureTime = depTs.toInstant();
+                        if (departureTime.isAfter(effectiveClock.instant())) {
+                            long totalSeats = rs.getLong("total_seats");
+                            long occupiedSeats = rs.getLong("occupied_seats");
 
-                    double occupancy = totalSeats > 0 ? (double) occupiedSeats / totalSeats : 0.0;
-                    BigDecimal demandMultiplier = PricingPolicy.getDemandMultiplier(occupancy);
-                    BigDecimal timingMultiplier = PricingPolicy.getTimingMultiplier(effectiveClock.instant(), departureTime);
+                            double occupancy = totalSeats > 0 ? (double) occupiedSeats / totalSeats : 0.0;
+                            BigDecimal demandMultiplier = PricingPolicy.getDemandMultiplier(occupancy);
+                            BigDecimal timingMultiplier = PricingPolicy.getTimingMultiplier(effectiveClock.instant(), departureTime);
 
-                    PriceQuote quote = PriceQuote.calculate(basePrice, classMultiplier, demandMultiplier, timingMultiplier);
-                    results.put(fId, quote);
+                            PriceQuote quote = PriceQuote.calculate(basePrice, classMultiplier, demandMultiplier, timingMultiplier);
+                            results.put(fId, quote);
+                        }
+                    }
                 }
             }
         } catch (SQLException e) {

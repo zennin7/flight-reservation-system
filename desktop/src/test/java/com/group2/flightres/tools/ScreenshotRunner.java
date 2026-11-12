@@ -217,23 +217,29 @@ public class ScreenshotRunner extends Application {
 
     private void setupSampleBookingContext(com.group2.flightres.model.BookingContext ctx) {
         if (ctx == null) return;
-        ctx.setFlightId(1L);
-        ctx.setFlightNumber("GRP 204");
-        ctx.setOrigin("Johannesburg (JNB)");
-        ctx.setDestination("Cape Town (CPT)");
-        ctx.setDepartureDate("2 Nov 2026");
-        ctx.setDepartureTime("06:30");
-        ctx.setArrivalTime("08:40");
+        com.group2.flightres.util.TestFlightFinder.OpenAltFlight flight =
+                com.group2.flightres.util.TestFlightFinder.findEarliestOpenAltFlight();
+        ctx.setFlightId(flight.flightId());
+        ctx.setFlightNumber(flight.flightNumber());
+        ctx.setOrigin(flight.originAirportName());
+        ctx.setDestination(flight.destAirportName());
+        ctx.setDepartureDate(flight.departureDate());
+        ctx.setDepartureTime(flight.departureTime());
+        ctx.setArrivalTime(flight.arrivalTime());
+        ctx.setDepartureInstant(flight.departureInstant());
+        ctx.setArrivalInstant(flight.arrivalInstant());
+        ctx.setAircraftModel(flight.aircraftModel());
+        ctx.setDuration(flight.duration());
 
-        com.group2.flightres.model.FlightSeat seat7E = new com.group2.flightres.model.FlightSeat();
-        seat7E.setSeatRow(7);
-        seat7E.setSeatCol('E');
-        seat7E.setSeatClass(com.group2.flightres.model.SeatClass.ECONOMY);
-        seat7E.setStatus(com.group2.flightres.model.SeatStatus.AVAILABLE);
+        com.group2.flightres.model.FlightSeat seat = flight.availableSeats().stream()
+                .filter(s -> s.getSeatRow() >= 7 && s.getSeatClass() == com.group2.flightres.model.SeatClass.ECONOMY)
+                .findFirst()
+                .orElse(flight.availableSeats().get(0));
 
-        ctx.setSelectedSeats(new ArrayList<>(List.of(seat7E)));
-        ctx.setBaseFare(new java.math.BigDecimal("1200"));
-        PriceQuote quote = PriceQuote.calculate(new java.math.BigDecimal("1200.00"), java.math.BigDecimal.ONE, 0.0, 100.0);
+        ctx.setSelectedSeats(new ArrayList<>(List.of(seat)));
+        ctx.setBaseFare(flight.basePrice());
+        com.group2.flightres.service.PricingService ps = new com.group2.flightres.service.PricingService();
+        PriceQuote quote = ps.quote(flight.flightId(), com.group2.flightres.model.SeatClass.ECONOMY, java.time.Clock.systemUTC());
         ctx.setPriceQuotes(List.of(quote));
         ctx.setTotalPrice(quote.total());
 

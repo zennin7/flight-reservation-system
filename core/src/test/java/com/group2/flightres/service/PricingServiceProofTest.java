@@ -20,6 +20,7 @@ import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -91,6 +92,48 @@ class PricingServiceProofTest {
         }
 
         assertTrue(flightCount >= 3, "Expected at least 3 ALT flights tomorrow in SAST, found: " + flightCount);
+    }
+
+    @Test
+    @DisplayName("PricingService.quote refuses a flight that has already departed or is at exact departure instant")
+    void testRefuseDepartedFlight() throws SQLException {
+        PricingService pricingService = new PricingService(new SeatDaoImpl(), Clock.systemUTC());
+
+        String sql = "SELECT flight_id, departure_time FROM flights WHERE flight_id = 1";
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            assertTrue(rs.next(), "Flight 1 must exist");
+            long flightId = rs.getLong("flight_id");
+            Timestamp depTs = rs.getTimestamp("departure_time");
+            Instant depInstant = depTs.toInstant();
+
+            // 1. Clock after departure (departed) -> throws IllegalStateException
+            Clock departedClock = Clock.fixed(depInstant.plusSeconds(300), ZoneOffset.UTC);
+            IllegalStateException exDeparted = org.junit.jupiter.api.Assertions.assertThrows(
+                    IllegalStateException.class,
+                    () -> pricingService.quote(flightId, SeatClass.ECONOMY, departedClock)
+            );
+            assertTrue(exDeparted.getMessage().contains("has already departed"),
+                    "Exception message must state flight has already departed: " + exDeparted.getMessage());
+
+            // 2. Clock at exact departure instant (departure <= clock.instant()) -> throws IllegalStateException
+            Clock exactClock = Clock.fixed(depInstant, ZoneOffset.UTC);
+            IllegalStateException exExact = org.junit.jupiter.api.Assertions.assertThrows(
+                    IllegalStateException.class,
+                    () -> pricingService.quote(flightId, SeatClass.ECONOMY, exactClock)
+            );
+            assertTrue(exExact.getMessage().contains("has already departed"),
+                    "Exception message must state flight has already departed: " + exExact.getMessage());
+
+            // 3. Just before departure (e.g. 5 minutes before departure) -> succeeds with urgent surge tier (<24h)
+            Clock justBeforeClock = Clock.fixed(depInstant.minusSeconds(300), ZoneOffset.UTC);
+            PriceQuote validQuote = pricingService.quote(flightId, SeatClass.ECONOMY, justBeforeClock);
+            assertNotNull(validQuote, "Quote just before departure must succeed");
+            assertEquals(new BigDecimal("1.20"), validQuote.timingMultiplier(),
+                    "Just before departure (< 24h) must use urgent surge timing multiplier 1.20");
+        }
     }
 
     private void printQuoteLine(String flightNo, String depSast, SeatClass seatClass, double hoursToDep, PriceQuote quote) {

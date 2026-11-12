@@ -1,10 +1,13 @@
 package com.group2.flightres.tools;
 
-import com.group2.flightres.model.PriceQuote;
-
 import com.group2.flightres.controller.SeatMapController;
 import com.group2.flightres.model.BookingContext;
+import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.PriceQuote;
+import com.group2.flightres.model.SeatClass;
+import com.group2.flightres.service.PricingService;
 import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.util.TestFlightFinder;
 import com.group2.flightres.util.ThemeManager;
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
@@ -25,20 +28,23 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.List;
 import java.nio.file.Path;
+import java.time.Clock;
+import java.util.List;
 
 /**
- * Renders the Phase 2 Glass Seat Map screen at 1280x860 and captures
- * docs/screenshots/glass-seat-map.png with real data and held seat.
+ * Renders the Glass Seat Map screen at 1280x800 and 900x680
+ * with real data and a held seat on an open ALT flight.
  */
 public class GlassSeatMapScreenshotRunner extends Application {
 
     private static final Logger logger = LoggerFactory.getLogger(GlassSeatMapScreenshotRunner.class);
-    private static final int WIDTH = 1280;
-    private static final int HEIGHT = 860;
 
     private static Path getOutputDir() {
+        File shadowDocs = new File("c:/Users/tttttttttttttttttttt/Desktop/flight-reservation-system-shadow/docs/screenshots");
+        if (shadowDocs.exists()) {
+            return shadowDocs.toPath();
+        }
         if (new File("..", "docs/screenshots").exists()) {
             return Path.of("..", "docs", "screenshots");
         }
@@ -50,16 +56,23 @@ public class GlassSeatMapScreenshotRunner extends Application {
         System.setProperty("altitude.screenshots", "true");
         FontLoader.loadFonts();
 
+        TestFlightFinder.OpenAltFlight flight = TestFlightFinder.findEarliestOpenAltFlight();
+        PricingService pricingService = new PricingService();
+        PriceQuote quote = pricingService.quote(flight.flightId(), SeatClass.ECONOMY, Clock.systemUTC());
+
         BookingContext ctx = new BookingContext();
-        ctx.setFlightId(1L);
-        ctx.setFlightNumber("FL 204");
-        ctx.setOrigin("JNB");
-        ctx.setDestination("CPT");
-        ctx.setDepartureTime("06:30");
-        ctx.setArrivalTime("08:35");
-        ctx.setDepartureDate("2026-11-14");
-        ctx.setBaseFare(new BigDecimal("1200"));
-        PriceQuote quote = PriceQuote.calculate(new BigDecimal("1200.00"), BigDecimal.ONE, 0.0, 100.0);
+        ctx.setFlightId(flight.flightId());
+        ctx.setFlightNumber(flight.flightNumber());
+        ctx.setOrigin(flight.originAirportName());
+        ctx.setDestination(flight.destAirportName());
+        ctx.setDepartureTime(flight.departureTime());
+        ctx.setArrivalTime(flight.arrivalTime());
+        ctx.setDepartureDate(flight.departureDate());
+        ctx.setDepartureInstant(flight.departureInstant());
+        ctx.setArrivalInstant(flight.arrivalInstant());
+        ctx.setAircraftModel(flight.aircraftModel());
+        ctx.setDuration(flight.duration());
+        ctx.setBaseFare(flight.basePrice());
         ctx.setPriceQuotes(List.of(quote));
         ctx.setTotalPrice(quote.total());
 
@@ -69,65 +82,51 @@ public class GlassSeatMapScreenshotRunner extends Application {
         SeatMapController controller = loader.getController();
         controller.init(ctx, () -> {}, () -> {});
 
-        // Select seat 9E (real hold via controller.handleSeatClick) to match target design
-        controller.selectSeatByLabel("9E");
+        // Select an available seat (e.g. 7C)
+        FlightSeat targetSeat = flight.availableSeats().stream()
+                .filter(s -> s.getSeatRow() >= 7 && s.getSeatClass() == SeatClass.ECONOMY)
+                .findFirst()
+                .orElse(flight.availableSeats().get(0));
+        controller.selectSeatByLabel(targetSeat.getSeatLabel());
 
-        Scene scene = new Scene(root, WIDTH, HEIGHT);
+        Scene scene = new Scene(root, 1280, 800);
         ThemeManager.getInstance().applyGlassTheme(scene);
 
         stage.setTitle("Glass Seat Map Preview");
         stage.setScene(scene);
-        stage.sizeToScene();
-        stage.setResizable(false);
+        stage.setWidth(1280);
+        stage.setHeight(800);
         stage.show();
 
         PauseTransition p1 = new PauseTransition(Duration.millis(900));
         p1.setOnFinished(e1 -> {
             root.applyCss();
             root.layout();
-            captureSnapshot(root, "glass-seat-map-s1.png");
-            captureSnapshot(root, "glass-seat-map.png");
+            captureSnapshot(root, "glass-seat-map.png", 1280, 800);
 
-            // Switch to Section 2 and hold seat 14B
-            controller.selectSeatByLabel("14B");
-            if (controller.getGlassBridge() != null) {
-                controller.getGlassBridge().setSection(2);
-            }
+            // Resize to 900x680
+            stage.setWidth(900);
+            stage.setHeight(680);
 
             PauseTransition p2 = new PauseTransition(Duration.millis(700));
             p2.setOnFinished(e2 -> {
                 root.applyCss();
                 root.layout();
-                captureSnapshot(root, "glass-seat-map-s2.png");
+                captureSnapshot(root, "glass-seat-map-900.png", 900, 680);
 
-                // Switch to Section 3 and hold seat 22D
-                controller.selectSeatByLabel("22D");
-                if (controller.getGlassBridge() != null) {
-                    controller.getGlassBridge().setSection(3);
-                }
-
-                PauseTransition p3 = new PauseTransition(Duration.millis(700));
-                p3.setOnFinished(e3 -> {
-                    root.applyCss();
-                    root.layout();
-                    captureSnapshot(root, "glass-seat-map-s3.png");
-
-                    // Release seat before exiting so database remains clean
-                    controller.handleReleaseSeat();
-
-                    logger.info("All 3 section screenshots captured successfully.");
-                    Platform.exit();
-                });
-                p3.play();
+                // Release seat before exiting so database remains completely clean
+                controller.handleReleaseSeat();
+                logger.info("Seat map screenshots captured successfully at 1280 and 900.");
+                Platform.exit();
             });
             p2.play();
         });
         p1.play();
     }
 
-    private static void captureSnapshot(Parent root, String filename) {
+    private static void captureSnapshot(Parent root, String filename, int w, int h) {
         javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
-        WritableImage snapshot = new WritableImage(WIDTH, HEIGHT);
+        WritableImage snapshot = new WritableImage(w, h);
         snapshot = root.snapshot(params, snapshot);
         File outputFile = getOutputDir().resolve(filename).toFile();
         try {

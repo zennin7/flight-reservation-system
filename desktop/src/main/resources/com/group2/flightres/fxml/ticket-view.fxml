@@ -172,6 +172,13 @@
                     <Label fx:id="stubReferenceLabel" text=""
                            style="-fx-font-family: 'Inter'; -fx-font-size: 20px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-letter-spacing: 0.1em;"/>
                 </VBox>
+
+                <!-- TOTAL FARE -->
+                <VBox fx:id="stubFareContainer" spacing="2" visible="false" managed="false">
+                    <Label text="TOTAL FARE" styleClass="ticket-grid-label"/>
+                    <Label fx:id="stubFareLabel" text=""
+                           style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 15px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                </VBox>
             </VBox>
         </HBox>
 

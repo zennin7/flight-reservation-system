@@ -103,19 +103,13 @@ public class BookingDaoImpl implements BookingDao {
             conn = DatabaseConfig.getDataSource().getConnection();
             conn.setAutoCommit(false);
 
-            long userId = resolveUserId(conn, context);
-            String pnr = generateUniquePnr(conn);
-            context.setBookingReference(pnr);
-
-            BookingHeader header = insertBookingHeader(conn, pnr, userId, context);
-            persistBookingSeats(conn, header.bookingId(), context);
-            persistPayment(conn, header.bookingId(), pnr, context);
+            BookingRecord record = createBookingInTransaction(conn, context);
 
             conn.commit();
             logger.info("Successfully created booking {} (ID: {}) for flight {} in transaction",
-                    pnr, header.bookingId(), context.getFlightId());
+                    context.getBookingReference(), record.getBookingId(), context.getFlightId());
 
-            return buildBookingRecord(header, pnr, userId, context);
+            return record;
         } catch (SQLException e) {
             if (conn != null) {
                 try { conn.rollback(); } catch (SQLException ex) { logger.error("Rollback failed", ex); }
@@ -127,6 +121,27 @@ public class BookingDaoImpl implements BookingDao {
                 try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
             }
         }
+    }
+
+    /**
+     * Executes the booking transaction within an externally-managed Connection/transaction.
+     * Does NOT commit or close the Connection, allowing callers (such as test suites)
+     * to test against real queries and roll back cleanly without leaving persisted rows.
+     */
+    public BookingRecord createBookingInTransaction(Connection conn, BookingContext context) throws SQLException {
+        if (context == null) {
+            throw new IllegalArgumentException("BookingContext cannot be null");
+        }
+
+        long userId = resolveUserId(conn, context);
+        String pnr = generateUniquePnr(conn);
+        context.setBookingReference(pnr);
+
+        BookingHeader header = insertBookingHeader(conn, pnr, userId, context);
+        persistBookingSeats(conn, header.bookingId(), context);
+        persistPayment(conn, header.bookingId(), pnr, context);
+
+        return buildBookingRecord(header, pnr, userId, context);
     }
 
     private BookingHeader insertBookingHeader(Connection conn, String pnr, long userId, BookingContext context)
@@ -290,19 +305,27 @@ public class BookingDaoImpl implements BookingDao {
         if (bookingRef == null || bookingRef.trim().isEmpty()) {
             return Optional.empty();
         }
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
+            return findByReference(conn, bookingRef);
+        } catch (SQLException e) {
+            logger.error("Failed to query booking by reference {}: {}", bookingRef, e.getMessage(), e);
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<BookingRecord> findByReference(Connection conn, String bookingRef) throws SQLException {
+        if (bookingRef == null || bookingRef.trim().isEmpty()) {
+            return Optional.empty();
+        }
         String ref = bookingRef.trim().toUpperCase(Locale.ROOT);
-
-        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(FIND_BY_REF_QUERY)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(FIND_BY_REF_QUERY)) {
             stmt.setString(1, ref);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(mapRecord(rs));
                 }
             }
-        } catch (SQLException e) {
-            logger.error("Failed to query booking by reference {}: {}", ref, e.getMessage(), e);
         }
         return Optional.empty();
     }
@@ -407,9 +430,9 @@ public class BookingDaoImpl implements BookingDao {
         String destTz = rs.getString("dest_timezone");
         ZoneId destZone = (destTz != null && !destTz.isBlank()) ? ZoneId.of(destTz) : ZoneId.of("UTC");
 
-        OffsetDateTime depOdt = rs.getObject("departure_time", OffsetDateTime.class);
-        if (depOdt != null) {
-            Instant depInstant = depOdt.toInstant();
+        Timestamp depTs = rs.getTimestamp("departure_time");
+        if (depTs != null) {
+            Instant depInstant = depTs.toInstant();
             rec.setDepartureInstant(depInstant);
             rec.setDepartureTime(FlightTimes.formatLocalTime(depInstant, origZone));
             rec.setDepartureDate(FlightTimes.formatLocalDate(depInstant, origZone));
@@ -418,9 +441,9 @@ public class BookingDaoImpl implements BookingDao {
             rec.setDepartureDate("—");
         }
 
-        OffsetDateTime arrOdt = rs.getObject("arrival_time", OffsetDateTime.class);
-        if (arrOdt != null) {
-            Instant arrInstant = arrOdt.toInstant();
+        Timestamp arrTs = rs.getTimestamp("arrival_time");
+        if (arrTs != null) {
+            Instant arrInstant = arrTs.toInstant();
             rec.setArrivalInstant(arrInstant);
             rec.setArrivalTime(FlightTimes.formatLocalTime(arrInstant, destZone));
         } else {
