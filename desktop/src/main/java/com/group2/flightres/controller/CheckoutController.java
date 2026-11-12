@@ -3,6 +3,9 @@ package com.group2.flightres.controller;
 import com.group2.flightres.component.StepperBar;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.exception.ValidationException;
+import com.group2.flightres.config.BaggagePolicy;
+import com.group2.flightres.exception.PriceChangedException;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.BookingStep;
@@ -21,6 +24,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,8 +71,10 @@ public class CheckoutController implements WizardStepController {
     @FXML private Label cardPreviewExpiry;
 
     @FXML private Button cardTabButton;
-    @FXML private Button eftTabButton;
-    @FXML private Button walletTabButton;
+    @FXML private Label baggageAllowanceLabel;
+    @FXML private VBox errorContainer;
+    @FXML private Label errorMessageLabel;
+    @FXML private Button errorBackButton;
 
     @FXML private Label holdTimerLabel;
     @FXML private Label confirmTotalLabel;
@@ -208,20 +214,54 @@ public class CheckoutController implements WizardStepController {
     }
 
     private void populatePriceSummary() {
-        BigDecimal base = bookingContext.getBaseFare() != null ? bookingContext.getBaseFare() : BigDecimal.ZERO;
-        if (bookingContext.getClassMultiplier() != null && bookingContext.getClassMultiplier().compareTo(BigDecimal.ONE) > 0) {
-            base = base.multiply(bookingContext.getClassMultiplier());
+        if (bookingContext == null || bookingContext.getPriceQuotes() == null || bookingContext.getPriceQuotes().isEmpty()
+                || bookingContext.getTotalPrice() == null || bookingContext.getTotalPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            showNoQuoteErrorState("No price quote available for this booking. Please return to seat selection.");
+            return;
         }
-        BigDecimal demand = bookingContext.getDemandPricing() != null ? bookingContext.getDemandPricing() : BigDecimal.ZERO;
-        BigDecimal taxes = bookingContext.getTaxesAndFees() != null ? bookingContext.getTaxesAndFees() : BigDecimal.ZERO;
-        BigDecimal total = bookingContext.getTotalPrice() != null && bookingContext.getTotalPrice().compareTo(BigDecimal.ZERO) > 0
-                ? bookingContext.getTotalPrice() : base.add(demand).add(taxes);
+
+        if (errorContainer != null) {
+            errorContainer.setVisible(false);
+            errorContainer.setManaged(false);
+        }
+        if (confirmBookingButton != null) {
+            confirmBookingButton.setDisable(false);
+        }
+
+        BigDecimal base = bookingContext.getPriceQuotes().stream()
+                .map(PriceQuote::classFare)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal demand = bookingContext.getPriceQuotes().stream()
+                .map(PriceQuote::demandAdjustment)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal timing = bookingContext.getPriceQuotes().stream()
+                .map(PriceQuote::timingAdjustment)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal total = bookingContext.getTotalPrice();
 
         if (baseFareLabel != null) baseFareLabel.setText(formatExactPrice(base));
         if (demandPricingLabel != null) demandPricingLabel.setText(formatExactPrice(demand));
-        if (taxesFeesLabel != null) taxesFeesLabel.setText(formatExactPrice(taxes));
+        if (taxesFeesLabel != null) taxesFeesLabel.setText(formatExactPrice(timing));
         if (totalLabel != null) totalLabel.setText(formatTotalText(total));
         if (confirmTotalLabel != null) confirmTotalLabel.setText(formatTotalText(total));
+    }
+
+    private void showNoQuoteErrorState(String message) {
+        if (errorContainer != null) {
+            errorContainer.setVisible(true);
+            errorContainer.setManaged(true);
+        }
+        if (errorMessageLabel != null) {
+            errorMessageLabel.setText(message);
+        }
+        if (confirmBookingButton != null) {
+            confirmBookingButton.setDisable(true);
+        }
+        if (baseFareLabel != null) baseFareLabel.setText("-");
+        if (demandPricingLabel != null) demandPricingLabel.setText("-");
+        if (taxesFeesLabel != null) taxesFeesLabel.setText("-");
+        if (totalLabel != null) totalLabel.setText("-");
+        if (confirmTotalLabel != null) confirmTotalLabel.setText("-");
     }
 
     private void populateInputFields() {
@@ -393,8 +433,11 @@ public class CheckoutController implements WizardStepController {
         String expiry = expiryField != null ? expiryField.getText() : "";
         String cvv = cvvField != null ? cvvField.getText() : "";
 
-        BigDecimal amount = (bookingContext.getTotalPrice() != null && bookingContext.getTotalPrice().compareTo(BigDecimal.ZERO) > 0)
-                ? bookingContext.getTotalPrice() : new BigDecimal("1522.00");
+        if (bookingContext.getTotalPrice() == null || bookingContext.getTotalPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            showAlert("Missing Quote", "No price quote available for this booking. Please return to seat selection.");
+            return;
+        }
+        BigDecimal amount = bookingContext.getTotalPrice();
 
         PaymentResult payResult = paymentService.processPayment(cardNum, expiry, cvv, amount);
         if (!payResult.isApproved()) {
@@ -420,6 +463,16 @@ public class CheckoutController implements WizardStepController {
             BookingRecord record = bookingService.createBooking(bookingContext);
             bookingContext.setBookingReference(record.getBookingReference());
             logger.info("Successfully confirmed booking '{}' in database.", record.getBookingReference());
+        } catch (PriceChangedException pce) {
+            logger.warn("Price changed during checkout: {}", pce.getMessage());
+            refundIfApproved(payResult);
+            clearCardFields();
+            showAlert("Fare Updated", String.format(Locale.US,
+                    "The fare changed from R %,d to R %,d. The price summary has been refreshed.",
+                    pce.getOldTotal().longValue(), pce.getNewTotal().longValue()));
+            bookingContext.setTotalPrice(pce.getNewTotal());
+            populatePriceSummary();
+            return;
         } catch (SeatUnavailableException sue) {
             logger.warn("Seat hold expired or taken: {}", sue.getMessage());
             refundIfApproved(payResult);
@@ -508,23 +561,45 @@ public class CheckoutController implements WizardStepController {
     @FXML
     private void handleCardTab() {
         if (cardTabButton != null) cardTabButton.getStyleClass().add("tab-btn-active");
-        if (eftTabButton != null) eftTabButton.getStyleClass().remove("tab-btn-active");
-        if (walletTabButton != null) walletTabButton.getStyleClass().remove("tab-btn-active");
-    }
-
-    @FXML
-    private void handleEftTab() {
-        showAlert("Coming soon", "Instant EFT isn't available yet.");
-    }
-
-    @FXML
-    private void handleWalletTab() {
-        showAlert("Coming soon", "Wallet isn't available yet.");
     }
 
     @FXML
     private void handleNavHome() {
-        showAlert("Coming soon", "Home navigation isn't available yet.");
+        navigateTo("/com/group2/flightres/fxml/home.fxml", "Home");
+    }
+
+    private void navigateTo(String fxmlPath, String screenName) {
+        javafx.scene.Scene scene = null;
+        if (confirmBookingButton != null && confirmBookingButton.getScene() != null) {
+            scene = confirmBookingButton.getScene();
+        }
+        if (scene == null) return;
+
+        javafx.scene.layout.StackPane contentArea =
+                (javafx.scene.layout.StackPane) scene.lookup("#contentArea");
+        if (contentArea != null) {
+            try {
+                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource(fxmlPath));
+                javafx.scene.Node view = loader.load();
+                contentArea.getChildren().setAll(view);
+                com.group2.flightres.util.Motion.screenTransition(view);
+
+                javafx.scene.layout.VBox stepperWrapper =
+                        (javafx.scene.layout.VBox) scene.lookup("#stepperWrapper");
+                if (stepperWrapper != null) {
+                    stepperWrapper.setVisible(false);
+                    stepperWrapper.setManaged(false);
+                }
+
+                com.group2.flightres.component.NavBar nav =
+                        (com.group2.flightres.component.NavBar) scene.lookup("#navBar");
+                if (nav != null) {
+                    nav.setActiveLink(screenName);
+                }
+            } catch (Exception e) {
+                logger.error("Failed to navigate to {}", fxmlPath, e);
+            }
+        }
     }
 
     @FXML

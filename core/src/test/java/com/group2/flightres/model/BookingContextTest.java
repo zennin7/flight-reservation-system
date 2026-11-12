@@ -25,17 +25,35 @@ class BookingContextTest {
     }
 
     @Test
-    @DisplayName("Total price calculation reflects base fare, multiplier, demand and taxes")
+    @DisplayName("Total price calculation reflects sum of price quotes over all seats")
     void testPriceCalculation() {
         BookingContext context = new BookingContext();
-        context.setBaseFare(new BigDecimal("1200"));
+        context.setBaseFare(new BigDecimal("1200.00"));
 
-        FlightSeat seat = new FlightSeat();
-        seat.setSeatClass(SeatClass.FIRST);
-        context.setSelectedSeats(List.of(seat));
+        PriceQuote q1 = new PriceQuote(
+                new BigDecimal("1200.00"),
+                new BigDecimal("1.00"),
+                new BigDecimal("1200.00"),
+                new BigDecimal("1.00"),
+                BigDecimal.ZERO.setScale(2),
+                new BigDecimal("1.00"),
+                BigDecimal.ZERO.setScale(2),
+                new BigDecimal("1200.00"),
+                new BigDecimal("156.52")
+        );
+        PriceQuote q2 = new PriceQuote(
+                new BigDecimal("1200.00"),
+                new BigDecimal("3.50"),
+                new BigDecimal("4200.00"),
+                new BigDecimal("1.05"),
+                new BigDecimal("210.00"),
+                new BigDecimal("1.12"),
+                new BigDecimal("529.20"),
+                new BigDecimal("4939.20"),
+                new BigDecimal("644.24")
+        );
 
-        // 1200 * 2.0 (First class) + 180 (demand) + 142 (taxes) = 2722
-        BigDecimal total = context.getTotalPrice();
-        assertEquals(new BigDecimal("2722.0"), total);
+        context.setPriceQuotes(List.of(q1, q2));
+        assertEquals(new BigDecimal("6139.20"), context.getTotalPrice());
     }
 }

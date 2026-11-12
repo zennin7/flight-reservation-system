@@ -1,6 +1,7 @@
 package com.group2.flightres.integration;
 
 import com.group2.flightres.model.BookingContext;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
@@ -38,12 +39,11 @@ public class DesktopBookingRunner {
         seat.setStatus(SeatStatus.AVAILABLE);
         seat.setCalculatedPrice(new BigDecimal("1200.00"));
 
+        PriceQuote quote = PriceQuote.calculate(new BigDecimal("1200.00"), BigDecimal.ONE, 0.0, 100.0);
         ctx.setSelectedSeats(new ArrayList<>(List.of(seat)));
-        ctx.setBaseFare(new BigDecimal("1200.00"));
-        ctx.setClassMultiplier(BigDecimal.ONE);
-        ctx.setDemandPricing(new BigDecimal("180.00"));
-        ctx.setTaxesAndFees(new BigDecimal("142.00"));
-        ctx.setTotalPrice(new BigDecimal("1522.00"));
+        ctx.setBaseFare(quote.baseFare());
+        ctx.setPriceQuotes(List.of(quote));
+        ctx.setTotalPrice(quote.total());
 
         ctx.setPassengerName("Thabo Ndlovu");
         ctx.setPassengerEmail("thabo.ndlovu@skyvoyage.com");

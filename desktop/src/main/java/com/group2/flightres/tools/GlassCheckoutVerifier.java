@@ -6,6 +6,7 @@ import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.service.BookingService;
@@ -126,10 +127,9 @@ public class GlassCheckoutVerifier extends Application {
         ctx.setArrivalTime("08:35");
         ctx.setDepartureDate("2026-11-14");
         ctx.setBaseFare(new BigDecimal("1200"));
-        ctx.setClassMultiplier(BigDecimal.ONE);
-        ctx.setDemandPricing(new BigDecimal("180"));
-        ctx.setTaxesAndFees(new BigDecimal("142"));
-        ctx.recalculateTotals();
+        PriceQuote quote = PriceQuote.calculate(new BigDecimal("1200.00"), BigDecimal.ONE, 0.0, 100.0);
+        ctx.setPriceQuotes(List.of(quote));
+        ctx.setTotalPrice(quote.total());
 
         FlightSeat seat = new FlightSeat();
         seat.setFlightId(1L);

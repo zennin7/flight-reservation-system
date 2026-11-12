@@ -30,6 +30,10 @@ public class DatabaseConfig {
         return dataSource;
     }
 
+        public static java.sql.Connection getConnection() throws java.sql.SQLException {
+        return getDataSource().getConnection();
+    }
+
     public static void closePool() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();

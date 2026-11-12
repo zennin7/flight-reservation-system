@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +34,12 @@ class SeatHoldRaceTest {
         @Override
         public List<FlightSeat> getSeatMapForFlight(long flightId) {
             return Collections.emptyList();
+        }
+
+        @Override
+        public Optional<Instant> holdSeat(long flightSeatId, int holdSeconds) {
+            boolean ok = holdSeat(flightSeatId);
+            return ok ? Optional.of(Instant.now().plusSeconds(holdSeconds)) : Optional.empty();
         }
 
         @Override

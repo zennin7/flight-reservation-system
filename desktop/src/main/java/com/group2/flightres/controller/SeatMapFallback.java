@@ -2,6 +2,7 @@ package com.group2.flightres.controller;
 
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
 
@@ -12,6 +13,8 @@ import java.util.Set;
 
 /**
  * Generates fallback reference seats when the database is offline or empty.
+ * Never fabricates prices: if no quotes exist in context, calculated prices remain null
+ * causing the UI to show an honest state and disable booking.
  */
 class SeatMapFallback {
 
@@ -21,12 +24,8 @@ class SeatMapFallback {
         List<FlightSeat> list = new ArrayList<>();
         long id = 100L;
 
-        BigDecimal base = (bookingContext != null && bookingContext.getBaseFare() != null && bookingContext.getBaseFare().compareTo(BigDecimal.ZERO) > 0)
-                ? bookingContext.getBaseFare() : new BigDecimal("1200");
-        BigDecimal demand = (bookingContext != null && bookingContext.getDemandPricing() != null && bookingContext.getDemandPricing().compareTo(BigDecimal.ZERO) > 0)
-                ? bookingContext.getDemandPricing() : new BigDecimal("180");
-        BigDecimal firstPrice = base.multiply(new BigDecimal("2.0")).add(demand);
-        BigDecimal econPrice = base.multiply(new BigDecimal("1.0")).add(demand);
+        BigDecimal firstPrice = resolvePrice(bookingContext, SeatClass.FIRST);
+        BigDecimal econPrice = resolvePrice(bookingContext, SeatClass.ECONOMY);
 
         // First Class: 1A(A), 1B(B), 1C(A), 1D(A), 2A(A), 2B(A), 2C(B), 2D(B)
         Set<String> firstBooked = Set.of("1B", "2C", "2D");
@@ -72,18 +71,23 @@ class SeatMapFallback {
     }
 
     static FlightSeat createFallbackSeat(long flightId, String label, SeatStatus status, BookingContext bookingContext) {
-        BigDecimal base = (bookingContext != null && bookingContext.getBaseFare() != null && bookingContext.getBaseFare().compareTo(BigDecimal.ZERO) > 0)
-                ? bookingContext.getBaseFare() : new BigDecimal("1200");
-        BigDecimal demand = (bookingContext != null && bookingContext.getDemandPricing() != null && bookingContext.getDemandPricing().compareTo(BigDecimal.ZERO) > 0)
-                ? bookingContext.getDemandPricing() : new BigDecimal("180");
-        BigDecimal econPrice = base.multiply(new BigDecimal("1.0")).add(demand);
-
         FlightSeat s = new FlightSeat();
         s.setFlightSeatId(System.currentTimeMillis());
         s.setFlightId(flightId);
         s.setStatus(status);
         s.setSeatClass(SeatClass.ECONOMY);
-        s.setCalculatedPrice(econPrice);
+        s.setCalculatedPrice(resolvePrice(bookingContext, SeatClass.ECONOMY));
         return s;
+    }
+
+    private static BigDecimal resolvePrice(BookingContext bookingContext, SeatClass seatClass) {
+        if (bookingContext != null && bookingContext.getPriceQuotes() != null) {
+            for (PriceQuote q : bookingContext.getPriceQuotes()) {
+                if (q != null && q.total() != null) {
+                    return q.total();
+                }
+            }
+        }
+        return null;
     }
 }

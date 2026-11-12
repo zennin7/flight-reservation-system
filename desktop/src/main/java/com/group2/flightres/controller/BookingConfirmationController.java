@@ -7,6 +7,7 @@ import com.group2.flightres.model.TicketData;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.util.FlightDateFormatter;
 import com.group2.flightres.model.BookingContext;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.util.BarcodeGenerator;
 import com.group2.flightres.util.BoardingPassPdfGenerator;
@@ -267,15 +268,22 @@ public class BookingConfirmationController implements WizardStepController {
             }
         }
 
-        // 5. Populate Payment Summary: THREE rows (Base fare, Demand pricing, Taxes and fees) then Paid
-        BigDecimal base = bookingContext.getBaseFare() != null ? bookingContext.getBaseFare() : BigDecimal.ZERO;
-        BigDecimal demand = bookingContext.getDemandPricing() != null ? bookingContext.getDemandPricing() : BigDecimal.ZERO;
-        BigDecimal taxes = bookingContext.getTaxesAndFees() != null ? bookingContext.getTaxesAndFees() : BigDecimal.ZERO;
-        BigDecimal total = bookingContext.getTotalPrice() != null ? bookingContext.getTotalPrice() : base.add(demand).add(taxes);
+        // 5. Populate Payment Summary
+        BigDecimal base = BigDecimal.ZERO;
+        BigDecimal demand = BigDecimal.ZERO;
+        BigDecimal timing = BigDecimal.ZERO;
+        if (bookingContext.getPriceQuotes() != null && !bookingContext.getPriceQuotes().isEmpty()) {
+            base = bookingContext.getPriceQuotes().stream().map(PriceQuote::classFare).reduce(BigDecimal.ZERO, BigDecimal::add);
+            demand = bookingContext.getPriceQuotes().stream().map(PriceQuote::demandAdjustment).reduce(BigDecimal.ZERO, BigDecimal::add);
+            timing = bookingContext.getPriceQuotes().stream().map(PriceQuote::timingAdjustment).reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else if (bookingContext.getBaseFare() != null) {
+            base = bookingContext.getBaseFare();
+        }
+        BigDecimal total = bookingContext.getTotalPrice() != null ? bookingContext.getTotalPrice() : base.add(demand).add(timing);
 
         if (baseFareLabel != null) baseFareLabel.setText(formatExactPrice(base));
         if (demandPricingLabel != null) demandPricingLabel.setText(formatExactPrice(demand));
-        if (taxesFeesLabel != null) taxesFeesLabel.setText(formatExactPrice(taxes));
+        if (taxesFeesLabel != null) taxesFeesLabel.setText(formatExactPrice(timing));
         if (totalPaidLabel != null) totalPaidLabel.setText(formatTotalText(total));
 
         // 6. Populate What Happens Next Timeline: Bag drop uses airport NAME from DB

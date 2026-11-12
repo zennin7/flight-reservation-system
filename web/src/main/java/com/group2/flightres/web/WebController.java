@@ -246,14 +246,11 @@ public class WebController {
         bc.setSelectedSeats(List.of(targetSeat));
 
         BigDecimal basePrice = flight.getBasePrice();
-        BigDecimal classMult = targetSeat.getSeatClass() == SeatClass.FIRST ? new BigDecimal("2.5") : BigDecimal.ONE;
-        BigDecimal demandPrice = new BigDecimal("180");
-        BigDecimal totalPrice = basePrice.multiply(classMult).add(demandPrice);
+        PriceQuote quote = bookingService.getPricingService().quote(flight.getFlightId(), targetSeat.getSeatClass());
 
         bc.setBaseFare(basePrice);
-        bc.setClassMultiplier(classMult);
-        bc.setDemandPricing(demandPrice);
-        bc.setTotalPrice(totalPrice);
+        bc.setPriceQuotes(List.of(quote));
+        bc.setTotalPrice(quote.total());
 
         User currentUser = ctx.sessionAttribute("user");
         if (currentUser != null) {

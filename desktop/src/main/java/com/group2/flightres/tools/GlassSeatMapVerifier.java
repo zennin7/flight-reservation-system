@@ -4,6 +4,7 @@ import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.controller.SeatMapController;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.util.FontLoader;
 import javafx.application.Application;
@@ -14,6 +15,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -86,10 +88,9 @@ public class GlassSeatMapVerifier extends Application {
         ctx.setArrivalTime("08:35");
         ctx.setDepartureDate("2026-11-14");
         ctx.setBaseFare(new BigDecimal("1200"));
-        ctx.setClassMultiplier(BigDecimal.ONE);
-        ctx.setDemandPricing(new BigDecimal("180"));
-        ctx.setTaxesAndFees(new BigDecimal("142"));
-        ctx.recalculateTotals();
+        PriceQuote quote = PriceQuote.calculate(new BigDecimal("1200.00"), BigDecimal.ONE, 0.0, 100.0);
+        ctx.setPriceQuotes(List.of(quote));
+        ctx.setTotalPrice(quote.total());
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/seat-map.fxml"));
         Parent root = loader.load();

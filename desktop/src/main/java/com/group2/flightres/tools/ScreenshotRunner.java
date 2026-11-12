@@ -1,5 +1,7 @@
 package com.group2.flightres.tools;
 
+import com.group2.flightres.model.PriceQuote;
+
 import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.controller.MainShellController;
 import com.group2.flightres.controller.SeatMapController;
@@ -231,10 +233,9 @@ public class ScreenshotRunner extends Application {
 
         ctx.setSelectedSeats(new ArrayList<>(List.of(seat7E)));
         ctx.setBaseFare(new java.math.BigDecimal("1200"));
-        ctx.setClassMultiplier(new java.math.BigDecimal("1.0"));
-        ctx.setDemandPricing(new java.math.BigDecimal("180"));
-        ctx.setTaxesAndFees(new java.math.BigDecimal("142"));
-        ctx.setTotalPrice(new java.math.BigDecimal("1522"));
+        PriceQuote quote = PriceQuote.calculate(new java.math.BigDecimal("1200.00"), java.math.BigDecimal.ONE, 0.0, 100.0);
+        ctx.setPriceQuotes(List.of(quote));
+        ctx.setTotalPrice(quote.total());
 
         ctx.setPassengerName("David M.");
         ctx.setPassengerEmail("david@example.com");

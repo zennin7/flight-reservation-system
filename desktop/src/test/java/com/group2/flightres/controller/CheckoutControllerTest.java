@@ -4,6 +4,7 @@ import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.service.BookingService;
@@ -57,11 +58,10 @@ class CheckoutControllerTest {
         seat.setCalculatedPrice(new BigDecimal("1200.00"));
         seat.setHeldUntil(Instant.now().plusSeconds(300));
 
+        PriceQuote quote = PriceQuote.calculate(new BigDecimal("1200.00"), BigDecimal.ONE, 0.0, 100.0);
         ctx.setSelectedSeats(new ArrayList<>(List.of(seat)));
         ctx.setBaseFare(new BigDecimal("1200.00"));
-        ctx.setDemandPricing(new BigDecimal("180.00"));
-        ctx.setTaxesAndFees(new BigDecimal("142.00"));
-        ctx.recalculateTotals();
+        ctx.setPriceQuotes(List.of(quote));
         ctx.setHoldExpiresAt(seat.getHeldUntil());
 
         return ctx;

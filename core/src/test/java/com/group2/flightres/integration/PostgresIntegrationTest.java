@@ -8,6 +8,12 @@ import com.group2.flightres.dao.impl.FlightDaoImpl;
 import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.model.Airport;
 import com.group2.flightres.model.BookingContext;
+import com.group2.flightres.model.PriceQuote;
+import com.group2.flightres.service.PricingService;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.DashboardStats;
 import com.group2.flightres.model.FlightSearchResult;
@@ -132,7 +138,7 @@ class PostgresIntegrationTest {
 
     @Test
     @DisplayName("PostgreSQL: Atomic booking insertion and lookup by PNR reference")
-    void testLiveBookingAndLookup() {
+    void testLiveBookingAndLookup() throws SQLException {
         BookingDaoImpl bookingDao = new BookingDaoImpl();
         SeatDaoImpl seatDao = new SeatDaoImpl();
 
@@ -153,6 +159,10 @@ class PostgresIntegrationTest {
         assertTrue(flightOpt.isPresent(), "Flight 1 must exist for integration test");
         FlightSearchResult flight = flightOpt.get();
 
+        Clock fixedClock = Clock.fixed(Instant.parse("2026-11-01T00:00:00Z"), ZoneOffset.UTC);
+        PricingService pricingService = new PricingService(seatDao, fixedClock);
+        PriceQuote quote = pricingService.quote(flight.getFlightId(), seat.getSeatClass(), fixedClock);
+
         BookingContext ctx = new BookingContext();
         ctx.setFlightId(1L);
         ctx.setFlightNumber("GRP 204");
@@ -167,7 +177,10 @@ class PostgresIntegrationTest {
         ctx.setPassengerEmail("test.passenger@skyvoyage.com");
         ctx.setPassportNumber("TEST998877");
         ctx.setDateOfBirth(LocalDate.of(1995, 5, 20));
-        ctx.setBaseFare(seat.getCalculatedPrice() != null ? seat.getCalculatedPrice() : new BigDecimal("1200.00"));
+        ctx.setPriceQuotes(List.of(quote));
+        ctx.setBaseFare(quote.baseFare());
+        ctx.setTotalPrice(quote.total());
+        seat.setCalculatedPrice(quote.total());
         ctx.setSelectedSeats(new ArrayList<>(List.of(seat)));
         ctx.setPaymentResult(new com.group2.flightres.service.PaymentResult(true, "TXN-IT-9988", "VISA", "4242", null));
 
@@ -176,6 +189,17 @@ class PostgresIntegrationTest {
             assertNotNull(record);
             assertNotNull(record.getBookingReference());
             assertEquals("CONFIRMED", record.getStatus());
+
+            // Assert stored payments.amount equals the quote total
+            try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+                 PreparedStatement stmt = conn.prepareStatement("SELECT amount FROM payments WHERE booking_id = ?")) {
+                stmt.setLong(1, record.getBookingId());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    assertTrue(rs.next(), "Payment record must exist for booking " + record.getBookingId());
+                    assertEquals(0, quote.total().compareTo(rs.getBigDecimal("amount")),
+                            "Stored payments.amount must equal the quote total");
+                }
+            }
 
             Optional<BookingRecord> fetched = bookingDao.findByReference(record.getBookingReference());
             assertTrue(fetched.isPresent());
@@ -270,6 +294,10 @@ class PostgresIntegrationTest {
             List<FlightSeat> seats = seatDao.getSeatMapForFlight(flight.getFlightId());
             FlightSeat seat = seats.stream().filter(s -> s.getStatus() == SeatStatus.AVAILABLE).findFirst().orElseThrow();
 
+            Clock fixedClock = Clock.fixed(Instant.parse("2026-11-01T00:00:00Z"), ZoneOffset.UTC);
+            PricingService pricingService = new PricingService(seatDao, fixedClock);
+            PriceQuote quote = pricingService.quote(flight.getFlightId(), seat.getSeatClass(), fixedClock);
+
             BookingContext ctx = new BookingContext();
             ctx.setFlightId(flight.getFlightId());
             ctx.setFlightNumber(flight.getFlightNumber());
@@ -285,12 +313,26 @@ class PostgresIntegrationTest {
             ctx.setPassengerEmail("tz.readback@skyvoyage.com");
             ctx.setPassportNumber("TZLA9988");
             ctx.setDateOfBirth(LocalDate.of(1990, 1, 1));
-            ctx.setBaseFare(flight.getBasePrice());
+            ctx.setPriceQuotes(List.of(quote));
+            ctx.setBaseFare(quote.baseFare());
+            ctx.setTotalPrice(quote.total());
+            seat.setCalculatedPrice(quote.total());
             ctx.setSelectedSeats(new ArrayList<>(List.of(seat)));
             ctx.setPaymentResult(new com.group2.flightres.service.PaymentResult(true, "TXN-TZ-9988", "VISA", "4242", null));
 
             BookingRecord record = bookingDao.createBooking(ctx);
             try {
+                // Assert stored payments.amount equals the quote total
+                try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+                     PreparedStatement stmt = conn.prepareStatement("SELECT amount FROM payments WHERE booking_id = ?")) {
+                    stmt.setLong(1, record.getBookingId());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        assertTrue(rs.next(), "Payment record must exist for booking " + record.getBookingId());
+                        assertEquals(0, quote.total().compareTo(rs.getBigDecimal("amount")),
+                                "Stored payments.amount must equal the quote total");
+                    }
+                }
+
                 Optional<BookingRecord> fetched = bookingDao.findByReference(record.getBookingReference());
                 assertTrue(fetched.isPresent());
                 assertEquals("06:30", fetched.get().getDepartureTime());

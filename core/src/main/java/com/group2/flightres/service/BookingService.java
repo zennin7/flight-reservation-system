@@ -4,14 +4,20 @@ import com.group2.flightres.dao.BookingDao;
 import com.group2.flightres.dao.FlightDao;
 import com.group2.flightres.dao.impl.BookingDaoImpl;
 import com.group2.flightres.dao.impl.FlightDaoImpl;
+import com.group2.flightres.dao.impl.SeatDaoImpl;
+import com.group2.flightres.exception.PriceChangedException;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.FlightSearchResult;
+import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.util.ValidationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +31,7 @@ public class BookingService {
 
     private final BookingDao bookingDao;
     private final FlightDao flightDao;
+    private final PricingService pricingService;
     private final Clock clock;
 
     public BookingService() {
@@ -40,14 +47,21 @@ public class BookingService {
     }
 
     public BookingService(BookingDao bookingDao, FlightDao flightDao, Clock clock) {
+        this(bookingDao, flightDao, new PricingService(new SeatDaoImpl(), clock != null ? clock : Clock.systemUTC()), clock);
+    }
+
+    public BookingService(BookingDao bookingDao, FlightDao flightDao, PricingService pricingService, Clock clock) {
         this.bookingDao = bookingDao;
         this.flightDao = flightDao != null ? flightDao : new FlightDaoImpl();
         this.clock = clock != null ? clock : Clock.systemUTC();
+        this.pricingService = pricingService != null ? pricingService : new PricingService(new SeatDaoImpl(), this.clock);
     }
 
     /**
      * Confirms and persists a booking in a single database transaction.
-     * Validates passenger details and enforces FlightSalesPolicy before committing.
+     * Recomputes the quote for every selected seat server-side.
+     * If the recomputed total differs from the expected total shown to the client,
+     * throws PriceChangedException BEFORE any payment, booking, or seat status changes.
      *
      * @param context active booking context
      * @return created BookingRecord with reference code
@@ -79,8 +93,32 @@ public class BookingService {
             }
         }
 
-        logger.info("Initiating booking transaction for passenger '{}' on flight ID {}",
-                context.getPassengerName(), context.getFlightId());
+        // Server-side authority: recompute quote for every selected seat
+        long flightId = context.getFlightId() != null ? context.getFlightId() : 0L;
+        List<PriceQuote> quotes = new ArrayList<>();
+        BigDecimal recomputedTotal = BigDecimal.ZERO;
+        for (FlightSeat seat : context.getSelectedSeats()) {
+            long fId = seat.getFlightId() > 0 ? seat.getFlightId() : flightId;
+            PriceQuote quote = pricingService.quote(fId, seat.getSeatClass(), clock);
+            quotes.add(quote);
+            recomputedTotal = recomputedTotal.add(quote.total());
+            seat.setCalculatedPrice(quote.total());
+        }
+
+        BigDecimal clientExpected = context.getTotalPrice();
+        if (clientExpected != null && clientExpected.compareTo(BigDecimal.ZERO) > 0
+                && clientExpected.compareTo(recomputedTotal) != 0) {
+            logger.warn("Booking price mismatch: client expected {} vs server recomputed {}",
+                    clientExpected, recomputedTotal);
+            throw new PriceChangedException(clientExpected, recomputedTotal);
+        }
+
+        // Apply authoritative server-side quotes to context
+        context.setPriceQuotes(quotes);
+        context.setTotalPrice(recomputedTotal);
+
+        logger.info("Initiating booking transaction for passenger '{}' on flight ID {} (total: R {})",
+                context.getPassengerName(), context.getFlightId(), recomputedTotal);
 
         BookingRecord record = bookingDao.createBooking(context);
         logger.info("Booking confirmed with reference '{}' (ID: {})",
@@ -119,5 +157,9 @@ public class BookingService {
      */
     public Optional<String> findAirportCity(String code) {
         return flightDao.findAirportCity(code);
+    }
+
+    public PricingService getPricingService() {
+        return pricingService;
     }
 }

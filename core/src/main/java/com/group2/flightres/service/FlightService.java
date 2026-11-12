@@ -4,9 +4,12 @@ import com.group2.flightres.dao.AirportDao;
 import com.group2.flightres.dao.FlightDao;
 import com.group2.flightres.dao.impl.AirportDaoImpl;
 import com.group2.flightres.dao.impl.FlightDaoImpl;
+import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.model.Airport;
 import com.group2.flightres.model.FlightSearchResult;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.Route;
+import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.util.ValidationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +18,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -27,6 +31,7 @@ public class FlightService {
 
     private final FlightDao flightDao;
     private final AirportDao airportDao;
+    private final PricingService pricingService;
     private final Clock clock;
 
     public FlightService() {
@@ -50,9 +55,14 @@ public class FlightService {
     }
 
     public FlightService(FlightDao flightDao, AirportDao airportDao, Clock clock) {
+        this(flightDao, airportDao, new PricingService(new SeatDaoImpl(), clock != null ? clock : Clock.systemUTC()), clock);
+    }
+
+    public FlightService(FlightDao flightDao, AirportDao airportDao, PricingService pricingService, Clock clock) {
         this.flightDao = flightDao;
         this.airportDao = airportDao != null ? airportDao : new AirportDaoImpl();
         this.clock = clock != null ? clock : Clock.systemUTC();
+        this.pricingService = pricingService != null ? pricingService : new PricingService(new SeatDaoImpl(), this.clock);
     }
 
     /**
@@ -84,11 +94,12 @@ public class FlightService {
     /**
      * Searches for flights matching route and departure date.
      * Enforces FlightSalesPolicy: closed or departed flights (<= 60 min before departure) are excluded.
+     * Computes the dynamic quote total for the cheapest available economy seat via batch query (no N+1).
      *
      * @param origin departure airport or city
      * @param destination arrival airport or city
      * @param departureDate departure date
-     * @return list of matching open flights, or empty list if no results
+     * @return list of matching open flights with live quoted economy prices, or empty list if no results
      */
     public List<FlightSearchResult> searchFlights(String origin, String destination, LocalDate departureDate) {
         ValidationUtil.validateFlightSearch(origin, destination, departureDate);
@@ -101,10 +112,22 @@ public class FlightService {
 
         if (openFlights.isEmpty()) {
             logger.info("No open flights found for {} -> {} on {}", origin, destination, departureDate);
-        } else {
-            logger.info("Retrieved {} available open flights", openFlights.size());
+            return openFlights;
         }
-        return openFlights;
+
+        // Batch quote cheapest available economy seat for all returned flights (single query, no N+1)
+        List<Long> flightIds = openFlights.stream().map(FlightSearchResult::getFlightId).toList();
+        Map<Long, PriceQuote> quotes = pricingService.quoteBatch(flightIds, SeatClass.ECONOMY, clock);
+
+        List<FlightSearchResult> quotedFlights = openFlights.stream()
+                .map(f -> {
+                    PriceQuote quote = quotes.get(f.getFlightId());
+                    return (quote != null) ? f.withBasePrice(quote.total()) : f;
+                })
+                .toList();
+
+        logger.info("Retrieved {} available open flights with dynamic economy quotes", quotedFlights.size());
+        return quotedFlights;
     }
 
     /**

@@ -3,6 +3,7 @@ package com.group2.flightres.tools;
 import com.group2.flightres.controller.CheckoutController;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.util.FontLoader;
@@ -82,9 +83,9 @@ public class GlassCheckoutScreenshotRunner extends Application {
         seats.add(seat9E);
         ctx.setSelectedSeats(seats);
 
-        ctx.setDemandPricing(new BigDecimal("180"));
-        ctx.setTaxesAndFees(new BigDecimal("142"));
-        ctx.recalculateTotals();
+        PriceQuote quote = PriceQuote.calculate(new BigDecimal("1200.00"), BigDecimal.ONE, 0.0, 100.0);
+        ctx.setPriceQuotes(List.of(quote));
+        ctx.setTotalPrice(quote.total());
 
         // Set hold expiry to 282 seconds from now -> countdown shows 04:42
         ctx.setHoldExpiresAt(Instant.now().plusSeconds(282));

@@ -51,6 +51,19 @@ class BookingTransactionTest {
         }
     };
 
+    private static final PricingService MOCK_PRICING_SERVICE = new PricingService() {
+        @Override
+        public com.group2.flightres.model.PriceQuote quote(long flightId, SeatClass seatClass, Clock c) {
+            // Flight departs 2026-11-02T04:30:00Z, clock is 2026-11-01T00:00:00Z -> 28.5h to departure
+            // Demand: 0% occupancy -> 1.00. Timing: 28.5h (24h-48h tier) -> 1.12. Total = 1200 * 1.12 = 1344.00
+            return com.group2.flightres.model.PriceQuote.calculate(
+                    new BigDecimal("1200.00"), BigDecimal.ONE,
+                    com.group2.flightres.config.PricingPolicy.DEMAND_TIER_UNDER_40,
+                    com.group2.flightres.config.PricingPolicy.TIMING_TIER_24_TO_48
+            );
+        }
+    };
+
     private static class MockBookingDao implements BookingDao {
         private final Map<String, BookingRecord> store = new HashMap<>();
         private boolean seatConflictSimulated = false;
@@ -103,7 +116,7 @@ class BookingTransactionTest {
     @DisplayName("Create booking transaction succeeds, marks seat BOOKED and sets 6-char PNR")
     void testBookingTransactionSuccess() {
         MockBookingDao dao = new MockBookingDao();
-        BookingService service = new BookingService(dao, MOCK_FLIGHT_DAO, TEST_CLOCK);
+        BookingService service = new BookingService(dao, MOCK_FLIGHT_DAO, MOCK_PRICING_SERVICE, TEST_CLOCK);
 
         BookingContext context = new BookingContext();
         context.setFlightId(1L);
@@ -111,7 +124,8 @@ class BookingTransactionTest {
         context.setPassengerName("Jane Doe");
         context.setPassengerEmail("jane.doe@example.com");
         context.setPassportNumber("PA123456");
-        context.setBaseFare(new BigDecimal("1200"));
+        context.setBaseFare(new BigDecimal("1200.00"));
+        context.setTotalPrice(new BigDecimal("1344.00"));
 
         FlightSeat seat = new FlightSeat();
         seat.setFlightSeatId(101L);
@@ -139,7 +153,7 @@ class BookingTransactionTest {
     void testBookingTransactionRollbackOnSeatConflict() {
         MockBookingDao dao = new MockBookingDao();
         dao.setSeatConflictSimulated(true);
-        BookingService service = new BookingService(dao, MOCK_FLIGHT_DAO, TEST_CLOCK);
+        BookingService service = new BookingService(dao, MOCK_FLIGHT_DAO, MOCK_PRICING_SERVICE, TEST_CLOCK);
 
         BookingContext context = new BookingContext();
         context.setFlightId(1L);
@@ -161,7 +175,7 @@ class BookingTransactionTest {
     @DisplayName("Invalid passenger inputs throw ValidationException before attempting transaction")
     void testBookingValidationRejection() {
         MockBookingDao dao = new MockBookingDao();
-        BookingService service = new BookingService(dao, MOCK_FLIGHT_DAO, TEST_CLOCK);
+        BookingService service = new BookingService(dao, MOCK_FLIGHT_DAO, MOCK_PRICING_SERVICE, TEST_CLOCK);
 
         BookingContext context = new BookingContext();
         context.setPassengerName(""); // Invalid

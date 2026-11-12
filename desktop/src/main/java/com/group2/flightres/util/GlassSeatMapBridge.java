@@ -49,7 +49,7 @@ public class GlassSeatMapBridge extends StackPane {
     private Label sectionHeaderLabel;
     private HBox seatGridNumbersRow;
     private VBox seatGridRowsContainer;
-    private Pane zoomContainer;
+    private VBox zoomContainer;
 
     // Selection Card UI Nodes
     private Label bigSeatLabel;
@@ -107,6 +107,45 @@ public class GlassSeatMapBridge extends StackPane {
         });
     }
 
+    public GlassSeatMapBridge(VBox zoomContainer) {
+        this();
+        this.zoomContainer = zoomContainer;
+    }
+
+    
+    public void populateSeats(List<FlightSeat> seats) {
+        if (seatGridRowsContainer == null) {
+            initUiBindings();
+        }
+        if (seats != null) {
+            for (FlightSeat seat : seats) {
+                if (seat != null) {
+                    seatsByLabel.put(seat.getSeatLabel(), seat);
+                }
+            }
+        }
+        harvestSeatsFromCabinContainer();
+        for (Map.Entry<String, Button> entry : seatButtons.entrySet()) {
+            syncButtonVisual(entry.getValue(), entry.getKey());
+        }
+    }
+
+    public Map<String, Button> getSeatButtons() {
+        return Collections.unmodifiableMap(seatButtons);
+    }
+
+    public void onSeatSelectionChanged(FlightSeat seat) {
+        if (seat == null) {
+            handleSelectionLabelChanged("None");
+        } else {
+            handleSelectionLabelChanged(seat.getSeatLabel());
+        }
+    }
+
+    public void clearSelectionVisuals() {
+        handleSelectionLabelChanged("None");
+    }
+
     public void setController(SeatMapController controller) {
         this.controller = controller;
         if (controller != null) {
@@ -115,7 +154,18 @@ public class GlassSeatMapBridge extends StackPane {
     }
 
     public void initUiBindings() {
-        Parent root = getScene() != null ? getScene().getRoot() : getParent();
+        Parent root = null;
+        if (getScene() != null && getScene().getRoot() != null) {
+            root = getScene().getRoot();
+        } else {
+            Node curr = this;
+            while (curr.getParent() != null) {
+                curr = curr.getParent();
+            }
+            if (curr instanceof Parent p) {
+                root = p;
+            }
+        }
         if (root == null) return;
 
         // Lookup Glass elements
@@ -126,7 +176,7 @@ public class GlassSeatMapBridge extends StackPane {
         this.sectionHeaderLabel = (Label) root.lookup("#sectionHeaderLabel");
         this.seatGridNumbersRow = (HBox) root.lookup("#seatGridNumbersRow");
         this.seatGridRowsContainer = (VBox) root.lookup("#seatGridRowsContainer");
-        this.zoomContainer = (Pane) root.lookup("#zoomContainer");
+        this.zoomContainer = (VBox) root.lookup("#zoomContainer");
 
         this.bigSeatLabel = (Label) root.lookup("#bigSeatLabel");
         this.bigPriceLabel = (Label) root.lookup("#bigPriceLabel");
@@ -171,7 +221,10 @@ public class GlassSeatMapBridge extends StackPane {
     }
 
     private void harvestSeatsFromCabinContainer() {
-        if (cabinContainer == null) return;
+        if (seatGridRowsContainer == null) {
+            initUiBindings();
+        }
+        if (cabinContainer == null && seatsByLabel.isEmpty() && (controller == null || controller.getSeatsByLabelMap().isEmpty())) return;
 
         seatButtons.clear();
         seatsByLabel.clear();
@@ -185,13 +238,15 @@ public class GlassSeatMapBridge extends StackPane {
             seatButtons.putAll(controller.getSeatButtonsMap());
         }
 
-        for (Node child : cabinContainer.getChildren()) {
-            if (child instanceof HBox rowBox) {
-                for (Node btnNode : rowBox.getChildren()) {
-                    if (btnNode instanceof Button btn) {
-                        String txt = btn.getText();
-                        if (txt != null && txt.matches("\\d+[A-F]")) {
-                            seatButtons.putIfAbsent(txt, btn);
+        if (cabinContainer != null) {
+            for (Node child : cabinContainer.getChildren()) {
+                if (child instanceof HBox rowBox) {
+                    for (Node btnNode : rowBox.getChildren()) {
+                        if (btnNode instanceof Button btn) {
+                            String txt = btn.getText();
+                            if (txt != null && txt.matches("\\d+[A-F]")) {
+                                seatButtons.putIfAbsent(txt, btn);
+                            }
                         }
                     }
                 }
@@ -429,6 +484,10 @@ public class GlassSeatMapBridge extends StackPane {
                         }
 
                         Button btn = (seatLabel != null) ? seatButtons.get(seatLabel) : null;
+                        if (btn == null && seatLabel != null && seatsByLabel.containsKey(seatLabel)) {
+                            btn = createSeatButton(seatLabel, seatsByLabel.get(seatLabel), r, letter, sectionRows, rowLetters);
+                            seatButtons.put(seatLabel, btn);
+                        }
                         if (btn != null) {
                             btn.setPrefSize(40, 34);
                             btn.setMinSize(40, 34);
@@ -505,10 +564,11 @@ public class GlassSeatMapBridge extends StackPane {
                 syncButtonVisual(entry.getValue(), entry.getKey());
             }
 
-            // Start countdown timer (10 mins or preselected 08:42 for screenshots)
+            // Start countdown timer from authoritative DB held_until
             int initialSecs = TOTAL_HOLD_SECONDS;
-            if (SeatMapController.isPreselectForScreenshots()) {
-                initialSecs = Math.max(0, TOTAL_HOLD_SECONDS - 18); // demo remaining seconds <= HOLD_SECONDS (04:42)
+            if (seat != null && seat.getHeldUntil() != null) {
+                long rem = java.time.Duration.between(java.time.Instant.now(), seat.getHeldUntil()).toSeconds();
+                initialSecs = (int) Math.max(0, Math.min(TOTAL_HOLD_SECONDS, rem));
             }
             startHoldTimer(initialSecs);
         }
@@ -525,10 +585,18 @@ public class GlassSeatMapBridge extends StackPane {
     public void toggleZoom() {
         isZoomed = !isZoomed;
         if (zoomContainer != null) {
-            double scale = isZoomed ? 1.12 : 1.0;
+            double scale = isZoomed ? 1.25 : 1.0;
             zoomContainer.setScaleX(scale);
             zoomContainer.setScaleY(scale);
         }
+    }
+
+    public boolean isZoomed() {
+        return isZoomed;
+    }
+
+    public VBox getZoomContainer() {
+        return zoomContainer;
     }
 
     public void startHoldTimer(int initialSeconds) {
@@ -541,9 +609,9 @@ public class GlassSeatMapBridge extends StackPane {
             if (remainingSeconds <= 0) {
                 remainingSeconds = 0;
                 stopHoldTimer();
-                // Expired hold: release seat
+                // Expired hold: release seat and notify controller
                 if (controller != null) {
-                    controller.handleReleaseSeat();
+                    controller.handleHoldExpired();
                 }
             }
             updateTimerVisuals();
@@ -572,35 +640,40 @@ public class GlassSeatMapBridge extends StackPane {
     }
 
     public void updateFlightCardData() {
-        String orig = "JNB";
-        String dest = "CPT";
-        String depTime = "06:30";
-        String arrTime = "08:40";
-        String flightNo = "GRP 204";
-        String duration = "2h 10m, direct";
-        String dateStr = "Fri 14 Nov";
-        String aircraft = "Airbus A320";
+        String orig = "";
+        String dest = "";
+        String depTime = "";
+        String arrTime = "";
+        String flightNo = "";
+        String duration = "";
+        String dateStr = "";
+        String aircraft = "";
 
         if (controller != null && controller.getBookingContext() != null) {
             this.bookingContext = controller.getBookingContext();
         }
 
         if (bookingContext != null) {
-            if (bookingContext.getOrigin() != null && !bookingContext.getOrigin().isBlank()) {
-                orig = bookingContext.getOrigin();
+            orig = bookingContext.getOriginCode() != null && !bookingContext.getOriginCode().isBlank()
+                    ? bookingContext.getOriginCode()
+                    : extractAirportCode(bookingContext.getOrigin());
+            dest = bookingContext.getDestinationCode() != null && !bookingContext.getDestinationCode().isBlank()
+                    ? bookingContext.getDestinationCode()
+                    : extractAirportCode(bookingContext.getDestination());
+            depTime = bookingContext.getDepartureTime() != null ? bookingContext.getDepartureTime() : "";
+            arrTime = bookingContext.getArrivalTime() != null ? bookingContext.getArrivalTime() : "";
+            flightNo = bookingContext.getFlightNumber() != null ? bookingContext.getFlightNumber() : "";
+            aircraft = bookingContext.getAircraftModel() != null ? bookingContext.getAircraftModel() : "";
+
+            if (bookingContext.getDepartureInstant() != null && bookingContext.getArrivalInstant() != null) {
+                duration = com.group2.flightres.util.FlightTimes.formatDuration(bookingContext.getDepartureInstant(), bookingContext.getArrivalInstant()) + ", direct";
+            } else if (bookingContext.getDuration() != null && !bookingContext.getDuration().isBlank()) {
+                duration = bookingContext.getDuration();
+                if (!duration.contains("direct")) {
+                    duration = duration + ", direct";
+                }
             }
-            if (bookingContext.getDestination() != null && !bookingContext.getDestination().isBlank()) {
-                dest = bookingContext.getDestination();
-            }
-            if (bookingContext.getDepartureTime() != null && !bookingContext.getDepartureTime().isBlank()) {
-                depTime = bookingContext.getDepartureTime();
-            }
-            if (bookingContext.getArrivalTime() != null && !bookingContext.getArrivalTime().isBlank()) {
-                arrTime = bookingContext.getArrivalTime();
-            }
-            if (bookingContext.getFlightNumber() != null && !bookingContext.getFlightNumber().isBlank()) {
-                flightNo = bookingContext.getFlightNumber();
-            }
+
             if (bookingContext.getDepartureDate() != null && !bookingContext.getDepartureDate().isBlank()) {
                 String rawDate = bookingContext.getDepartureDate();
                 try {
@@ -620,7 +693,11 @@ public class GlassSeatMapBridge extends StackPane {
         if (flightDurationLabel != null) flightDurationLabel.setText(duration);
 
         if (planeCardSubtitle != null) {
-            planeCardSubtitle.setText(orig + " to " + dest + " · " + dateStr + " · " + aircraft);
+            String sub = (!aircraft.isBlank() ? aircraft + " · " : "")
+                    + (!orig.isBlank() && !dest.isBlank() ? orig + " to " + dest : "")
+                    + (!dateStr.isBlank() ? " · " + dateStr : "")
+                    + (!duration.isBlank() ? " · " + duration : "");
+            planeCardSubtitle.setText(sub);
         }
 
         // Count free seats
@@ -639,4 +716,109 @@ public class GlassSeatMapBridge extends StackPane {
             freeSeatsLabel.setText(freeCount + " of " + total);
         }
     }
+
+    private String extractAirportCode(String val) {
+        if (val == null) return "";
+        int open = val.lastIndexOf('(');
+        int close = val.lastIndexOf(')');
+        if (open >= 0 && close > open) {
+            return val.substring(open + 1, close);
+        }
+        return val.trim();
+    }
+
+
+    private Button createSeatButton(String label, FlightSeat seat, int rowNum, char colLetter,
+                                     List<Integer> sectionRows, List<Character> rowLetters) {
+        Button btn = new Button();
+        btn.setId("seatBtn_" + label);
+        btn.setPrefSize(40, 34);
+        btn.setMinSize(40, 34);
+        btn.setMaxSize(40, 34);
+        btn.setFocusTraversable(true);
+        btn.setAccessibleText("Seat " + label + " " + (seat != null ? seat.getSeatClass() : "") + " " + (seat != null ? seat.getStatus() : ""));
+
+        btn.getStyleClass().add("seat-btn");
+        if (seat != null && seat.getStatus() == SeatStatus.BOOKED) {
+            btn.getStyleClass().add("seat-taken");
+        } else {
+            btn.getStyleClass().add("seat-available");
+            if (seat != null && seat.getSeatClass() == SeatClass.FIRST) {
+                btn.getStyleClass().add("seat-first-class");
+            }
+        }
+
+        btn.setOnAction(e -> {
+            if (controller != null) {
+                controller.handleSeatClick(label);
+            }
+        });
+
+        // Keyboard navigation per Gate 4c: arrow keys move focus, Enter selects, Esc closes/toggles
+        btn.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case UP -> {
+                    navigateGrid(rowNum, colLetter, -1, 0, sectionRows, rowLetters);
+                    event.consume();
+                }
+                case DOWN -> {
+                    navigateGrid(rowNum, colLetter, 1, 0, sectionRows, rowLetters);
+                    event.consume();
+                }
+                case LEFT -> {
+                    navigateGrid(rowNum, colLetter, 0, -1, sectionRows, rowLetters);
+                    event.consume();
+                }
+                case RIGHT -> {
+                    navigateGrid(rowNum, colLetter, 0, 1, sectionRows, rowLetters);
+                    event.consume();
+                }
+                case ENTER, SPACE -> {
+                    btn.fire();
+                    event.consume();
+                }
+                case ESCAPE -> {
+                    if (isZoomed) {
+                        toggleZoom();
+                    }
+                    event.consume();
+                }
+                default -> {}
+            }
+        });
+
+        return btn;
+    }
+
+    private void navigateGrid(int rowNum, char colLetter, int dLetter, int dRow,
+                              List<Integer> sectionRows, List<Character> rowLetters) {
+        if (dRow != 0) {
+            int currentIdx = sectionRows.indexOf(rowNum);
+            int targetIdx = currentIdx + dRow;
+            if (targetIdx >= 0 && targetIdx < sectionRows.size()) {
+                int targetRow = sectionRows.get(targetIdx);
+                String targetLabel = targetRow + String.valueOf(colLetter);
+                Button targetBtn = seatButtons.get(targetLabel);
+                if (targetBtn != null) {
+                    targetBtn.requestFocus();
+                }
+            }
+        } else if (dLetter != 0) {
+            int currentIdx = rowLetters.indexOf(colLetter);
+            int targetIdx = currentIdx + dLetter;
+            while (targetIdx >= 0 && targetIdx < rowLetters.size()) {
+                char targetLetter = rowLetters.get(targetIdx);
+                if (targetLetter != '_') {
+                    String targetLabel = rowNum + String.valueOf(targetLetter);
+                    Button targetBtn = seatButtons.get(targetLabel);
+                    if (targetBtn != null) {
+                        targetBtn.requestFocus();
+                        break;
+                    }
+                }
+                targetIdx += dLetter;
+            }
+        }
+    }
+
 }

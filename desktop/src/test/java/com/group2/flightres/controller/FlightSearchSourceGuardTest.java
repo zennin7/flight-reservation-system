@@ -52,10 +52,29 @@ class FlightSearchSourceGuardTest {
 
     // Explicit allowlist of legitimate occurrences in desktop/src/main (all checkout, seatmap or verifier owned)
     static final List<AllowlistEntry> ALLOWLIST = List.of(
-            new AllowlistEntry("GlassConfirmationVerifier.java", "Durban", 1, "verifier", "Verification test fixture synthetic destination"),
-            new AllowlistEntry("GlassSeatMapBridge.java", "Airbus A320", 1, "seatmap", "Screen 3 Seat map header fallback aircraft label"),
-            new AllowlistEntry("checkout.fxml", "23 kg", 1, "checkout", "Screen 5 Checkout screen static baggage allowance label"),
-            new AllowlistEntry("checkout.fxml", "2h 05m", 1, "checkout", "Screen 5 Checkout screen static duration placeholder")
+            new AllowlistEntry("GlassConfirmationVerifier.java", "Durban", 1, "verifier", "Verification test fixture synthetic destination")
+    );
+
+    // Banned literals specific to seat-map and checkout UI and controllers
+    static final java.util.Set<String> SEATMAP_CHECKOUT_SOURCES = java.util.Set.of(
+            "seat-map.fxml",
+            "checkout.fxml",
+            "SeatMapController.java",
+            "CheckoutController.java",
+            "GlassSeatMapBridge.java",
+            "SeatMapFallback.java"
+    );
+
+    static final List<String> SEATMAP_CHECKOUT_BANNED = List.of(
+            "new BigDecimal(\"" + "180\")",
+            "new BigDecimal(\"" + "142\")",
+            "new BigDecimal(\"" + "1522\")",
+            "new BigDecimal(\"" + "1200\")",
+            "x " + "2.0",
+            "Instant" + " EFT",
+            "Wal" + "let",
+            "Cabin " + "view",
+            "Cabin " + "View"
     );
 
     // Banned literals specific to flight search UI and controller
@@ -119,6 +138,26 @@ class FlightSearchSourceGuardTest {
             }
         }
 
+        // 4. Check seat-map and checkout specific banned literals
+        if (SEATMAP_CHECKOUT_SOURCES.contains(fileName)) {
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
+                int lineNum = i + 1;
+                for (String banned : SEATMAP_CHECKOUT_BANNED) {
+                    if (line.contains(banned)) {
+                        violations.add(fileName + ":" + lineNum + " contains banned seat-map/checkout literal: '" + banned + "'");
+                    }
+                }
+                if (line.contains("Coming " + "soon") || line.contains("Coming " + "Soon")) {
+                    boolean isAllowedNavStub = "CheckoutController.java".equals(fileName) &&
+                            (line.contains("My Bookings") || line.contains("Offers") || line.contains("About") || line.contains("Contact") || line.contains("User profile"));
+                    if (!isAllowedNavStub) {
+                        violations.add(fileName + ":" + lineNum + " contains banned seat-map/checkout literal: 'Coming soon'");
+                    }
+                }
+            }
+        }
+
         return violations;
     }
 
@@ -176,5 +215,13 @@ class FlightSearchSourceGuardTest {
         assertFalse(fsViolations.isEmpty(), "Banned flight search literal must trigger a violation");
         assertTrue(fsViolations.get(0).contains("contains banned flight search literal: 'Premium'"),
                 "Violation must name the banned literal: " + fsViolations.get(0));
+
+        // Test seat-map/checkout banned literal
+        List<String> smViolations = checkFileContent("seat-map.fxml",
+                List.of("<Button text=\"Cabin " + "view\"/>"),
+                BANNED_PATTERNS, GUARDED_PATTERNS, ALLOWLIST);
+        assertFalse(smViolations.isEmpty(), "Banned seat-map literal must trigger a violation");
+        assertTrue(smViolations.get(0).contains("contains banned seat-map/checkout literal: 'Cabin view'"),
+                "Violation must name the banned literal: " + smViolations.get(0));
     }
 }

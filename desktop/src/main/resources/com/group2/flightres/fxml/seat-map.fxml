@@ -55,8 +55,8 @@
             <!-- Center nav links: Flights (active pill), My Bookings, Offers, About, Contact -->
             <HBox alignment="CENTER" spacing="30" styleClass="glass-nav-links-box">
                 <Button text="Flights" styleClass="glass-nav-link, glass-nav-link-active" onAction="#handleNavFlights"/>
-                <Button text="My Bookings" styleClass="glass-nav-link" onAction="#handleComingSoonMyBookings"/>
-                <Button text="Offers" styleClass="glass-nav-link" onAction="#handleComingSoonOffers"/>
+                <Button text="My Bookings" styleClass="glass-nav-link" onAction="#handleNavBookings"/>
+                <Button text="Offers" styleClass="glass-nav-link" onAction="#handleNavOffers"/>
                 <Button text="About" styleClass="glass-nav-link" onAction="#handleNavAbout"/>
                 <Button text="Contact" styleClass="glass-nav-link" onAction="#handleNavContact"/>
             </HBox>
@@ -87,7 +87,7 @@
             <HBox VBox.vgrow="ALWAYS" spacing="14" minHeight="0" prefWidth="1140" minWidth="1140" maxWidth="1140">
 
                 <!-- =======================================================
-                     LEFT COLUMN: Plane Card + (Cabin View Card + Seat Grid)
+                     LEFT COLUMN: Plane Card + (Info Card + Seat Grid)
                      ======================================================= -->
                 <VBox prefWidth="796" minWidth="796" maxWidth="796" spacing="14" minHeight="0">
 
@@ -117,14 +117,9 @@
 
                         <!-- Content Row: Action Buttons (left) + Scaled Aircraft Vector Graphic -->
                         <HBox spacing="6" VBox.vgrow="ALWAYS" alignment="CENTER_LEFT" prefWidth="752" minWidth="752" maxWidth="752" style="-fx-padding: 0;">
-                            <!-- Action Buttons: Cabin View (cube) & Zoom (+) -->
+                            <!-- Action Buttons: Zoom (+) -->
                             <VBox spacing="10" alignment="TOP_CENTER" style="-fx-padding: 14px 0 0 0;" minWidth="44" maxWidth="44">
-                                <Button styleClass="plane-action-btn" onAction="#handleComingSoonCabinView" accessibleText="Cabin view">
-                                    <graphic>
-                                        <SVGPath content="M12 3l8 4.5v9L12 21l-8-4.5v-9z M12 12l8-4.5 M12 12v9 M12 12L4 7.5"
-                                                 style="-fx-fill: transparent; -fx-stroke: #ffffff; -fx-stroke-width: 1.8; -fx-stroke-line-cap: round; -fx-stroke-line-join: round; -fx-scale-x: 0.75; -fx-scale-y: 0.75;"/>
-                                    </graphic>
-                                </Button>
+
                                 <Button styleClass="plane-action-btn" onAction="#handleZoomGrid" accessibleText="Zoom">
                                     <graphic>
                                         <SVGPath content="M11 4.5 A 6.5 6.5 0 1 0 11 17.5 A 6.5 6.5 0 1 0 11 4.5 M16 16l5 5 M11 8v6 M8 11h6"
@@ -140,11 +135,11 @@
                         </HBox>
                     </VBox>
 
-                    <!-- B. Bottom Row: Cabin View Card (206w) + Seat Grid Card (576w) = 796w -->
+                    <!-- B. Bottom Row: Info Card (206w) + Seat Grid Card (576w) = 796w -->
                     <HBox VBox.vgrow="ALWAYS" spacing="14" minHeight="0" prefWidth="796" minWidth="796" maxWidth="796">
 
-                        <!-- Cabin View Card (width 206) -->
-                        <VBox prefWidth="206" minWidth="206" maxWidth="206" styleClass="cabin-view-card" onMouseClicked="#handleComingSoonCabinView">
+                        <!-- Info Card (width 206) -->
+                        <VBox prefWidth="206" minWidth="206" maxWidth="206" styleClass="cabin-view-card">
                             <HBox alignment="TOP_LEFT">
                                 <StackPane styleClass="cabin-icon-tile">
                                     <SVGPath content="M12 3l8 4.5v9L12 21l-8-4.5v-9z M12 12l8-4.5 M12 12v9 M12 12L4 7.5"
@@ -158,8 +153,8 @@
                             <Region VBox.vgrow="ALWAYS"/>
 
                             <VBox spacing="6">
-                                <Label text="Cabin view" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 17px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
-                                <Label text="Look down the aisle before you choose. See legroom and row spacing for this section."
+                                <Label text="Select your seat" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 17px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                                <Label text="Choose your preferred seat on the map. Legroom and seat amenities vary by cabin class."
                                        wrapText="true"
                                        style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.60); -fx-line-spacing: 2px;"/>
                             </VBox>
@@ -225,6 +220,37 @@
                         <!-- Chips Row -->
                         <HBox fx:id="chipsContainer" spacing="6" style="-fx-padding: 4px 0 0 0;"/>
 
+                        <!-- Price Breakdown Rows: Base fare / Cabin / Demand / Booking time / Total / Includes VAT -->
+                        <VBox spacing="3" style="-fx-padding: 6px 0 2px 0;">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Base fare" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.70);"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="seatBaseFareLabel" text="-" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 12px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label fx:id="seatCabinTitleLabel" text="Cabin" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.70);"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="seatCabinLabel" text="-" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 12px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Demand" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.70);"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="seatDemandLabel" text="-" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 12px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Booking time" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.70);"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="seatTimingLabel" text="-" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 12px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                            </HBox>
+                            <Region style="-fx-min-height: 1px; -fx-pref-height: 1px; -fx-max-height: 1px; -fx-background-color: rgba(255,255,255,0.12); -fx-margin: 3px 0;"/>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Total" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="seatTotalLabel" text="-" style="-fx-font-family: 'Inter Bold'; -fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #f3d98b;"/>
+                            </HBox>
+                            <Label fx:id="seatVatLabel" text="" style="-fx-font-family: 'Inter'; -fx-font-size: 10.5px; -fx-text-fill: rgba(255,255,255,0.50); -fx-alignment: CENTER_RIGHT;"/>
+                        </VBox>
+
                         <!-- Hold Countdown Timer Row -->
                         <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 10px 12px; -fx-background-color: rgba(0,0,0,0.25); -fx-background-radius: 14px; -fx-margin: 6px 0 0 0;">
                             <StackPane prefWidth="44" prefHeight="44" minWidth="44" minHeight="44" maxWidth="44" maxHeight="44">
@@ -234,7 +260,7 @@
                             </StackPane>
                             <VBox spacing="1" HBox.hgrow="ALWAYS">
                                 <Label fx:id="timerLabel" text="--:--" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #ffffff;"/>
-                                <Label text="Held for you. Nobody else can take it." wrapText="true" maxWidth="240" style="-fx-font-family: 'Inter'; -fx-font-size: 11.5px; -fx-text-fill: rgba(255,255,255,0.60);"/>
+                                <Label text="Held for you. Nobody else can take it." wrapText="true" maxWidth="240" style="-fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.60);"/>
                             </VBox>
                         </HBox>
 
@@ -294,6 +320,11 @@
                         <HBox alignment="CENTER_LEFT">
                             <Label text="Flight" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.60);" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                             <Label fx:id="flightNoLabel" text="-" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                        </HBox>
+
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Aircraft" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.60);" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                            <Label fx:id="flightAircraftLabel" text="-" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
                         </HBox>
 
                         <HBox alignment="CENTER_LEFT">

@@ -1,31 +1,42 @@
 package com.group2.flightres.controller;
 
+import com.group2.flightres.dao.FlightDao;
+import com.group2.flightres.dao.impl.FlightDaoImpl;
+import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.model.BookingContext;
+import com.group2.flightres.model.FlightSearchResult;
 import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
+import com.group2.flightres.service.PricingService;
 import com.group2.flightres.service.SeatMapService;
+import com.group2.flightres.util.FlightTimes;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Controller for SkyVoyage Screen 04 Seat Map.
- * Preserves real SeatMapService hold/release logic while styling First 2x2
- * and Economy 3x3 with aisle gap, row numbers, legend, and selection summary.
+ * Manages seat selection, live database seat holds, dynamic price quotes via PricingService,
+ * and transparent breakdown summary rows.
  */
 public class SeatMapController implements WizardStepController {
 
@@ -43,6 +54,25 @@ public class SeatMapController implements WizardStepController {
     @FXML private Button continueButton;
     @FXML private Button backButton;
 
+    // Reskin breakdown labels
+    @FXML private Label seatBaseFareLabel;
+    @FXML private Label seatCabinTitleLabel;
+    @FXML private Label seatCabinLabel;
+    @FXML private Label seatDemandLabel;
+    @FXML private Label seatTimingLabel;
+    @FXML private Label seatTotalLabel;
+    @FXML private Label seatVatLabel;
+
+    @FXML private Label bigSeatLabel;
+    @FXML private Label bigPriceLabel;
+
+    // Flight Card labels
+    @FXML private Label flightNoLabel;
+    @FXML private Label flightAircraftLabel;
+    @FXML private Label flightDurationLabel;
+    @FXML private Label freeSeatsLabel;
+    @FXML private Label planeCardSubtitle;
+
     private static boolean preselectForScreenshots = false;
 
     public static void setPreselectForScreenshots(boolean preselect) {
@@ -53,7 +83,11 @@ public class SeatMapController implements WizardStepController {
         return preselectForScreenshots || Boolean.getBoolean("altitude.screenshots");
     }
 
-    private final SeatMapService seatMapService = new SeatMapService();
+    private final SeatMapService seatMapService;
+    private final FlightDao flightDao;
+    private final PricingService pricingService;
+    private final Clock clock;
+
     private final Map<String, Button> seatButtonsByLabel = new HashMap<>();
     private final Map<String, FlightSeat> seatsByLabel = new HashMap<>();
     private final List<FlightSeat> selectedSeats = new ArrayList<>();
@@ -62,7 +96,18 @@ public class SeatMapController implements WizardStepController {
     private BookingContext bookingContext;
     private Runnable onNext;
     private Runnable onBack;
-    private long flightId = 1L; // default GRP 204
+    private long flightId = 1L;
+
+    public SeatMapController() {
+        this(new SeatMapService(), new FlightDaoImpl(), new PricingService(new SeatDaoImpl(), Clock.systemDefaultZone()), Clock.systemDefaultZone());
+    }
+
+    public SeatMapController(SeatMapService seatMapService, FlightDao flightDao, PricingService pricingService, Clock clock) {
+        this.seatMapService = seatMapService != null ? seatMapService : new SeatMapService();
+        this.flightDao = flightDao != null ? flightDao : new FlightDaoImpl();
+        this.clock = clock != null ? clock : Clock.systemDefaultZone();
+        this.pricingService = pricingService != null ? pricingService : new PricingService(new SeatDaoImpl(), this.clock);
+    }
 
     @Override
     public void init(BookingContext context, Runnable onNext) {
@@ -77,6 +122,7 @@ public class SeatMapController implements WizardStepController {
         if (context != null && context.getFlightId() != null) {
             this.flightId = context.getFlightId();
         }
+        loadFlightMetadata();
         loadSeatMap();
         if (glassBridge != null) {
             glassBridge.setController(this);
@@ -93,16 +139,51 @@ public class SeatMapController implements WizardStepController {
             glassBridge.setController(this);
         }
         if (bookingContext == null) {
+            loadFlightMetadata();
             loadSeatMap();
         }
     }
 
     public void setFlightId(long flightId) {
         this.flightId = flightId;
+        loadFlightMetadata();
         loadSeatMap();
         if (glassBridge != null) {
             glassBridge.setController(this);
             glassBridge.updateFlightCardData();
+        }
+    }
+
+    private void loadFlightMetadata() {
+        String aircraft = (bookingContext != null && bookingContext.getAircraftModel() != null)
+                ? bookingContext.getAircraftModel() : "";
+        Instant dep = (bookingContext != null) ? bookingContext.getDepartureInstant() : null;
+        Instant arr = (bookingContext != null) ? bookingContext.getArrivalInstant() : null;
+
+        if ((aircraft.isBlank() || dep == null || arr == null) && flightId > 0) {
+            FlightSearchResult flight = flightDao.findById(flightId).orElse(null);
+            if (flight != null) {
+                if (aircraft.isBlank()) aircraft = flight.getAircraftModel();
+                if (dep == null) dep = flight.getDeparture();
+                if (arr == null) arr = flight.getArrival();
+                if (bookingContext != null) {
+                    if (bookingContext.getAircraftModel() == null) bookingContext.setAircraftModel(flight.getAircraftModel());
+                    if (bookingContext.getDepartureInstant() == null) bookingContext.setDepartureInstant(flight.getDeparture());
+                    if (bookingContext.getArrivalInstant() == null) bookingContext.setArrivalInstant(flight.getArrival());
+                    if (bookingContext.getBaseFare() == null) bookingContext.setBaseFare(flight.getBasePrice());
+                    if (bookingContext.getFlightNumber() == null) bookingContext.setFlightNumber(flight.getFlightNumber());
+                }
+            }
+        }
+
+        String durStr = (dep != null && arr != null)
+                ? FlightTimes.formatDuration(dep, arr) + ", direct"
+                : (bookingContext != null && bookingContext.getDuration() != null ? bookingContext.getDuration() : "");
+
+        if (flightDurationLabel != null) flightDurationLabel.setText(durStr);
+        if (flightAircraftLabel != null) flightAircraftLabel.setText(aircraft);
+        if (flightNoLabel != null && bookingContext != null) {
+            flightNoLabel.setText(bookingContext.getFlightNumber() != null ? bookingContext.getFlightNumber() : "");
         }
     }
 
@@ -118,15 +199,15 @@ public class SeatMapController implements WizardStepController {
             seats = seatMapService.loadSeatMap(flightId);
             if (seats == null || seats.isEmpty()) {
                 logger.warn("Seat map from DAO returned empty list; falling back to sample reference seats.");
-                isSampleData = true;
                 seats = SeatMapFallback.generateSampleSeats(flightId, bookingContext);
+                isSampleData = true;
             } else {
                 isSampleData = false;
             }
         } catch (Exception e) {
-            logger.warn("Could not query seat map from DAO; falling back to sample reference seats: {}", e.getMessage());
-            isSampleData = true;
+            logger.error("Failed to load seat map from database: {}. Falling back to sample seats.", e.getMessage());
             seats = SeatMapFallback.generateSampleSeats(flightId, bookingContext);
+            isSampleData = true;
         }
 
         if (fallbackNoticeLabel != null) {
@@ -135,249 +216,169 @@ public class SeatMapController implements WizardStepController {
         }
 
         for (FlightSeat seat : seats) {
-            seatsByLabel.put(seat.getSeatLabel(), seat);
+            String label = seat.getSeatLabel();
+            seatsByLabel.put(label, seat);
         }
 
-        buildCabinLayout();
-
-        if (flightTitleLabel != null) {
-            String flightInfo = (bookingContext != null)
-                    ? bookingContext.getFlightRouteDisplay()
-                    : "";
-            flightTitleLabel.setText(flightInfo.isEmpty() ? "Choose your seat" : "Choose your seat · " + flightInfo);
+        if (glassBridge != null) {
+            glassBridge.populateSeats(seats);
         }
 
-        applyInitialSelection();
         updateSelectionSummary();
     }
 
-    private void applyInitialSelection() {
-        if (isPreselectForScreenshots()) {
-            FlightSeat seat7E = seatsByLabel.get("7E");
-            if (seat7E != null && seat7E.getStatus() == SeatStatus.AVAILABLE) {
-                markSeatSelected(seat7E);
-            }
-        } else if (bookingContext != null && bookingContext.getSelectedSeats() != null) {
-            for (FlightSeat prev : bookingContext.getSelectedSeats()) {
-                FlightSeat currentSeat = seatsByLabel.get(prev.getSeatLabel());
-                if (currentSeat != null && currentSeat.getStatus() != SeatStatus.BOOKED) {
-                    markSeatSelected(currentSeat);
-                }
-            }
-        }
-    }
-
-    private void markSeatSelected(FlightSeat seat) {
-        selectedSeats.add(seat);
-        Button btn = seatButtonsByLabel.get(seat.getSeatLabel());
-        if (btn != null) {
-            btn.getStyleClass().removeAll("seat-available", "seat-taken");
-            btn.getStyleClass().add("seat-selected");
-        }
-    }
-
-    private void buildCabinLayout() {
-        Map<Integer, List<FlightSeat>> rowMap = new TreeMap<>();
-        for (FlightSeat s : seatsByLabel.values()) {
-            rowMap.computeIfAbsent(s.getSeatRow(), k -> new ArrayList<>()).add(s);
-        }
-
-        boolean firstClassHeaderAdded = false;
-        boolean economyHeaderAdded = false;
-
-        for (Map.Entry<Integer, List<FlightSeat>> entry : rowMap.entrySet()) {
-            int rowNum = entry.getKey();
-            List<FlightSeat> rowSeats = entry.getValue();
-            boolean isFirstClass = rowSeats.stream().anyMatch(s -> s.getSeatClass() == SeatClass.FIRST);
-
-            if (isFirstClass && !firstClassHeaderAdded) {
-                Label firstHeader = new Label("FIRST CLASS  2 x 2");
-                firstHeader.getStyleClass().add("cabin-section-header");
-                cabinContainer.getChildren().add(firstHeader);
-                firstClassHeaderAdded = true;
-            } else if (!isFirstClass && !economyHeaderAdded) {
-                Label econHeader = new Label("ECONOMY  3 x 3");
-                econHeader.getStyleClass().add("cabin-section-header");
-                VBox.setMargin(econHeader, new javafx.geometry.Insets(6, 0, 0, 0));
-                cabinContainer.getChildren().add(econHeader);
-                economyHeaderAdded = true;
-            }
-
-            if (isFirstClass) {
-                String[] left = {rowNum + "A", rowNum + "C"};
-                String[] right = {rowNum + "D", rowNum + "F"};
-                cabinContainer.getChildren().add(buildRow(rowNum, left, right));
-            } else {
-                String[] left = {rowNum + "A", rowNum + "B", rowNum + "C"};
-                String[] right = {rowNum + "D", rowNum + "E", rowNum + "F"};
-                cabinContainer.getChildren().add(buildRow(rowNum, left, right));
-            }
-        }
-    }
-
-    private HBox buildRow(int rowNumber, String[] leftSeats, String[] rightSeats) {
-        HBox rowBox = new HBox();
-        rowBox.setAlignment(Pos.CENTER);
-        rowBox.setSpacing(6);
-        rowBox.getStyleClass().add("seat-row-box");
-
-        // Row number label on left
-        Label numLabel = new Label(String.valueOf(rowNumber));
-        numLabel.getStyleClass().add("row-number-label");
-        rowBox.getChildren().add(numLabel);
-
-        // Left seat group
-        for (String label : leftSeats) {
-            rowBox.getChildren().add(createSeatButton(label));
-        }
-
-        // Aisle spacer (26px)
-        Region aisle = new Region();
-        aisle.getStyleClass().add("aisle-spacer");
-        rowBox.getChildren().add(aisle);
-
-        // Right seat group
-        for (String label : rightSeats) {
-            rowBox.getChildren().add(createSeatButton(label));
-        }
-
-        return rowBox;
-    }
-
-    private Button createSeatButton(String seatLabel) {
-        Button btn = new Button(seatLabel);
-        btn.getStyleClass().add("seat");
-
-        FlightSeat seat = seatsByLabel.get(seatLabel);
-        if (seat == null) {
-            seat = SeatMapFallback.createFallbackSeat(flightId, seatLabel, SeatStatus.AVAILABLE, bookingContext);
-            seatsByLabel.put(seatLabel, seat);
-        }
+    public void handleSeatClick(String label) {
+        FlightSeat seat = seatsByLabel.get(label);
+        if (seat == null) return;
 
         if (seat.getStatus() == SeatStatus.BOOKED) {
-            btn.getStyleClass().add("seat-taken");
-        } else {
-            btn.getStyleClass().add("seat-available");
-            btn.setOnAction(e -> handleSeatClick(seatLabel));
+            return;
         }
 
-        // Tooltip
-        String seatClassStr = (seat.getSeatClass() == SeatClass.FIRST) ? "First Class" : "Economy";
-        Tooltip tooltip = new Tooltip("Seat " + seatLabel + " — " + seatClassStr + "\nPrice: R " + seat.getCalculatedPrice());
-        tooltip.setShowDelay(Duration.millis(150));
-        btn.setTooltip(tooltip);
-
-        // Hover effect for available seats: updates summary preview on hover
-        final FlightSeat hoveredSeat = seat;
-        btn.setOnMouseEntered(e -> {
-            if (hoveredSeat.getStatus() == SeatStatus.AVAILABLE && selectedSeats.isEmpty()) {
-                previewSeat(hoveredSeat);
-            }
-        });
-        btn.setOnMouseExited(e -> {
-            if (selectedSeats.isEmpty()) {
-                updateSelectionSummary();
-            }
-        });
-
-        seatButtonsByLabel.put(seatLabel, btn);
-        return btn;
-    }
-
-    private void handleSeatClick(String seatLabel) {
-        FlightSeat seat = seatsByLabel.get(seatLabel);
-        if (seat == null || seat.getStatus() == SeatStatus.BOOKED) return;
-
-        boolean alreadySelected = selectedSeats.contains(seat);
-        Button btn = seatButtonsByLabel.get(seatLabel);
-
-        try {
-            if (alreadySelected) {
-                // Real logic call: deselect (when connected to real database)
+        // Toggle selection
+        if (selectedSeats.contains(seat)) {
+            try {
                 if (!isSampleData) {
                     seatMapService.deselectSeat(seat);
                 }
+                seat.setStatus(SeatStatus.AVAILABLE);
                 seat.setHeldUntil(null);
-                if (bookingContext != null) {
-                    bookingContext.setHoldExpiresAt(null);
-                }
                 selectedSeats.remove(seat);
-                if (btn != null) {
-                    btn.getStyleClass().remove("seat-selected");
-                    btn.getStyleClass().add("seat-available");
-                }
-            } else {
-                // Single seat selection for this wizard flow: clear previous
-                for (FlightSeat prev : new ArrayList<>(selectedSeats)) {
-                    if (!isSampleData) {
-                        seatMapService.deselectSeat(prev);
-                    }
-                    prev.setHeldUntil(null);
-                    Button prevBtn = seatButtonsByLabel.get(prev.getSeatLabel());
-                    if (prevBtn != null) {
-                        prevBtn.getStyleClass().remove("seat-selected");
-                        prevBtn.getStyleClass().add("seat-available");
-                    }
-                }
-                selectedSeats.clear();
                 if (bookingContext != null) {
-                    bookingContext.setHoldExpiresAt(null);
+                    bookingContext.setSelectedSeats(new ArrayList<>(selectedSeats));
+                    bookingContext.setPriceQuotes(new ArrayList<>());
+                    bookingContext.setTotalPrice(BigDecimal.ZERO);
                 }
-
-                // Real logic call: hold/select (when connected to real database)
-                if (!isSampleData) {
-                    seatMapService.selectSeat(seat);
-                } else {
-                    seat.setHeldUntil(java.time.Instant.now().plusSeconds(com.group2.flightres.config.SeatHoldPolicy.HOLD_SECONDS));
+                updateSelectionSummary();
+                if (glassBridge != null) {
+                    glassBridge.onSeatSelectionChanged(null);
                 }
-                selectedSeats.add(seat);
-                if (bookingContext != null) {
-                    bookingContext.setHoldExpiresAt(seat.getHeldUntil());
-                }
-                if (btn != null) {
-                    btn.getStyleClass().remove("seat-available");
-                    btn.getStyleClass().add("seat-selected");
-                    com.group2.flightres.util.Motion.pop(btn);
-                }
+            } catch (Exception e) {
+                logger.warn("Failed to deselect seat: {}", e.getMessage());
             }
+            return;
+        }
+
+        // Single seat selection: release previous hold if exists
+        if (!selectedSeats.isEmpty()) {
+            FlightSeat prev = selectedSeats.get(0);
+            try {
+                if (!isSampleData) {
+                    seatMapService.deselectSeat(prev);
+                }
+                prev.setStatus(SeatStatus.AVAILABLE);
+                prev.setHeldUntil(null);
+            } catch (Exception e) {
+                logger.warn("Failed to release prior seat: {}", e.getMessage());
+            }
+            selectedSeats.clear();
+        }
+
+        try {
+            if (!isSampleData) {
+                seatMapService.selectSeat(seat);
+            } else {
+                seat.setStatus(SeatStatus.HELD);
+            }
+            selectedSeats.add(seat);
+
+            PriceQuote quote = pricingService.quote(flightId, seat.getSeatClass(), clock);
+            seat.setCalculatedPrice(quote.total());
+
+            if (bookingContext != null) {
+                bookingContext.setSelectedSeats(new ArrayList<>(selectedSeats));
+                bookingContext.setPriceQuotes(List.of(quote));
+                bookingContext.setBaseFare(quote.baseFare());
+                bookingContext.setTotalPrice(quote.total());
+                bookingContext.setHoldExpiresAt(seat.getHeldUntil());
+            }
+
             updateSelectionSummary();
+            if (glassBridge != null) {
+                glassBridge.onSeatSelectionChanged(seat);
+            }
         } catch (SeatUnavailableException e) {
             new Alert(Alert.AlertType.WARNING, e.getMessage()).showAndWait();
+            loadSeatMap();
+        } catch (Exception e) {
+            logger.error("Failed to hold seat {}: {}", label, e.getMessage(), e);
+            new Alert(Alert.AlertType.ERROR, "Unable to hold seat: " + e.getMessage()).showAndWait();
             loadSeatMap();
         }
     }
 
     private void renderSelectionSummary(FlightSeat seat, boolean isInteractive) {
-        BigDecimal base = (bookingContext != null && bookingContext.getBaseFare() != null)
-                ? bookingContext.getBaseFare() : new BigDecimal("1200");
-
         if (seat == null) {
             if (seatSelectionLabel != null) seatSelectionLabel.setText("None");
-            if (baseFareLabel != null) baseFareLabel.setText(formatPrice(base));
-            if (classMultiplierLabel != null) classMultiplierLabel.setText("x 1.0");
-            if (demandPricingLabel != null) demandPricingLabel.setText("+ R 0");
-            if (totalPriceLabel != null) totalPriceLabel.setText("R 0");
+            if (baseFareLabel != null) baseFareLabel.setText("-");
+            if (classMultiplierLabel != null) classMultiplierLabel.setText("-");
+            if (demandPricingLabel != null) demandPricingLabel.setText("-");
+            if (totalPriceLabel != null) totalPriceLabel.setText("-");
+
+            if (seatBaseFareLabel != null) seatBaseFareLabel.setText("-");
+            if (seatCabinTitleLabel != null) seatCabinTitleLabel.setText("Cabin");
+            if (seatCabinLabel != null) seatCabinLabel.setText("-");
+            if (seatDemandLabel != null) seatDemandLabel.setText("-");
+            if (seatTimingLabel != null) seatTimingLabel.setText("-");
+            if (seatTotalLabel != null) seatTotalLabel.setText("-");
+            if (seatVatLabel != null) seatVatLabel.setText("");
+
+            if (bigSeatLabel != null) bigSeatLabel.setText("—");
+            if (bigPriceLabel != null) bigPriceLabel.setText("R 0");
+
             if (isInteractive && continueButton != null) continueButton.setDisable(true);
             return;
         }
 
         String clsName = (seat.getSeatClass() == SeatClass.FIRST) ? "First Class" : "Economy";
         if (seatSelectionLabel != null) seatSelectionLabel.setText(seat.getSeatLabel() + " · " + clsName);
-        if (baseFareLabel != null) baseFareLabel.setText(formatPrice(base));
-        BigDecimal mult = (seat.getSeatClass() == SeatClass.FIRST) ? new BigDecimal("2.0") : new BigDecimal("1.0");
-        if (classMultiplierLabel != null) {
-            classMultiplierLabel.setText(seat.getSeatClass() == SeatClass.FIRST ? "x 2.0" : "x 1.0");
-        }
-        if (demandPricingLabel != null) demandPricingLabel.setText("+ R 180");
-        BigDecimal seatPrice = seat.getCalculatedPrice() != null
-                ? seat.getCalculatedPrice()
-                : base.multiply(mult).add(new BigDecimal("180"));
-        if (totalPriceLabel != null) totalPriceLabel.setText(formatPrice(seatPrice));
-        if (isInteractive && continueButton != null) continueButton.setDisable(false);
-    }
+        if (bigSeatLabel != null) bigSeatLabel.setText(seat.getSeatLabel());
 
-    private void previewSeat(FlightSeat seat) {
-        renderSelectionSummary(seat, false);
+        PriceQuote quote = null;
+        if (bookingContext != null && bookingContext.getPriceQuotes() != null && !bookingContext.getPriceQuotes().isEmpty()) {
+            quote = bookingContext.getPriceQuotes().get(0);
+        } else {
+            try {
+                quote = pricingService.quote(flightId, seat.getSeatClass(), clock);
+            } catch (Exception e) {
+                logger.warn("Could not calculate live quote: {}", e.getMessage());
+            }
+        }
+
+        if (quote != null) {
+            String baseStr = formatPrice(quote.baseFare());
+            String classFareStr = formatPrice(quote.classFare());
+            String demandStr = (quote.demandAdjustment().compareTo(BigDecimal.ZERO) >= 0 ? "+ " : "") + formatPrice(quote.demandAdjustment());
+            String timingStr = (quote.timingAdjustment().compareTo(BigDecimal.ZERO) >= 0 ? "+ " : "") + formatPrice(quote.timingAdjustment());
+            String totalStr = formatPrice(quote.total());
+            String vatStr = String.format(Locale.US, "Includes VAT R %,.2f", quote.vatIncluded().doubleValue());
+
+            if (baseFareLabel != null) baseFareLabel.setText(baseStr);
+            if (classMultiplierLabel != null) classMultiplierLabel.setText("x " + quote.classMultiplier());
+            if (demandPricingLabel != null) demandPricingLabel.setText(demandStr);
+            if (totalPriceLabel != null) totalPriceLabel.setText(totalStr);
+
+            if (seatBaseFareLabel != null) seatBaseFareLabel.setText(baseStr);
+            if (seatCabinTitleLabel != null) seatCabinTitleLabel.setText("Cabin (x " + quote.classMultiplier() + ")");
+            if (seatCabinLabel != null) seatCabinLabel.setText(classFareStr);
+            if (seatDemandLabel != null) seatDemandLabel.setText(demandStr);
+            if (seatTimingLabel != null) seatTimingLabel.setText(timingStr);
+            if (seatTotalLabel != null) seatTotalLabel.setText(totalStr);
+            if (seatVatLabel != null) seatVatLabel.setText(vatStr);
+
+            if (bigPriceLabel != null) bigPriceLabel.setText(totalStr);
+            if (isInteractive && continueButton != null) continueButton.setDisable(false);
+        } else {
+            // No quote state: honest messaging, disable continue
+            if (seatBaseFareLabel != null) seatBaseFareLabel.setText("-");
+            if (seatCabinLabel != null) seatCabinLabel.setText("-");
+            if (seatDemandLabel != null) seatDemandLabel.setText("-");
+            if (seatTimingLabel != null) seatTimingLabel.setText("-");
+            if (seatTotalLabel != null) seatTotalLabel.setText("-");
+            if (seatVatLabel != null) seatVatLabel.setText("Pricing unavailable");
+            if (bigPriceLabel != null) bigPriceLabel.setText("—");
+            if (isInteractive && continueButton != null) continueButton.setDisable(true);
+        }
     }
 
     private void updateSelectionSummary() {
@@ -397,16 +398,11 @@ public class SeatMapController implements WizardStepController {
             bookingContext.setSelectedSeats(new ArrayList<>(selectedSeats));
             if (!selectedSeats.isEmpty()) {
                 FlightSeat seat = selectedSeats.get(0);
-                BigDecimal base = (bookingContext.getBaseFare() != null)
-                        ? bookingContext.getBaseFare() : new BigDecimal("1200");
-                bookingContext.setBaseFare(base);
-                BigDecimal mult = (seat.getSeatClass() == SeatClass.FIRST)
-                        ? new BigDecimal("2.0") : new BigDecimal("1.0");
-                bookingContext.setClassMultiplier(mult);
-                bookingContext.setDemandPricing(new BigDecimal("180"));
-                bookingContext.setTaxesAndFees(new BigDecimal("142"));
-                bookingContext.recalculateTotals();
-                if (bookingContext.getHoldExpiresAt() == null && seat.getHeldUntil() != null) {
+                PriceQuote quote = pricingService.quote(flightId, seat.getSeatClass(), clock);
+                bookingContext.setPriceQuotes(List.of(quote));
+                bookingContext.setBaseFare(quote.baseFare());
+                bookingContext.setTotalPrice(quote.total());
+                if (seat.getHeldUntil() != null) {
                     bookingContext.setHoldExpiresAt(seat.getHeldUntil());
                 }
             }
@@ -423,9 +419,7 @@ public class SeatMapController implements WizardStepController {
             onBack.run();
         }
     }
-// ===================================================================
-    // Glass Reskin (Phase 2 Screen 03) Additions
-    // ===================================================================
+
     @FXML private com.group2.flightres.util.GlassSeatMapBridge glassBridge;
 
     public void setGlassBridge(com.group2.flightres.util.GlassSeatMapBridge bridge) {
@@ -456,6 +450,9 @@ public class SeatMapController implements WizardStepController {
     }
 
     public Map<String, Button> getSeatButtonsMap() {
+        if (glassBridge != null && !glassBridge.getSeatButtons().isEmpty()) {
+            return glassBridge.getSeatButtons();
+        }
         return Collections.unmodifiableMap(seatButtonsByLabel);
     }
 
@@ -471,9 +468,47 @@ public class SeatMapController implements WizardStepController {
         }
     }
 
-    @FXML
-    private void handleComingSoonCabinView() {
-        showComingSoon("Cabin view", "Cabin view isn't available yet.");
+    public void handleHoldExpired() {
+        logger.info("Seat hold expired for flight ID {}", flightId);
+        if (!selectedSeats.isEmpty()) {
+            FlightSeat seat = selectedSeats.get(0);
+            try {
+                if (!isSampleData) {
+                    seatMapService.deselectSeat(seat);
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to release expired seat hold in DB: {}", e.getMessage());
+            }
+            selectedSeats.clear();
+        }
+        if (bookingContext != null) {
+            bookingContext.setSelectedSeats(new ArrayList<>());
+            bookingContext.setPriceQuotes(new ArrayList<>());
+            bookingContext.setTotalPrice(BigDecimal.ZERO);
+            bookingContext.setHoldExpiresAt(null);
+        }
+        renderSelectionSummary(null, true);
+        if (glassBridge != null) {
+            glassBridge.clearSelectionVisuals();
+        }
+        loadSeatMap();
+        showInfoAlert("Seat hold expired", "Your seat hold has expired. The seat has been released.");
+    }
+
+    private String lastAlertMessage;
+
+    public String getLastAlertMessage() {
+        return lastAlertMessage;
+    }
+
+    private void showInfoAlert(String header, String message) {
+        this.lastAlertMessage = message;
+        logger.warn("SeatMap Alert [{}]: {}", header, message);
+        if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, message);
+            alert.setHeaderText(header);
+            alert.showAndWait();
+        }
     }
 
     @FXML
@@ -509,13 +544,13 @@ public class SeatMapController implements WizardStepController {
     }
 
     @FXML
-    private void handleComingSoonMyBookings() {
-        showComingSoon("My Bookings", "My Bookings isn't available yet.");
+    private void handleNavOffers() {
+        showComingSoon("Offers", "Offers aren't available yet.");
     }
 
     @FXML
-    private void handleComingSoonOffers() {
-        showComingSoon("Offers", "Offers aren't available yet.");
+    private void handleNavBookings() {
+        showComingSoon("My Bookings", "My Bookings isn't available yet.");
     }
 
     @FXML
@@ -530,18 +565,12 @@ public class SeatMapController implements WizardStepController {
 
     @FXML
     private void handleNavAvatar() {
-        if (bookingContext != null && bookingContext.getCurrentUser() != null) {
-            bookingContext.setCurrentUser(null);
-            navigateTo("/com/group2/flightres/fxml/home.fxml", "Home");
-        } else {
-            navigateTo("/com/group2/flightres/fxml/login.fxml", "Login / Sign Up");
-        }
+        showComingSoon("User Profile", "Profile isn't available yet.");
     }
 
-    private void showComingSoon(String title, String message) {
+    private void showComingSoon(String feature, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, message);
-        alert.setTitle("Coming soon");
-        alert.setHeaderText(title);
+        alert.setHeaderText(feature);
         alert.showAndWait();
     }
 
@@ -575,24 +604,9 @@ public class SeatMapController implements WizardStepController {
                 if (nav != null) {
                     nav.setActiveLink(screenName);
                 }
-
-                Object ctrl = loader.getController();
-                if (ctrl instanceof WizardStepController wz) {
-                    wz.init(bookingContext, () -> navigateTo("/com/group2/flightres/fxml/home.fxml", "Home"));
-                }
-                return;
             } catch (Exception e) {
-                logger.error("Failed to navigate to screen {} in contentArea", fxmlPath, e);
+                logger.error("Failed to navigate to {}", fxmlPath, e);
             }
-        }
-
-        try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource(fxmlPath));
-            javafx.scene.Parent root = loader.load();
-            scene.setRoot(root);
-            com.group2.flightres.util.ThemeManager.getInstance().applyGlassTheme(scene);
-        } catch (Exception e) {
-            logger.error("Failed to navigate to screen {} as scene root", fxmlPath, e);
         }
     }
 }

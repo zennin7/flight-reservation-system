@@ -9,14 +9,17 @@ import com.group2.flightres.model.SeatStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class SeatDaoImpl implements SeatDao {
@@ -33,11 +36,12 @@ public class SeatDaoImpl implements SeatDao {
         """;
 
     // Optimistic concurrency: only holds if the seat is still AVAILABLE.
-    // If another user grabbed it first, rowsAffected will be 0.
+    // Generates held_until server-side using make_interval with the policy duration parameter.
     private static final String HOLD_SEAT_QUERY = """
         UPDATE flight_seats
-        SET status = 'HELD', held_until = ?
+        SET status = 'HELD', held_until = NOW() + make_interval(secs => ?)
         WHERE flight_seat_id = ? AND status = 'AVAILABLE'
+        RETURNING held_until
         """;
 
     private static final String RELEASE_SEAT_QUERY = """
@@ -64,6 +68,11 @@ public class SeatDaoImpl implements SeatDao {
         FROM seat_pricing_view spv
         JOIN flight_seats fs ON fs.flight_seat_id = spv.flight_seat_id
         WHERE spv.flight_seat_id = ?
+        """;
+
+    private static final String SEAT_CLASS_PRICING_QUERY = """
+        SELECT seat_class, price_multiplier
+        FROM seat_class_pricing
         """;
 
     @Override
@@ -105,18 +114,22 @@ public class SeatDaoImpl implements SeatDao {
     }
 
     @Override
-    public boolean holdSeat(long flightSeatId) {
+    public Optional<Instant> holdSeat(long flightSeatId, int holdSeconds) {
         releaseExpiredHolds();
 
         try (Connection conn = DatabaseConfig.getDataSource().getConnection();
              PreparedStatement stmt = conn.prepareStatement(HOLD_SEAT_QUERY)) {
 
-            // Soft-lock for 5 minutes while the passenger is in checkout
-            stmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now().plusSeconds(SeatHoldPolicy.HOLD_SECONDS)));
+            stmt.setInt(1, holdSeconds);
             stmt.setLong(2, flightSeatId);
 
-            int updated = stmt.executeUpdate();
-            return updated == 1;
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Timestamp ts = rs.getTimestamp("held_until");
+                    return Optional.ofNullable(ts != null ? ts.toInstant() : null);
+                }
+            }
+            return Optional.empty();
         } catch (SQLException e) {
             logger.error("Failed to hold seat {}: {}", flightSeatId, e.getMessage(), e);
             throw new RuntimeException("Failed to hold seat " + flightSeatId, e);
@@ -164,6 +177,24 @@ public class SeatDaoImpl implements SeatDao {
             logger.error("Failed to find seat by ID {}: {}", flightSeatId, e.getMessage(), e);
         }
         return Optional.empty();
+    }
+
+    @Override
+    public Map<SeatClass, BigDecimal> getSeatClassMultipliers() {
+        Map<SeatClass, BigDecimal> map = new EnumMap<>(SeatClass.class);
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SEAT_CLASS_PRICING_QUERY);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                SeatClass sc = SeatClass.valueOf(rs.getString("seat_class"));
+                BigDecimal mult = rs.getBigDecimal("price_multiplier");
+                map.put(sc, mult);
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to load seat class pricing: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to load seat class pricing", e);
+        }
+        return map;
     }
 
     private FlightSeat mapSeat(ResultSet rs) throws SQLException {

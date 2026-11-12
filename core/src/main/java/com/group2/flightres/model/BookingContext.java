@@ -34,10 +34,8 @@ public class BookingContext {
     private Instant arrivalInstant;
 
     private List<FlightSeat> selectedSeats = new ArrayList<>();
+    private List<PriceQuote> priceQuotes = new ArrayList<>();
     private BigDecimal baseFare = BigDecimal.ZERO;
-    private BigDecimal classMultiplier = BigDecimal.ONE;
-    private BigDecimal demandPricing = BigDecimal.ZERO;
-    private BigDecimal taxesAndFees = BigDecimal.ZERO;
     private BigDecimal totalPrice = BigDecimal.ZERO;
 
     private String passengerName;
@@ -103,35 +101,20 @@ public class BookingContext {
     public Instant getArrivalInstant() { return arrivalInstant; }
     public void setArrivalInstant(Instant arrivalInstant) { this.arrivalInstant = arrivalInstant; }
 
-
     public List<FlightSeat> getSelectedSeats() { return selectedSeats; }
     public void setSelectedSeats(List<FlightSeat> selectedSeats) {
-        this.selectedSeats = selectedSeats;
+        this.selectedSeats = selectedSeats != null ? new ArrayList<>(selectedSeats) : new ArrayList<>();
+    }
+
+    public List<PriceQuote> getPriceQuotes() { return priceQuotes; }
+    public void setPriceQuotes(List<PriceQuote> priceQuotes) {
+        this.priceQuotes = priceQuotes != null ? new ArrayList<>(priceQuotes) : new ArrayList<>();
         recalculateTotals();
     }
 
     public BigDecimal getBaseFare() { return baseFare; }
     public void setBaseFare(BigDecimal baseFare) {
         this.baseFare = baseFare;
-        recalculateTotals();
-    }
-
-    public BigDecimal getClassMultiplier() { return classMultiplier; }
-    public void setClassMultiplier(BigDecimal classMultiplier) {
-        this.classMultiplier = classMultiplier;
-        recalculateTotals();
-    }
-
-    public BigDecimal getDemandPricing() { return demandPricing; }
-    public void setDemandPricing(BigDecimal demandPricing) {
-        this.demandPricing = demandPricing;
-        recalculateTotals();
-    }
-
-    public BigDecimal getTaxesAndFees() { return taxesAndFees; }
-    public void setTaxesAndFees(BigDecimal taxesAndFees) {
-        this.taxesAndFees = taxesAndFees;
-        recalculateTotals();
     }
 
     public BigDecimal getTotalPrice() { return totalPrice; }
@@ -193,38 +176,16 @@ public class BookingContext {
     }
 
     /**
-     * Recalculates total price from baseFare, classMultiplier, demandPricing and taxesAndFees
-     * based on currently selected seat.
+     * Recalculates total price from priceQuotes summing over all selected seats.
      */
     public void recalculateTotals() {
-        if (selectedSeats == null || selectedSeats.isEmpty()) {
-            classMultiplier = BigDecimal.ONE;
-            demandPricing = BigDecimal.ZERO;
-            taxesAndFees = BigDecimal.ZERO;
+        if (priceQuotes == null || priceQuotes.isEmpty()) {
             totalPrice = BigDecimal.ZERO;
             return;
         }
-
-        if (baseFare == null) {
-            baseFare = BigDecimal.ZERO;
-        }
-
-        FlightSeat primarySeat = selectedSeats.get(0);
-        if (primarySeat.getSeatClass() == SeatClass.FIRST) {
-            classMultiplier = new BigDecimal("2.0");
-        } else {
-            classMultiplier = new BigDecimal("1.0");
-        }
-
-        if (demandPricing == null || demandPricing.compareTo(BigDecimal.ZERO) == 0) {
-            demandPricing = new BigDecimal("180");
-        }
-        if (taxesAndFees == null || taxesAndFees.compareTo(BigDecimal.ZERO) == 0) {
-            taxesAndFees = new BigDecimal("142");
-        }
-
-        BigDecimal adjustedBase = baseFare.multiply(classMultiplier);
-        totalPrice = adjustedBase.add(demandPricing).add(taxesAndFees);
+        totalPrice = priceQuotes.stream()
+                .map(PriceQuote::total)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public String generateBookingReference() {

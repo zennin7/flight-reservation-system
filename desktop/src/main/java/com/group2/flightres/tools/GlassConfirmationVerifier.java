@@ -21,6 +21,7 @@ import com.group2.flightres.controller.MainShellController;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.model.User;
@@ -270,9 +271,10 @@ public class GlassConfirmationVerifier extends Application {
         ctx.setPassengerEmail("amahle@example.com");
         ctx.setPassportNumber("A91827364");
         ctx.setDateOfBirth(LocalDate.of(1998, 5, 12));
-        ctx.setBaseFare(new BigDecimal("1250.00"));
-        ctx.setTaxesAndFees(new BigDecimal("272.00"));
-        ctx.setTotalPrice(new BigDecimal("1522.00"));
+        PriceQuote quote = new com.group2.flightres.service.PricingService().quote(TEST_FLIGHT_ID, SeatClass.ECONOMY);
+        ctx.setBaseFare(quote.baseFare());
+        ctx.setPriceQuotes(List.of(quote));
+        ctx.setTotalPrice(quote.total());
         ctx.setPaymentResult(new PaymentResult(true, "TXN-CONFIRM-001", "VISA", "4242", null));
 
         BookingRecord record = bookingService.createBooking(ctx);
@@ -1153,9 +1155,9 @@ public class GlassConfirmationVerifier extends Application {
         seat.setSeatClass(SeatClass.ECONOMY);
         ctx.setSelectedSeats(List.of(seat));
         ctx.setBaseFare(new BigDecimal("1200"));
-        ctx.setDemandPricing(new BigDecimal("180"));
-        ctx.setTaxesAndFees(new BigDecimal("142"));
-        ctx.setTotalPrice(new BigDecimal("1522"));
+        PriceQuote quote = PriceQuote.calculate(new BigDecimal("1200.00"), BigDecimal.ONE, 0.0, 100.0);
+        ctx.setPriceQuotes(List.of(quote));
+        ctx.setTotalPrice(quote.total());
 
         // Setup stage and scene once, matching GlassConfirmationScreenshotRunner
         CompletableFuture<BookingConfirmationController> initFuture = new CompletableFuture<>();

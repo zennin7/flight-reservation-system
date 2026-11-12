@@ -169,7 +169,18 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             Slider pSlider = (Slider) root.lookup("#priceSlider");
             if (pSlider != null) {
                 this.priceSlider = pSlider;
-                pSlider.valueProperty().addListener((obs, oldVal, newVal) -> setMaxPriceFilter(newVal.doubleValue()));
+                pSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+                    setMaxPriceFilter(newVal.doubleValue());
+                    updateSliderGradient(pSlider);
+                });
+                pSlider.minProperty().addListener((obs, o, n) -> updateSliderGradient(pSlider));
+                pSlider.maxProperty().addListener((obs, o, n) -> updateSliderGradient(pSlider));
+                pSlider.skinProperty().addListener((obs, o, n) -> {
+                    if (n != null) {
+                        Platform.runLater(() -> updateSliderGradient(pSlider));
+                    }
+                });
+                Platform.runLater(() -> updateSliderGradient(pSlider));
             }
 
             durationFilterValueLabel = (Label) root.lookup("#durationFilterValueLabel");
@@ -177,7 +188,18 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             Slider dSlider = (Slider) root.lookup("#durationSlider");
             if (dSlider != null) {
                 this.durationSlider = dSlider;
-                dSlider.valueProperty().addListener((obs, oldVal, newVal) -> setMaxDurationFilter(newVal.doubleValue()));
+                dSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+                    setMaxDurationFilter(newVal.doubleValue());
+                    updateSliderGradient(dSlider);
+                });
+                dSlider.minProperty().addListener((obs, o, n) -> updateSliderGradient(dSlider));
+                dSlider.maxProperty().addListener((obs, o, n) -> updateSliderGradient(dSlider));
+                dSlider.skinProperty().addListener((obs, o, n) -> {
+                    if (n != null) {
+                        Platform.runLater(() -> updateSliderGradient(dSlider));
+                    }
+                });
+                Platform.runLater(() -> updateSliderGradient(dSlider));
             }
 
             economyCheckCircle = (StackPane) root.lookup("#economyCheckCircle");
@@ -395,7 +417,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         if (economyCabinLabel != null) {
             if (econCount > 0) {
-                economyCabinLabel.setText("Economy · " + econCount + " flights");
+                economyCabinLabel.setText("Economy · " + (econCount == 1 ? "1 flight" : econCount + " flights"));
                 if (economyCabinRow != null) {
                     economyCabinRow.setDisable(false);
                     economyCabinRow.setStyle("");
@@ -412,7 +434,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         if (firstCabinLabel != null) {
             if (firstCount > 0) {
-                firstCabinLabel.setText("First Class · " + firstCount + " flights");
+                firstCabinLabel.setText("First Class · " + (firstCount == 1 ? "1 flight" : firstCount + " flights"));
                 if (firstCabinRow != null) {
                     firstCabinRow.setDisable(false);
                     firstCabinRow.setStyle("");
@@ -442,6 +464,20 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         updatePillStyles();
         updateCheckStyles();
+    }
+
+    public static void updateSliderGradient(Slider slider) {
+        if (slider == null) return;
+        Node trackNode = slider.lookup(".track");
+        if (trackNode instanceof StackPane track) {
+            double min = slider.getMin();
+            double max = slider.getMax();
+            double val = slider.getValue();
+            double pct = (max > min) ? Math.max(0.0, Math.min(100.0, (val - min) / (max - min) * 100.0)) : 100.0;
+            track.setStyle(String.format(Locale.US,
+                    "-fx-background-color: linear-gradient(to right, #b98a2e 0%%, #e8c46a %.2f%%, rgba(255, 255, 255, 0.12) %.2f%%, rgba(255, 255, 255, 0.12) 100%%); -fx-background-radius: 4px;",
+                    pct, pct));
+        }
     }
 
     // --- Interactive Filter Handlers ---

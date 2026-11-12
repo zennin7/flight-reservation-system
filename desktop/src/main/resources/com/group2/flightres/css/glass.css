@@ -782,7 +782,7 @@
 
 /* Sliders */
 .glass-slider .track {
-    -fx-background-color: linear-gradient(to right, #b98a2e 0%, #e8c46a 60%, rgba(255, 255, 255, 0.12) 60%, rgba(255, 255, 255, 0.12) 100%);
+    -fx-background-color: rgba(255, 255, 255, 0.12);
     -fx-background-radius: 4px;
 }
 

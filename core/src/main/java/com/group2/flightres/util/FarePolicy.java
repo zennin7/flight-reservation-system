@@ -1,5 +1,7 @@
 package com.group2.flightres.util;
 
+import com.group2.flightres.config.BaggagePolicy;
+
 import java.util.List;
 
 /**
@@ -12,7 +14,7 @@ public final class FarePolicy {
 
     public static final List<PolicyRule> BAGGAGE_RULES = List.of(
             new PolicyRule("Cabin Baggage", "1 carry-on bag (up to 7 kg) + 1 personal item included"),
-            new PolicyRule("Checked Baggage", "1 checked bag (up to 23 kg) included free of charge"),
+            new PolicyRule("Checked Baggage", "1 checked bag (up to " + BaggagePolicy.CHECKED_BAGGAGE_KG + " kg) included free of charge"),
             new PolicyRule("Oversized Bags", "Available for purchase at check-in counter"),
             new PolicyRule("Sports Equipment", "Not provided")
     );

@@ -69,6 +69,9 @@ public class FlightSearchResult {
         this.availableFirst = availableFirst;
     }
 
+    /**
+     * Backward-compatible convenience constructor defaulting available economy/first breakdown.
+     */
     public FlightSearchResult(
             Long flightId,
             String flightNumber,
@@ -108,6 +111,14 @@ public class FlightSearchResult {
     public int getAvailableEconomy() { return availableEconomy; }
     public int getAvailableFirst() { return availableFirst; }
 
+    public FlightSearchResult withBasePrice(BigDecimal newPrice) {
+        return new FlightSearchResult(
+                flightId, flightNumber, originCode, originAirportName, originCity, originZone,
+                destCode, destAirportName, destCity, destZone, departure, arrival,
+                newPrice, aircraftModel, availableSeats, availableEconomy, availableFirst
+        );
+    }
+
     // Derived getters via FlightTimes for backward compatibility and formatted presentation
     public String getDepartureTime() {
         return FlightTimes.formatLocalTime(departure, originZone);
@@ -138,13 +149,7 @@ public class FlightSearchResult {
                 && Objects.equals(flightId, that.flightId)
                 && Objects.equals(flightNumber, that.flightNumber)
                 && Objects.equals(originCode, that.originCode)
-                && Objects.equals(originAirportName, that.originAirportName)
-                && Objects.equals(originCity, that.originCity)
-                && Objects.equals(originZone, that.originZone)
                 && Objects.equals(destCode, that.destCode)
-                && Objects.equals(destAirportName, that.destAirportName)
-                && Objects.equals(destCity, that.destCity)
-                && Objects.equals(destZone, that.destZone)
                 && Objects.equals(departure, that.departure)
                 && Objects.equals(arrival, that.arrival)
                 && Objects.equals(basePrice, that.basePrice)
@@ -153,8 +158,22 @@ public class FlightSearchResult {
 
     @Override
     public int hashCode() {
-        return Objects.hash(flightId, flightNumber, originCode, originAirportName, originCity, originZone,
+        return Objects.hash(
+                flightId, flightNumber, originCode, originAirportName, originCity, originZone,
                 destCode, destAirportName, destCity, destZone, departure, arrival, basePrice, aircraftModel,
-                availableSeats, availableEconomy, availableFirst);
+                availableSeats, availableEconomy, availableFirst
+        );
+    }
+
+    @Override
+    public String toString() {
+        return "FlightSearchResult{" +
+                "flightNumber='" + flightNumber + '\'' +
+                ", originCode='" + originCode + '\'' +
+                ", destCode='" + destCode + '\'' +
+                ", departure=" + departure +
+                ", basePrice=" + basePrice +
+                ", availableSeats=" + availableSeats +
+                '}';
     }
 }

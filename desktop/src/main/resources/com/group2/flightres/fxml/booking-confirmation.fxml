@@ -131,7 +131,7 @@
                             <!-- RIGHT COLUMN: SIDEBAR (Width 310) -->
                             <VBox fx:id="sidebarContainer" prefWidth="310" minWidth="310" maxWidth="310" spacing="12">
 
-                                <!-- Payment Summary Panel: THREE ROWS (Base fare, Demand pricing, Taxes and fees) then Paid -->
+                                <!-- Payment Summary Panel: THREE ROWS (Base fare, Demand pricing, Booking time) then Paid -->
                                 <VBox fx:id="paymentBox" spacing="8" styleClass="inner-card, glass-inner-panel" style="-fx-padding: 14 18;">
                                     <Label text="PAYMENT" styleClass="order-summary-overline"/>
 
@@ -148,7 +148,7 @@
                                     </HBox>
 
                                     <HBox alignment="CENTER_LEFT">
-                                        <Label text="Taxes and fees" styleClass="confirmation-subtitle-mut"/>
+                                        <Label text="Booking time" styleClass="confirmation-subtitle-mut"/>
                                         <Region HBox.hgrow="ALWAYS"/>
                                         <Label fx:id="taxesFeesLabel" text="" style="-fx-font-family: 'Inter Medium'; -fx-font-size: 14px; -fx-text-fill: #ffffff;"/>
                                     </HBox>

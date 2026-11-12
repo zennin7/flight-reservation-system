@@ -3,6 +3,7 @@ package com.group2.flightres.tools;
 import com.group2.flightres.controller.BookingConfirmationController;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.util.FontLoader;
@@ -96,9 +97,9 @@ public class GlassConfirmationScreenshotRunner extends Application {
         ctx.setPassengerEmail("amahle@example.com");
         ctx.setBookingReference("K7QX2M");
         ctx.setBaseFare(new BigDecimal("1200"));
-        ctx.setDemandPricing(new BigDecimal("180"));
-        ctx.setTaxesAndFees(new BigDecimal("142"));
-        ctx.setTotalPrice(new BigDecimal("1522"));
+        PriceQuote quote = PriceQuote.calculate(new BigDecimal("1200.00"), BigDecimal.ONE, 0.0, 100.0);
+        ctx.setPriceQuotes(List.of(quote));
+        ctx.setTotalPrice(quote.total());
 
         FlightSeat seat9E = new FlightSeat();
         seat9E.setFlightId(1L);

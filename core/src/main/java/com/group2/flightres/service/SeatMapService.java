@@ -1,5 +1,6 @@
 package com.group2.flightres.service;
 
+import com.group2.flightres.config.SeatHoldPolicy;
 import com.group2.flightres.dao.FlightDao;
 import com.group2.flightres.dao.SeatDao;
 import com.group2.flightres.dao.impl.FlightDaoImpl;
@@ -7,11 +8,14 @@ import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.model.FlightSearchResult;
 import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.SeatStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service managing seat map availability, holds, and bookings.
@@ -73,19 +77,15 @@ public class SeatMapService {
             }
         }
 
-        boolean success = seatDao.holdSeat(seat.getFlightSeatId());
-        if (!success) {
+        Optional<Instant> heldUntilOpt = seatDao.holdSeat(seat.getFlightSeatId(), SeatHoldPolicy.HOLD_SECONDS);
+        if (heldUntilOpt.isEmpty()) {
             logger.warn("Seat hold failed: Seat {} (ID: {}) was just taken by another user",
                     seat.getSeatLabel(), seat.getFlightSeatId());
             throw new SeatUnavailableException(
                     "Seat " + seat.getSeatLabel() + " was just taken by another user. Please choose a different seat.");
         }
-        seatDao.findSeatById(seat.getFlightSeatId()).ifPresent(fresh -> {
-            seat.setHeldUntil(fresh.getHeldUntil());
-        });
-        if (seat.getHeldUntil() == null) {
-            throw new IllegalStateException("Seat " + seat.getSeatLabel() + " (ID: " + seat.getFlightSeatId() + ") was held successfully but held_until is null in database.");
-        }
+        seat.setStatus(SeatStatus.HELD);
+        seat.setHeldUntil(heldUntilOpt.get());
         logger.info("Seat {} (ID: {}) held successfully until {}", seat.getSeatLabel(), seat.getFlightSeatId(), seat.getHeldUntil());
     }
 
@@ -95,6 +95,7 @@ public class SeatMapService {
     public void deselectSeat(FlightSeat seat) {
         if (seat == null) return;
         boolean released = seatDao.releaseSeat(seat.getFlightSeatId());
+        seat.setStatus(SeatStatus.AVAILABLE);
         seat.setHeldUntil(null);
         logger.info("Released hold for seat {} (ID: {}): {}", seat.getSeatLabel(), seat.getFlightSeatId(), released);
     }
@@ -113,6 +114,7 @@ public class SeatMapService {
             throw new SeatUnavailableException(
                     "Seat " + seat.getSeatLabel() + " could not be booked. Its hold may have expired.");
         }
+        seat.setStatus(SeatStatus.BOOKED);
         logger.info("Seat {} (ID: {}) successfully booked", seat.getSeatLabel(), seat.getFlightSeatId());
     }
 
