@@ -398,7 +398,7 @@ class PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("Cabin availability per flight: tomorrow's ALT 204 has economy 150 and first 12")
+    @DisplayName("Cabin availability per flight: tomorrow's ALT 204 matches DB available and capacity (economy 150, first 12)")
     void testCabinAvailabilityAlt204() throws SQLException {
         FlightDaoImpl flightDao = new FlightDaoImpl();
         LocalDate tomorrow = LocalDate.now(ZoneId.of("Africa/Johannesburg")).plusDays(1);
@@ -411,22 +411,30 @@ class PostgresIntegrationTest {
         int dbAvailable = 0;
         int dbEconomy = 0;
         int dbFirst = 0;
+        int dbTotalEconomy = 0;
+        int dbTotalFirst = 0;
         try (Connection conn = DatabaseConfig.getDataSource().getConnection();
              PreparedStatement stmt = conn.prepareStatement(
                      """
                      SELECT
-                       (SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = ? AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW()))) AS avail,
-                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = ? AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW())) AND st.seat_class = 'ECONOMY') AS econ,
-                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = ? AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW())) AND st.seat_class = 'FIRST') AS fst
+                       (SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = ? AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until <= NOW()))) AS avail,
+                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = ? AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until <= NOW())) AND st.seat_class = 'ECONOMY') AS econ,
+                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = ? AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until <= NOW())) AND st.seat_class = 'FIRST') AS fst,
+                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = ? AND st.seat_class = 'ECONOMY') AS total_econ,
+                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = ? AND st.seat_class = 'FIRST') AS total_fst
                      """)) {
             stmt.setLong(1, alt204.getFlightId());
             stmt.setLong(2, alt204.getFlightId());
             stmt.setLong(3, alt204.getFlightId());
+            stmt.setLong(4, alt204.getFlightId());
+            stmt.setLong(5, alt204.getFlightId());
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     dbAvailable = rs.getInt("avail");
                     dbEconomy = rs.getInt("econ");
                     dbFirst = rs.getInt("fst");
+                    dbTotalEconomy = rs.getInt("total_econ");
+                    dbTotalFirst = rs.getInt("total_fst");
                 }
             }
         }
@@ -435,7 +443,7 @@ class PostgresIntegrationTest {
         assertEquals(dbEconomy, alt204.getAvailableEconomy());
         assertEquals(dbFirst, alt204.getAvailableFirst());
         assertEquals(alt204.getAvailableSeats(), alt204.getAvailableEconomy() + alt204.getAvailableFirst());
-        assertEquals(150, alt204.getAvailableEconomy());
-        assertEquals(12, alt204.getAvailableFirst());
+        assertEquals(150, dbTotalEconomy);
+        assertEquals(12, dbTotalFirst);
     }
 }

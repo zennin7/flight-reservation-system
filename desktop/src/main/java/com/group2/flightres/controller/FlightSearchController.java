@@ -7,6 +7,7 @@ import com.group2.flightres.model.Route;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.util.GlassFlightResultsBridge;
 import com.group2.flightres.util.Motion;
+import com.group2.flightres.util.Navigator;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -517,7 +518,7 @@ public class FlightSearchController implements WizardStepController {
 
     @FXML
     private void handleComingSoonMyBookings() {
-        showFeatureNotice("My Bookings", "My Bookings isn't available yet.");
+        Navigator.navigateToMyBookings(searchButton != null ? searchButton : fromCombo, bookingContext);
     }
 
     @FXML

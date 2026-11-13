@@ -151,7 +151,7 @@ public class MainShellController {
                 goToStep(BookingStep.SEARCH);
                 break;
             case "My Bookings":
-                loadOptionalScreen("/com/group2/flightres/fxml/booking-confirmation.fxml", true, "My Bookings");
+                loadOptionalScreen("/com/group2/flightres/fxml/my-bookings.fxml", false, "My Bookings");
                 break;
             case "Login":
                 loadOptionalScreen("/com/group2/flightres/fxml/login.fxml", false, "Login / Sign Up");
@@ -247,6 +247,8 @@ public class MainShellController {
                 aboutCtrl.init(bookingContext, () -> handleNavigation("Home"));
             } else if (controller instanceof ContactController contactCtrl) {
                 contactCtrl.init(bookingContext, () -> handleNavigation("Home"));
+            } else if (controller instanceof MyBookingsController myBookingsCtrl) {
+                myBookingsCtrl.init(bookingContext, () -> handleNavigation("Flights"));
             } else if (controller instanceof WizardStepController wizardController) {
                 wizardController.init(bookingContext, () -> goToStep(BookingStep.SEARCH));
             }

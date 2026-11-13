@@ -14,6 +14,7 @@ import com.group2.flightres.util.BoardingPassPdfGenerator;
 import com.group2.flightres.util.FontLoader;
 import com.group2.flightres.util.IcsCalendarGenerator;
 import com.group2.flightres.util.Motion;
+import com.group2.flightres.util.Navigator;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -488,7 +489,9 @@ public class BookingConfirmationController implements WizardStepController {
     // Top Navigation Handlers
     @FXML private void handleNavHome() { handleBackToHome(); }
     @FXML private void handleNavFlights() { handleBackToHome(); }
-    @FXML private void handleComingSoonMyBookings() { showComingSoonAlert("My Bookings"); }
+    @FXML private void handleComingSoonMyBookings() {
+        Navigator.navigateToMyBookings(downloadPdfButton != null ? downloadPdfButton : cardMarginWrapper, bookingContext);
+    }
     @FXML private void handleComingSoonOffers() { showComingSoonAlert("Offers"); }
     @FXML private void handleNavAbout() { showComingSoonAlert("About"); }
     @FXML private void handleNavContact() { showComingSoonAlert("Contact"); }

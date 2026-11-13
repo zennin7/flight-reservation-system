@@ -18,6 +18,7 @@ import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.service.SimulatedPaymentGateway;
 import com.group2.flightres.util.DestinationPhotos;
 import com.group2.flightres.util.GlassCheckoutBridge;
+import com.group2.flightres.util.Navigator;
 import com.group2.flightres.util.ValidationUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -627,7 +628,7 @@ public class CheckoutController implements WizardStepController {
 
     @FXML
     private void handleComingSoonMyBookings() {
-        showAlert("Coming soon", "My Bookings isn't available yet.");
+        Navigator.navigateToMyBookings(confirmBookingButton != null ? confirmBookingButton : backButton, bookingContext);
     }
 
     @FXML

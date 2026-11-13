@@ -5,6 +5,7 @@ import com.group2.flightres.dao.BookingDao;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
+import com.group2.flightres.model.BookingSummary;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.service.PaymentResult;
@@ -21,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -28,6 +30,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -89,6 +92,29 @@ public class BookingDaoImpl implements BookingDao {
     private static final String FIND_BY_REF_QUERY = BOOKING_SELECT_FROM + " WHERE b.booking_ref = ?\n";
 
     private static final String FIND_BY_USER_QUERY = BOOKING_SELECT_FROM + " WHERE b.user_id = ?\nORDER BY b.created_at DESC\n";
+
+    private static final String LIST_SUMMARIES_BY_USER_QUERY = """
+        SELECT b.booking_id, b.booking_ref, b.user_id, b.status AS booking_status, b.total_amount,
+               f.flight_id, f.flight_number, f.departure_time, f.arrival_time,
+               act.model AS aircraft_model,
+               o.iata_code AS origin_code, o.city AS origin_city, o.timezone AS origin_timezone,
+               d.iata_code AS dest_code, d.city AS dest_city, d.timezone AS dest_timezone,
+               MIN(bs.passenger_name) AS passenger_name, u.email AS user_email,
+               string_agg(concat(st.seat_row, st.seat_col), ', ' ORDER BY st.seat_row, st.seat_col) AS seat_labels
+        FROM bookings b
+        JOIN flights f ON f.flight_id = b.flight_id
+        JOIN aircraft_types act ON act.aircraft_type_id = f.aircraft_type_id
+        JOIN airports o ON o.airport_id = f.origin_airport_id
+        JOIN airports d ON d.airport_id = f.dest_airport_id
+        JOIN users u ON u.user_id = b.user_id
+        LEFT JOIN booking_seats bs ON bs.booking_id = b.booking_id
+        LEFT JOIN flight_seats fs ON fs.flight_seat_id = bs.flight_seat_id
+        LEFT JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id
+        WHERE b.user_id = ?
+        GROUP BY b.booking_id, b.booking_ref, b.user_id, b.status, b.total_amount,
+                 f.flight_id, f.flight_number, f.departure_time, f.arrival_time, act.model,
+                 o.iata_code, o.city, o.timezone, d.iata_code, d.city, d.timezone, u.email
+        """;
 
     private record BookingHeader(long bookingId, LocalDateTime createdAt) {}
 
@@ -346,6 +372,121 @@ public class BookingDaoImpl implements BookingDao {
             logger.error("Failed to query bookings for user {}: {}", userId, e.getMessage(), e);
         }
         return list;
+    }
+
+    @Override
+    public List<BookingSummary> listSummariesForUser(long userId, Clock clock) {
+        Clock refClock = clock != null ? clock : Clock.systemUTC();
+        List<BookingSummary> rawList = new ArrayList<>();
+
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(LIST_SUMMARIES_BY_USER_QUERY)) {
+
+            stmt.setLong(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    long bookingId = rs.getLong("booking_id");
+                    String bookingRef = rs.getString("booking_ref");
+                    long uid = rs.getLong("user_id");
+                    String storedStatus = rs.getString("booking_status");
+                    BigDecimal totalAmount = rs.getBigDecimal("total_amount");
+                    String flightNumber = rs.getString("flight_number");
+                    String aircraftModel = rs.getString("aircraft_model");
+
+                    String origTz = rs.getString("origin_timezone");
+                    ZoneId origZone = (origTz != null && !origTz.isBlank()) ? ZoneId.of(origTz) : ZoneId.of("Africa/Johannesburg");
+                    String destTz = rs.getString("dest_timezone");
+                    ZoneId destZone = (destTz != null && !destTz.isBlank()) ? ZoneId.of(destTz) : ZoneId.of("Africa/Johannesburg");
+
+                    Timestamp depTs = rs.getTimestamp("departure_time");
+                    Instant depInstant = depTs != null ? depTs.toInstant() : Instant.EPOCH;
+
+                    Timestamp arrTs = rs.getTimestamp("arrival_time");
+                    Instant arrInstant = arrTs != null ? arrTs.toInstant() : depInstant;
+
+                    String originCode = rs.getString("origin_code");
+                    String originCity = rs.getString("origin_city");
+                    String destCode = rs.getString("dest_code");
+                    String destCity = rs.getString("dest_city");
+                    String passengerName = rs.getString("passenger_name");
+                    String userEmail = rs.getString("user_email");
+
+                    String seatLabelsAgg = rs.getString("seat_labels");
+                    List<String> seatLabels = new ArrayList<>();
+                    if (seatLabelsAgg != null && !seatLabelsAgg.isBlank()) {
+                        for (String s : seatLabelsAgg.split(",")) {
+                            String trimmed = s.trim();
+                            if (!trimmed.isEmpty()) {
+                                seatLabels.add(trimmed);
+                            }
+                        }
+                    }
+
+                    // Status classification:
+                    // UPCOMING if departure is in the future and not cancelled,
+                    // COMPLETED if past,
+                    // CANCELLED as stored.
+                    String status;
+                    if (storedStatus != null && "CANCELLED".equalsIgnoreCase(storedStatus.trim())) {
+                        status = "CANCELLED";
+                    } else if (depInstant.isAfter(refClock.instant())) {
+                        status = "UPCOMING";
+                    } else {
+                        status = "COMPLETED";
+                    }
+
+                    rawList.add(new BookingSummary(
+                            bookingId,
+                            bookingRef,
+                            uid,
+                            flightNumber,
+                            originCode,
+                            originCity,
+                            depInstant,
+                            origZone,
+                            destCode,
+                            destCity,
+                            arrInstant,
+                            destZone,
+                            status,
+                            storedStatus,
+                            seatLabels,
+                            totalAmount,
+                            passengerName,
+                            userEmail,
+                            aircraftModel
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to list booking summaries for user {}: {}", userId, e.getMessage(), e);
+        }
+
+        // Ordering requirement:
+        // "Order: upcoming ascending, then past descending."
+        List<BookingSummary> upcoming = new ArrayList<>();
+        List<BookingSummary> past = new ArrayList<>();
+        List<BookingSummary> cancelled = new ArrayList<>();
+
+        for (BookingSummary summary : rawList) {
+            if ("UPCOMING".equals(summary.getStatus())) {
+                upcoming.add(summary);
+            } else if ("COMPLETED".equals(summary.getStatus())) {
+                past.add(summary);
+            } else {
+                cancelled.add(summary);
+            }
+        }
+
+        upcoming.sort(Comparator.comparing(BookingSummary::getDepartureInstant));
+        past.sort(Comparator.comparing(BookingSummary::getDepartureInstant).reversed());
+        cancelled.sort(Comparator.comparing(BookingSummary::getDepartureInstant).reversed());
+
+        List<BookingSummary> ordered = new ArrayList<>(rawList.size());
+        ordered.addAll(upcoming);
+        ordered.addAll(past);
+        ordered.addAll(cancelled);
+        return ordered;
     }
 
     private long resolveUserId(Connection conn, BookingContext context) throws SQLException {

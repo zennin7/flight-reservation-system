@@ -8,6 +8,7 @@ import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.exception.PriceChangedException;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
+import com.group2.flightres.model.BookingSummary;
 import com.group2.flightres.model.FlightSearchResult;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.PriceQuote;
@@ -19,6 +20,8 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
@@ -143,6 +146,41 @@ public class BookingService {
      */
     public List<BookingRecord> getBookingsByUserId(long userId) {
         return bookingDao.findByUserId(userId);
+    }
+
+    /**
+     * Lists booking summaries for a user using default service clock.
+     */
+    public List<BookingSummary> listBookingsForUser(long userId) {
+        return listBookingsForUser(userId, this.clock);
+    }
+
+    /**
+     * Lists booking summaries for a user via a single join query,
+     * computing status (UPCOMING, COMPLETED, CANCELLED) using the provided Clock
+     * and ordering upcoming ascending, then past descending.
+     */
+    public List<BookingSummary> listBookingsForUser(long userId, Clock clock) {
+        return bookingDao.listSummariesForUser(userId, clock != null ? clock : this.clock);
+    }
+
+    /**
+     * Retrieves a booking record for a user, enforcing strict ownership.
+     * Throws SecurityException if the booking belongs to another user.
+     */
+    public BookingRecord getBookingForUser(long userId, String bookingReference) {
+        if (bookingReference == null || bookingReference.isBlank()) {
+            throw new IllegalArgumentException("Booking reference must not be null or blank");
+        }
+        String ref = bookingReference.trim().toUpperCase(Locale.ROOT);
+        BookingRecord record = bookingDao.findByReference(ref)
+                .orElseThrow(() -> new NoSuchElementException("Booking not found: " + ref));
+        if (record.getUserId() == null || record.getUserId() != userId) {
+            logger.warn("Security violation: user {} attempted to access booking {} owned by user {}",
+                    userId, ref, record.getUserId());
+            throw new SecurityException("User " + userId + " is not authorized to access booking " + ref);
+        }
+        return record;
     }
 
     /**

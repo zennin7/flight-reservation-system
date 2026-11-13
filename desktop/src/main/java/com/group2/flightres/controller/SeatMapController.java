@@ -13,6 +13,7 @@ import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.service.PricingService;
 import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.util.FlightTimes;
+import com.group2.flightres.util.Navigator;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -560,7 +561,7 @@ public class SeatMapController implements WizardStepController {
 
     @FXML
     private void handleNavBookings() {
-        showComingSoon("My Bookings", "My Bookings isn't available yet.");
+        Navigator.navigateToMyBookings(continueButton != null ? continueButton : cabinContainer, bookingContext);
     }
 
     @FXML
