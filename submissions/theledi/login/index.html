@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FLIGHTS SA - Flight Reservation System</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">✈</div>
+    <div>
+      <h1>FLIGHTS <span> SA</span></h1>
+      <p>FLIGHT RESERVATION SYSTEM</p>
+    </div>
+  </div>
+  <nav>
+    <a href="#">Home</a><span>|</span>
+    <a href="#">Flights</a><span>|</span>
+    <a href="#">Help</a>
+  </nav>
+</header>
+
+<div class="main">
+  <div class="left">
+    <h2>Unpack a new <span>Horizon</span></h2>
+    <p>Stop Dreaming . Start Packing <br>Book with ease.</p>
+  </div>
+
+  <div class="login-card">
+    <div class="login-header">
+      <div class="plane">✈</div>
+      <h3>Log In</h3>
+      <p>Access your account to book flights,<br>view your bookings and more.</p>
+    </div>
+
+    <form id="loginForm" novalidate>
+      <div id="formMessage" class="form-message" role="alert"></div>
+
+      <label for="email">Email Address</label>
+      <div class="input-box">
+        <span>✉</span>
+        <input type="email" id="email" placeholder="Enter your email address">
+      </div>
+      <p class="error-msg" id="emailError"></p>
+
+      <label for="pass">Password</label>
+      <div class="input-box">
+        <span>🔒</span>
+        <input type="password" id="pass" placeholder="Enter your password">
+        <span id="togglePass" style="cursor:pointer">👁</span>
+      </div>
+      <p class="error-msg" id="passError"></p>
+
+      <div class="options">
+        <label class="remember"><input type="checkbox" id="remember"> Remember me</label>
+        <a href="#" class="forgot" id="forgotLink">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="btn-login">Log In <span>→</span></button>
+    </form>
+
+    <div class="divider">or</div>
+
+    <button class="btn-social"><b style="color:#D4AF37;font-size:18px">G</b> Continue with Google</button>
+    <button class="btn-social"> Continue with Apple</button>
+
+    <div class="signup">Don't have an account? <span>Sign up</span></div>
+  </div>
+</div>
+
+<div class="footer">
+  <span style="color:#D4AF37;font-size:18px">✈</span> • BOOK <span style="color:#D4AF37">•</span> FLY <span style="color:#D4AF37">•</span> EXPLORE
+  <div class="line"></div>
+</div>
+
+<div class="gold-arc"></div>
+
+<!-- FORGOT PASSWORD POPUP -->
+<div class="modal-overlay" id="forgotModal">
+  <div class="modal">
+    <button class="modal-close" id="closeModal" aria-label="Close">&times;</button>
+    <h3>Reset Password</h3>
+    <p>Enter your email address and we'll send you a link to reset your password.</p>
+
+    <div class="input-box">
+      <span>✉</span>
+      <input type="email" id="resetEmail" placeholder="Enter your email address">
+    </div>
+    <p class="error-msg" id="resetError"></p>
+    <p class="success-msg" id="resetSuccess"></p>
+
+    <button class="btn-login" id="sendReset">Send Reset Link</button>
+  </div>
+</div>
+
+<script>
+const form        = document.getElementById('loginForm');
+const emailInput  = document.getElementById('email');
+const passInput   = document.getElementById('pass');
+const emailError  = document.getElementById('emailError');
+const passError   = document.getElementById('passError');
+const formMessage = document.getElementById('formMessage');
+const remember    = document.getElementById('remember');
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Show / hide password
+document.getElementById('togglePass').addEventListener('click', () => {
+  passInput.type = passInput.type === 'password' ? 'text' : 'password';
+});
+
+// Helpers
+function showError(input, errorEl, message) {
+  input.closest('.input-box').classList.add('error');
+  errorEl.textContent = message;
+}
+function clearError(input, errorEl) {
+  input.closest('.input-box').classList.remove('error');
+  errorEl.textContent = '';
+}
+
+// Clear errors as the user types
+emailInput.addEventListener('input', () => { clearError(emailInput, emailError); formMessage.textContent = ''; });
+passInput.addEventListener('input',  () => { clearError(passInput, passError);  formMessage.textContent = ''; });
+
+// Remember me: pre-fill saved email
+const savedEmail = localStorage.getItem('rememberedEmail');
+if (savedEmail) {
+  emailInput.value = savedEmail;
+  remember.checked = true;
+}
+
+// LOGIN
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  let valid = true;
+  formMessage.textContent = '';
+  formMessage.className = 'form-message';
+
+  const email = emailInput.value.trim();
+  const password = passInput.value;
+
+  if (email === '') {
+    showError(emailInput, emailError, 'Please enter your email address.');
+    valid = false;
+  } else if (!emailPattern.test(email)) {
+    showError(emailInput, emailError, 'Please enter a valid email address.');
+    valid = false;
+  } else {
+    clearError(emailInput, emailError);
+  }
+
+  if (password === '') {
+    showError(passInput, passError, 'Please enter your password.');
+    valid = false;
+  } else if (password.length < 6) {
+    showError(passInput, passError, 'Password must be at least 6 characters.');
+    valid = false;
+  } else {
+    clearError(passInput, passError);
+  }
+
+  if (!valid) return;
+
+  // Remember me
+  if (remember.checked) localStorage.setItem('rememberedEmail', email);
+  else localStorage.removeItem('rememberedEmail');
+
+  formMessage.textContent = 'Login successful! Redirecting...';
+  formMessage.className = 'form-message success';
+  setTimeout(() => {
+    window.location.href = 'flights.html'; 
+  }, 1500);
+});
+
+// FORGOT PASSWORD
+const modal        = document.getElementById('forgotModal');
+const resetEmail   = document.getElementById('resetEmail');
+const resetError   = document.getElementById('resetError');
+const resetSuccess = document.getElementById('resetSuccess');
+
+function openModal() {
+  resetEmail.value = emailInput.value.trim(); // reuse what they typed
+  resetError.textContent = '';
+  resetSuccess.textContent = '';
+  resetEmail.closest('.input-box').classList.remove('error');
+  modal.classList.add('open');
+  resetEmail.focus();
+}
+function closeModal() { modal.classList.remove('open'); }
+
+document.getElementById('forgotLink').addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+document.getElementById('closeModal').addEventListener('click', closeModal);
+modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+document.getElementById('sendReset').addEventListener('click', () => {
+  const email = resetEmail.value.trim();
+  resetSuccess.textContent = '';
+
+  if (email === '') {
+    showError(resetEmail, resetError, 'Please enter your email address.');
+    return;
+  }
+  if (!emailPattern.test(email)) {
+    showError(resetEmail, resetError, 'Please enter a valid email address.');
+    return;
+  }
+  clearError(resetEmail, resetError);
+
+  // TODO: send the reset email from your backend here
+  resetSuccess.textContent = 'A reset link has been sent to ' + email + '.';
+});
+resetEmail.addEventListener('input', () => clearError(resetEmail, resetError));
+</script>
+
+</body>
+</html>
