@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.group2.flightres.controller.BookingConfirmationController"
+      stylesheets="@styles.css"
+      alignment="CENTER"
+      spacing="18"
+      styleClass="main-container">
+
+    <padding>
+        <Insets top="30" right="40" bottom="30" left="40"/>
+    </padding>
+
+    <Label text="✓ Booking Confirmed!"
+           styleClass="heading"/>
+
+    <Label text="Your flight has been successfully booked."
+           styleClass="subtitle"/>
+
+    <VBox spacing="15" styleClass="booking-card">
+
+        <Label text="BOOKING DETAILS" styleClass="section-heading"/>
+
+        <HBox spacing="10">
+            <Label text="Booking Reference:" styleClass="detail-label"/>
+            <Label fx:id="bookingReference" text="PNR12345"/>
+        </HBox>
+
+        <HBox spacing="10">
+            <Label text="Flight Number:" styleClass="detail-label"/>
+            <Label fx:id="flightNumber" text="SA205"/>
+        </HBox>
+
+        <HBox spacing="10">
+            <Label text="Passenger Name:" styleClass="detail-label"/>
+            <Label fx:id="passengerName" text="Keahana Campbell"/>
+        </HBox>
+
+        <HBox spacing="10">
+            <Label text="Seat Number:" styleClass="detail-label"/>
+            <Label fx:id="seatNumber" text="12A"/>
+        </HBox>
+
+        <HBox spacing="10">
+            <Label text="Departure Date:" styleClass="detail-label"/>
+            <Label fx:id="departureDate" text="15 December 2026"/>
+        </HBox>
+
+        <HBox spacing="10">
+            <Label text="Departure Time:" styleClass="detail-label"/>
+            <Label fx:id="departureTime" text="10:30 AM"/>
+        </HBox>
+
+    </VBox>
+
+    <HBox spacing="15" alignment="CENTER">
+        <Button text="Download Boarding Pass"
+                onAction="#downloadBoardingPass"
+                styleClass="primary-button"/>
+
+        <Button text="Back to Home"
+                onAction="#backToHome"
+                styleClass="secondary-button"/>
+    </HBox>
+
+</VBox>
