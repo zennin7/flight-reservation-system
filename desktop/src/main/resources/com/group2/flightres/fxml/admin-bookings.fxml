@@ -1,168 +1,267 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.group2.flightres.component.TicketView?>
-<?import com.group2.flightres.config.BrandConfig?>
+<?import com.group2.flightres.component.NavBar?>
 <?import com.group2.flightres.util.GlassBackground?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.SVGPath?>
 
-<GlassBackground xmlns="http://javafx.com/javafx"
-                 xmlns:fx="http://javafx.com/fxml"
-                 fx:controller="com.group2.flightres.controller.AdminBookingsController"
-                 photoPath="/images/destinations/cpt.jpg"
-                 blurRadius="26.0"
-                 darkness="-0.50"
-                 saturation="0.20"
-                 enableSecondaryGlow="true"
-                 stylesheets="@../css/glass.css"
-                 styleClass="seat-map-glass-root"
-                 prefWidth="1280"
-                 prefHeight="800"
-                 minWidth="900"
-                 minHeight="680">
+<!-- Original concept: Petja / Luyanda. Integrated by David. -->
+<GlassBackground xmlns="http://javafx.com/javafx/21"
+                 xmlns:fx="http://javafx.com/fxml/1"
+                 fx:controller="com.group2.flightres.controller.AdminBookingsController">
+    <VBox spacing="0" alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
 
-    <VBox alignment="TOP_CENTER" spacing="0" prefWidth="1280" prefHeight="800" VBox.vgrow="ALWAYS">
+        <NavBar fx:id="navBar"/>
 
-        <!-- TOP NAV -->
-        <HBox alignment="CENTER_LEFT" prefHeight="64" minHeight="64" maxHeight="64" styleClass="glass-nav-bar">
-            <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleNavHome" styleClass="admin-nav-brand-wrap" focusTraversable="true">
-                <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" styleClass="nav-brand-plane"/>
-                <Label styleClass="nav-brand-text">
-                    <text><BrandConfig fx:constant="APP_NAME"/></text>
-                </Label>
-            </HBox>
-
-            <Region HBox.hgrow="ALWAYS"/>
-
-            <HBox fx:id="adminNavLinksBox" alignment="CENTER" spacing="28" styleClass="glass-nav-links-box">
-                <Button fx:id="navDashboardBtn" text="Dashboard" styleClass="glass-nav-link" onAction="#handleNavDashboard"/>
-                <Button fx:id="navFlightsBtn" text="Flights" styleClass="glass-nav-link" onAction="#handleNavFlights"/>
-                <Button fx:id="navBookingsBtn" text="Bookings" styleClass="glass-nav-link, glass-nav-link-active" onAction="#handleRefresh"/>
-            </HBox>
-
-            <Region HBox.hgrow="ALWAYS"/>
-
-            <HBox alignment="CENTER_RIGHT" spacing="10" prefWidth="140">
-                <Label fx:id="roleBadgeLabel" text="ADMIN" styleClass="badge, badge-gold"/>
-                <StackPane fx:id="avatarCircle" styleClass="glass-avatar-circle" onMouseClicked="#handleNavAvatar" focusTraversable="true">
-                    <Label fx:id="avatarInitialsLabel" text="AD" styleClass="glass-avatar-text"/>
-                </StackPane>
-            </HBox>
-        </HBox>
-
-        <!-- MAIN CONTENT GLASS CARD -->
         <StackPane fx:id="cardMarginWrapper" VBox.vgrow="ALWAYS">
-            <VBox.margin>
-                <Insets top="4" bottom="20" left="56" right="56"/>
-            </VBox.margin>
+            <padding>
+                <Insets top="4" right="56" bottom="20" left="56"/>
+            </padding>
 
-            <VBox fx:id="mainContainer" spacing="12" styleClass="glass-card, admin-main-card" VBox.vgrow="ALWAYS">
+            <VBox fx:id="mainContainer" styleClass="glass-panel, admin-main-card" spacing="12" maxWidth="1360" VBox.vgrow="ALWAYS">
 
-                <!-- Header + Server-Side Search -->
-                <HBox alignment="CENTER_LEFT" spacing="14">
-                    <VBox spacing="2" HBox.hgrow="ALWAYS">
-                        <Label fx:id="pageTitleLabel" text="Admin Bookings" styleClass="headline-serif"/>
-                        <Label fx:id="pageSubtitleLabel" text="Search reservations by PNR, email or passenger and inspect boarding passes." styleClass="subheadline"/>
-                    </VBox>
-                    <TextField fx:id="searchField" promptText="PNR, email or name..." prefWidth="250" onAction="#handleSearch"/>
-                    <Button fx:id="searchButton" text="Search" styleClass="btn-gold" onAction="#handleSearch"/>
-                </HBox>
+                <!-- Header Row (2 cols at >=1100, stacked at 900) -->
+                <GridPane fx:id="headerGrid" hgap="12" vgap="8">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="-Infinity"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
 
-                <!-- Filter Bar + Aggregate Summary -->
-                <HBox fx:id="filterBar" alignment="CENTER_LEFT" spacing="10">
-                    <Button fx:id="filterAllBtn" text="All" styleClass="admin-filter-pill-active" onAction="#handleFilterAll"/>
-                    <Button fx:id="filterConfirmedBtn" text="Confirmed" styleClass="admin-filter-pill" onAction="#handleFilterConfirmed"/>
-                    <Button fx:id="filterCancelledBtn" text="Cancelled" styleClass="admin-filter-pill" onAction="#handleFilterCancelled"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="summaryStatsLabel" text="0 bookings · R 0.00" styleClass="admin-row-gold"/>
-                </HBox>
+                    <HBox fx:id="headerLeftBox" alignment="CENTER_LEFT" spacing="14" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                        <Label text="Bookings and flights" styleClass="headline-serif" minWidth="-Infinity"/>
+                        <HBox spacing="4" alignment="CENTER" styleClass="admin-segment-bar" minWidth="-Infinity">
+                            <Button fx:id="tabBookingsBtn" text="Bookings" styleClass="admin-segment-btn-active" minWidth="-Infinity" onAction="#handleShowBookingsTab"/>
+                            <Button fx:id="tabFlightsBtn" text="Flights" styleClass="admin-segment-btn" minWidth="-Infinity" onAction="#handleShowFlightsTab"/>
+                        </HBox>
+                    </HBox>
+
+                    <HBox fx:id="headerRightBox" alignment="CENTER_RIGHT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                        <TextField fx:id="searchField" promptText="Reference, passenger or email..." styleClass="search-field" prefWidth="240" onAction="#handleSearch"/>
+                        <Button fx:id="searchButton" text="Search" styleClass="btn-gold" minWidth="-Infinity" onAction="#handleSearch"/>
+                        <Button fx:id="exportCsvButton" text="Export CSV" styleClass="btn-ghost" minWidth="-Infinity" onAction="#handleExportCsv"/>
+                    </HBox>
+                </GridPane>
 
                 <!-- State Stack -->
                 <StackPane fx:id="contentStack" VBox.vgrow="ALWAYS">
 
-                    <!-- 1. POPULATED STATE: Table + Ticket Detail Drawer -->
-                    <HBox fx:id="splitBody" spacing="14" VBox.vgrow="ALWAYS">
+                    <!-- 1. POPULATED BOOKINGS TAB -->
+                    <ScrollPane fx:id="outerScrollPane"
+                                styleClass="confirmation-scroll-pane"
+                                fitToWidth="true"
+                                fitToHeight="false"
+                                hbarPolicy="NEVER"
+                                vbarPolicy="AS_NEEDED"
+                                VBox.vgrow="ALWAYS">
+                        <GridPane fx:id="bookingsGrid" hgap="12" vgap="12">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="176" prefWidth="184" maxWidth="196"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                                <ColumnConstraints minWidth="285" prefWidth="296" maxWidth="310"/>
+                            </columnConstraints>
 
-                        <!-- Left: Joined Bookings Table + Pagination -->
-                        <VBox styleClass="admin-panel-card" HBox.hgrow="ALWAYS" spacing="8" VBox.vgrow="ALWAYS">
-                            <HBox spacing="10" styleClass="admin-table-header">
-                                <Label text="PNR" styleClass="admin-section-title" minWidth="72"/>
-                                <Label text="PASSENGER" styleClass="admin-section-title" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                                <Label text="ROUTE" styleClass="admin-section-title" minWidth="88"/>
-                                <Label text="DEPARTURE" styleClass="admin-section-title" minWidth="122"/>
-                                <Label text="SEAT" styleClass="admin-section-title" minWidth="44"/>
-                                <Label text="TOTAL" styleClass="admin-section-title" minWidth="82"/>
-                                <Label text="STATUS" styleClass="admin-section-title" minWidth="84"/>
-                            </HBox>
+                            <!-- Left Filter Sidebar (collapses to compact bar at 900) -->
+                            <VBox fx:id="filterSidebar" styleClass="admin-sidebar-card" spacing="12" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <VBox spacing="6">
+                                    <Label text="STATUS" styleClass="admin-section-title" minWidth="-Infinity"/>
+                                    <FlowPane hgap="6" vgap="6">
+                                        <Button fx:id="statusAllBtn" text="All" styleClass="admin-filter-pill-active" minWidth="-Infinity" onAction="#handleStatusAll"/>
+                                        <Button fx:id="statusConfirmedBtn" text="Confirmed" styleClass="admin-filter-pill" minWidth="-Infinity" onAction="#handleStatusConfirmed"/>
+                                        <Button fx:id="statusCancelledBtn" text="Cancelled" styleClass="admin-filter-pill" minWidth="-Infinity" onAction="#handleStatusCancelled"/>
+                                    </FlowPane>
+                                </VBox>
 
-                            <ScrollPane fx:id="tableScrollPane"
-                                        styleClass="confirmation-scroll-pane"
-                                        fitToWidth="true"
-                                        fitToHeight="false"
-                                        hbarPolicy="AS_NEEDED"
-                                        vbarPolicy="AS_NEEDED"
-                                        VBox.vgrow="ALWAYS">
-                                <VBox fx:id="rowsContainer" spacing="6"/>
-                            </ScrollPane>
+                                <VBox spacing="6">
+                                    <Label text="DATE" styleClass="admin-section-title" minWidth="-Infinity"/>
+                                    <VBox fx:id="dateButtonsBox" spacing="5">
+                                        <Button fx:id="dateAllBtn" text="All dates" styleClass="admin-filter-choice-btn-active" maxWidth="Infinity" minWidth="-Infinity" onAction="#handleDateAll"/>
+                                        <Button fx:id="date7DaysBtn" text="Next 7 days" styleClass="admin-filter-choice-btn" maxWidth="Infinity" minWidth="-Infinity" onAction="#handleDate7Days"/>
+                                        <Button fx:id="date30DaysBtn" text="Next 30 days" styleClass="admin-filter-choice-btn" maxWidth="Infinity" minWidth="-Infinity" onAction="#handleDate30Days"/>
+                                        <Button fx:id="dateCustomBtn" text="Custom range" styleClass="admin-filter-choice-btn" maxWidth="Infinity" minWidth="-Infinity" onAction="#handleDateCustom"/>
+                                    </VBox>
+                                    <VBox fx:id="customDateBox" spacing="6" visible="false" managed="false">
+                                        <DatePicker fx:id="customFromPicker" promptText="From (SAST)" maxWidth="Infinity"/>
+                                        <DatePicker fx:id="customToPicker" promptText="To (SAST)" maxWidth="Infinity"/>
+                                        <Button text="Apply range" styleClass="btn-ghost" maxWidth="Infinity" onAction="#handleApplyCustomDate"/>
+                                    </VBox>
+                                </VBox>
 
-                            <HBox alignment="CENTER_LEFT" spacing="10">
-                                <Label fx:id="paginationLabel" text="Page 1 of 1" styleClass="admin-row-meta"/>
-                                <Region HBox.hgrow="ALWAYS"/>
-                                <Button fx:id="prevPageButton" text="Previous" styleClass="btn-ghost" onAction="#handlePrevPage"/>
-                                <Button fx:id="nextPageButton" text="Next" styleClass="btn-ghost" onAction="#handleNextPage"/>
-                            </HBox>
-                        </VBox>
+                                <VBox spacing="6">
+                                    <Label text="CABIN" styleClass="admin-section-title" minWidth="-Infinity"/>
+                                    <FlowPane hgap="6" vgap="6">
+                                        <Button fx:id="cabinAllBtn" text="All" styleClass="admin-filter-pill-active" minWidth="-Infinity" onAction="#handleCabinAll"/>
+                                        <Button fx:id="cabinEconomyBtn" text="Economy" styleClass="admin-filter-pill" minWidth="-Infinity" onAction="#handleCabinEconomy"/>
+                                        <Button fx:id="cabinFirstBtn" text="First" styleClass="admin-filter-pill" minWidth="-Infinity" onAction="#handleCabinFirst"/>
+                                    </FlowPane>
+                                </VBox>
 
-                        <!-- Right: Detail Drawer with Reusable TicketView -->
-                        <VBox fx:id="detailDrawer" styleClass="admin-panel-card" spacing="10" prefWidth="350" minWidth="290">
-                            <HBox alignment="CENTER_LEFT" spacing="8">
-                                <Label text="BOOKING TICKET DETAIL" styleClass="admin-section-title" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                                <Label fx:id="selectedPnrLabel" text="" styleClass="admin-row-gold"/>
-                            </HBox>
-                            <TicketView fx:id="ticketView"/>
-                            <Label fx:id="drawerPlaceholderLabel" text="Select a booking row to inspect its boarding pass." styleClass="admin-row-meta" wrapText="true"/>
-                        </VBox>
-                    </HBox>
+                                <VBox spacing="6">
+                                    <Label text="FLIGHT" styleClass="admin-section-title" minWidth="-Infinity"/>
+                                    <ComboBox fx:id="flightFilterCombo" maxWidth="Infinity" onAction="#handleFlightFilterChanged"/>
+                                </VBox>
 
-                    <!-- 2. EMPTY STATE -->
-                    <VBox fx:id="emptyStateContainer" alignment="CENTER" spacing="14" visible="false" managed="false"
-                          styleClass="admin-state-box">
+                                <Region VBox.vgrow="ALWAYS"/>
+                                <Button fx:id="resetFiltersBtn" text="Reset filters" styleClass="admin-link-gold" minWidth="-Infinity" onAction="#handleResetFilters"/>
+                            </VBox>
+
+                            <!-- Center Table Card -->
+                            <VBox fx:id="tableCard" styleClass="admin-panel-card" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <Label fx:id="totalCountLabel" text="0 bookings" styleClass="admin-row-title" minWidth="-Infinity" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                    <Label fx:id="showingRangeLabel" text="Showing 0 to 0" styleClass="admin-row-meta" minWidth="-Infinity"/>
+                                </HBox>
+
+                                <HBox spacing="6" styleClass="admin-table-header" alignment="CENTER_LEFT">
+                                    <Label text="REFERENCE" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="76"/>
+                                    <Label text="PASSENGER" styleClass="admin-section-title" minWidth="-Infinity" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                    <Label text="ROUTE" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="68"/>
+                                    <Label text="SEAT" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="34"/>
+                                    <Label text="TOTAL" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="64"/>
+                                    <Label text="STATUS" styleClass="admin-section-title" minWidth="-Infinity"/>
+                                </HBox>
+
+                                <ScrollPane fx:id="tableScrollPane"
+                                            styleClass="confirmation-scroll-pane"
+                                            fitToWidth="true"
+                                            fitToHeight="false"
+                                            hbarPolicy="NEVER"
+                                            vbarPolicy="AS_NEEDED"
+                                            prefHeight="390"
+                                            VBox.vgrow="ALWAYS">
+                                    <VBox fx:id="rowsContainer" spacing="6"/>
+                                </ScrollPane>
+
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <Label fx:id="paginationLabel" text="Page 1 of 1" styleClass="admin-row-meta" minWidth="-Infinity"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Button fx:id="prevPageButton" text="Previous" styleClass="btn-ghost" minWidth="-Infinity" onAction="#handlePrevPage"/>
+                                    <Button fx:id="nextPageButton" text="Next" styleClass="btn-ghost" minWidth="-Infinity" onAction="#handleNextPage"/>
+                                </HBox>
+                            </VBox>
+
+                            <!-- Right Selected-Booking Detail Panel (opens below table at 900) -->
+                            <VBox fx:id="detailPanel" styleClass="admin-detail-panel" spacing="12" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                <HBox alignment="CENTER_LEFT" spacing="8">
+                                    <Label text="SELECTED BOOKING" styleClass="admin-section-title" minWidth="-Infinity" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                    <Label fx:id="detailStatusBadge" text="Confirmed" styleClass="badge, badge-green" minWidth="-Infinity"/>
+                                </HBox>
+
+                                <Label fx:id="detailPnrLabel" text="—" styleClass="admin-pnr-hero" minWidth="-Infinity"/>
+
+                                <HBox styleClass="admin-passenger-card" spacing="10" alignment="CENTER_LEFT">
+                                    <Label fx:id="detailAvatarLabel" text="AD" styleClass="avatar-circle-gold"/>
+                                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                        <Label fx:id="detailPassengerLabel" text="—" styleClass="admin-row-title"/>
+                                        <Label fx:id="detailEmailLabel" text="—" styleClass="admin-row-meta"/>
+                                    </VBox>
+                                </HBox>
+
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <VBox spacing="2">
+                                        <Label fx:id="detailOriginCodeLabel" text="—" styleClass="admin-route-code-lg" minWidth="-Infinity"/>
+                                        <Label fx:id="detailOriginTimeLabel" text="—" styleClass="admin-row-meta" minWidth="-Infinity"/>
+                                    </VBox>
+                                    <HBox alignment="CENTER" spacing="4" HBox.hgrow="ALWAYS">
+                                        <Region styleClass="flight-path-dot"/>
+                                        <Region styleClass="flight-path-line" HBox.hgrow="ALWAYS"/>
+                                        <SVGPath content="M2 16h20l-4-6h-5l-3-6H8l2 6H5l-3 6z" styleClass="nav-brand-plane"/>
+                                    </HBox>
+                                    <VBox alignment="CENTER_RIGHT" spacing="2">
+                                        <Label fx:id="detailDestCodeLabel" text="—" styleClass="admin-route-code-lg" minWidth="-Infinity"/>
+                                        <Label fx:id="detailDestTimeLabel" text="—" styleClass="admin-row-meta" minWidth="-Infinity"/>
+                                    </VBox>
+                                </HBox>
+
+                                <Region styleClass="card-divider-line"/>
+
+                                <VBox spacing="8">
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Label text="Flight" styleClass="admin-row-meta" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                        <Label fx:id="detailFlightDateLabel" text="—" styleClass="admin-row-title" minWidth="-Infinity"/>
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Label text="Seat" styleClass="admin-row-meta" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                        <Label fx:id="detailSeatCabinLabel" text="—" styleClass="admin-row-title" minWidth="-Infinity"/>
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT">
+                                        <Label text="Paid" styleClass="admin-row-title" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                        <Label fx:id="detailPaidLabel" text="R 0.00" styleClass="admin-paid-hero" minWidth="-Infinity"/>
+                                    </HBox>
+                                </VBox>
+
+                                <Region VBox.vgrow="ALWAYS"/>
+                                <Button fx:id="downloadBoardingPassBtn" text="Download boarding pass" styleClass="btn-gold" maxWidth="Infinity" minWidth="-Infinity" onAction="#handleDownloadBoardingPass"/>
+                            </VBox>
+                        </GridPane>
+                    </ScrollPane>
+
+                    <!-- 2. FLIGHTS TAB (Read-Only, Reuses Dashboard Query) -->
+                    <VBox fx:id="flightsTabContainer" styleClass="admin-panel-card" spacing="10" visible="false" managed="false">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="UPCOMING FLIGHTS (READ-ONLY)" styleClass="admin-section-title" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                            <Label fx:id="flightsTabCountLabel" text="0 flights" styleClass="admin-row-meta" minWidth="-Infinity"/>
+                        </HBox>
+                        <HBox spacing="10" styleClass="admin-table-header" alignment="CENTER_LEFT">
+                            <Label text="FLIGHT" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="84"/>
+                            <Label text="ROUTE" styleClass="admin-section-title" minWidth="-Infinity" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                            <Label text="DEPARTURE" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="128"/>
+                            <Label text="STATUS" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="88"/>
+                            <Label text="SEATS" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="86"/>
+                            <Label text="LOAD" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="70"/>
+                        </HBox>
+                        <ScrollPane styleClass="confirmation-scroll-pane" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS">
+                            <VBox fx:id="flightsRowsContainer" spacing="6"/>
+                        </ScrollPane>
+                    </VBox>
+
+                    <!-- 3. LOADING STATE -->
+                    <VBox fx:id="loadingStateContainer" alignment="CENTER" spacing="14" visible="false" managed="false" styleClass="admin-state-box">
+                        <ProgressIndicator prefWidth="44" prefHeight="44"/>
+                        <Label text="Loading bookings..." styleClass="subheadline"/>
+                    </VBox>
+
+                    <!-- 4. EMPTY STATE -->
+                    <VBox fx:id="emptyStateContainer" alignment="CENTER" spacing="14" visible="false" managed="false" styleClass="admin-state-box">
                         <StackPane prefWidth="56" prefHeight="56" maxWidth="56" maxHeight="56" styleClass="admin-empty-circle">
                             <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" styleClass="nav-brand-plane"/>
                         </StackPane>
-                        <Label fx:id="emptyTitleLabel" text="No bookings found" styleClass="headline-serif"/>
-                        <Label fx:id="emptySubtitleLabel" text="No reservations match your current search or status filter." styleClass="subheadline"/>
-                        <Button fx:id="resetFiltersButton" text="Reset filters" styleClass="btn-gold" onAction="#handleResetFilters" prefWidth="180"/>
+                        <Label text="No bookings found" styleClass="headline-serif"/>
+                        <Label text="No reservations match your current search or filter." styleClass="subheadline"/>
+                        <Button text="Reset filters" styleClass="btn-gold" onAction="#handleResetFilters" prefWidth="180"/>
                     </VBox>
 
-                    <!-- 3. ERROR STATE -->
-                    <VBox fx:id="errorStateContainer" alignment="CENTER" spacing="14" visible="false" managed="false"
-                          styleClass="admin-state-box">
+                    <!-- 5. ERROR STATE -->
+                    <VBox fx:id="errorStateContainer" alignment="CENTER" spacing="14" visible="false" managed="false" styleClass="admin-state-box">
                         <StackPane prefWidth="56" prefHeight="56" maxWidth="56" maxHeight="56" styleClass="admin-error-circle">
                             <Label text="!" styleClass="admin-error-glyph"/>
                         </StackPane>
-                        <Label fx:id="errorTitleLabel" text="Unable to load bookings" styleClass="headline-serif"/>
+                        <Label text="Unable to load bookings" styleClass="headline-serif"/>
                         <Label fx:id="errorMessageLabel" text="Could not retrieve bookings list. Please try again." styleClass="subheadline"/>
-                        <Button fx:id="retryButton" text="Retry" styleClass="btn-gold" onAction="#handleRetry" prefWidth="180"/>
+                        <Button text="Retry" styleClass="btn-gold" onAction="#handleRetry" prefWidth="180"/>
                     </VBox>
 
-                    <!-- 4. DENIED STATE (RBAC) -->
-                    <VBox fx:id="deniedStateContainer" alignment="CENTER" spacing="14" visible="false" managed="false"
-                          styleClass="admin-state-box">
+                    <!-- 6. DENIED STATE (RBAC) -->
+                    <VBox fx:id="deniedStateContainer" alignment="CENTER" spacing="14" visible="false" managed="false" styleClass="admin-state-box">
                         <StackPane prefWidth="56" prefHeight="56" maxWidth="56" maxHeight="56" styleClass="admin-error-circle">
                             <Label text="!" styleClass="admin-error-glyph"/>
                         </StackPane>
-                        <Label fx:id="deniedTitleLabel" text="Access denied" styleClass="headline-serif"/>
-                        <Label fx:id="deniedMessageLabel" text="Administrator privileges are required to view Admin Bookings." styleClass="subheadline"/>
-                        <Button fx:id="backHomeButton" text="Back to Home" styleClass="btn-gold" onAction="#handleNavHome" prefWidth="180"/>
+                        <Label text="Access denied" styleClass="headline-serif"/>
+                        <Label fx:id="deniedMessageLabel" text="Administrator privileges are required to view Admin Bookings and Flights." styleClass="subheadline"/>
+                        <Button text="Back to Home" styleClass="btn-gold" onAction="#handleNavHome" prefWidth="180"/>
                     </VBox>
 
                 </StackPane>

@@ -73,7 +73,9 @@ public class GlassAdminBookingsScreenshotRunner extends Application {
         controller.init(adminUser);
 
         Scene scene = new Scene(root, 1280, 800);
+        ThemeManager.getInstance().setTheme(ThemeManager.Theme.DARK);
         ThemeManager.getInstance().applyTheme(scene);
+        ThemeManager.getInstance().applyGlassTheme(scene);
         stage.setScene(scene);
         stage.setWidth(1280);
         stage.setHeight(800);

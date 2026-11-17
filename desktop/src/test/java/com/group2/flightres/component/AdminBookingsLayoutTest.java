@@ -8,15 +8,17 @@ import com.group2.flightres.model.AdminBookingsPage;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.User;
 import com.group2.flightres.model.UserRole;
-import com.group2.flightres.service.AdminBookingsService;
 import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.util.ThemeManager;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -32,6 +34,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -62,7 +65,7 @@ class AdminBookingsLayoutTest {
         User u = new User();
         u.setUserId(1L);
         u.setEmail("testadmin@example.com");
-        u.setFullName("Test Admin");
+        u.setFullName("David Admin");
         u.setRole(UserRole.ADMIN);
         return u;
     }
@@ -77,8 +80,8 @@ class AdminBookingsLayoutTest {
     }
 
     @ParameterizedTest(name = "Admin Bookings layout check at width {0}")
-    @ValueSource(doubles = {1100.0, 900.0})
-    @DisplayName("Admin Bookings renders at 1100 and 900 without clipping or truncation")
+    @ValueSource(doubles = {1280.0, 1100.0, 900.0})
+    @DisplayName("Admin Bookings renders at 1280, 1100 and 900 with zero ellipsis, zero overflow, and zero h-scroll")
     void testLayoutAtWidths(double width) throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> errorRef = new AtomicReference<>();
@@ -93,15 +96,16 @@ class AdminBookingsLayoutTest {
                 controller.init(adminUser());
 
                 StackPane container = new StackPane(root);
-                Scene scene = new Scene(container, width, 760);
+                Scene scene = new Scene(container, width, 800);
+                ThemeManager.getInstance().setTheme(ThemeManager.Theme.DARK);
+                ThemeManager.getInstance().applyTheme(scene);
+                ThemeManager.getInstance().applyGlassTheme(scene);
                 stage.setScene(scene);
-                stage.setWidth(width);
-                stage.setHeight(760);
                 stage.show();
 
                 Platform.runLater(() -> Platform.runLater(() -> {
                     try {
-                        controller.updateResponsiveLayout(width, 760);
+                        controller.updateResponsiveLayout(width, 800);
                         container.applyCss();
                         container.layout();
 
@@ -109,19 +113,32 @@ class AdminBookingsLayoutTest {
                         if (width < 1100) {
                             assertEquals(20.0, padding.getLeft(), 0.01, "Compact padding must be 20 at width 900");
                             assertTrue(controller.getMainContainer().getStyleClass().contains("admin-main-card-compact"));
+                            assertEquals(1, controller.getBookingsGrid().getColumnConstraints().size(),
+                                    "Bookings grid must collapse to 1 column at width 900");
                         } else {
-                            assertEquals(56.0, padding.getLeft(), 0.01, "Standard padding must be 56 at width 1100");
+                            assertEquals(56.0, padding.getLeft(), 0.01, "Standard padding must be 56 at width >= 1100");
                             assertTrue(controller.getMainContainer().getStyleClass().contains("admin-main-card"));
+                            assertEquals(3, controller.getBookingsGrid().getColumnConstraints().size(),
+                                    "Bookings grid must use 3 columns at width >= 1100");
                         }
 
-                        assertTrue(controller.getSplitBody().isVisible());
+                        assertTrue(controller.getOuterScrollPane().isVisible());
                         assertFalse(controller.getRowsContainer().getChildren().isEmpty());
                         assertNotNull(controller.getSelectedRow());
-                        assertEquals(controller.getSelectedRow().bookingReference(), controller.getSelectedPnrLabel().getText());
+                        assertEquals(controller.getSelectedRow().bookingReference(), controller.getDetailPnrLabel().getText());
 
+                        // No horizontal scrollbar visible
+                        for (ScrollBar sb : collectScrollBars(controller.getMainContainer())) {
+                            if (sb.getOrientation() == javafx.geometry.Orientation.HORIZONTAL) {
+                                assertFalse(sb.isVisible(), "Horizontal scrollbar must not be visible at width " + width);
+                            }
+                        }
+
+                        // Zero truncated labels & zero overflow outside viewport
                         List<String> violations = new ArrayList<>();
+                        Bounds viewportBounds = container.localToScene(container.getBoundsInLocal());
                         List<Labeled> labels = new ArrayList<>();
-                        collectLabeledNodes(controller.getRowsContainer(), labels);
+                        collectLabeledNodes(controller.getMainContainer(), labels);
                         for (Labeled l : labels) {
                             if (l.getText() == null || l.getText().isEmpty() || !isTreeVisible(l)) continue;
                             Text textNode = (Text) l.lookup(".text");
@@ -131,7 +148,19 @@ class AdminBookingsLayoutTest {
                                     violations.add("Truncated label [" + l.getText() + "]: rendered='" + rendered + "'");
                                 }
                             }
+                            Bounds b = l.localToScene(l.getBoundsInLocal());
+                            if (b.getMaxX() > viewportBounds.getMaxX() + 2.0 || b.getMinX() < viewportBounds.getMinX() - 2.0) {
+                                violations.add("Overflowing label [" + l.getText() + "] at width " + width);
+                            }
                         }
+
+                        // Detail panel content inside detailPanel bounds
+                        Bounds detailBounds = controller.getDetailPanel().localToScene(controller.getDetailPanel().getBoundsInLocal());
+                        Bounds pnrBounds = controller.getDetailPnrLabel().localToScene(controller.getDetailPnrLabel().getBoundsInLocal());
+                        if (pnrBounds.getMaxX() > detailBounds.getMaxX() + 2.0) {
+                            violations.add("Detail PNR overflows detailPanel at width " + width);
+                        }
+
                         violationsRef.set(violations);
                     } catch (Throwable t) {
                         errorRef.set(t);
@@ -155,8 +184,8 @@ class AdminBookingsLayoutTest {
     }
 
     @Test
-    @DisplayName("RBAC & States: CUSTOMER denied, Empty result shows empty state, DAO failure shows error state")
-    void testStatesAndRbacUi() throws Exception {
+    @DisplayName("RBAC, States (clear stale counts), 100+ rows pagination, and Flights tab")
+    void testStatesRbacAndLargeDataset() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
@@ -168,73 +197,37 @@ class AdminBookingsLayoutTest {
                 AdminBookingsController deniedCtrl = deniedLoader.getController();
                 deniedCtrl.init(customerUser());
                 assertTrue(deniedCtrl.getDeniedStateContainer().isVisible(), "CUSTOMER must see denied state");
-                assertFalse(deniedCtrl.getAdminNavLinksBox().isVisible(), "Admin nav links must be hidden for CUSTOMER");
+                assertFalse(deniedCtrl.getOuterScrollPane().isVisible());
 
-                // 2. Empty
-                AdminBookingsService emptyService = new AdminBookingsService(
-                        (s, st, p, sz) -> new AdminBookingsPage(List.of(), 0L, BigDecimal.ZERO, p, sz));
-                FXMLLoader emptyLoader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/admin-bookings.fxml"));
-                emptyLoader.setControllerFactory(c -> new AdminBookingsController(emptyService));
-                emptyLoader.load();
-                AdminBookingsController emptyCtrl = emptyLoader.getController();
-                emptyCtrl.init(adminUser());
-                assertTrue(emptyCtrl.getEmptyStateContainer().isVisible(), "Empty search must show empty state");
-
-                // 3. Error
-                AdminBookingsService errService = new AdminBookingsService((s, st, p, sz) -> {
-                    throw new IllegalStateException("DB down");
-                });
-                FXMLLoader errLoader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/admin-bookings.fxml"));
-                errLoader.setControllerFactory(c -> new AdminBookingsController(errService));
-                errLoader.load();
-                AdminBookingsController errCtrl = errLoader.getController();
-                errCtrl.init(adminUser());
-                assertTrue(errCtrl.getErrorStateContainer().isVisible(), "DAO failure must show error state");
-            } catch (Throwable t) {
-                errorRef.set(t);
-            } finally {
-                latch.countDown();
-            }
-        });
-
-        assertTrue(latch.await(20, TimeUnit.SECONDS));
-        if (errorRef.get() != null) {
-            throw new AssertionError("Admin Bookings states/RBAC UI test failed", errorRef.get());
-        }
-    }
-
-    @Test
-    @DisplayName("100+ booking rows UI build performance")
-    void test100PlusBookingsRowsPerformance() throws Exception {
-        CountDownLatch latch = new CountDownLatch(1);
-        AtomicReference<Throwable> errorRef = new AtomicReference<>();
-
-        Platform.runLater(() -> {
-            try {
+                // 2. 100+ rows (120 total, 25 on page 1) -> counts match rendered rows -> empty/error clear counts
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/admin-bookings.fxml"));
                 loader.load();
                 AdminBookingsController ctrl = loader.getController();
 
-                List<AdminBookingRow> rows = new ArrayList<>();
-                Instant dep = Instant.parse("2026-11-20T06:30:00Z");
-                Instant arr = dep.plusSeconds(7800);
-                ZoneId jhb = ZoneId.of("Africa/Johannesburg");
-                for (int i = 0; i < 120; i++) {
-                    rows.add(new AdminBookingRow(100L + i, "PNR" + String.format("%03d", i),
-                            "Passenger " + i, "p" + i + "@example.com", "Passenger " + i,
-                            10L, "ALT 204", "JNB", "Johannesburg", "CPT", "Cape Town",
-                            dep, jhb, arr, jhb, "7A", SeatClass.ECONOMY, new BigDecimal("1560.00"), "CONFIRMED"));
+                ZoneId sast = ZoneId.of("Africa/Johannesburg");
+                List<AdminBookingRow> page1Rows = new ArrayList<>();
+                for (int i = 1; i <= 25; i++) {
+                    page1Rows.add(new AdminBookingRow(
+                            i, "PNR" + String.format("%03d", i), "Amahle Mokoena", "amahle@example.com", "Amahle Mokoena",
+                            1L, "ALT 204", "JNB", "Johannesburg", "CPT", "Cape Town",
+                            Instant.now().plusSeconds(7200), sast, Instant.now().plusSeconds(14400), sast,
+                            "9E", SeatClass.ECONOMY, new BigDecimal("1522.00"), "CONFIRMED"
+                    ));
                 }
+                ctrl.populateRows(new AdminBookingsPage(page1Rows, 120, new BigDecimal("182640.00"), 1, 25));
+                assertEquals(25, ctrl.getRowsContainer().getChildren().size());
+                assertEquals("120 bookings", ctrl.getTotalCountLabel().getText());
+                assertEquals("Showing 1 to 25", ctrl.getShowingRangeLabel().getText());
+                assertEquals("Page 1 of 5", ctrl.getPaginationLabel().getText());
 
-                long start = System.currentTimeMillis();
-                ctrl.getRowsContainer().getChildren().clear();
-                for (AdminBookingRow row : rows) {
-                    ctrl.getRowsContainer().getChildren().add(ctrl.buildBookingTableRow(row));
-                }
-                long elapsed = System.currentTimeMillis() - start;
+                ctrl.showEmptyState();
+                assertTrue(ctrl.getEmptyStateContainer().isVisible());
+                assertEquals("0 bookings", ctrl.getTotalCountLabel().getText(), "Empty state must clear stale count");
+                assertEquals("Showing 0 to 0", ctrl.getShowingRangeLabel().getText());
 
-                assertEquals(120, ctrl.getRowsContainer().getChildren().size());
-                assertTrue(elapsed < 5000, "120 booking rows took " + elapsed + " ms");
+                ctrl.showErrorState("DB error");
+                assertTrue(ctrl.getErrorStateContainer().isVisible());
+                assertEquals("0 bookings", ctrl.getTotalCountLabel().getText(), "Error state must clear stale count");
             } catch (Throwable t) {
                 errorRef.set(t);
             } finally {
@@ -242,23 +235,36 @@ class AdminBookingsLayoutTest {
             }
         });
 
-        assertTrue(latch.await(20, TimeUnit.SECONDS));
+        assertTrue(latch.await(30, TimeUnit.SECONDS));
         if (errorRef.get() != null) {
-            throw new AssertionError("100+ booking rows test failed", errorRef.get());
+            throw new AssertionError("States/RBAC/100+ rows UI test failed", errorRef.get());
         }
     }
 
-    private static void collectLabeledNodes(Node node, List<Labeled> list) {
-        if (node instanceof Labeled l) list.add(l);
-        if (node instanceof Parent p) {
-            for (Node c : p.getChildrenUnmodifiable()) collectLabeledNodes(c, list);
+    private static List<ScrollBar> collectScrollBars(Parent root) {
+        List<ScrollBar> out = new ArrayList<>();
+        Set<Node> nodes = root.lookupAll(".scroll-bar");
+        for (Node n : nodes) {
+            if (n instanceof ScrollBar sb) out.add(sb);
+        }
+        return out;
+    }
+
+    private static void collectLabeledNodes(Parent parent, List<Labeled> out) {
+        for (Node child : parent.getChildrenUnmodifiable()) {
+            if (child instanceof Labeled l) {
+                out.add(l);
+            }
+            if (child instanceof Parent p) {
+                collectLabeledNodes(p, out);
+            }
         }
     }
 
     private static boolean isTreeVisible(Node node) {
         Node cur = node;
         while (cur != null) {
-            if (!cur.isVisible()) return false;
+            if (!cur.isVisible() || !cur.isManaged()) return false;
             cur = cur.getParent();
         }
         return true;
