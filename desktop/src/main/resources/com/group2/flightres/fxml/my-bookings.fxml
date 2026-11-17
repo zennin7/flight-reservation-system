@@ -96,11 +96,11 @@
 
                     <!-- 1. POPULATED STATE (Scrollable booking cards) -->
                     <ScrollPane fx:id="bookingsScrollPane"
+                                styleClass="confirmation-scroll-pane"
                                 fitToWidth="true"
                                 fitToHeight="false"
                                 hbarPolicy="NEVER"
                                 vbarPolicy="AS_NEEDED"
-                                style="-fx-background-color: transparent; -fx-background: transparent;"
                                 VBox.vgrow="ALWAYS">
                         <VBox fx:id="cardsContainer" spacing="14" alignment="TOP_CENTER" VBox.vgrow="ALWAYS"
                               style="-fx-padding: 4 10 16 0; -fx-background-color: transparent;">

@@ -95,8 +95,8 @@ class MyBookingsLayoutTest {
     private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-11-12T00:00:00Z"), ZoneOffset.UTC);
 
     @ParameterizedTest(name = "Layout responsive check at width {0}")
-    @ValueSource(doubles = {1100.0, 900.0})
-    @DisplayName("My Bookings layout renders at 1100 and 900 without clipping or truncation")
+    @ValueSource(doubles = {1280.0, 1100.0, 900.0})
+    @DisplayName("My Bookings layout renders at 1280, 1100 and 900 without clipping, truncation, or tall connectors")
     void testLayoutAtWidths(double width) throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> errorRef = new AtomicReference<>();
@@ -157,6 +157,18 @@ class MyBookingsLayoutTest {
                                 double cardMaxX = cardBounds.getMaxX();
                                 if (cardMaxX > width + 0.5) {
                                     violations.add("Card maxX " + cardMaxX + " exceeds width " + width);
+                                }
+
+                                // Verify route connector nodes stay thin (<= 2px height)
+                                var connectors = card.lookupAll(".route-connector-line");
+                                if (connectors.isEmpty()) {
+                                    violations.add("Expected .route-connector-line nodes on booking card");
+                                }
+                                for (Node conn : connectors) {
+                                    double connHeight = conn.getBoundsInParent().getHeight();
+                                    if (connHeight <= 0.0 || connHeight > 2.0) {
+                                        violations.add("Route connector height must be <= 2.0px, was " + connHeight);
+                                    }
                                 }
 
                                 List<Labeled> labeledNodes = new ArrayList<>();

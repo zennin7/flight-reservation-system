@@ -211,6 +211,8 @@ class MyBookingsStatesAndTicketTest {
 
                 assertEquals(1, listCallCount.get(), "Initial load must call listBookingsForUser once");
                 assertTrue(controller.getErrorStateContainer().isVisible(), "Error state must be visible after load failure");
+                assertFalse(controller.getTabsBar().isVisible(), "Tab bar with counts must be hidden in error state");
+                assertFalse(controller.getUpcomingTabBtn().getText().matches(".*\\d+.*"), "Error state must not display stale numeric tab counts");
                 assertTrue(controller.getRetryButton().isVisible(), "Retry button must be visible in error state");
 
                 // Click Retry -> invokes loadBookings() again
@@ -218,6 +220,8 @@ class MyBookingsStatesAndTicketTest {
 
                 assertEquals(2, listCallCount.get(), "Clicking Retry must call loadBookings / listBookingsForUser a second time");
                 assertFalse(controller.getErrorStateContainer().isVisible(), "Error state must hide after successful retry");
+                assertTrue(controller.getTabsBar().isVisible(), "Tab bar must reappear after successful retry");
+                assertEquals("Upcoming (1)", controller.getUpcomingTabBtn().getText());
                 assertEquals(1, controller.getCardsContainer().getChildren().size(), "Booking card must render after retry");
             } catch (Throwable t) {
                 errorRef.set(t);
@@ -364,6 +368,118 @@ class MyBookingsStatesAndTicketTest {
         assertTrue(latch.await(20, TimeUnit.SECONDS), "View ticket ownership refusal test timed out");
         if (errorRef.get() != null) {
             throw new AssertionError("View ticket ownership refusal test failed", errorRef.get());
+        }
+    }
+
+    @Test
+    @DisplayName("Step 0A: Tab pill counts match rendered cards for every tab (Upcoming, Past, Cancelled)")
+    void testTabCountsMatchRenderedCardsForEveryTab() throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<Throwable> errorRef = new AtomicReference<>();
+
+        BookingSummary up1 = createSampleSummary(12L, "UP0001");
+        BookingSummary up2 = createSampleSummary(12L, "UP0002");
+        BookingSummary past1 = new BookingSummary(
+                502L, "PA0001", 12L, "ALT 205",
+                "CPT", "Cape Town", Instant.parse("2026-11-01T06:00:00Z"), ZoneId.of("Africa/Johannesburg"),
+                "JNB", "Johannesburg", Instant.parse("2026-11-01T08:00:00Z"), ZoneId.of("Africa/Johannesburg"),
+                "COMPLETED", "CONFIRMED", List.of("8B"), new BigDecimal("1400.00"),
+                "Demo Traveller", "demo.traveller@example.com", "Airbus A320");
+        BookingSummary can1 = new BookingSummary(
+                503L, "CA0001", 12L, "ALT 602",
+                "JNB", "Johannesburg", Instant.parse("2026-11-25T06:00:00Z"), ZoneId.of("Africa/Johannesburg"),
+                "DUR", "Durban", Instant.parse("2026-11-25T07:25:00Z"), ZoneId.of("Africa/Johannesburg"),
+                "CANCELLED", "CANCELLED", List.of("9C"), new BigDecimal("1100.00"),
+                "Demo Traveller", "demo.traveller@example.com", "Airbus A320");
+
+        BookingService mixedService = new BookingService(new BookingDao() {
+            @Override public BookingRecord createBooking(BookingContext context) { return null; }
+            @Override public Optional<BookingRecord> findByReference(String bookingRef) { return Optional.empty(); }
+            @Override public List<BookingRecord> findByUserId(long userId) { return List.of(); }
+            @Override public List<BookingSummary> listSummariesForUser(long userId, Clock clock) {
+                return List.of(up1, up2, past1, can1);
+            }
+        }, new FlightDaoImpl(), FIXED_CLOCK);
+
+        Platform.runLater(() -> {
+            Stage stage = new Stage();
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/my-bookings.fxml"));
+                loader.setControllerFactory(cls -> new MyBookingsController(mixedService, FIXED_CLOCK));
+                Parent root = loader.load();
+                MyBookingsController controller = loader.getController();
+
+                BookingContext ctx = new BookingContext();
+                ctx.setCurrentUser(createUser(12L, "demo.traveller@example.com", "Demo Traveller"));
+                controller.init(ctx, () -> {});
+
+                assertEquals("Upcoming (2)", controller.getUpcomingTabBtn().getText());
+                assertEquals("Past (1)", controller.getPastTabBtn().getText());
+                assertEquals("Cancelled (1)", controller.getCancelledTabBtn().getText());
+
+                controller.setActiveTab(MyBookingsController.Tab.UPCOMING);
+                assertEquals(2, controller.getCardsContainer().getChildren().size());
+
+                controller.setActiveTab(MyBookingsController.Tab.PAST);
+                assertEquals(1, controller.getCardsContainer().getChildren().size());
+
+                controller.setActiveTab(MyBookingsController.Tab.CANCELLED);
+                assertEquals(1, controller.getCardsContainer().getChildren().size());
+            } catch (Throwable t) {
+                errorRef.set(t);
+            } finally {
+                stage.close();
+                latch.countDown();
+            }
+        });
+
+        assertTrue(latch.await(20, TimeUnit.SECONDS), "Tab counts parity test timed out");
+        if (errorRef.get() != null) {
+            throw new AssertionError("Tab counts parity test failed", errorRef.get());
+        }
+    }
+
+    @Test
+    @DisplayName("Step 0A: Real DB user with Upcoming empty (0) and Past rows (N) shows Upcoming (0), Past (N), and empty message")
+    void testUpcomingEmptyButPastHasRows() throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<Throwable> errorRef = new AtomicReference<>();
+
+        // Use real BookingService against DB with a future clock (2027-01-01) so all user 12 bookings are in the past
+        Clock futureClock = Clock.fixed(Instant.parse("2027-01-01T00:00:00Z"), ZoneOffset.UTC);
+
+        Platform.runLater(() -> {
+            Stage stage = new Stage();
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/my-bookings.fxml"));
+                loader.setControllerFactory(cls -> new MyBookingsController(new BookingService(), futureClock));
+                Parent root = loader.load();
+                MyBookingsController controller = loader.getController();
+
+                BookingContext ctx = new BookingContext();
+                ctx.setCurrentUser(createUser(12L, "demo.traveller@example.com", "Demo Traveller"));
+                controller.init(ctx, () -> {});
+
+                int totalForUser12 = controller.getAllBookings().size();
+                assertTrue(totalForUser12 >= 4, "Demo user 12 must have real DB bookings");
+
+                assertEquals("Upcoming (0)", controller.getUpcomingTabBtn().getText());
+                assertEquals("Past (" + totalForUser12 + ")", controller.getPastTabBtn().getText());
+                assertTrue(controller.getEmptyStateContainer().isVisible(), "Empty message must show when Upcoming is 0");
+                Label emptyTitle = (Label) controller.getEmptyStateContainer().lookup("#emptyTitleLabel");
+                assertNotNull(emptyTitle);
+                assertEquals("No upcoming trips", emptyTitle.getText());
+            } catch (Throwable t) {
+                errorRef.set(t);
+            } finally {
+                stage.close();
+                latch.countDown();
+            }
+        });
+
+        assertTrue(latch.await(20, TimeUnit.SECONDS), "Upcoming empty / Past populated test timed out");
+        if (errorRef.get() != null) {
+            throw new AssertionError("Upcoming empty / Past populated test failed", errorRef.get());
         }
     }
 }

@@ -289,6 +289,14 @@ public class MyBookingsController {
     }
 
     public void showErrorState(String message) {
+        if (tabsBar != null) {
+            tabsBar.setVisible(false);
+            tabsBar.setManaged(false);
+        }
+        if (upcomingTabBtn != null) upcomingTabBtn.setText("Upcoming (—)");
+        if (pastTabBtn != null) pastTabBtn.setText("Past (—)");
+        if (cancelledTabBtn != null) cancelledTabBtn.setText("Cancelled (—)");
+
         if (bookingsScrollPane != null) {
             bookingsScrollPane.setVisible(false);
             bookingsScrollPane.setManaged(false);
@@ -307,6 +315,10 @@ public class MyBookingsController {
     }
 
     private void hideErrorState() {
+        if (tabsBar != null) {
+            tabsBar.setVisible(true);
+            tabsBar.setManaged(true);
+        }
         if (errorStateContainer != null) {
             errorStateContainer.setVisible(false);
             errorStateContainer.setManaged(false);
@@ -388,17 +400,22 @@ public class MyBookingsController {
 
         HBox arrowBox = new HBox(6);
         arrowBox.setAlignment(Pos.CENTER);
+        arrowBox.setFillHeight(false);
         Region leftLine = new Region();
+        leftLine.getStyleClass().add("route-connector-line");
         leftLine.setPrefWidth(40);
-        leftLine.setPrefHeight(1);
-        leftLine.setStyle("-fx-background-color: rgba(212, 166, 60, 0.40);");
+        leftLine.setMinHeight(1.5);
+        leftLine.setPrefHeight(1.5);
+        leftLine.setMaxHeight(2.0);
         SVGPath planeIcon = new SVGPath();
         planeIcon.setContent("M3 13l18-8-6 16-3-7-9-1z");
         planeIcon.setStyle("-fx-stroke: #d4a63c; -fx-stroke-width: 1.5; -fx-fill: transparent;");
         Region rightLine = new Region();
+        rightLine.getStyleClass().add("route-connector-line");
         rightLine.setPrefWidth(40);
-        rightLine.setPrefHeight(1);
-        rightLine.setStyle("-fx-background-color: rgba(212, 166, 60, 0.40);");
+        rightLine.setMinHeight(1.5);
+        rightLine.setPrefHeight(1.5);
+        rightLine.setMaxHeight(2.0);
         arrowBox.getChildren().addAll(leftLine, planeIcon, rightLine);
 
         Label directLabel = new Label("Direct");
@@ -596,4 +613,5 @@ public class MyBookingsController {
     public Button getSearchFlightsButton() { return searchFlightsButton; }
     public Button getRetryButton() { return retryButton; }
     public Label getErrorMessageLabel() { return errorMessageLabel; }
+    public HBox getTabsBar() { return tabsBar; }
 }

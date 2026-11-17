@@ -392,11 +392,18 @@ public class GlassMyBookingsScreenshotRunner extends Application {
                         controller.updateResponsiveLayout(scene.getWidth(), scene.getHeight());
                         captureSnapshot(scene, "glass-bookings-populated-900.png", outputDir, brainDir);
 
-                        // Resize back to 1280x800 and show empty state
+                        // Resize back to 1280x800 and load real zero-booking user (user_id=9, amahle@example.com)
                         stage.setWidth(1280);
                         stage.setHeight(800);
                         controller.updateResponsiveLayout(1280, 800);
-                        controller.showEmptyState();
+                        User zeroBookingUser = new User();
+                        zeroBookingUser.setUserId(9L);
+                        zeroBookingUser.setEmail("amahle@example.com");
+                        zeroBookingUser.setFullName("Ms Amahle Mokoena");
+                        zeroBookingUser.setRole(UserRole.CUSTOMER);
+                        BookingContext emptyCtx = new BookingContext();
+                        emptyCtx.setCurrentUser(zeroBookingUser);
+                        controller.init(emptyCtx, () -> {});
 
                         PauseTransition p3 = new PauseTransition(Duration.millis(600));
                         p3.setOnFinished(e3 -> {

@@ -1708,3 +1708,10 @@
     -fx-padding: 8px 24px;
     -fx-cursor: hand;
 }
+
+.route-connector-line {
+    -fx-background-color: rgba(212, 166, 60, 0.55);
+    -fx-min-height: 1.5px;
+    -fx-pref-height: 1.5px;
+    -fx-max-height: 1.5px;
+}
