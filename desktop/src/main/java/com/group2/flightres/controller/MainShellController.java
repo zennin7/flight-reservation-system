@@ -247,6 +247,8 @@ public class MainShellController {
                 aboutCtrl.init(bookingContext, () -> handleNavigation("Home"));
             } else if (controller instanceof ContactController contactCtrl) {
                 contactCtrl.init(bookingContext, () -> handleNavigation("Home"));
+            } else if (controller instanceof AdminDashboardController adminDashCtrl) {
+                adminDashCtrl.init(bookingContext);
             } else if (controller instanceof MyBookingsController myBookingsCtrl) {
                 myBookingsCtrl.init(bookingContext, () -> handleNavigation("Flights"));
             } else if (controller instanceof WizardStepController wizardController) {

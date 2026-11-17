@@ -1,6 +1,7 @@
 package com.group2.flightres.util;
 
 import com.group2.flightres.component.NavBar;
+import com.group2.flightres.controller.AdminDashboardController;
 import com.group2.flightres.controller.BookingConfirmationController;
 import com.group2.flightres.controller.MyBookingsController;
 import com.group2.flightres.controller.WizardStepController;
@@ -28,11 +29,21 @@ public final class Navigator {
     public static final String FLIGHT_SEARCH_FXML = "/com/group2/flightres/fxml/flight-search.fxml";
     public static final String CONFIRMATION_FXML = "/com/group2/flightres/fxml/booking-confirmation.fxml";
     public static final String HOME_FXML = "/com/group2/flightres/fxml/home.fxml";
+    public static final String ADMIN_DASHBOARD_FXML = "/com/group2/flightres/fxml/admin-dashboard.fxml";
+    public static final String ADMIN_BOOKINGS_FXML = "/com/group2/flightres/fxml/admin-bookings.fxml";
 
     private Navigator() {}
 
     public static void navigateToMyBookings(Node sourceNode, BookingContext context) {
         navigate(sourceNode, MY_BOOKINGS_FXML, false, "My Bookings", context);
+    }
+
+    public static void navigateToAdminDashboard(Node sourceNode, BookingContext context) {
+        navigate(sourceNode, ADMIN_DASHBOARD_FXML, false, "Dashboard", context);
+    }
+
+    public static void navigateToAdminBookings(Node sourceNode, BookingContext context) {
+        navigate(sourceNode, ADMIN_BOOKINGS_FXML, false, "Bookings", context);
     }
 
     public static void navigateToSearch(Node sourceNode, BookingContext context) {
@@ -89,7 +100,9 @@ public final class Navigator {
             }
 
             Object controller = loader.getController();
-            if (controller instanceof MyBookingsController myBookingsCtrl) {
+            if (controller instanceof AdminDashboardController adminDashCtrl) {
+                adminDashCtrl.init(context);
+            } else if (controller instanceof MyBookingsController myBookingsCtrl) {
                 myBookingsCtrl.init(context, () -> navigateToSearch(view, context));
             } else if (controller instanceof BookingConfirmationController confirmCtrl) {
                 confirmCtrl.init(context, () -> navigateToHome(view, context));

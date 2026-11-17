@@ -1715,3 +1715,229 @@
     -fx-pref-height: 1.5px;
     -fx-max-height: 1.5px;
 }
+
+/* ===================================================================
+   ADMIN DASHBOARD & ADMIN BOOKINGS (S8 + S9 TOKEN CLASSES)
+   =================================================================== */
+
+.admin-main-card {
+    -fx-padding: 22px 28px 22px 28px;
+}
+
+.admin-main-card-compact {
+    -fx-padding: 14px 16px 14px 16px;
+}
+
+.admin-kpi-card {
+    -fx-background-color: rgba(8, 12, 22, 0.48);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-radius: 16px;
+    -fx-border-width: 1px;
+    -fx-padding: 14px 18px;
+}
+
+.admin-kpi-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+}
+
+.admin-kpi-value {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 24px;
+    -fx-text-fill: #ffffff;
+}
+
+.admin-kpi-value-gold {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 24px;
+    -fx-text-fill: -glass-gold-light;
+}
+
+.admin-panel-card {
+    -fx-background-color: rgba(8, 12, 22, 0.45);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-radius: 16px;
+    -fx-border-width: 1px;
+    -fx-padding: 16px 18px;
+}
+
+.admin-section-title {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(255, 255, 255, 0.70);
+}
+
+.admin-row-card {
+    -fx-background-color: rgba(255, 255, 255, 0.04);
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(255, 255, 255, 0.06);
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 10px 14px;
+}
+
+.admin-row-card-selected {
+    -fx-background-color: rgba(212, 166, 60, 0.16);
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(212, 166, 60, 0.55);
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 10px 14px;
+}
+
+.admin-row-title {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: #ffffff;
+}
+
+.admin-row-gold {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: -glass-gold-light;
+}
+
+.admin-row-meta {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+}
+
+.admin-alert-row {
+    -fx-background-color: rgba(220, 38, 38, 0.14);
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(248, 113, 113, 0.35);
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 10px 14px;
+}
+
+.admin-state-box {
+    -fx-padding: 48px 20px 48px 20px;
+}
+
+.admin-error-circle {
+    -fx-background-color: rgba(239, 68, 68, 0.20);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(239, 68, 68, 0.50);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+}
+
+.admin-error-glyph {
+    -fx-font-size: 28px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ef4444;
+}
+
+.admin-empty-circle {
+    -fx-background-color: rgba(212, 166, 60, 0.15);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(212, 166, 60, 0.40);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+}
+
+.admin-bar-chart,
+.admin-pie-chart {
+    -fx-background-color: transparent;
+}
+
+.admin-bar-chart .chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.admin-bar-chart .chart-horizontal-grid-lines {
+    -fx-stroke: rgba(255, 255, 255, 0.08);
+}
+
+.admin-bar-chart .chart-vertical-grid-lines {
+    -fx-stroke: transparent;
+}
+
+.admin-bar-chart .axis {
+    -fx-tick-label-fill: rgba(255, 255, 255, 0.65);
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+}
+
+.admin-bar-chart .axis-label {
+    -fx-text-fill: rgba(255, 255, 255, 0.65);
+}
+
+.admin-bar-chart .default-color0.chart-bar {
+    -fx-bar-fill: linear-gradient(to top, #c4952f, #e8c46a);
+    -fx-background-radius: 4px 4px 0 0;
+}
+
+.admin-pie-chart .chart-legend {
+    -fx-background-color: transparent;
+}
+
+.admin-pie-chart .chart-legend-item {
+    -fx-text-fill: #ffffff;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+}
+
+.admin-pie-chart .chart-pie-label {
+    -fx-fill: #ffffff;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+}
+
+.admin-pie-chart .chart-pie-label-line {
+    -fx-stroke: rgba(255, 255, 255, 0.45);
+}
+
+.admin-pie-chart .default-color0.chart-pie { -fx-pie-color: #d4a63c; }
+.admin-pie-chart .default-color1.chart-pie { -fx-pie-color: #e8c46a; }
+.admin-pie-chart .default-color2.chart-pie { -fx-pie-color: #f3d98b; }
+.admin-pie-chart .default-color3.chart-pie { -fx-pie-color: #94a3b8; }
+.admin-pie-chart .default-color4.chart-pie { -fx-pie-color: #4ade80; }
+.admin-pie-chart .default-color5.chart-pie { -fx-pie-color: #64748b; }
+
+.admin-filter-pill {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-text-fill: rgba(255, 255, 255, 0.78);
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 6px 14px;
+    -fx-cursor: hand;
+}
+
+.admin-filter-pill-active {
+    -fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c);
+    -fx-text-fill: -glass-navy;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 12px;
+    -fx-background-radius: 999px;
+    -fx-border-color: #f3d98b;
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 6px 14px;
+    -fx-cursor: hand;
+}
+
+.admin-divider {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-nav-brand-wrap {
+    -fx-cursor: hand;
+}
+
+.admin-table-header {
+    -fx-padding: 6px 14px;
+}
