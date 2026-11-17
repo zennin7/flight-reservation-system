@@ -105,10 +105,6 @@ public class AdminDashboardController {
         init(ctx);
     }
 
-    public static void setSampleStatsForTesting(com.group2.flightres.model.DashboardStats ignored) {
-        // Legacy ScreenshotRunner compatibility hook; live AdminDashboardService queries SQL directly.
-    }
-
     @FXML
     public void initialize() {
         FontLoader.loadFonts();

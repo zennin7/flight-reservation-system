@@ -56,4 +56,22 @@ class AdminDashboardSourceGuardTest {
         assertFalse(ctrl.contains("148k") || ctrl.contains("412") || ctrl.contains("1,522"),
                 "Sample board figures must not appear in AdminDashboardController.java");
     }
+
+    @Test
+    @DisplayName("Git Hygiene Guard: git ls-files contains no .bak, .orig, or .log artefacts")
+    void testNoBuildArtefactsTrackedInGit() throws Exception {
+        Path repoRoot = Files.exists(Path.of(".git")) ? Path.of(".") : Path.of("..");
+        Process process = new ProcessBuilder("git", "ls-files")
+                .directory(repoRoot.toFile())
+                .redirectErrorStream(true)
+                .start();
+        String output = new String(process.getInputStream().readAllBytes());
+        int exit = process.waitFor();
+        assertTrue(exit == 0, "git ls-files failed with exit code " + exit);
+        for (String line : output.split("\\R")) {
+            String trimmed = line.trim();
+            assertFalse(trimmed.endsWith(".bak") || trimmed.endsWith(".orig") || trimmed.endsWith(".log"),
+                    "Tracked build/backup artefact found in git ls-files: " + trimmed);
+        }
+    }
 }

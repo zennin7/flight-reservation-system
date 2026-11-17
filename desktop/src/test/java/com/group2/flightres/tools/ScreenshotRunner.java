@@ -206,7 +206,6 @@ public class ScreenshotRunner extends Application {
                 if (controller.getNavBar() != null) {
                     controller.getNavBar().setAdminMode(true);
                 }
-                com.group2.flightres.controller.AdminDashboardController.setSampleStatsForTesting(createSampleDashboardStats());
                 controller.handleNavigation("Dashboard");
                 break;
             case "shell":

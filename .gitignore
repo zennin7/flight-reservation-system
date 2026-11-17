@@ -4,6 +4,8 @@ target/
 .vscode/
 .DS_Store
 *.log
+*.bak
+*.orig
 
 **/app.json
 !**/app.json.example
