@@ -1,6 +1,7 @@
 package com.group2.flightres.util;
 
 import com.group2.flightres.component.NavBar;
+import com.group2.flightres.controller.AdminBookingsController;
 import com.group2.flightres.controller.AdminDashboardController;
 import com.group2.flightres.controller.BookingConfirmationController;
 import com.group2.flightres.controller.MyBookingsController;
@@ -102,6 +103,8 @@ public final class Navigator {
             Object controller = loader.getController();
             if (controller instanceof AdminDashboardController adminDashCtrl) {
                 adminDashCtrl.init(context);
+            } else if (controller instanceof AdminBookingsController adminBookingsCtrl) {
+                adminBookingsCtrl.init(context);
             } else if (controller instanceof MyBookingsController myBookingsCtrl) {
                 myBookingsCtrl.init(context, () -> navigateToSearch(view, context));
             } else if (controller instanceof BookingConfirmationController confirmCtrl) {

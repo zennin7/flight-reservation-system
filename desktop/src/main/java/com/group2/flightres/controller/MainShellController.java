@@ -198,6 +198,14 @@ public class MainShellController {
                 loadOptionalScreen("/com/group2/flightres/fxml/contact.fxml", false, "Contact");
                 break;
             case "Bookings":
+                boolean isAdminBookings = (bookingContext != null && bookingContext.getCurrentUser() != null
+                        && bookingContext.getCurrentUser().getRole() == UserRole.ADMIN);
+                if (isAdminBookings) {
+                    loadOptionalScreen("/com/group2/flightres/fxml/admin-bookings.fxml", false, "Bookings");
+                } else {
+                    logger.warn("Access denied for route 'Bookings'. Administrator privileges required.");
+                }
+                break;
             case "Reports":
             default:
                 // No-op where screen does not exist yet
@@ -249,6 +257,8 @@ public class MainShellController {
                 contactCtrl.init(bookingContext, () -> handleNavigation("Home"));
             } else if (controller instanceof AdminDashboardController adminDashCtrl) {
                 adminDashCtrl.init(bookingContext);
+            } else if (controller instanceof AdminBookingsController adminBookingsCtrl) {
+                adminBookingsCtrl.init(bookingContext);
             } else if (controller instanceof MyBookingsController myBookingsCtrl) {
                 myBookingsCtrl.init(bookingContext, () -> handleNavigation("Flights"));
             } else if (controller instanceof WizardStepController wizardController) {
