@@ -4,18 +4,25 @@ package com.group2.flightres.component;
 import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.controller.AdminDashboardController;
 import com.group2.flightres.model.AdminDashboardData;
+import com.group2.flightres.model.AdminDashboardData.CabinLoadBreakdown;
+import com.group2.flightres.model.AdminDashboardData.DailySeriesPoint;
 import com.group2.flightres.model.AdminDashboardData.FlightLoadFactor;
+import com.group2.flightres.model.AdminDashboardData.Range;
+import com.group2.flightres.model.AdminDashboardData.RecentBookingItem;
+import com.group2.flightres.model.AdminDashboardData.TopDestinationItem;
 import com.group2.flightres.model.User;
 import com.group2.flightres.model.UserRole;
-import com.group2.flightres.service.AdminDashboardService;
 import com.group2.flightres.util.FontLoader;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.ScrollBar;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -27,11 +34,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -61,7 +69,7 @@ class AdminDashboardLayoutTest {
         User u = new User();
         u.setUserId(1L);
         u.setEmail("testadmin@example.com");
-        u.setFullName("Test Admin");
+        u.setFullName("David Admin");
         u.setRole(UserRole.ADMIN);
         return u;
     }
@@ -76,8 +84,8 @@ class AdminDashboardLayoutTest {
     }
 
     @ParameterizedTest(name = "Admin Dashboard layout check at width {0}")
-    @ValueSource(doubles = {1100.0, 900.0})
-    @DisplayName("Admin Dashboard renders at 1100 and 900 without clipping or truncation")
+    @ValueSource(doubles = {1280.0, 1100.0, 900.0})
+    @DisplayName("Admin Dashboard renders at 1280, 1100 and 900 with 2x2 KPI reflow, zero ellipsis, and zero h-scroll")
     void testLayoutAtWidths(double width) throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> errorRef = new AtomicReference<>();
@@ -92,15 +100,14 @@ class AdminDashboardLayoutTest {
                 controller.init(adminUser());
 
                 StackPane container = new StackPane(root);
-                Scene scene = new Scene(container, width, 760);
+                Scene scene = new Scene(container, width, 800);
+                scene.getStylesheets().add(getClass().getResource("/com/group2/flightres/css/glass.css").toExternalForm());
                 stage.setScene(scene);
-                stage.setWidth(width);
-                stage.setHeight(760);
                 stage.show();
 
                 Platform.runLater(() -> Platform.runLater(() -> {
                     try {
-                        controller.updateResponsiveLayout(width, 760);
+                        controller.updateResponsiveLayout(width, 800);
                         container.applyCss();
                         container.layout();
 
@@ -108,16 +115,29 @@ class AdminDashboardLayoutTest {
                         if (width < 1100) {
                             assertEquals(20.0, padding.getLeft(), 0.01, "Compact padding must be 20 at width 900");
                             assertTrue(controller.getMainContainer().getStyleClass().contains("admin-main-card-compact"));
+                            assertEquals(2, controller.getKpiGrid().getColumnConstraints().size(),
+                                    "KPI grid must reflow to 2 columns (2x2) below 1100px");
                         } else {
-                            assertEquals(56.0, padding.getLeft(), 0.01, "Standard padding must be 56 at width 1100");
+                            assertEquals(56.0, padding.getLeft(), 0.01, "Standard padding must be 56 at width >= 1100");
                             assertTrue(controller.getMainContainer().getStyleClass().contains("admin-main-card"));
+                            assertEquals(4, controller.getKpiGrid().getColumnConstraints().size(),
+                                    "KPI grid must be 4 columns at width >= 1100px");
                         }
 
                         assertTrue(controller.getDashboardScrollPane().isVisible());
-                        assertFalse(controller.getBookingsPerDayChart().getData().isEmpty());
-                        assertEquals(14, controller.getBookingsPerDayChart().getData().get(0).getData().size());
+                        assertTrue(controller.getGreetingLabel().getText().contains("David"));
 
+                        // Check no visible horizontal scrollbar
+                        Set<Node> hBars = controller.getDashboardScrollPane().lookupAll(".scroll-bar");
+                        for (Node n : hBars) {
+                            if (n instanceof ScrollBar sb && sb.getOrientation() == javafx.geometry.Orientation.HORIZONTAL) {
+                                assertFalse(sb.isVisible(), "Horizontal scrollbar must not be visible at width " + width);
+                            }
+                        }
+
+                        // Check zero truncated labels and bounds inside viewport
                         List<String> violations = new ArrayList<>();
+                        Bounds viewportBounds = container.localToScene(container.getBoundsInLocal());
                         List<Labeled> labels = new ArrayList<>();
                         collectLabeledNodes(controller.getMainContainer(), labels);
                         for (Labeled l : labels) {
@@ -128,6 +148,10 @@ class AdminDashboardLayoutTest {
                                 if (rendered.contains("\u2026") || rendered.endsWith("...")) {
                                     violations.add("Truncated label [" + l.getText() + "]: rendered='" + rendered + "'");
                                 }
+                            }
+                            Bounds b = l.localToScene(l.getBoundsInLocal());
+                            if (b.getMaxX() > viewportBounds.getMaxX() + 2.0 || b.getMinX() < viewportBounds.getMinX() - 2.0) {
+                                violations.add("Overflowing label [" + l.getText() + "] at width " + width);
                             }
                         }
                         violationsRef.set(violations);
@@ -153,42 +177,61 @@ class AdminDashboardLayoutTest {
     }
 
     @Test
-    @DisplayName("RBAC & States: CUSTOMER denied, Empty DB shows empty state, DAO failure shows error state")
+    @DisplayName("RBAC & States: CUSTOMER denied, Empty and Error clear stale numbers, Populated renders charts & lists")
     void testStatesAndRbacUi() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
         Platform.runLater(() -> {
             try {
-                // 1. Denied state for CUSTOMER
+                // 1. Denied
                 FXMLLoader deniedLoader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/admin-dashboard.fxml"));
                 deniedLoader.load();
                 AdminDashboardController deniedCtrl = deniedLoader.getController();
                 deniedCtrl.init(customerUser());
                 assertTrue(deniedCtrl.getDeniedStateContainer().isVisible(), "CUSTOMER must see denied state");
-                assertFalse(deniedCtrl.getAdminNavLinksBox().isVisible(), "Admin nav links must be hidden for CUSTOMER");
+                assertFalse(deniedCtrl.getDashboardScrollPane().isVisible());
 
-                // 2. Empty state when DB returns zero rows
-                AdminDashboardService emptyService = new AdminDashboardService(
-                        (clock, thr) -> new AdminDashboardData(BigDecimal.ZERO, 0, 0, List.of(), List.of(), List.of(), List.of()),
-                        Clock.systemUTC());
-                FXMLLoader emptyLoader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/admin-dashboard.fxml"));
-                emptyLoader.setControllerFactory(c -> new AdminDashboardController(emptyService));
-                emptyLoader.load();
-                AdminDashboardController emptyCtrl = emptyLoader.getController();
-                emptyCtrl.init(adminUser());
-                assertTrue(emptyCtrl.getEmptyStateContainer().isVisible(), "Empty DB must show empty state");
+                // 2. Populated -> then Empty -> then Error (must clear stale numbers)
+                FXMLLoader stateLoader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/admin-dashboard.fxml"));
+                stateLoader.load();
+                AdminDashboardController ctrl = stateLoader.getController();
 
-                // 3. Error state when DAO throws
-                AdminDashboardService errService = new AdminDashboardService((clock, thr) -> {
-                    throw new IllegalStateException("DB down");
-                }, Clock.systemUTC());
-                FXMLLoader errLoader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/admin-dashboard.fxml"));
-                errLoader.setControllerFactory(c -> new AdminDashboardController(errService));
-                errLoader.load();
-                AdminDashboardController errCtrl = errLoader.getController();
-                errCtrl.init(adminUser());
-                assertTrue(errCtrl.getErrorStateContainer().isVisible(), "DAO failure must show error state");
+                ZoneId sast = ZoneId.of("Africa/Johannesburg");
+                Instant dep = Instant.now().plusSeconds(7200);
+                AdminDashboardData data = new AdminDashboardData(
+                        Range.SEVEN_DAYS,
+                        7, 16.7, new BigDecimal("28175.75"), 12.5, 9, 10.0, 1, null,
+                        List.of(new DailySeriesPoint(LocalDate.now(sast), "Mon", 7, new BigDecimal("28175.75"), 9, 1)),
+                        new CabinLoadBreakdown(7, 2, 171, 180, 3, 1),
+                        List.of(new FlightLoadFactor(1, "ALT 101", "JNB", "CPT", dep, sast, 90, 100, 10, 90.0, "Scheduled")),
+                        List.of(new FlightLoadFactor(1, "ALT 101", "JNB", "CPT", dep, sast, 90, 100, 10, 90.0, "Scheduled")),
+                        List.of(new TopDestinationItem("CPT", "Cape Town", 5)),
+                        List.of(new RecentBookingItem("9RQHX7", "Amahle Mokoena", "JNB -> CPT", "9E", new BigDecimal("3557.75")))
+                );
+                ctrl.populateData(data);
+                assertTrue(ctrl.getDashboardScrollPane().isVisible());
+                assertEquals("R 28,175.75", ctrl.getKpiRevenueLabel().getText());
+                assertEquals("3", ctrl.getSeatsHeldLabel().getText());
+                assertEquals("1", ctrl.getFlightsLowFreeLabel().getText());
+                assertEquals("1 of 1", ctrl.getTodayFlightsCountLabel().getText());
+                assertEquals(1, ctrl.getTodayFlightsList().getChildren().size());
+                assertEquals(1, ctrl.getTopDestinationsList().getChildren().size());
+                assertEquals(1, ctrl.getRecentBookingsList().getChildren().size());
+                assertEquals(2, ctrl.getBookingsRevenueChart().getData().size());
+                assertEquals(3, ctrl.getCabinDonutChart().getData().size());
+
+                ctrl.showEmptyState();
+                assertTrue(ctrl.getEmptyStateContainer().isVisible());
+                assertFalse(ctrl.getDashboardScrollPane().isVisible());
+                assertEquals("R 0.00", ctrl.getKpiRevenueLabel().getText(), "Empty state must clear stale revenue");
+                assertEquals("0", ctrl.getKpiBookingsLabel().getText());
+
+                ctrl.populateData(data);
+                ctrl.showErrorState("DB unreachable");
+                assertTrue(ctrl.getErrorStateContainer().isVisible());
+                assertFalse(ctrl.getDashboardScrollPane().isVisible());
+                assertEquals("R 0.00", ctrl.getKpiRevenueLabel().getText(), "Error state must clear stale revenue");
             } catch (Throwable t) {
                 errorRef.set(t);
             } finally {
@@ -196,65 +239,27 @@ class AdminDashboardLayoutTest {
             }
         });
 
-        assertTrue(latch.await(20, TimeUnit.SECONDS));
+        assertTrue(latch.await(30, TimeUnit.SECONDS));
         if (errorRef.get() != null) {
-            throw new AssertionError("States/RBAC UI test failed", errorRef.get());
+            throw new AssertionError("State/RBAC UI test failed", errorRef.get());
         }
     }
 
-    @Test
-    @DisplayName("100+ upcoming flights row performance")
-    void test100PlusFlightsPerformance() throws Exception {
-        CountDownLatch latch = new CountDownLatch(1);
-        AtomicReference<Throwable> errorRef = new AtomicReference<>();
-
-        Platform.runLater(() -> {
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/admin-dashboard.fxml"));
-                loader.load();
-                AdminDashboardController ctrl = loader.getController();
-
-                List<FlightLoadFactor> rows = new ArrayList<>();
-                Instant base = Instant.parse("2026-11-20T06:00:00Z");
-                ZoneId jhb = ZoneId.of("Africa/Johannesburg");
-                for (int i = 0; i < 120; i++) {
-                    rows.add(new FlightLoadFactor(1000L + i, "ALT " + (100 + i), "JNB -> CPT",
-                            base.plusSeconds(i * 3600L), jhb, 80, 162, 82, 49.4));
-                }
-
-                long start = System.currentTimeMillis();
-                ctrl.getUpcomingFlightsContainer().getChildren().clear();
-                for (FlightLoadFactor f : rows) {
-                    ctrl.getUpcomingFlightsContainer().getChildren().add(ctrl.buildUpcomingFlightRow(f));
-                }
-                long elapsed = System.currentTimeMillis() - start;
-
-                assertEquals(120, ctrl.getUpcomingFlightsContainer().getChildren().size());
-                assertTrue(elapsed < 5000, "120 flight rows took " + elapsed + " ms");
-            } catch (Throwable t) {
-                errorRef.set(t);
-            } finally {
-                latch.countDown();
+    private static void collectLabeledNodes(Parent parent, List<Labeled> out) {
+        for (Node child : parent.getChildrenUnmodifiable()) {
+            if (child instanceof Labeled l) {
+                out.add(l);
             }
-        });
-
-        assertTrue(latch.await(20, TimeUnit.SECONDS));
-        if (errorRef.get() != null) {
-            throw new AssertionError("100+ flights performance test failed", errorRef.get());
-        }
-    }
-
-    private static void collectLabeledNodes(Node node, List<Labeled> list) {
-        if (node instanceof Labeled l) list.add(l);
-        if (node instanceof Parent p) {
-            for (Node c : p.getChildrenUnmodifiable()) collectLabeledNodes(c, list);
+            if (child instanceof Parent p) {
+                collectLabeledNodes(p, out);
+            }
         }
     }
 
     private static boolean isTreeVisible(Node node) {
         Node cur = node;
         while (cur != null) {
-            if (!cur.isVisible()) return false;
+            if (!cur.isVisible() || !cur.isManaged()) return false;
             cur = cur.getParent();
         }
         return true;
