@@ -10,6 +10,7 @@ import com.group2.flightres.model.UserRole;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.util.FontLoader;
 import com.group2.flightres.util.Motion;
+import com.group2.flightres.util.MoneyFormatter;
 import com.group2.flightres.util.Navigator;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -443,7 +444,7 @@ public class MyBookingsController {
         passName.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;");
         Label seatLabel = new Label("Seat: " + summary.getSeatLabelsString());
         seatLabel.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-text-fill: #e8c46a;");
-        Label priceLabel = new Label(String.format(Locale.US, "R %,.2f", summary.getTotalPaid()));
+        Label priceLabel = new Label(MoneyFormatter.format(summary.getTotalPaid()));
         priceLabel.setStyle("-fx-font-family: 'Inter'; -fx-font-weight: 700; -fx-font-size: 18px; -fx-text-fill: #ffffff;");
         detailsBox.getChildren().addAll(passName, seatLabel, priceLabel);
 

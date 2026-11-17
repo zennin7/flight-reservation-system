@@ -15,6 +15,8 @@ import com.group2.flightres.model.UserRole;
 import com.group2.flightres.service.AdminBookingsService;
 import com.group2.flightres.service.AdminDashboardService;
 import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.util.MoneyFormatter;
+import com.group2.flightres.util.NameInitials;
 import com.group2.flightres.util.Navigator;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -91,6 +93,14 @@ public class AdminBookingsController {
     @FXML private Button cabinFirstBtn;
     @FXML private ComboBox<FlightFilterOption> flightFilterCombo;
     @FXML private Button resetFiltersBtn;
+    @FXML private Button filtersToggleBtn;
+    @FXML private HBox bookingsTableHeader;
+    @FXML private Label hdrRefLabel;
+    @FXML private Label hdrPaxLabel;
+    @FXML private Label hdrRouteLabel;
+    @FXML private Label hdrSeatLabel;
+    @FXML private Label hdrTotalLabel;
+    @FXML private Label hdrStatusLabel;
 
     @FXML private Label totalCountLabel;
     @FXML private Label showingRangeLabel;
@@ -137,6 +147,7 @@ public class AdminBookingsController {
     private Long activeFlightId = null;
     private int currentPage = 1;
     private int totalPages = 1;
+    private boolean compactFiltersExpanded = false;
     private AdminBookingRow selectedRow;
     private final List<HBox> rowNodes = new ArrayList<>();
     private final List<AdminBookingRow> rowModels = new ArrayList<>();
@@ -153,6 +164,10 @@ public class AdminBookingsController {
     @FXML
     public void initialize() {
         FontLoader.loadFonts();
+        if (bookingsTableHeader != null && rowsContainer != null) {
+            bookingsTableHeader.prefWidthProperty().bind(rowsContainer.widthProperty());
+            bookingsTableHeader.maxWidthProperty().bind(rowsContainer.widthProperty());
+        }
         updateTabClasses();
         updateFilterClasses();
         setupResponsiveListeners();
@@ -226,6 +241,8 @@ public class AdminBookingsController {
             }
             reflowHeader(true);
             reflowBookingsGrid(true);
+            setVisibleManaged(filtersToggleBtn, true);
+            setVisibleManaged(filterSidebar, compactFiltersExpanded);
         } else {
             cardMarginWrapper.setPadding(new Insets(4, 56, 20, 56));
             if (mainContainer != null) {
@@ -236,6 +253,8 @@ public class AdminBookingsController {
             }
             reflowHeader(false);
             reflowBookingsGrid(false);
+            setVisibleManaged(filtersToggleBtn, false);
+            setVisibleManaged(filterSidebar, true);
         }
     }
 
@@ -453,10 +472,10 @@ public class AdminBookingsController {
         seat.setMinWidth(Region.USE_PREF_SIZE);
         seat.setPrefWidth(34);
 
-        Label total = new Label(String.format(Locale.US, "R %,.0f", row.totalAmount()));
+        Label total = new Label(MoneyFormatter.format(row.totalAmount()));
         total.getStyleClass().add("admin-row-title");
         total.setMinWidth(Region.USE_PREF_SIZE);
-        total.setPrefWidth(64);
+        total.setPrefWidth(84);
 
         String displayStatus = formatStatusLabel(row.status());
         Label status = new Label(displayStatus);
@@ -469,6 +488,7 @@ public class AdminBookingsController {
             status.getStyleClass().add("badge-gold");
         }
         status.setMinWidth(Region.USE_PREF_SIZE);
+        status.setPrefWidth(82);
 
         box.setOnMouseClicked(e -> selectRow(row));
         box.setOnKeyPressed(e -> {
@@ -525,7 +545,7 @@ public class AdminBookingsController {
             detailSeatCabinLabel.setText(seat + ", " + cabin);
         }
         if (detailPaidLabel != null) {
-            detailPaidLabel.setText(String.format(Locale.US, "R %,.2f", row.totalAmount()));
+            detailPaidLabel.setText(MoneyFormatter.format(row.totalAmount()));
         }
         if (downloadBoardingPassBtn != null) {
             downloadBoardingPassBtn.setDisable(false);
@@ -539,19 +559,7 @@ public class AdminBookingsController {
     }
 
     private String initials(String fullName) {
-        if (fullName == null || fullName.isBlank()) return "AD";
-        String[] parts = fullName.trim().split("\\s+");
-        List<String> filtered = new ArrayList<>();
-        for (String p : parts) {
-            String clean = p.replace(".", "");
-            if (!clean.equalsIgnoreCase("Mr") && !clean.equalsIgnoreCase("Ms")
-                    && !clean.equalsIgnoreCase("Mrs") && !clean.equalsIgnoreCase("Dr")) {
-                filtered.add(clean);
-            }
-        }
-        if (filtered.isEmpty()) return "AD";
-        if (filtered.size() == 1) return filtered.get(0).substring(0, Math.min(2, filtered.get(0).length())).toUpperCase(Locale.ROOT);
-        return ("" + filtered.get(0).charAt(0) + filtered.get(filtered.size() - 1).charAt(0)).toUpperCase(Locale.ROOT);
+        return NameInitials.of(fullName);
     }
 
     public void showLoadingState() {
@@ -589,7 +597,7 @@ public class AdminBookingsController {
         if (detailPnrLabel != null) detailPnrLabel.setText("—");
         if (detailPassengerLabel != null) detailPassengerLabel.setText("—");
         if (detailEmailLabel != null) detailEmailLabel.setText("—");
-        if (detailPaidLabel != null) detailPaidLabel.setText("R 0.00");
+        if (detailPaidLabel != null) detailPaidLabel.setText(MoneyFormatter.format(java.math.BigDecimal.ZERO));
     }
 
     private void setStateVisibility(boolean bookings, boolean flights, boolean loading, boolean empty, boolean error, boolean denied) {
@@ -731,6 +739,12 @@ public class AdminBookingsController {
         }
     }
 
+    @FXML
+    private void handleToggleCompactFilters() {
+        compactFiltersExpanded = !compactFiltersExpanded;
+        setVisibleManaged(filterSidebar, compactFiltersExpanded);
+    }
+
     @FXML private void handleNavHome() { Navigator.navigateToHome(mainContainer, bookingContext); }
 
     // Getters for layout & state tests
@@ -743,6 +757,13 @@ public class AdminBookingsController {
     public VBox getTableCard() { return tableCard; }
     public VBox getDetailPanel() { return detailPanel; }
     public VBox getRowsContainer() { return rowsContainer; }
+    public Button getFiltersToggleBtn() { return filtersToggleBtn; }
+    public HBox getBookingsTableHeader() { return bookingsTableHeader; }
+    public Label getHdrRefLabel() { return hdrRefLabel; }
+    public Label getHdrRouteLabel() { return hdrRouteLabel; }
+    public Label getHdrSeatLabel() { return hdrSeatLabel; }
+    public Label getHdrTotalLabel() { return hdrTotalLabel; }
+    public Label getHdrStatusLabel() { return hdrStatusLabel; }
     public VBox getFlightsTabContainer() { return flightsTabContainer; }
     public VBox getFlightsRowsContainer() { return flightsRowsContainer; }
     public VBox getLoadingStateContainer() { return loadingStateContainer; }

@@ -3,7 +3,7 @@
  * Elevated Look with Atmospheric Backdrop Blur & Translucent Surfaces
  * =================================================================== */
 
-.root {
+.root, .glass-root, .glass-panel, .admin-main-card, .admin-main-card-compact {
     /* Color Tokens */
     -glass-navy: #0b1220;
     -glass-navy-overlay: rgba(11, 18, 32, 0.60);
@@ -1939,7 +1939,7 @@
 }
 
 .admin-table-header {
-    -fx-padding: 6px 14px;
+    -fx-padding: 6px 15px;
 }
 
 /* -------------------------------------------------------------------

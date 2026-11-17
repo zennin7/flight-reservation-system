@@ -15,6 +15,8 @@ import com.group2.flightres.model.UserRole;
 import com.group2.flightres.service.AdminDashboardService;
 import com.group2.flightres.util.DestinationPhotoResolver;
 import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.util.MoneyFormatter;
+import com.group2.flightres.util.NameInitials;
 import com.group2.flightres.util.Navigator;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -124,6 +126,8 @@ public class AdminDashboardController {
     @FXML private AreaChart<String, Number> bookingsRevenueChart;
     @FXML private CategoryAxis chartDateAxis;
     @FXML private NumberAxis chartValueAxis;
+    @FXML private Label chartBookingsLegendLabel;
+    @FXML private Label chartRevenueLegendLabel;
 
     @FXML private PieChart cabinDonutChart;
     @FXML private Label cabinCenterPctLabel;
@@ -166,6 +170,13 @@ public class AdminDashboardController {
         if (bookingsRevenueChart != null) {
             bookingsRevenueChart.setAnimated(false);
             bookingsRevenueChart.setLegendVisible(false);
+        }
+        if (chartValueAxis != null) {
+            chartValueAxis.setLabel("% of period peak");
+            chartValueAxis.setAutoRanging(false);
+            chartValueAxis.setLowerBound(0);
+            chartValueAxis.setUpperBound(100);
+            chartValueAxis.setTickUnit(25);
         }
         if (cabinDonutChart != null) {
             cabinDonutChart.setAnimated(false);
@@ -469,15 +480,27 @@ public class AdminDashboardController {
         XYChart.Series<String, Number> revenueSeries = new XYChart.Series<>();
         revenueSeries.setName("Revenue");
 
-        double maxBookings = Math.max(1.0, points.stream().mapToDouble(DailySeriesPoint::bookingsCount).max().orElse(1.0));
-        double maxRevenue = Math.max(1.0, points.stream().mapToDouble(p -> p.revenue().doubleValue()).max().orElse(1.0));
+        long maxBookings = Math.max(1L, points.stream().mapToLong(DailySeriesPoint::bookingsCount).max().orElse(1L));
+        BigDecimal maxRevenueBd = points.stream()
+                .map(DailySeriesPoint::revenue)
+                .max(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
+        double maxRevenue = Math.max(1.0, maxRevenueBd.doubleValue());
+
+        if (chartBookingsLegendLabel != null) {
+            chartBookingsLegendLabel.setText("Bookings (peak " + maxBookings + ")");
+        }
+        if (chartRevenueLegendLabel != null) {
+            chartRevenueLegendLabel.setText("Revenue (peak " + MoneyFormatter.format(maxRevenueBd) + ")");
+        }
 
         for (DailySeriesPoint p : points) {
-            XYChart.Data<String, Number> bData = new XYChart.Data<>(p.dayLabel(), p.bookingsCount());
+            double indexedBookings = (p.bookingsCount() * 100.0) / maxBookings;
+            XYChart.Data<String, Number> bData = new XYChart.Data<>(p.dayLabel(), indexedBookings);
             bookingsSeries.getData().add(bData);
 
-            double scaledRev = (p.revenue().doubleValue() / maxRevenue) * maxBookings;
-            XYChart.Data<String, Number> rData = new XYChart.Data<>(p.dayLabel(), scaledRev);
+            double indexedRev = (p.revenue().doubleValue() * 100.0) / maxRevenue;
+            XYChart.Data<String, Number> rData = new XYChart.Data<>(p.dayLabel(), indexedRev);
             revenueSeries.getData().add(rData);
         }
 
@@ -508,16 +531,16 @@ public class AdminDashboardController {
             cabinDonutChart.setData(slices);
         }
         if (cabinCenterPctLabel != null) {
-            cabinCenterPctLabel.setText(String.format(Locale.US, "%.0f%%", cabin.soldPercent()));
+            cabinCenterPctLabel.setText(formatCabinPercent(cabin.soldPercent()));
         }
         if (cabinEconomyPctLabel != null) {
-            cabinEconomyPctLabel.setText(String.format(Locale.US, "%.0f%%", cabin.economyPercent()));
+            cabinEconomyPctLabel.setText(formatCabinPercent(cabin.economyPercent()));
         }
         if (cabinFirstPctLabel != null) {
-            cabinFirstPctLabel.setText(String.format(Locale.US, "%.0f%%", cabin.firstPercent()));
+            cabinFirstPctLabel.setText(formatCabinPercent(cabin.firstPercent()));
         }
         if (cabinOpenPctLabel != null) {
-            cabinOpenPctLabel.setText(String.format(Locale.US, "%.0f%%", cabin.openPercent()));
+            cabinOpenPctLabel.setText(formatCabinPercent(cabin.openPercent()));
         }
         if (seatsHeldLabel != null) {
             seatsHeldLabel.setText(String.valueOf(cabin.seatsHeldRightNow()));
@@ -699,25 +722,19 @@ public class AdminDashboardController {
         return track;
     }
 
-    private String initials(String fullName) {
-        if (fullName == null || fullName.isBlank()) return "AD";
-        String[] parts = fullName.trim().split("\\s+");
-        List<String> filtered = new ArrayList<>();
-        for (String p : parts) {
-            String clean = p.replace(".", "");
-            if (!clean.equalsIgnoreCase("Mr") && !clean.equalsIgnoreCase("Ms")
-                    && !clean.equalsIgnoreCase("Mrs") && !clean.equalsIgnoreCase("Dr")) {
-                filtered.add(clean);
-            }
+    public static String formatCabinPercent(double pct) {
+        if (pct > 0.0 && Math.round(pct) == 0) {
+            return String.format(Locale.US, "%.1f%%", pct);
         }
-        if (filtered.isEmpty()) return "AD";
-        if (filtered.size() == 1) return filtered.get(0).substring(0, Math.min(2, filtered.get(0).length())).toUpperCase(Locale.ROOT);
-        return ("" + filtered.get(0).charAt(0) + filtered.get(filtered.size() - 1).charAt(0)).toUpperCase(Locale.ROOT);
+        return String.format(Locale.US, "%.0f%%", pct);
+    }
+
+    private String initials(String fullName) {
+        return NameInitials.of(fullName);
     }
 
     private String formatRand(BigDecimal amount) {
-        BigDecimal safe = amount != null ? amount : BigDecimal.ZERO;
-        return String.format(Locale.US, "R %,.2f", safe);
+        return MoneyFormatter.format(amount);
     }
 
     public void showLoadingState() {

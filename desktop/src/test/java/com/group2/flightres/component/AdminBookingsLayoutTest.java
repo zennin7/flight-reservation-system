@@ -89,6 +89,19 @@ class AdminBookingsLayoutTest {
 
         Platform.runLater(() -> {
             Stage stage = new Stage();
+            java.util.List<String> cssWarnings = new ArrayList<>();
+            java.util.logging.Handler cssHandler = new java.util.logging.Handler() {
+                @Override
+                public void publish(java.util.logging.LogRecord record) {
+                    if (record != null && record.getMessage() != null && record.getMessage().contains("Could not resolve")) {
+                        cssWarnings.add(record.getMessage());
+                    }
+                }
+                @Override public void flush() {}
+                @Override public void close() {}
+            };
+            java.util.logging.Logger cssLogger = java.util.logging.Logger.getLogger("javafx.scene.CssStyleHelper");
+            cssLogger.addHandler(cssHandler);
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/admin-bookings.fxml"));
                 Parent root = loader.load();
@@ -115,12 +128,26 @@ class AdminBookingsLayoutTest {
                             assertTrue(controller.getMainContainer().getStyleClass().contains("admin-main-card-compact"));
                             assertEquals(1, controller.getBookingsGrid().getColumnConstraints().size(),
                                     "Bookings grid must collapse to 1 column at width 900");
+                            assertTrue(controller.getFiltersToggleBtn().isVisible(), "Compact Filters toggle must be visible at 900");
+                            assertFalse(controller.getFilterSidebar().isVisible(), "Filter sidebar must start collapsed at 900");
+                            Bounds tblBounds = controller.getTableCard().localToScene(controller.getTableCard().getBoundsInLocal());
+                            assertTrue(tblBounds.getMinY() < 680.0, "Table must be visible in first screen at 900x680, was y=" + tblBounds.getMinY());
                         } else {
                             assertEquals(56.0, padding.getLeft(), 0.01, "Standard padding must be 56 at width >= 1100");
                             assertTrue(controller.getMainContainer().getStyleClass().contains("admin-main-card"));
                             assertEquals(3, controller.getBookingsGrid().getColumnConstraints().size(),
                                     "Bookings grid must use 3 columns at width >= 1100");
                         }
+
+                        // Table header x == column cell x within 1.5px
+                        javafx.scene.layout.HBox firstRow = (javafx.scene.layout.HBox) controller.getRowsContainer().getChildren().get(0);
+                        assertHeaderAligned(controller.getHdrRefLabel(), firstRow.getChildren().get(0), "REFERENCE", width);
+                        assertHeaderAligned(controller.getHdrRouteLabel(), firstRow.getChildren().get(2), "ROUTE", width);
+                        assertHeaderAligned(controller.getHdrSeatLabel(), firstRow.getChildren().get(3), "SEAT", width);
+                        assertHeaderAligned(controller.getHdrTotalLabel(), firstRow.getChildren().get(4), "TOTAL", width);
+                        assertHeaderAligned(controller.getHdrStatusLabel(), firstRow.getChildren().get(5), "STATUS", width);
+
+                        assertTrue(cssWarnings.isEmpty(), "Unresolved CSS tokens detected: " + String.join("; ", cssWarnings));
 
                         assertTrue(controller.getOuterScrollPane().isVisible());
                         assertFalse(controller.getRowsContainer().getChildren().isEmpty());
@@ -165,6 +192,7 @@ class AdminBookingsLayoutTest {
                     } catch (Throwable t) {
                         errorRef.set(t);
                     } finally {
+                        cssLogger.removeHandler(cssHandler);
                         stage.close();
                         latch.countDown();
                     }
@@ -239,6 +267,13 @@ class AdminBookingsLayoutTest {
         if (errorRef.get() != null) {
             throw new AssertionError("States/RBAC/100+ rows UI test failed", errorRef.get());
         }
+    }
+
+    private static void assertHeaderAligned(Node header, Node cell, String col, double width) {
+        double hx = header.localToScene(header.getBoundsInLocal()).getMinX();
+        double cx = cell.localToScene(cell.getBoundsInLocal()).getMinX();
+        assertTrue(Math.abs(hx - cx) <= 1.5,
+                "Header " + col + " minX=" + hx + " must align with cell minX=" + cx + " at width " + width);
     }
 
     private static List<ScrollBar> collectScrollBars(Parent root) {

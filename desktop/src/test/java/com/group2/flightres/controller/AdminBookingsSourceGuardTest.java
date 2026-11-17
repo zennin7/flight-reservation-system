@@ -56,4 +56,22 @@ class AdminBookingsSourceGuardTest {
         assertFalse(fxml.contains("K7QX2M") || fxml.contains("1,522"),
                 "Sample board values must not appear in admin-bookings.fxml");
     }
+
+    @Test
+    @DisplayName("MoneyFormatter Guard: MyBookings, AdminDashboard, and AdminBookings use MoneyFormatter only")
+    void testSingleMoneyFormatterInPolishedScreens() throws IOException {
+        List<Path> controllers = List.of(
+                resolve("src/main/java/com/group2/flightres/controller/MyBookingsController.java"),
+                resolve("src/main/java/com/group2/flightres/controller/AdminDashboardController.java"),
+                resolve("src/main/java/com/group2/flightres/controller/AdminBookingsController.java")
+        );
+        Pattern rawCurrencyFormat = Pattern.compile("String\\.format\\([^;]*\"R %");
+        for (Path p : controllers) {
+            String src = Files.readString(p);
+            assertFalse(rawCurrencyFormat.matcher(src).find(),
+                    "Found raw currency String.format instead of MoneyFormatter in " + p);
+            assertTrue(src.contains("MoneyFormatter.format"),
+                    "Expected MoneyFormatter.format usage in " + p);
+        }
+    }
 }

@@ -156,7 +156,7 @@ public class NavBar extends HBox {
         navButtons.clear();
 
         String[] links = adminMode
-                ? new String[]{"Dashboard", "Flights", "Bookings", "Reports"}
+                ? new String[]{"Dashboard", "Flights", "Bookings"}
                 : new String[]{"Home", "Flights", "My Bookings", "About", "Contact"};
 
         for (String link : links) {

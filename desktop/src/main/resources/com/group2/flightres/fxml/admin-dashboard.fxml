@@ -139,11 +139,11 @@
                                         <Label text="BOOKINGS AND REVENUE" styleClass="admin-section-title" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                                         <HBox alignment="CENTER" spacing="6">
                                             <Region styleClass="series-legend-gold"/>
-                                            <Label text="Bookings" styleClass="admin-row-meta"/>
+                                            <Label fx:id="chartBookingsLegendLabel" text="Bookings (% of peak)" styleClass="admin-row-meta" minWidth="-Infinity"/>
                                         </HBox>
                                         <HBox alignment="CENTER" spacing="6">
                                             <Region styleClass="series-legend-blue"/>
-                                            <Label text="Revenue" styleClass="admin-row-meta"/>
+                                            <Label fx:id="chartRevenueLegendLabel" text="Revenue (% of peak)" styleClass="admin-row-meta" minWidth="-Infinity"/>
                                         </HBox>
                                     </HBox>
                                     <AreaChart fx:id="bookingsRevenueChart" styleClass="admin-area-chart" prefHeight="168" minHeight="155" createSymbols="true">

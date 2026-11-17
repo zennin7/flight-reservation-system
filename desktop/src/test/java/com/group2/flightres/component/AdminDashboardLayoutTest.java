@@ -232,6 +232,28 @@ class AdminDashboardLayoutTest {
                 assertTrue(ctrl.getErrorStateContainer().isVisible());
                 assertFalse(ctrl.getDashboardScrollPane().isVisible());
                 assertEquals("R 0.00", ctrl.getKpiRevenueLabel().getText(), "Error state must clear stale revenue");
+
+                // 3. Initials uniqueness, cabin 0.2% formatting, labelled chart axis, NavBar links
+                assertEquals("DT", com.group2.flightres.util.NameInitials.of("Demo Traveller"));
+                assertEquals("D2", com.group2.flightres.util.NameInitials.of("Demo Traveller II"));
+                assertEquals("D3", com.group2.flightres.util.NameInitials.of("Demo Traveller III"));
+                assertEquals("D4", com.group2.flightres.util.NameInitials.of("Demo Traveller IV"));
+                assertEquals("AM", com.group2.flightres.util.NameInitials.of("Ms Amahle Mokoena"));
+
+                assertEquals("0.2%", AdminDashboardController.formatCabinPercent(0.2));
+                assertEquals("0%", AdminDashboardController.formatCabinPercent(0.0));
+                assertEquals("68%", AdminDashboardController.formatCabinPercent(68.4));
+                assertEquals("% of period peak", ctrl.getBookingsRevenueChart().getYAxis().getLabel());
+
+                NavBar nav = new NavBar();
+                nav.setAdminMode(true);
+                List<String> navTexts = new ArrayList<>();
+                collectLabeledNodes(nav, new ArrayList<>());
+                for (Node n : nav.lookupAll(".nav-link")) {
+                    if (n instanceof Labeled l) navTexts.add(l.getText());
+                }
+                assertEquals(List.of("Dashboard", "Flights", "Bookings"), navTexts,
+                        "Admin NavBar must only expose real implemented destinations");
             } catch (Throwable t) {
                 errorRef.set(t);
             } finally {
