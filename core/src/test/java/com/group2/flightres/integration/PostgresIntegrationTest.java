@@ -174,7 +174,7 @@ class PostgresIntegrationTest {
         ctx.setDepartureInstant(flight.getDeparture());
         ctx.setArrivalInstant(flight.getArrival());
         ctx.setPassengerName("Integration Test Passenger");
-        ctx.setPassengerEmail("test.passenger@skyvoyage.com");
+        ctx.setPassengerEmail("test.passenger@skyroyal.com");
         ctx.setPassportNumber("TEST998877");
         ctx.setDateOfBirth(LocalDate.of(1995, 5, 20));
         ctx.setPriceQuotes(List.of(quote));
@@ -310,7 +310,7 @@ class PostgresIntegrationTest {
             ctx.setDepartureInstant(flight.getDeparture());
             ctx.setArrivalInstant(flight.getArrival());
             ctx.setPassengerName("Timezone Readback Passenger");
-            ctx.setPassengerEmail("tz.readback@skyvoyage.com");
+            ctx.setPassengerEmail("tz.readback@skyroyal.com");
             ctx.setPassportNumber("TZLA9988");
             ctx.setDateOfBirth(LocalDate.of(1990, 1, 1));
             ctx.setPriceQuotes(List.of(quote));
@@ -367,24 +367,32 @@ class PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("AirportDao findAll returns JNB, CPT, DUR with correct timezones ordered by city")
-    void testAirportDaoFindAll() {
+    @DisplayName("AirportDao findAll returns all DB airports including JNB, CPT, DUR with correct timezones ordered by city")
+    void testAirportDaoFindAll() throws SQLException {
+        int expectedCount;
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM airports");
+             ResultSet rs = ps.executeQuery()) {
+            assertTrue(rs.next());
+            expectedCount = rs.getInt(1);
+        }
+
         AirportDaoImpl airportDao = new AirportDaoImpl();
         List<Airport> airports = airportDao.findAll();
         assertNotNull(airports);
-        assertEquals(3, airports.size());
+        assertEquals(expectedCount, airports.size());
 
-        assertEquals("CPT", airports.get(0).code());
-        assertEquals("Cape Town", airports.get(0).city());
-        assertEquals(ZoneId.of("Africa/Johannesburg"), airports.get(0).zoneId());
+        Airport cpt = airports.stream().filter(a -> "CPT".equals(a.code())).findFirst().orElseThrow();
+        assertEquals("Cape Town", cpt.city());
+        assertEquals(ZoneId.of("Africa/Johannesburg"), cpt.zoneId());
 
-        assertEquals("DUR", airports.get(1).code());
-        assertEquals("Durban", airports.get(1).city());
-        assertEquals(ZoneId.of("Africa/Johannesburg"), airports.get(1).zoneId());
+        Airport dur = airports.stream().filter(a -> "DUR".equals(a.code())).findFirst().orElseThrow();
+        assertEquals("Durban", dur.city());
+        assertEquals(ZoneId.of("Africa/Johannesburg"), dur.zoneId());
 
-        assertEquals("JNB", airports.get(2).code());
-        assertEquals("Johannesburg", airports.get(2).city());
-        assertEquals(ZoneId.of("Africa/Johannesburg"), airports.get(2).zoneId());
+        Airport jnb = airports.stream().filter(a -> "JNB".equals(a.code())).findFirst().orElseThrow();
+        assertEquals("Johannesburg", jnb.city());
+        assertEquals(ZoneId.of("Africa/Johannesburg"), jnb.zoneId());
     }
 
     @Test
