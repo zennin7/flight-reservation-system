@@ -1,0 +1,2342 @@
+/* ===================================================================
+ * Glass Design System - JavaFX
+ * Elevated Look with Atmospheric Backdrop Blur & Translucent Surfaces
+ * =================================================================== */
+
+.root, .glass-root, .glass-panel, .admin-main-card, .admin-main-card-compact {
+    /* Color Tokens */
+    -glass-navy: #0b1220;
+    -glass-navy-overlay: rgba(11, 18, 32, 0.60);
+    -glass-gold: #d4a63c;
+    -glass-gold-light: #e8c46a;
+    -glass-gold-pale: #f3d98b;
+    -glass-green: #16a34a;
+    -glass-red: #dc2626;
+
+    -glass-text-white: #ffffff;
+    -glass-text-muted: rgba(255, 255, 255, 0.60);
+    -glass-border-panel: rgba(255, 255, 255, 0.16);
+    -glass-border-card: rgba(255, 255, 255, 0.08);
+
+    /* Base Typography */
+    -fx-font-family: 'Inter', -apple-system, sans-serif;
+    -fx-text-fill: -glass-text-white;
+}
+
+/* -------------------------------------------------------------------
+ * Glass Containers
+ * ------------------------------------------------------------------- */
+
+.glass-panel {
+    -fx-background-color: rgba(255, 255, 255, 0.09);
+    -fx-background-radius: 28px;
+    -fx-border-color: rgba(255, 255, 255, 0.16);
+    -fx-border-width: 1px;
+    -fx-border-radius: 28px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 32, 0.0, 0, 12);
+}
+
+.glass-card {
+    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-background-radius: 20px;
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+}
+
+/* -------------------------------------------------------------------
+ * Buttons
+ * ------------------------------------------------------------------- */
+
+.btn-gold {
+    -fx-background-color: linear-gradient(to bottom, #d9ac47, #c4952f);
+    -fx-text-fill: #0b1220;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 14px;
+    -fx-background-radius: 14px;
+    -fx-border-radius: 14px;
+    -fx-padding: 10px 22px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.35), 14, 0.0, 0, 4);
+}
+
+.btn-gold:hover {
+    -fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c);
+    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.55), 18, 0.0, 0, 6);
+}
+
+.btn-gold:pressed {
+    -fx-background-color: linear-gradient(to bottom, #c4952f, #a87d22);
+    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.20), 8, 0.0, 0, 2);
+}
+
+.btn-ghost {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-text-fill: #ffffff;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 600;
+    -fx-font-size: 14px;
+    -fx-border-color: rgba(255, 255, 255, 0.22);
+    -fx-border-width: 1px;
+    -fx-background-radius: 14px;
+    -fx-border-radius: 14px;
+    -fx-padding: 10px 22px;
+    -fx-cursor: hand;
+}
+
+.btn-ghost:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.18);
+    -fx-border-color: rgba(255, 255, 255, 0.38);
+}
+
+.btn-ghost:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+}
+
+.btn-danger {
+    -fx-background-color: rgba(220, 38, 38, 0.16);
+    -fx-text-fill: #fca5a5;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 600;
+    -fx-font-size: 14px;
+    -fx-border-color: rgba(248, 113, 113, 0.50);
+    -fx-border-width: 1px;
+    -fx-background-radius: 14px;
+    -fx-border-radius: 14px;
+    -fx-padding: 10px 22px;
+    -fx-cursor: hand;
+}
+
+.btn-danger:hover {
+    -fx-background-color: rgba(220, 38, 38, 0.28);
+    -fx-border-color: rgba(248, 113, 113, 0.75);
+}
+
+.btn-danger:pressed {
+    -fx-background-color: rgba(220, 38, 38, 0.10);
+}
+
+/* -------------------------------------------------------------------
+ * Badges / Status Pills
+ * ------------------------------------------------------------------- */
+
+.badge {
+    -fx-padding: 4px 12px;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-alignment: center;
+}
+
+.badge-green {
+    -fx-background-color: rgba(22, 163, 74, 0.20);
+    -fx-border-color: rgba(34, 197, 94, 0.40);
+    -fx-border-width: 1px;
+    -fx-text-fill: #4ade80;
+}
+
+.badge-gold {
+    -fx-background-color: rgba(212, 166, 60, 0.20);
+    -fx-border-color: rgba(232, 196, 106, 0.40);
+    -fx-border-width: 1px;
+    -fx-text-fill: #f3d98b;
+}
+
+.badge-red {
+    -fx-background-color: rgba(220, 38, 38, 0.20);
+    -fx-border-color: rgba(248, 113, 113, 0.40);
+    -fx-border-width: 1px;
+    -fx-text-fill: #fca5a5;
+}
+
+/* -------------------------------------------------------------------
+ * Input Fields
+ * ------------------------------------------------------------------- */
+
+.text-field, .password-field {
+    -fx-background-color: rgba(15, 23, 42, 0.45);
+    -fx-background-radius: 12px;
+    -fx-border-color: rgba(255, 255, 255, 0.16);
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-text-fill: #ffffff;
+    -fx-prompt-text-fill: rgba(255, 255, 255, 0.45);
+    -fx-padding: 10px 14px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 14px;
+}
+
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #d4a63c;
+    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.35), 8, 0.0, 0, 0);
+}
+
+/* -------------------------------------------------------------------
+ * Seat Map Colors (Phase 2 Screen 03)
+ * ------------------------------------------------------------------- */
+
+.seat {
+    -fx-background-radius: 8px 8px 6px 6px;
+    -fx-border-radius: 8px 8px 6px 6px;
+    -fx-min-width: 40px;
+    -fx-min-height: 34px;
+    -fx-pref-width: 40px;
+    -fx-pref-height: 34px;
+    -fx-max-width: 40px;
+    -fx-max-height: 34px;
+    -fx-alignment: center;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.seat-free, .seat-available {
+    -fx-background-color: rgba(34, 197, 94, 0.30);
+    -fx-border-color: rgba(74, 222, 128, 0.65);
+    -fx-border-width: 1px;
+    -fx-text-fill: rgba(255, 255, 255, 0.70);
+}
+
+.seat-free:hover, .seat-available:hover {
+    -fx-background-color: rgba(34, 197, 94, 0.45);
+    -fx-border-color: rgba(74, 222, 128, 0.90);
+    -fx-effect: dropshadow(gaussian, rgba(34, 197, 94, 0.40), 8, 0.0, 0, 0);
+}
+
+.seat-taken {
+    -fx-background-color: rgba(220, 38, 38, 0.28);
+    -fx-border-color: rgba(248, 113, 113, 0.50);
+    -fx-border-width: 1px;
+    -fx-opacity: 0.70;
+    -fx-text-fill: transparent;
+    -fx-cursor: default;
+}
+
+.seat-yours, .seat-selected {
+    -fx-background-color: linear-gradient(to bottom, #f0cf74, #d4a63c);
+    -fx-text-fill: #0b1220;
+    -fx-border-color: #f3d98b;
+    -fx-border-width: 1px;
+    -fx-opacity: 1.0;
+    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.55), 18, 0.0, 0, 6);
+}
+
+/* -------------------------------------------------------------------
+ * Typography Helpers
+ * ------------------------------------------------------------------- */
+
+.headline-serif, .glass-headline {
+    -fx-font-family: 'Lora SemiBold';
+    -fx-font-size: 32px;
+    -fx-text-fill: #ffffff;
+}
+
+.subheadline, .glass-subheadline {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: -glass-text-muted;
+}
+
+/* -------------------------------------------------------------------
+ * Screen 1: Login Specific Styles (Translated from design-glass/login.html)
+ * ------------------------------------------------------------------- */
+
+.login-root {
+    -fx-alignment: center;
+}
+
+/* Glass Split Card: 980x620 in 1280x800 design, fill rgba(255,255,255,0.085), border rgba(255,255,255,0.16) */
+.login-split-card {
+    -fx-background-color: rgba(255, 255, 255, 0.085);
+    -fx-background-radius: 28px;
+    -fx-border-color: rgba(255, 255, 255, 0.20) rgba(255, 255, 255, 0.16) rgba(255, 255, 255, 0.16) rgba(255, 255, 255, 0.16);
+    -fx-border-width: 1px;
+    -fx-border-radius: 28px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.40), 90, 0.0, 0, 34);
+}
+
+/* Left photo panel: gradient overlay from rgba(11,18,32,0.05) at 40% to rgba(11,18,32,0.88) at 100% */
+.login-photo-gradient {
+    -fx-background-color: linear-gradient(to bottom, transparent 0%, rgba(11, 18, 32, 0.05) 40%, rgba(11, 18, 32, 0.88) 100%);
+    -fx-background-radius: 20px;
+}
+
+/* Brand icon: stroke #d4a63c, 1.8px, fill none */
+.brand-plane-icon {
+    -fx-fill: transparent;
+    -fx-stroke: #d4a63c;
+    -fx-stroke-width: 1.8;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+/* Brand label: 14px, semibold, letter-spacing .14em */
+.brand-label {
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 14px;
+    -fx-text-fill: #ffffff;
+}
+
+/* Left panel headline: Lora Medium 38px, line-height 1.12 */
+.login-hero-headline {
+    -fx-font-family: 'Lora Medium';
+    -fx-font-size: 38px;
+    -fx-text-fill: #ffffff;
+    -fx-line-spacing: -2px;
+}
+
+/* Three dots: 26x4 pill #e8c46a, two 8x4 pills rgba(255,255,255,0.4), gap 10 */
+.carousel-pill-active {
+    -fx-background-color: #e8c46a;
+    -fx-background-radius: 2px;
+    -fx-pref-width: 26px;
+    -fx-min-width: 26px;
+    -fx-max-width: 26px;
+    -fx-pref-height: 4px;
+    -fx-min-height: 4px;
+    -fx-max-height: 4px;
+}
+
+.carousel-dot {
+    -fx-background-color: rgba(255, 255, 255, 0.40);
+    -fx-background-radius: 2px;
+    -fx-pref-width: 8px;
+    -fx-min-width: 8px;
+    -fx-max-width: 8px;
+    -fx-pref-height: 4px;
+    -fx-min-height: 4px;
+    -fx-max-height: 4px;
+}
+
+/* Right side overline: "WELCOME BACK" 11px, semibold, letter-spacing .16em, #e8c46a */
+.login-kicker {
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 11px;
+    -fx-text-fill: #e8c46a;
+}
+
+/* Right side title: "Sign in" Lora Medium 34px */
+.login-title-serif {
+    -fx-font-family: 'Lora Medium';
+    -fx-font-size: 34px;
+    -fx-text-fill: #ffffff;
+}
+
+/* Subtitle: 14px rgba(255,255,255,0.6) */
+.login-subtitle {
+    -fx-font-family: 'Inter';
+    -fx-font-size: 14px;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+}
+
+/* Field label: 12px semibold rgba(255,255,255,0.7) */
+.login-field-label {
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.70);
+}
+
+/* "Forgot?" link: 12px semibold #e8c46a */
+.login-forgot-link {
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 12px;
+    -fx-text-fill: #e8c46a;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-underline: false;
+    -fx-cursor: hand;
+}
+
+.login-forgot-link:hover {
+    -fx-underline: true;
+}
+
+/* Field container: height 52px, radius 14px, fill rgba(8,12,22,0.4), border rgba(255,255,255,0.12), padding 0 16px, gap 12px */
+.login-field-box {
+    -fx-background-color: rgba(8, 12, 22, 0.40);
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 255, 255, 0.12);
+    -fx-border-width: 1px;
+    -fx-border-radius: 14px;
+    -fx-padding: 0 16px;
+    -fx-pref-height: 52px;
+    -fx-min-height: 52px;
+    -fx-max-height: 52px;
+    -fx-alignment: center-left;
+}
+
+.login-field-box:focus-within {
+    -fx-border-color: #d4a63c;
+    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.35), 8, 0.0, 0, 0);
+}
+
+/* Inner field input (transparent background inside the field-box) */
+.login-field-input,
+.login-field-input:focused,
+.login-field-box .text-field,
+.login-field-box .password-field,
+.login-field-box .text-field:focused,
+.login-field-box .password-field:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-effect: null;
+    -fx-text-fill: rgba(255, 255, 255, 0.90);
+    -fx-prompt-text-fill: rgba(255, 255, 255, 0.35);
+    -fx-font-family: 'Inter';
+    -fx-font-size: 14px;
+    -fx-padding: 0;
+}
+
+/* SVG icon in field: stroke rgba(255,255,255,0.55), 1.8px */
+.login-input-icon {
+    -fx-fill: transparent;
+    -fx-stroke: rgba(255, 255, 255, 0.55);
+    -fx-stroke-width: 1.8;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+/* Checkbox: 18x18, radius 6, fill #e8c46a, navy check mark, label 13px rgba(255,255,255,0.7) */
+.glass-checkbox {
+    -fx-font-family: 'Inter';
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.70);
+    -fx-cursor: hand;
+}
+
+.glass-checkbox .box {
+    -fx-background-color: rgba(8, 12, 22, 0.40);
+    -fx-border-color: rgba(255, 255, 255, 0.16);
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-pref-width: 18px;
+    -fx-pref-height: 18px;
+    -fx-min-width: 18px;
+    -fx-min-height: 18px;
+    -fx-alignment: center;
+}
+
+.glass-checkbox:selected .box {
+    -fx-background-color: #e8c46a;
+    -fx-border-color: #e8c46a;
+}
+
+.glass-checkbox:selected .mark {
+    -fx-background-color: #0b1220;
+    -fx-shape: "M5 12l5 5 9-10";
+}
+
+/* Sign In Button: height 52, radius 14, gradient #d9ac47 to #c4952f, text #0b1220 bold 15px, shadow 0 12 30 rgba(212,166,60,0.3) */
+.btn-login-gold {
+    -fx-background-color: linear-gradient(to bottom, #d9ac47, #c4952f);
+    -fx-background-radius: 14px;
+    -fx-border-radius: 14px;
+    -fx-text-fill: #0b1220;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 15px;
+    -fx-pref-height: 52px;
+    -fx-min-height: 52px;
+    -fx-max-height: 52px;
+    -fx-alignment: center;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.30), 30, 0.0, 0, 12);
+}
+
+.btn-login-gold:hover {
+    -fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c);
+    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.50), 34, 0.0, 0, 14);
+}
+
+.btn-login-gold:pressed {
+    -fx-background-color: linear-gradient(to bottom, #c4952f, #a87d22);
+    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.20), 16, 0.0, 0, 6);
+}
+
+/* "New here? Create an account": 13px rgba(255,255,255,0.6), link #e8c46a semibold */
+.login-muted-text {
+    -fx-font-family: 'Inter';
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+}
+
+.login-signup-link {
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 13px;
+    -fx-text-fill: #e8c46a;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-underline: false;
+    -fx-cursor: hand;
+}
+
+.login-signup-link:hover {
+    -fx-underline: true;
+}
+
+/* Small ghost buttons for Google & Apple */
+.btn-ghost-sm {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-text-fill: rgba(255, 255, 255, 0.85);
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 12px;
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 6px 12px;
+    -fx-cursor: hand;
+}
+
+.btn-ghost-sm:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Error text */
+.login-error-text {
+    -fx-font-family: 'Inter';
+    -fx-font-size: 12px;
+    -fx-text-fill: #fca5a5;
+    -fx-background-color: rgba(220, 38, 38, 0.15);
+    -fx-border-color: rgba(248, 113, 113, 0.40);
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 6px 10px;
+}
+
+
+/* ===================================================================
+ * Screen 2: Flight Search (Glass Theme)
+ * =================================================================== */
+
+.flight-search-root {
+    -fx-alignment: top-center;
+}
+
+/* Collapse MainShell outer top wrapper when glass.css is active */
+.shell-root > VBox {
+    -fx-min-height: 0;
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+    -fx-padding: 0;
+    visibility: hidden;
+}
+
+/* Main Glass Card (margins: left/right 56, top 68, bottom 32) */
+.search-main-glass {
+    -fx-background-color: rgba(255, 255, 255, 0.085);
+    -fx-border-color: rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.20) transparent transparent transparent;
+    -fx-border-insets: 0, 1;
+    -fx-border-width: 1px, 1px 0 0 0;
+    -fx-border-radius: 28px, 27px 27px 0 0;
+    -fx-background-radius: 28px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.40), 90, 0.0, 0, 34);
+    -fx-padding: 14px;
+}
+
+/* Top Nav (64 high, padding 0 56) */
+.glass-nav-bar {
+    -fx-min-height: 64px;
+    -fx-pref-height: 64px;
+    -fx-max-height: 64px;
+    -fx-padding: 0 56px;
+    -fx-alignment: center-left;
+}
+
+.nav-brand-plane {
+    -fx-stroke: #d4a63c;
+    -fx-stroke-width: 1.8;
+    -fx-fill: transparent;
+}
+
+.nav-brand-text {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-letter-spacing: 0.14em;
+}
+
+.glass-nav-links-box {
+    -fx-alignment: center;
+    -fx-spacing: 30px;
+}
+
+.glass-nav-link {
+    -fx-background-color: transparent;
+    -fx-font-family: 'Inter Medium', 'Inter', sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #ffffff;
+    -fx-border-width: 0;
+    -fx-padding: 6px 4px;
+    -fx-cursor: hand;
+}
+
+.glass-nav-link:hover {
+    -fx-text-fill: #e8c46a;
+}
+
+.glass-nav-link-active {
+    -fx-text-fill: #e8c46a;
+}
+
+.glass-avatar-circle {
+    -fx-background-color: #d4a63c;
+    -fx-background-radius: 50%;
+    -fx-min-width: 34px;
+    -fx-min-height: 34px;
+    -fx-pref-width: 34px;
+    -fx-pref-height: 34px;
+    -fx-max-width: 34px;
+    -fx-max-height: 34px;
+    -fx-alignment: center;
+    -fx-cursor: hand;
+}
+
+.glass-avatar-initials {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 13px;
+    -fx-text-fill: #0b1220;
+}
+
+/* Search Bar (inner card 84 high) */
+.glass-search-bar {
+    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-min-height: 84px;
+    -fx-pref-height: 84px;
+    -fx-max-height: 84px;
+    -fx-padding: 0 0 0 6px;
+    -fx-alignment: center-left;
+}
+
+.search-cell {
+    -fx-alignment: center-left;
+    -fx-padding: 14px 18px;
+}
+
+.search-cell-border {
+    -fx-border-color: transparent rgba(255, 255, 255, 0.10) transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+}
+
+.search-cell-muted-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.58);
+}
+
+.search-cell-value-label {
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 20px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.search-cell-sub-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(255, 255, 255, 0.58);
+}
+
+/* Swap button 32px */
+.search-swap-btn {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-border-color: rgba(255, 255, 255, 0.20);
+    -fx-border-width: 1px;
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-min-width: 32px;
+    -fx-min-height: 32px;
+    -fx-pref-width: 32px;
+    -fx-pref-height: 32px;
+    -fx-max-width: 32px;
+    -fx-max-height: 32px;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+    -fx-alignment: center;
+}
+
+.search-swap-btn:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.24);
+    -fx-border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Gold search button 84 wide, vertical gradient #d9ac47 to #b98a2e */
+.search-btn-gold {
+    -fx-background-color: linear-gradient(to bottom, #d9ac47, #b98a2e);
+    -fx-border-radius: 0 20px 20px 0;
+    -fx-background-radius: 0 20px 20px 0;
+    -fx-min-width: 84px;
+    -fx-pref-width: 84px;
+    -fx-max-width: 84px;
+    -fx-min-height: 84px;
+    -fx-pref-height: 84px;
+    -fx-max-height: 84px;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+    -fx-alignment: center;
+}
+
+.search-btn-gold:hover {
+    -fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c);
+}
+
+.search-btn-icon {
+    -fx-stroke: #0b1220;
+    -fx-stroke-width: 2.4;
+    -fx-fill: transparent;
+}
+
+/* Filters panel (width 300) */
+.filters-panel {
+    -fx-min-width: 300px;
+    -fx-pref-width: 300px;
+    -fx-max-width: 300px;
+}
+
+.filters-title {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 17px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 2px 4px;
+}
+
+.filters-card {
+    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 16px 18px;
+    -fx-spacing: 16px;
+}
+
+.filter-section-title {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.filter-reset-link {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #e8c46a;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
+}
+
+.filter-reset-link:hover {
+    -fx-underline: true;
+}
+
+/* Pills */
+.pill-button {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-background-radius: 999px;
+    -fx-min-height: 34px;
+    -fx-pref-height: 34px;
+    -fx-max-height: 34px;
+    -fx-font-family: 'Inter Medium', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-text-fill: rgba(255, 255, 255, 0.85);
+    -fx-cursor: hand;
+    -fx-alignment: center;
+    -fx-padding: 0 10px;
+}
+
+.pill-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.16);
+}
+
+.pill-button-on {
+    -fx-background-color: rgba(212, 166, 60, 0.20);
+    -fx-border-color: rgba(212, 166, 60, 0.70);
+    -fx-text-fill: #f3d98b;
+}
+
+.pill-button-on:hover {
+    -fx-background-color: rgba(212, 166, 60, 0.28);
+}
+
+/* Sliders */
+.glass-slider .track {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+    -fx-background-radius: 4px;
+}
+
+.glass-slider .thumb {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 10px;
+    -fx-padding: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 8, 0, 0, 2);
+    -fx-cursor: hand;
+}
+
+/* Cabin Check circle */
+.cabin-check-row {
+    -fx-alignment: center-left;
+    -fx-spacing: 10px;
+    -fx-cursor: hand;
+}
+
+.check-circle {
+    -fx-min-width: 18px;
+    -fx-min-height: 18px;
+    -fx-pref-width: 18px;
+    -fx-pref-height: 18px;
+    -fx-max-width: 18px;
+    -fx-max-height: 18px;
+    -fx-border-radius: 999px;
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 255, 255, 0.40);
+    -fx-border-width: 1.5px;
+    -fx-background-color: transparent;
+    -fx-alignment: center;
+}
+
+.check-circle-on {
+    -fx-background-color: #d4a63c;
+    -fx-border-color: #d4a63c;
+}
+
+.check-circle .check-tick-icon {
+    -fx-stroke: #0b1220;
+    -fx-stroke-width: 3.5;
+    -fx-fill: transparent;
+    visibility: hidden;
+    -fx-opacity: 0;
+}
+
+.check-circle-on .check-tick-icon {
+    visibility: visible;
+    -fx-opacity: 1;
+}
+
+/* Result Cards */
+.results-header-title {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 17px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.results-header-count {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.58);
+}
+
+.flight-result-card {
+    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 16px 22px 14px 22px;
+}
+
+.flight-result-card:hover {
+    -fx-border-color: rgba(212, 166, 60, 0.30);
+}
+
+.airline-logo-circle {
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-pref-width: 30px;
+    -fx-pref-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+    -fx-background-color: linear-gradient(to bottom right, #e8c46a, #b98a2e);
+    -fx-alignment: center;
+}
+
+.airline-brand-text {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.flight-number-muted {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.58);
+}
+
+.airport-code-muted {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.58);
+}
+
+.flight-time-bold {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+}
+
+.flight-duration-pill {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+    -fx-background-radius: 999px;
+    -fx-padding: 4px 12px;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-alignment: center;
+}
+
+.flight-path-line {
+    -fx-border-color: rgba(255, 255, 255, 0.35) transparent transparent transparent;
+    -fx-border-style: segments(5, 5);
+    -fx-border-width: 1.5px 0 0 0;
+    -fx-min-height: 2px;
+    -fx-pref-height: 2px;
+    -fx-max-height: 2px;
+}
+
+.flight-path-dot {
+    -fx-background-color: #e8c46a;
+    -fx-background-radius: 50%;
+    -fx-min-width: 7px;
+    -fx-min-height: 7px;
+    -fx-pref-width: 7px;
+    -fx-pref-height: 7px;
+    -fx-max-width: 7px;
+    -fx-max-height: 7px;
+}
+
+.flight-price-bold {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 30px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+    -fx-alignment: center-right;
+}
+
+.card-divider-line {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-min-height: 1px;
+    -fx-pref-height: 1px;
+    -fx-max-height: 1px;
+}
+
+.card-tag-text {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.75);
+}
+
+.flight-details-btn {
+    -fx-background-color: transparent;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #e8c46a;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+    -fx-alignment: center;
+}
+
+.flight-details-btn:hover {
+    -fx-text-fill: #f3d98b;
+}
+
+/* Expanded details box */
+.expanded-details-box {
+    -fx-background-color: rgba(0, 0, 0, 0.22);
+    -fx-background-radius: 16px;
+    -fx-padding: 8px;
+    -fx-spacing: 8px;
+}
+
+.tab-bar-container {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+    -fx-background-radius: 12px;
+    -fx-padding: 3px;
+    -fx-spacing: 4px;
+}
+
+.details-tab-btn {
+    -fx-background-color: transparent;
+    -fx-background-radius: 10px;
+    -fx-min-height: 34px;
+    -fx-pref-height: 34px;
+    -fx-max-height: 34px;
+    -fx-font-family: 'Inter Medium', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 500;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.details-tab-btn:hover {
+    -fx-text-fill: #ffffff;
+}
+
+.details-tab-btn-on {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-text-fill: #ffffff;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-weight: 600;
+}
+
+
+
+.glass-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-padding: 0;
+}
+
+.glass-scroll-pane > .viewport,
+.glass-scroll-pane .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.glass-scroll-pane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+
+.glass-scroll-pane .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+}
+
+.glass-scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: rgba(255, 255, 255, 0.20);
+    -fx-background-radius: 4px;
+}
+
+
+/* -------------------------------------------------------------------
+ * Screen 03 (Seat Map) Glass UI Additions
+ * ------------------------------------------------------------------- */
+
+.glass-stepper-card {
+    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 0;
+    -fx-alignment: center;
+}
+
+.stepper-container {
+    -fx-alignment: center;
+}
+
+.stepper-container .step-item {
+    -fx-spacing: 9px;
+    -fx-alignment: center;
+}
+
+.stepper-container .step-circle {
+    -fx-min-width: 26px;
+    -fx-min-height: 26px;
+    -fx-pref-width: 26px;
+    -fx-pref-height: 26px;
+    -fx-max-width: 26px;
+    -fx-max-height: 26px;
+    -fx-background-radius: 13px;
+    -fx-border-radius: 13px;
+    -fx-alignment: center;
+}
+
+.stepper-container .step-circle-done {
+    -fx-background-color: #16a34a;
+}
+
+.stepper-container .step-circle-done .step-circle-text {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+}
+
+.stepper-container .step-circle-active {
+    -fx-background-color: #d4a63c;
+}
+
+.stepper-container .step-circle-active .step-circle-text {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0b1220;
+}
+
+.stepper-container .step-circle-pending {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+}
+
+.stepper-container .step-circle-pending .step-circle-text {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(255, 255, 255, 0.70);
+}
+
+.stepper-container .step-label {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+
+.stepper-container .step-label-done, .stepper-container .step-label-active {
+    -fx-text-fill: #ffffff;
+}
+
+.stepper-container .step-label-pending {
+    -fx-text-fill: rgba(255, 255, 255, 0.55);
+}
+
+.stepper-container .step-line, .stepper-container .step-arrow {
+    -fx-min-width: 64px;
+    -fx-pref-width: 64px;
+    -fx-max-width: 64px;
+    -fx-min-height: 2px;
+    -fx-pref-height: 2px;
+    -fx-max-height: 2px;
+    -fx-font-size: 0px;
+    -fx-text-fill: transparent;
+    -fx-padding: 0;
+}
+
+.stepper-container .step-line-done {
+    -fx-background-color: #16a34a;
+}
+
+.stepper-container .step-line-pending {
+    -fx-background-color: rgba(255, 255, 255, 0.20);
+}
+
+.section-tab-bar {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-background-radius: 999px;
+    -fx-padding: 4px;
+    -fx-spacing: 4px;
+    -fx-alignment: CENTER_RIGHT;
+}
+
+.section-tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-padding: 8px 18px;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(255, 255, 255, 0.65);
+    -fx-cursor: hand;
+}
+
+.section-tab-on {
+    -fx-background-color: linear-gradient(to bottom, #d9ac47, #c4952f);
+    -fx-text-fill: #0b1220;
+}
+
+.plane-action-btn {
+    -fx-min-width: 40px;
+    -fx-min-height: 40px;
+    -fx-pref-width: 40px;
+    -fx-pref-height: 40px;
+    -fx-max-width: 40px;
+    -fx-max-height: 40px;
+    -fx-background-radius: 20px;
+    -fx-border-radius: 20px;
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-border-color: rgba(255, 255, 255, 0.16);
+    -fx-border-width: 1px;
+    -fx-alignment: center;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.plane-action-btn:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.18);
+    -fx-border-color: rgba(255, 255, 255, 0.28);
+}
+
+.cabin-view-card {
+    -fx-background-color: linear-gradient(to bottom right, rgba(212, 166, 60, 0.20), rgba(8, 12, 22, 0.50) 70%);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 18px;
+    -fx-cursor: hand;
+}
+
+.cabin-icon-tile {
+    -fx-min-width: 42px;
+    -fx-min-height: 42px;
+    -fx-pref-width: 42px;
+    -fx-pref-height: 42px;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-background-color: linear-gradient(to bottom right, #e8c46a, #b98a2e);
+    -fx-alignment: center;
+}
+
+.seat-col-header {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+    -fx-alignment: center;
+}
+
+.seat-row-letter {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+    -fx-alignment: center;
+}
+
+.selection-chip {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-background-radius: 999px;
+    -fx-padding: 4px 9px;
+    -fx-font-family: 'Inter Medium', sans-serif;
+    -fx-font-size: 11.5px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #ffffff;
+}
+
+.btn-checkout-gold {
+    -fx-background-color: linear-gradient(to bottom, #d9ac47, #c4952f);
+    -fx-background-radius: 14px;
+    -fx-border-radius: 14px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0b1220;
+    -fx-padding: 0 22px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(196, 149, 47, 0.35), 24, 0.0, 0, 10);
+}
+
+.btn-checkout-gold:hover {
+    -fx-background-color: linear-gradient(to bottom, #e0b44f, #cb9c37);
+    -fx-effect: dropshadow(gaussian, rgba(196, 149, 47, 0.50), 28, 0.0, 0, 12);
+}
+
+.btn-release-ghost {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 255, 255, 0.22);
+    -fx-border-radius: 14px;
+    -fx-border-width: 1px;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-cursor: hand;
+}
+
+.btn-release-ghost:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-border-color: rgba(255, 255, 255, 0.32);
+}
+
+/* ===================================================================
+   GLASS CHECKOUT SCREEN STYLES (Screen 05 / Phase 2)
+   =================================================================== */
+
+.paycard {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #0f1b33 0%, #2a3f6b 100%);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.18);
+    -fx-border-radius: 16px;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.40), 24, 0.0, 0, 10);
+}
+
+.paycard-chip {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #f0cf74 0%, #b98a2e 100%);
+    -fx-background-radius: 6px;
+}
+
+.tab-group {
+    -fx-background-color: rgba(255, 255, 255, 0.07);
+    -fx-background-radius: 13px;
+    -fx-padding: 4px;
+}
+
+.tab-btn {
+    -fx-background-color: transparent;
+    -fx-background-radius: 10px;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+    -fx-cursor: hand;
+    -fx-padding: 8px 16px;
+}
+
+.tab-btn:hover {
+    -fx-text-fill: rgba(255, 255, 255, 0.85);
+}
+
+.tab-btn-active {
+    -fx-background-color: rgba(255, 255, 255, 0.16);
+    -fx-text-fill: #ffffff;
+}
+
+.checkout-input {
+    -fx-background-color: rgba(255, 255, 255, 0.07);
+    -fx-background-radius: 11px;
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-radius: 11px;
+    -fx-border-width: 1px;
+    -fx-font-family: 'Inter Medium', sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #ffffff;
+    -fx-prompt-text-fill: rgba(255, 255, 255, 0.35);
+    -fx-padding: 0 14px;
+    -fx-pref-height: 42px;
+}
+
+.checkout-input:focused {
+    -fx-border-color: #e8c46a;
+    -fx-effect: dropshadow(gaussian, rgba(232, 196, 106, 0.22), 6, 0.0, 0, 0);
+}
+
+.order-summary-card {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(212, 166, 60, 0.20) 0%, rgba(8, 12, 22, 0.40) 60%);
+    -fx-background-radius: 20px;
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-radius: 20px;
+    -fx-border-width: 1px;
+}
+
+.inner-card,
+.glass-inner-panel {
+    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-background-radius: 20px;
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-radius: 20px;
+    -fx-border-width: 1px;
+}
+
+.order-summary-overline,
+.section-badge-gold {
+    -fx-text-fill: #e8c46a;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.14em;
+}
+
+.gold-total-text {
+    -fx-font-family: 'Inter';
+    -fx-font-size: 36px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #f3d98b;
+}
+
+.demo-payment-badge {
+    -fx-background-color: rgba(232, 196, 106, 0.15);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(232, 196, 106, 0.30);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-padding: 4px 10px;
+}
+
+.demo-payment-text {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #e8c46a;
+}
+
+/* ===================================================================
+   SCREEN 5: BOOKING CONFIRMATION GLASS STYLES
+   =================================================================== */
+
+.confirmation-emerald-circle {
+    -fx-min-width: 68px;
+    -fx-min-height: 68px;
+    -fx-max-width: 68px;
+    -fx-max-height: 68px;
+    -fx-background-color: rgba(22, 163, 74, 0.22), #16a34a;
+    -fx-background-insets: 0, 6;
+    -fx-background-radius: 999px, 999px;
+    -fx-alignment: center;
+    -fx-effect: dropshadow(gaussian, rgba(22, 163, 74, 0.45), 18, 0.35, 0, 0);
+}
+
+.confirmation-title-serif {
+    -fx-font-family: 'Lora Medium', 'Lora', Georgia, serif;
+    -fx-font-size: 38px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #ffffff;
+}
+
+.confirmation-subtitle-mut {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: rgba(255, 255, 255, 0.65);
+}
+
+.ref-pill-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.14em;
+    -fx-text-fill: rgba(255, 255, 255, 0.50);
+}
+
+.ref-pill-code {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #e8c46a;
+}
+
+.ticket-card {
+    -fx-background-color: rgba(8, 12, 22, 0.40);
+    -fx-background-radius: 24px;
+    -fx-border-color: rgba(255, 255, 255, 0.12);
+    -fx-border-radius: 24px;
+    -fx-border-width: 1px;
+}
+
+.ticket-cabin-badge {
+    -fx-background-color: rgba(212, 166, 60, 0.20);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(212, 166, 60, 0.60);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-padding: 4px 14px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #f3d98b;
+}
+
+.ticket-airport-code {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 48px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+}
+
+.ticket-city-time {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+}
+
+.ticket-duration-pill {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-background-radius: 999px;
+    -fx-padding: 4px 12px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.ticket-stub-pane {
+    -fx-background-color: radial-gradient(center 100% 0%, radius 60%, rgba(212, 166, 60, 0.26) 0%, transparent 100%);
+    -fx-background-radius: 0 24px 24px 0;
+}
+
+.ticket-seat-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.14em;
+    -fx-text-fill: #d4a63c;
+}
+
+.ticket-seat-value {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 72px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #e8c46a;
+}
+
+.ticket-grid-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.14em;
+    -fx-text-fill: rgba(255, 255, 255, 0.50);
+}
+
+.ticket-grid-value {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.ticket-notch-circle {
+    -fx-fill: #0b1220;
+}
+
+.timeline-dot-green {
+    -fx-background-color: #4ade80;
+    -fx-background-radius: 999px;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-max-width: 10px;
+    -fx-max-height: 10px;
+}
+
+.timeline-dot-gold {
+    -fx-background-color: #e8c46a;
+    -fx-background-radius: 999px;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-max-width: 10px;
+    -fx-max-height: 10px;
+}
+
+.timeline-dot-gray {
+    -fx-background-color: rgba(255, 255, 255, 0.35);
+    -fx-background-radius: 999px;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-max-width: 10px;
+    -fx-max-height: 10px;
+}
+
+.gold-primary-action-btn {
+    -fx-background-color: linear-gradient(to bottom, #d9ac47, #b98a2e);
+    -fx-background-radius: 16px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0b1220;
+    -fx-pref-height: 54px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(185, 138, 46, 0.40), 16, 0.0, 0, 6);
+}
+
+.gold-primary-action-btn:hover {
+    -fx-background-color: linear-gradient(to bottom, #f3d98b, #cfa038);
+    -fx-effect: dropshadow(gaussian, rgba(232, 196, 106, 0.50), 20, 0.0, 0, 8);
+}
+
+.secondary-glass-btn {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 255, 255, 0.22);
+    -fx-border-radius: 14px;
+    -fx-border-width: 1px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+    -fx-pref-height: 46px;
+    -fx-cursor: hand;
+}
+
+.secondary-glass-btn:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.18);
+    -fx-border-color: rgba(255, 255, 255, 0.35);
+}
+
+.error-glass-card {
+    -fx-background-color: rgba(8, 12, 22, 0.65);
+    -fx-background-radius: 24px;
+    -fx-border-color: rgba(239, 68, 68, 0.35);
+    -fx-border-radius: 24px;
+    -fx-border-width: 1px;
+    -fx-padding: 40px;
+}
+
+/* =============================================================================
+   REUSABLE TICKET VIEW COMPONENT (Screen 05 Confirmation & Screen 06 Boarding Pass)
+   ============================================================================= */
+
+.ticket-view-root {
+    -fx-alignment: center-left;
+}
+
+.ticket-photo-panel {
+    -fx-background-radius: 24px 0 0 24px;
+    -fx-background-color: #0b1220;
+}
+
+.ticket-photo-gradient {
+    -fx-background-color: linear-gradient(to bottom, rgba(11, 18, 32, 0.15) 0%, rgba(11, 18, 32, 0.88) 100%);
+    -fx-background-radius: 24px 0 0 24px;
+}
+
+.ticket-photo-gradient-fallback {
+    -fx-background-color: linear-gradient(to bottom, #0b1220 0%, #151e30 60%, rgba(212, 166, 60, 0.20) 100%);
+    -fx-background-radius: 24px 0 0 24px;
+}
+
+.ticket-brand-plane {
+    -fx-fill: none;
+    -fx-stroke: #d4a63c;
+    -fx-stroke-width: 1.8px;
+}
+
+.ticket-brand-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.14em;
+    -fx-text-fill: #ffffff;
+}
+
+.ticket-welcome-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 10px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.18em;
+    -fx-text-fill: rgba(255, 255, 255, 0.75);
+}
+
+.ticket-welcome-city {
+    -fx-font-family: 'Lora Medium', 'Lora SemiBold', 'Lora', Georgia, serif;
+    -fx-font-size: 21px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #ffffff;
+}
+
+
+.ticket-barcode-strip {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 6px;
+    -fx-padding: 0;
+    -fx-alignment: center;
+}
+
+/* Responsive ScrollPane for Confirmation Screen */
+.confirmation-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.confirmation-scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.confirmation-scroll-pane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+
+.confirmation-scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: rgba(255, 255, 255, 0.25);
+    -fx-background-radius: 4px;
+}
+
+.confirmation-scroll-pane .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: rgba(212, 166, 60, 0.50);
+}
+
+.confirmation-scroll-pane .scroll-bar:vertical .track,
+.confirmation-scroll-pane .scroll-bar:vertical .increment-button,
+.confirmation-scroll-pane .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-opacity: 0;
+    -fx-padding: 0;
+}
+
+/* ===================================================================
+   FLIGHT SEARCH EMPTY & ERROR STATE CARDS
+   =================================================================== */
+.flight-search-state-card,
+.flight-search-error-card {
+    -fx-alignment: center;
+    -fx-padding: 36px 24px 36px 24px;
+    -fx-pref-width: 824px;
+    -fx-max-width: infinity;
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.10);
+    -fx-border-radius: 16px;
+    -fx-border-width: 1px;
+}
+
+.flight-search-state-text,
+.flight-search-error-text {
+    -fx-font-family: 'Inter';
+    -fx-font-size: 14px;
+    -fx-text-fill: #E2E8F0;
+    -fx-alignment: center;
+}
+
+.flight-search-state-btn,
+.search-retry-btn {
+    -fx-font-family: 'Inter SemiBold';
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-background-radius: 999px;
+    -fx-padding: 8px 24px;
+    -fx-cursor: hand;
+}
+
+.route-connector-line {
+    -fx-background-color: rgba(212, 166, 60, 0.55);
+    -fx-min-height: 1.5px;
+    -fx-pref-height: 1.5px;
+    -fx-max-height: 1.5px;
+}
+
+/* ===================================================================
+   ADMIN DASHBOARD & ADMIN BOOKINGS (S8 + S9 TOKEN CLASSES)
+   =================================================================== */
+
+.admin-main-card {
+    -fx-padding: 22px 28px 22px 28px;
+}
+
+.admin-main-card-compact {
+    -fx-padding: 14px 16px 14px 16px;
+}
+
+.admin-kpi-card {
+    -fx-background-color: rgba(8, 12, 22, 0.48);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-radius: 16px;
+    -fx-border-width: 1px;
+    -fx-padding: 14px 18px;
+}
+
+.admin-kpi-label {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+}
+
+.admin-kpi-value {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 24px;
+    -fx-text-fill: #ffffff;
+}
+
+.admin-kpi-value-gold {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 24px;
+    -fx-text-fill: -glass-gold-light;
+}
+
+.admin-panel-card {
+    -fx-background-color: rgba(8, 12, 22, 0.45);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-radius: 16px;
+    -fx-border-width: 1px;
+    -fx-padding: 16px 18px;
+}
+
+.admin-section-title {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: rgba(255, 255, 255, 0.70);
+}
+
+.admin-row-card {
+    -fx-background-color: rgba(255, 255, 255, 0.04);
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(255, 255, 255, 0.06);
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 10px 14px;
+}
+
+.admin-row-card-selected {
+    -fx-background-color: rgba(212, 166, 60, 0.16);
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(212, 166, 60, 0.55);
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 10px 14px;
+}
+
+.admin-row-title {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: #ffffff;
+}
+
+.admin-row-gold {
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: -glass-gold-light;
+}
+
+.admin-row-meta {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.60);
+}
+
+.admin-alert-row {
+    -fx-background-color: rgba(220, 38, 38, 0.14);
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(248, 113, 113, 0.35);
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 10px 14px;
+}
+
+.admin-state-box {
+    -fx-padding: 48px 20px 48px 20px;
+}
+
+.admin-error-circle {
+    -fx-background-color: rgba(239, 68, 68, 0.20);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(239, 68, 68, 0.50);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+}
+
+.admin-error-glyph {
+    -fx-font-size: 28px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ef4444;
+}
+
+.admin-empty-circle {
+    -fx-background-color: rgba(212, 166, 60, 0.15);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(212, 166, 60, 0.40);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+}
+
+.admin-bar-chart,
+.admin-pie-chart {
+    -fx-background-color: transparent;
+}
+
+.admin-bar-chart .chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.admin-bar-chart .chart-horizontal-grid-lines {
+    -fx-stroke: rgba(255, 255, 255, 0.08);
+}
+
+.admin-bar-chart .chart-vertical-grid-lines {
+    -fx-stroke: transparent;
+}
+
+.admin-bar-chart .axis {
+    -fx-tick-label-fill: rgba(255, 255, 255, 0.65);
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+}
+
+.admin-bar-chart .axis-label {
+    -fx-text-fill: rgba(255, 255, 255, 0.65);
+}
+
+.admin-bar-chart .default-color0.chart-bar {
+    -fx-bar-fill: linear-gradient(to top, #c4952f, #e8c46a);
+    -fx-background-radius: 4px 4px 0 0;
+}
+
+.admin-pie-chart .chart-legend {
+    -fx-background-color: transparent;
+}
+
+.admin-pie-chart .chart-legend-item {
+    -fx-text-fill: #ffffff;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+}
+
+.admin-pie-chart .chart-pie-label {
+    -fx-fill: #ffffff;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+}
+
+.admin-pie-chart .chart-pie-label-line {
+    -fx-stroke: rgba(255, 255, 255, 0.45);
+}
+
+.admin-pie-chart .default-color0.chart-pie { -fx-pie-color: #d4a63c; }
+.admin-pie-chart .default-color1.chart-pie { -fx-pie-color: #e8c46a; }
+.admin-pie-chart .default-color2.chart-pie { -fx-pie-color: #f3d98b; }
+.admin-pie-chart .default-color3.chart-pie { -fx-pie-color: #94a3b8; }
+.admin-pie-chart .default-color4.chart-pie { -fx-pie-color: #4ade80; }
+.admin-pie-chart .default-color5.chart-pie { -fx-pie-color: #64748b; }
+
+.admin-filter-pill {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-text-fill: rgba(255, 255, 255, 0.78);
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 6px 14px;
+    -fx-cursor: hand;
+}
+
+.admin-filter-pill-active {
+    -fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c);
+    -fx-text-fill: -glass-navy;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 12px;
+    -fx-background-radius: 999px;
+    -fx-border-color: #f3d98b;
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 6px 14px;
+    -fx-cursor: hand;
+}
+
+.admin-divider {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-nav-brand-wrap {
+    -fx-cursor: hand;
+}
+
+.admin-table-header {
+    -fx-padding: 6px 15px;
+}
+
+/* -------------------------------------------------------------------
+ * S8B + S9B Board Rebuild Tokens & Components
+ * ------------------------------------------------------------------- */
+
+.admin-segment-bar {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+    -fx-background-radius: 12px;
+    -fx-border-color: rgba(255, 255, 255, 0.12);
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-padding: 3px;
+}
+
+.admin-segment-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: rgba(255, 255, 255, 0.72);
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-background-radius: 9px;
+    -fx-padding: 6px 12px;
+    -fx-cursor: hand;
+}
+
+.admin-segment-btn:hover {
+    -fx-text-fill: #ffffff;
+}
+
+.admin-segment-btn-active {
+    -fx-background-color: rgba(255, 255, 255, 0.16);
+    -fx-text-fill: #ffffff;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-background-radius: 9px;
+    -fx-padding: 6px 12px;
+    -fx-cursor: hand;
+}
+
+.delta-pill-up {
+    -fx-background-color: rgba(22, 163, 74, 0.22);
+    -fx-border-color: rgba(74, 222, 128, 0.45);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-background-radius: 999px;
+    -fx-text-fill: #86efac;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 11px;
+    -fx-padding: 2px 8px;
+}
+
+.delta-pill-down {
+    -fx-background-color: rgba(220, 38, 38, 0.22);
+    -fx-border-color: rgba(248, 113, 113, 0.45);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-background-radius: 999px;
+    -fx-text-fill: #fca5a5;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 11px;
+    -fx-padding: 2px 8px;
+}
+
+.delta-pill-neutral {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-border-color: rgba(255, 255, 255, 0.16);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-background-radius: 999px;
+    -fx-text-fill: rgba(255, 255, 255, 0.65);
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 11px;
+    -fx-padding: 2px 8px;
+}
+
+.sparkline-gold {
+    -fx-stroke: #e8c46a;
+    -fx-stroke-width: 2px;
+    -fx-fill: transparent;
+}
+
+.sparkline-blue {
+    -fx-stroke: #60a5fa;
+    -fx-stroke-width: 2px;
+    -fx-fill: transparent;
+}
+
+.sparkline-red {
+    -fx-stroke: #f87171;
+    -fx-stroke-width: 2px;
+    -fx-fill: transparent;
+}
+
+.admin-area-chart {
+    -fx-background-color: transparent;
+    -fx-legend-visible: false;
+}
+
+.admin-area-chart .chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.admin-area-chart .chart-horizontal-grid-lines {
+    -fx-stroke: rgba(255, 255, 255, 0.08);
+}
+
+.admin-area-chart .chart-vertical-grid-lines {
+    -fx-stroke: transparent;
+}
+
+.admin-area-chart .axis {
+    -fx-tick-label-fill: rgba(255, 255, 255, 0.62);
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+}
+
+.admin-area-chart .default-color0.chart-series-area-line {
+    -fx-stroke: #e8c46a;
+    -fx-stroke-width: 2.5px;
+}
+
+.admin-area-chart .default-color0.chart-series-area-fill {
+    -fx-fill: linear-gradient(to bottom, rgba(232, 196, 106, 0.32), rgba(232, 196, 106, 0.02));
+}
+
+.admin-area-chart .default-color0.chart-area-symbol {
+    -fx-background-color: #e8c46a, #0b1220;
+    -fx-background-radius: 5px;
+    -fx-padding: 3px;
+}
+
+.admin-area-chart .default-color1.chart-series-area-line {
+    -fx-stroke: #60a5fa;
+    -fx-stroke-width: 2px;
+    -fx-stroke-dash-array: 6 5;
+}
+
+.admin-area-chart .default-color1.chart-series-area-fill {
+    -fx-fill: transparent;
+}
+
+.admin-area-chart .default-color1.chart-area-symbol {
+    -fx-background-color: #60a5fa, #0b1220;
+    -fx-background-radius: 4px;
+    -fx-padding: 2.5px;
+}
+
+.admin-donut-chart {
+    -fx-background-color: transparent;
+    -fx-legend-visible: false;
+}
+
+.admin-donut-chart .default-color0.chart-pie { -fx-pie-color: #d4a63c; }
+.admin-donut-chart .default-color1.chart-pie { -fx-pie-color: #5b8def; }
+.admin-donut-chart .default-color2.chart-pie { -fx-pie-color: #475569; }
+
+.admin-donut-hole {
+    -fx-background-color: #111827;
+    -fx-background-radius: 999px;
+}
+
+.admin-donut-pct {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+}
+
+.admin-donut-sub {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 10px;
+    -fx-text-fill: rgba(255, 255, 255, 0.65);
+}
+
+.series-legend-gold {
+    -fx-background-color: #e8c46a;
+    -fx-background-radius: 3px;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-max-width: 10px;
+    -fx-max-height: 10px;
+}
+
+.series-legend-blue {
+    -fx-background-color: #5b8def;
+    -fx-background-radius: 3px;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-max-width: 10px;
+    -fx-max-height: 10px;
+}
+
+.series-legend-open {
+    -fx-background-color: #475569;
+    -fx-background-radius: 3px;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-max-width: 10px;
+    -fx-max-height: 10px;
+}
+
+.avatar-circle-gold {
+    -fx-background-color: #d4a63c;
+    -fx-text-fill: #0b1220;
+    -fx-background-radius: 999px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 11px;
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+    -fx-alignment: center;
+}
+
+.avatar-circle-blue {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 999px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 11px;
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+    -fx-alignment: center;
+}
+
+.avatar-circle-green {
+    -fx-background-color: #22c55e;
+    -fx-text-fill: #0b1220;
+    -fx-background-radius: 999px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 11px;
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+    -fx-alignment: center;
+}
+
+.avatar-circle-violet {
+    -fx-background-color: #c084fc;
+    -fx-text-fill: #0b1220;
+    -fx-background-radius: 999px;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 11px;
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+    -fx-alignment: center;
+}
+
+.load-bar-track {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+    -fx-background-radius: 999px;
+    -fx-min-height: 6px;
+    -fx-pref-height: 6px;
+    -fx-max-height: 6px;
+}
+
+.load-bar-fill-gold {
+    -fx-background-color: linear-gradient(to right, #d4a63c, #e8c46a);
+    -fx-background-radius: 999px;
+    -fx-min-height: 6px;
+    -fx-pref-height: 6px;
+    -fx-max-height: 6px;
+}
+
+.load-bar-fill-blue {
+    -fx-background-color: linear-gradient(to right, #3b82f6, #60a5fa);
+    -fx-background-radius: 999px;
+    -fx-min-height: 6px;
+    -fx-pref-height: 6px;
+    -fx-max-height: 6px;
+}
+
+.load-bar-fill-red {
+    -fx-background-color: linear-gradient(to right, #dc2626, #f87171);
+    -fx-background-radius: 999px;
+    -fx-min-height: 6px;
+    -fx-pref-height: 6px;
+    -fx-max-height: 6px;
+}
+
+.admin-alert-value {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #fca5a5;
+}
+
+.admin-link-gold {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e8c46a;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.admin-link-gold:hover {
+    -fx-text-fill: #f3d98b;
+}
+
+.admin-credit-text {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(255, 255, 255, 0.45);
+}
+
+.admin-row-card-selected {
+    -fx-background-color: rgba(212, 166, 60, 0.16);
+    -fx-background-radius: 12px;
+    -fx-border-color: rgba(232, 196, 106, 0.55);
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-padding: 10px 14px;
+    -fx-cursor: hand;
+}
+
+.admin-detail-panel {
+    -fx-background-color: linear-gradient(to bottom right, rgba(212, 166, 60, 0.16), rgba(15, 23, 42, 0.72));
+    -fx-background-radius: 18px;
+    -fx-border-color: rgba(232, 196, 106, 0.35);
+    -fx-border-width: 1px;
+    -fx-border-radius: 18px;
+    -fx-padding: 16px;
+}
+
+.admin-passenger-card {
+    -fx-background-color: rgba(8, 12, 22, 0.52);
+    -fx-background-radius: 12px;
+    -fx-border-color: rgba(255, 255, 255, 0.10);
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-padding: 10px 12px;
+}
+
+.admin-pnr-hero {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 28px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #f3d98b;
+}
+
+.admin-route-code-lg {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 22px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+}
+
+.admin-paid-hero {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #f3d98b;
+}
+
+.admin-sidebar-card {
+    -fx-background-color: rgba(8, 12, 22, 0.42);
+    -fx-background-radius: 18px;
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1px;
+    -fx-border-radius: 18px;
+    -fx-padding: 14px;
+}
+
+.admin-filter-choice-btn {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+    -fx-text-fill: rgba(255, 255, 255, 0.80);
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(255, 255, 255, 0.12);
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-padding: 7px 12px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+}
+
+.admin-filter-choice-btn-active {
+    -fx-background-color: rgba(212, 166, 60, 0.18);
+    -fx-text-fill: #f3d98b;
+    -fx-font-family: 'Inter SemiBold', sans-serif;
+    -fx-font-size: 12px;
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(232, 196, 106, 0.55);
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-padding: 7px 12px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+}

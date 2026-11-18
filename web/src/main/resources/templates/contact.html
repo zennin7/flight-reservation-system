@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title th:text="${appName + ' – Contact &amp; 24/7 Support'}">Sky Royal – Contact &amp; 24/7 Support</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ================================================================= -->
+  <!-- Navigation Bar (Shared Component)                                 -->
+  <!-- ================================================================= -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="/" class="brand-logo">
+        <svg class="brand-icon" viewBox="0 0 40 32">
+          <path d="M3 21 L35 4 L38 7 L26 16 L28 28 L24 29 L18 19 L9 24 L6 22 Z"/>
+        </svg>
+        <div>
+          <div class="brand-name">
+            <span class="logo-sky" th:text="${logoPrefix}">Sky</span><span class="logo-voyage" th:text="${logoSuffix}">Voyage</span>
+          </div>
+          <div class="brand-tagline">Flight Reservations</div>
+        </div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link">Home</a></li>
+        <li><a href="/flights" class="nav-link">Flights</a></li>
+        <li><a href="/about" class="nav-link">About</a></li>
+        <li><a href="/contact" class="nav-link active">Contact</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <!-- TEMPLATE PLACEHOLDER: User Auth Status -->
+        <span th:if="${user != null}" class="user-badge" th:text="${user.username}">Traveller</span>
+        <a th:if="${user != null}" href="/logout" class="btn btn-secondary btn-sm">Log Out</a>
+        <a th:if="${user == null}" href="/login" class="btn btn-primary btn-sm">Log In</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================================================================= -->
+  <!-- Content Hero Banner                                               -->
+  <!-- ================================================================= -->
+  <section class="content-hero">
+    <div style="max-width: 800px; margin: 0 auto;">
+      <span class="hero-badge" style="margin-bottom: 8px;">Concierge &middot; 24 Hours</span>
+      <h1>We're Here For You</h1>
+      <p>Reach out any time of day or night. Our dedicated air concierge team is standing by to assist with your travel needs.</p>
+    </div>
+  </section>
+
+  <main class="section">
+    <div class="contact-layout">
+      <!-- Left Column: Contact Channels -->
+      <div class="contact-info-list">
+        <div class="contact-info-item">
+          <div class="contact-icon">📞</div>
+          <div>
+            <h4 style="font-size: 15px; font-weight: 700; color: var(--sv-text);" th:text="${supportPhone}">0800 123 456</h4>
+            <p style="font-size: 13px; color: var(--sv-muted);">Toll-Free &middot; 24/7 Passenger Hotline</p>
+          </div>
+        </div>
+
+        <div class="contact-info-item">
+          <div class="contact-icon">✉️</div>
+          <div>
+            <h4 style="font-size: 15px; font-weight: 700; color: var(--sv-text);" th:text="${supportEmail}">support@skyroyal.com</h4>
+            <p style="font-size: 13px; color: var(--sv-muted);">Fast Human Response &middot; Under 2 Hours</p>
+          </div>
+        </div>
+
+        <div class="contact-info-item">
+          <div class="contact-icon">📍</div>
+          <div>
+            <h4 style="font-size: 15px; font-weight: 700; color: var(--sv-text);">Aviation Headquarters</h4>
+            <p style="font-size: 13px; color: var(--sv-muted);">OR Tambo International Airport, Terminal B, Kempton Park, Johannesburg</p>
+          </div>
+        </div>
+
+        <div class="contact-info-item">
+          <div class="contact-icon">🕒</div>
+          <div>
+            <h4 style="font-size: 15px; font-weight: 700; color: var(--sv-text);">Operational Hours</h4>
+            <p style="font-size: 13px; color: var(--sv-muted);">365 days a year, around the clock</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Inquiry Form -->
+      <div class="checkout-card">
+        <h3>Send an Inquiry</h3>
+        <p style="font-size: 13px; color: var(--sv-muted); margin-bottom: 24px;">
+          Have a question regarding your booking or require special travel arrangements? Submit your details below.
+        </p>
+
+        <!-- Success Alert if Message Sent -->
+        <div th:if="${contactSuccess != null}" class="alert-success" th:text="${contactSuccess}">
+          Thank you! Your message has been sent.
+        </div>
+
+        <form action="/contact" method="POST">
+          <!-- CSRF Token (Mandatory) -->
+          <input type="hidden" name="csrf_token" th:value="${csrf_token}">
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label for="cName">Your Full Name *</label>
+            <input type="text" id="cName" name="name" class="form-input"
+                   placeholder="e.g. Sarah Jenkins" required
+                   th:value="${user != null ? user.username : ''}">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label for="cEmail">Email Address *</label>
+            <input type="email" id="cEmail" name="email" class="form-input"
+                   placeholder="e.g. sarah@example.com" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label for="cRef">Booking Reference (Optional)</label>
+            <input type="text" id="cRef" name="reference" class="form-input"
+                   placeholder="e.g. K7P2QX">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 24px;">
+            <label for="cMsg">Your Message *</label>
+            <textarea id="cMsg" name="message" class="form-input" rows="4"
+                      style="height: auto; padding: 12px; resize: vertical;"
+                      placeholder="How can our concierge team assist you today?" required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" style="height: 48px; font-size: 15px;">
+            Submit Inquiry &rarr;
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- Footer                                                            -->
+  <!-- ================================================================= -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col">
+        <div class="brand-name" style="margin-bottom: 12px;">
+          <span class="logo-sky" th:text="${logoPrefix}">Sky</span><span class="logo-voyage" style="color: #ffffff;" th:text="${logoSuffix}">Voyage</span>
+        </div>
+        <p>Premium air travel designed for seamless comfort, exceptional reliability, and human-centred hospitality across Southern Africa.</p>
+      </div>
+
+      <div class="footer-col">
+        <h5>Direct Routes</h5>
+        <ul class="footer-links">
+          <li><a href="/flights?origin=Johannesburg+(JNB)&destination=Cape+Town+(CPT)&date=2026-11-02">Johannesburg &ndash; Cape Town</a></li>
+          <li><a href="/flights?origin=Cape+Town+(CPT)&destination=Johannesburg+(JNB)&date=2026-11-02">Cape Town &ndash; Johannesburg</a></li>
+          <li><a href="/flights?origin=Johannesburg+(JNB)&destination=Durban+(DUR)&date=2026-11-02">Johannesburg &ndash; Durban</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Company</h5>
+        <ul class="footer-links">
+          <li><a href="/about">About Us</a></li>
+          <li><a href="/about#fleet">Our Fleet</a></li>
+          <li><a href="/contact">Support</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Support</h5>
+        <p th:text="${'Email: ' + supportEmail}">support@skyroyal.com</p>
+        <p th:text="${'Toll-Free: ' + supportPhone}">0800 123 456</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>&copy; 2026 <span th:text="${appName}">Sky Royal</span> Ltd. All rights reserved.</div>
+      <div>Privacy Policy &middot; Terms &amp; Conditions</div>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Andarna Air – Flight Bookings</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="sky" aria-hidden="true">
+  <div class="stars" id="stars"></div>
+  <div class="day"><div class="rays"></div><div class="sun"></div><div class="dust" id="dust"></div></div>
+  <div class="cloud" style="top:12%"></div><div class="cloud"></div><div class="cloud"></div>
+</div>
+
+<header>
+  <div class="bar">
+    <a href="#home" class="logo" data-view="home">ANDARNA<span>AIR</span></a>
+    <nav id="nav" aria-label="Main">
+      <ul>
+        <li class="dd" id="homeDD">
+        <li><a href="#home" data-view="home">Home</a></li>
+        <li><a href="#flights" data-view="flights">Flights</a></li>
+        <li><a href="#bookings" data-view="bookings">My Bookings</a></li>
+        <li><a href="#about" data-view="about">About</a></li>
+        <li><a href="#contact" data-view="contact">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="tools">
+      <div class="auth" id="authGuest">
+        <button class="auth-btn" id="openLogin" type="button">Log in</button>
+        <button class="auth-btn solid" id="openSignup" type="button">Sign up</button>
+      </div>
+      <div class="user" id="authUser" hidden>
+        <button class="user-btn" id="userBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="userMenu">
+          <span class="avatar" id="avatar" aria-hidden="true"></span>
+          <span class="uname" id="uname"></span>
+        </button>
+        <div class="user-menu" id="userMenu" hidden>
+          <div class="who" id="uemail"></div>
+          <a href="#bookings" data-view="bookings">My Bookings</a>
+          <button type="button" id="logout">Log out</button>
+        </div>
+      </div>
+      <button class="icon-btn" id="theme" aria-label="Toggle light and dark mode">☾</button>
+      <button class="icon-btn" id="menuBtn" aria-label="Menu">☰</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="view show" id="v-home">
+    <div class="hero">
+      <h1>Fly beyond the <em>ordinary</em>.</h1>
+      <p>Book premium flights to over 900 destinations worldwide at the best prices guaranteed.</p>
+    </div>
+    <form class="panel search" id="searchForm" novalidate>
+      <div>
+        <label for="from">From</label>
+        <input id="from" list="cities" placeholder="Johannesburg (JNB)" autocomplete="off">
+      </div>
+      <div>
+        <label for="to">To</label>
+        <input id="to" list="cities" placeholder="London (LHR)" autocomplete="off">
+      </div>
+      <div>
+        <label for="date">Departure Date</label>
+        <input type="date" id="date">
+      </div>
+      <div>
+        <label for="pax">Passengers</label>
+        <select id="pax">
+          <option>1 Passenger</option>
+          <option>2 Passengers</option>
+          <option>3 Passengers</option>
+          <option>4 Passengers</option>
+          <option>5 Passengers</option>
+          <option>6 Passengers</option>
+          <option>7 Passengers</option>
+          <option>8 Passengers</option>
+          <option>9 Passengers</option>
+          <option>10 Passengers</option>
+        </select>
+      </div>
+      <button class="btn" type="submit">Search Flights</button>
+      <datalist id="cities">
+        <option value="Johannesburg (JNB)">
+        <option value="Cape Town (CPT)">
+        <option value="London (LHR)">
+        <option value="Dubai (DXB)">
+        <option value="New York (JFK)">
+        <option value="Paris (CDG)">
+        <option value="Singapore (SIN)">
+        <option value="Sydney (SYD)">
+        <option value="Tokyo (HND)">
+        <option value="Nairobi (NBO)">
+      </datalist>
+    </form>
+    <p class="err" id="err" role="alert"></p>
+
+    <section class="welcome panel" id="welcome" aria-labelledby="welcomeTitle">
+      <div class="welcome-text">
+        <h2 id="welcomeTitle">Welcome to Andarna Air</h2>
+        <p id="welcomeMsg">Search a route above to compare fares, or create a free account to save your trips and check out faster.</p>
+      </div>
+      <div class="welcome-actions" id="welcomeGuest">
+        <button class="btn" type="button" id="welcomeSignup">Create free account</button>
+        <button class="auth-btn" type="button" id="welcomeLogin">Log in</button>
+      </div>
+      <div class="welcome-actions" id="welcomeUser" hidden>
+        <a class="btn" href="#bookings" data-view="bookings">View my bookings</a>
+      </div>
+    </section>
+    <div class="grid" id="offers">
+      <div class="card">
+        <h3>Dubai from R6,990</h3>
+        <p>Fly direct, 8 hours, with gold-class service.</p>
+      </div>
+      <div class="card">
+        <h3>London from R9,450</h3>
+        <p>Overnight flights with lie-flat options.</p>
+      </div>
+      <div class="card">
+        <h3>Cape Town from R1,190</h3>
+        <p>Hourly departures, flexible fares.</p>
+      </div>
+    </div>
+    <div class="grid" id="destinations">
+      <div class="card">
+        <h3>Paris</h3>
+        <p>Romance, art and café culture.</p>
+      </div>
+      <div class="card">
+        <h3>Singapore</h3><p>Where skyline meets street food.</p>
+      </div>
+      <div class="card">
+        <h3>New York</h3>
+        <p>The city that never sleeps.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-flights">
+    <h2>Available Flights</h2>
+    <p id="sub">Use the search on the Home page to find flights.</p>
+    <div class="panel" id="results">
+      <p style="color:var(--muted)">No search yet. Choose a route to see flights.</p>
+    </div>
+  </section>
+
+  <section class="view" id="v-bookings">
+    <h2>My Bookings</h2>
+    <p>Your confirmed trips appear here.</p>
+    <div class="panel" id="bookings">
+      <p style="color:var(--muted)">You have no bookings yet.</p>
+    </div>
+  </section>
+
+  <section class="view" id="v-about">
+    <h2>About Andarna Air</h2>
+    <p>Premium travel, made simple.</p>
+    <div class="panel">
+      <p style="line-height:1.7">Andarna Air connects travellers to more than 900 destinations with transparent pricing, secure payments and round-the-clock human support. We partner with leading airlines worldwide so you always get the right seat at the right price.</p>
+    </div>
+  </section>
+
+  <section class="view" id="v-contact">
+    <h2>Contact Us</h2>
+    <p>We’re here 24 hours a day.</p>
+    <form class="panel contact" id="contactForm">
+      <div>
+        <label for="cn">Name</label>
+        <input id="cn" required>
+      </div>
+      <div>
+        <label for="ce">Email</label>
+        <input id="ce" type="email" required>
+      </div>
+      <div>
+        <label for="cm">Message</label>
+        <textarea id="cm" rows="4" required></textarea>
+      </div>
+      <button class="btn" type="submit">Send Message</button>
+      <p class="err" id="cok" style="color:var(--gold)"></p>
+    </form>
+  </section>
+</main>
+
+<footer>
+  <div class="assure">
+    <div>
+      <span class="ic">🔒</span>
+      <span>
+        <h4>Safe &amp; Secure</h4>
+        <p>256-bit encryption and trusted payment partners protect every booking.</p>
+      </span>
+    </div>
+    <div>
+      <span class="ic">🕒</span>
+      <span>
+        <h4>Open 24 Hours</h4>
+        <p>Book, change or get help any time, day or night, every day of the year.</p>
+      </span></div>
+    <div>
+      <span class="ic">★</span>
+      <span>
+        <h4>Best Price Guarantee</h4>
+        <p>Find it cheaper elsewhere and we’ll match it.</p>
+      </span>
+    </div>
+    <div>
+      <span class="ic">🌍</span>
+      <span>
+        <h4>Global Destinations</h4>
+        <p>Over 900 destinations across 6 continents.</p>
+      </span>
+    </div>
+  </div>
+  <div class="copy">© 2026 Aurum Air. All rights reserved.</div>
+</footer>
+
+<dialog class="auth-modal" id="authModal" aria-label="Log in or sign up">
+  <button class="auth-close" id="authClose" type="button" aria-label="Close">×</button>
+  <div class="auth-tabs" role="tablist">
+    <button id="tabLogin" role="tab" aria-selected="true" type="button">Log in</button>
+    <button id="tabSignup" role="tab" aria-selected="false" type="button">Sign up</button>
+  </div>
+  <div class="inner">
+    <form id="loginForm" novalidate>
+      <h2>Welcome back</h2>
+      <p class="lead">Log in to view and manage your bookings.</p>
+      <label for="liEmail">Email</label>
+      <input id="liEmail" type="email" autocomplete="email" required>
+      <label for="liPass">Password</label>
+      <input id="liPass" type="password" autocomplete="current-password" required>
+      <div class="btn-row">
+        <button class="btn submit" type="submit">Log in</button>
+      </div>
+      <p class="auth-switch">New to Aurum Air? <button type="button" id="toSignup">Create an account</button></p>
+    </form>
+    <form id="signupForm" novalidate hidden>
+      <h2>Create your account</h2>
+      <p class="lead">Save your trips and check out faster.</p>
+      <label for="suName">Full name</label>
+      <input id="suName" autocomplete="name" required>
+      <label for="suEmail">Email</label>
+      <input id="suEmail" type="email" autocomplete="email" required>
+      <label for="suPass">Password (8+ characters)</label>
+      <input id="suPass" type="password" autocomplete="new-password" minlength="8" required>
+      <label for="suPass2">Confirm password</label>
+      <input id="suPass2" type="password" autocomplete="new-password" required>
+      <div class="btn-row">
+        <button class="btn submit" type="submit">Create account</button>
+      </div>
+      <p class="auth-switch">Already registered? <button type="button" id="toLogin">Log in</button></p>
+    </form>
+    <p class="auth-err" id="authErr" role="alert"></p>
+  </div>
+</dialog>
+
+<script src="script.js"></script>
+</body>
+</html>

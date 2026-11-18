@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glass Checkout</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter','Segoe UI',sans-serif;color:#fff}
+a{color:inherit;text-decoration:none}
+.serif{font-family:'Lora',Georgia,serif}
+.bgp{position:absolute;inset:-60px;background:url(/_blob/ad0a6c7d6f19f21676c802fcdbac6917) center/cover no-repeat;filter:blur(28px) brightness(.5) saturate(1.2)}
+.bgs{position:absolute;inset:0;background:radial-gradient(circle at 15% 100%,rgba(212,166,60,.16),transparent 50%),linear-gradient(180deg,rgba(11,18,32,.4),rgba(11,18,32,.74))}
+.glass{background:rgba(255,255,255,.085);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(28px) saturate(1.3);backdrop-filter:blur(28px) saturate(1.3);border-radius:28px;box-shadow:0 34px 90px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.2)}
+.inner{background:rgba(8,12,22,.34);border:1px solid rgba(255,255,255,.08);border-radius:20px}
+.mut{color:rgba(255,255,255,.58)}
+.sec{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#e8c46a}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:12px;font-weight:500;color:rgba(255,255,255,.65)}
+.fld input{height:42px;box-sizing:border-box;border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:0 14px;font:500 14px 'Inter',sans-serif;color:#fff;background:rgba(255,255,255,.07);outline:none;min-width:0;width:100%}
+.fld input:focus{border-color:#e8c46a;box-shadow:0 0 0 3px rgba(232,196,106,.22)}
+.tab{flex:1;height:38px;border:0;border-radius:10px;background:transparent;font:600 13px 'Inter',sans-serif;color:rgba(255,255,255,.6);cursor:pointer}
+.tab.on{background:rgba(255,255,255,.16);color:#fff}
+.ph{background:linear-gradient(180deg,rgba(11,18,32,.05) 0%,rgba(11,18,32,.85) 100%),url(/_blob/ad0a6c7d6f19f21676c802fcdbac6917) center 40%/cover no-repeat}
+.paycard{background:radial-gradient(circle at 90% 10%,rgba(232,196,106,.5),transparent 46%),linear-gradient(135deg,#0f1b33,#2a3f6b)}
+.pr{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;color:rgba(255,255,255,.72)}
+.dl{flex-grow:1;border-top:1.5px dashed rgba(255,255,255,.35)}
+.dot{width:7px;height:7px;border-radius:50%;background:#e8c46a;flex-shrink:0}
+</style>
+</helmet>
+<div style="position:relative;width:1280px;height:860px;overflow:hidden;background:#0b1220">
+  <div class="bgp"></div><div class="bgs"></div>
+
+  <div style="position:absolute;left:0;right:0;top:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 56px">
+    <div style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:.14em"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a63c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l18-8-6 16-3-7-9-1z"></path></svg>APP_NAME</div>
+    <div style="display:flex;gap:30px;font-size:14px;font-weight:500"><a href="#" style="color:#e8c46a">Flights</a><a href="#">My Bookings</a><a href="#">Offers</a><a href="#">About</a><a href="#">Contact</a></div>
+    <span style="width:34px;height:34px;border-radius:50%;background:#d4a63c;color:#0b1220;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">AM</span>
+  </div>
+
+  <div class="glass" style="position:absolute;left:56px;right:56px;top:68px;bottom:32px;padding:14px;display:flex;flex-direction:column;gap:14px">
+
+    <div class="inner" style="height:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">
+      <span style="display:flex;align-items:center;gap:9px"><span style="width:26px;height:26px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;font-size:12px">✓</span>Search</span><span style="width:64px;height:2px;margin:0 16px;background:#16a34a"></span>
+      <span style="display:flex;align-items:center;gap:9px"><span style="width:26px;height:26px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;font-size:12px">✓</span>Select seat</span><span style="width:64px;height:2px;margin:0 16px;background:#16a34a"></span>
+      <span style="display:flex;align-items:center;gap:9px"><span style="width:26px;height:26px;border-radius:50%;background:#d4a63c;color:#0b1220;display:flex;align-items:center;justify-content:center;font-size:12px">3</span>Checkout</span><span style="width:64px;height:2px;margin:0 16px;background:rgba(255,255,255,.2)"></span>
+      <span style="display:flex;align-items:center;gap:9px;color:rgba(255,255,255,.55)"><span style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:12px">4</span>Confirmed</span>
+    </div>
+
+    <div style="flex-grow:1;display:flex;gap:16px;min-height:0">
+
+      <div style="width:540px;flex-shrink:0;display:flex;flex-direction:column;gap:14px">
+        <div class="inner" style="overflow:hidden">
+          <div class="ph" style="height:150px;padding:18px 24px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span class="sec" style="color:#fff;opacity:.9">Your trip</span><span style="padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.2);font-size:12px;font-weight:600">Sat, 14 Nov 2026</span></div>
+            <div><div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.85">From Johannesburg to</div><div class="serif" style="font-size:38px;font-weight:500;line-height:1.1">Cape Town</div></div>
+          </div>
+          <div style="padding:18px 24px 6px;display:flex;align-items:center;gap:14px">
+            <div><div style="font-size:28px;font-weight:700;line-height:1">06:30</div><div class="mut" style="font-size:12px;margin-top:5px">JNB · O.R. Tambo</div></div>
+            <div style="flex-grow:1;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:11px;font-weight:600" class="mut">2h 05m · Direct</span><div style="width:100%;display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="dl"></span><svg width="18" height="18" viewBox="0 0 24 24" fill="#e8c46a" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"></path></svg></div></div>
+            <div style="text-align:right"><div style="font-size:28px;font-weight:700;line-height:1">08:35</div><div class="mut" style="font-size:12px;margin-top:5px">CPT · Cape Town Intl</div></div>
+          </div>
+          <div style="position:relative;margin:12px 0 0;border-top:2px dashed rgba(255,255,255,.18)"></div>
+          <div style="padding:14px 24px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+            <div><div class="mut" style="font-size:11px">Flight</div><div style="font-size:15px;font-weight:600;margin-top:3px">FL 204</div></div>
+            <div><div class="mut" style="font-size:11px">Seat</div><div style="font-size:15px;font-weight:600;margin-top:3px;color:#f3d98b">9E · Economy</div></div>
+            <div><div class="mut" style="font-size:11px">Baggage</div><div style="font-size:15px;font-weight:600;margin-top:3px">23 kg included</div></div>
+          </div>
+        </div>
+
+        <div class="inner" style="padding:18px 24px;flex-grow:1;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:16px;font-weight:600">Passenger</div><span style="padding:4px 11px;border-radius:999px;background:rgba(212,166,60,.2);color:#f3d98b;font-size:12px;font-weight:600">Adult 1 of 1</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="fld"><label for="gfn">First name</label><input id="gfn" value="Amahle"></div>
+            <div class="fld"><label for="gln">Last name</label><input id="gln" value="Mokoena"></div>
+            <div class="fld"><label for="gpp">Passport number</label><input id="gpp" value="A91827364"></div>
+            <div class="fld"><label for="gdb">Date of birth</label><input id="gdb" value="12 May 1998"></div>
+            <div class="fld" style="grid-column:span 2"><label for="gem">Email for your boarding pass</label><input id="gem" value="amahle@example.com"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex-grow:1;min-width:0;display:flex;flex-direction:column;gap:14px">
+        <div class="inner" style="padding:18px 24px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:16px;font-weight:600">Payment method</div><span style="display:flex;align-items:center;gap:6px;font-size:12px" class="mut"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 018 0v4"></path></svg>Secure payment</span></div>
+          <div style="display:flex;gap:4px;padding:4px;border-radius:13px;background:rgba(255,255,255,.07)"><button class="tab on" type="button">Card</button><button class="tab" type="button">Instant EFT</button><button class="tab" type="button">Wallet</button></div>
+          <div style="display:flex;gap:18px">
+            <div class="paycard" style="width:240px;height:150px;flex-shrink:0;border-radius:16px;padding:16px 18px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 18px 34px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.18)">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="width:34px;height:26px;border-radius:6px;background:linear-gradient(135deg,#f0cf74,#b98a2e)"></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 8a6 6 0 010 8M12 5.5a10 10 0 010 13M16 3a14 14 0 010 18"></path></svg></div>
+              <div style="font-size:16px;letter-spacing:.14em;font-weight:500">•••• •••• •••• 4242</div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.85"><span>Amahle Mokoena</span><span>08 / 28</span></div>
+            </div>
+            <div style="flex-grow:1;display:flex;flex-direction:column;gap:10px;min-width:0;justify-content:center">
+              <div class="fld"><label for="gcn">Card number</label><input id="gcn" value="4242 4242 4242 4242"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="fld"><label for="gex">Expiry</label><input id="gex" value="08 / 28"></div><div class="fld"><label for="gcv">CVV</label><input id="gcv" type="password" value="123"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="inner" style="flex-grow:1;padding:20px 24px;display:flex;flex-direction:column;background:linear-gradient(160deg,rgba(212,166,60,.2),rgba(8,12,22,.4) 60%)">
+          <div style="display:flex;justify-content:space-between;align-items:center"><div class="sec">Order summary</div><span style="padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.12);font-size:12px;font-weight:600">Seat 9E · Economy</span></div>
+          <div style="margin-top:8px"><div class="pr"><span>Base fare</span><span>R 1,250.00</span></div><div class="pr"><span>Seat selection</span><span>R 0.00</span></div><div class="pr"><span>Taxes and fees</span><span>R 272.00</span></div></div>
+          <div style="height:1px;background:rgba(255,255,255,.16);margin:8px 0 10px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:15px;font-weight:600">Total</span><span style="font-size:36px;font-weight:700;letter-spacing:-.01em;color:#f3d98b">R 1,522</span></div>
+          <button type="button" style="margin-top:auto;height:56px;border:0;border-radius:15px;background:linear-gradient(180deg,#d9ac47,#c4952f);color:#0b1220;font:700 16px 'Inter',sans-serif;display:flex;align-items:center;justify-content:space-between;padding:0 22px;cursor:pointer;box-shadow:0 10px 24px rgba(196,149,47,.35)"><span>Confirm and pay</span><span style="display:flex;align-items:center;gap:10px">R 1,522<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></span></button>
+          <div class="mut" style="text-align:center;font-size:12px;margin-top:12px">Your seat is held for 08:42. You are only charged when you confirm.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

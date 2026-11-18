@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title th:text="${appName + ' – Available Flights'}">Sky Royal – Available Flights</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ================================================================= -->
+  <!-- Navigation Bar (Shared Component)                                 -->
+  <!-- ================================================================= -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="/" class="brand-logo">
+        <svg class="brand-icon" viewBox="0 0 40 32">
+          <path d="M3 21 L35 4 L38 7 L26 16 L28 28 L24 29 L18 19 L9 24 L6 22 Z"/>
+        </svg>
+        <div>
+          <div class="brand-name">
+            <span class="logo-sky" th:text="${logoPrefix}">Sky</span><span class="logo-voyage" th:text="${logoSuffix}">Voyage</span>
+          </div>
+          <div class="brand-tagline">Flight Reservations</div>
+        </div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link">Home</a></li>
+        <li><a href="/flights" class="nav-link active">Flights</a></li>
+        <li><a href="/about" class="nav-link">About</a></li>
+        <li><a href="/contact" class="nav-link">Contact</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <!-- TEMPLATE PLACEHOLDER: User Auth Status -->
+        <span th:if="${user != null}" class="user-badge" th:text="${user.username}">Traveller</span>
+        <a th:if="${user != null}" href="/logout" class="btn btn-secondary btn-sm">Log Out</a>
+        <a th:if="${user == null}" href="/login" class="btn btn-primary btn-sm">Log In</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================================================================= -->
+  <!-- Stepper Bar (Step 1: Search Active)                               -->
+  <!-- ================================================================= -->
+  <nav class="stepper-bar" aria-label="Booking Progress">
+    <div class="step-item active">
+      <div class="step-circle">1</div>
+      <span class="step-title">Search</span>
+    </div>
+    <span class="step-arrow">&rarr;</span>
+    <div class="step-item">
+      <div class="step-circle">2</div>
+      <span class="step-title">Select Seat</span>
+    </div>
+    <span class="step-arrow">&rarr;</span>
+    <div class="step-item">
+      <div class="step-circle">3</div>
+      <span class="step-title">Checkout</span>
+    </div>
+    <span class="step-arrow">&rarr;</span>
+    <div class="step-item">
+      <div class="step-circle">4</div>
+      <span class="step-title">Confirmation</span>
+    </div>
+  </nav>
+
+  <main class="section" style="padding-top: 10px;">
+    <!-- Compact Search Filter Bar -->
+    <div class="search-card" style="margin-bottom: 32px; padding: 20px;">
+      <form action="/flights" method="GET" class="search-form-grid">
+        <div class="form-group">
+          <label for="fOrigin">From</label>
+          <select id="fOrigin" name="origin" class="form-select" required>
+            <option value="Johannesburg (JNB)" th:selected="${origin == 'Johannesburg (JNB)'}">Johannesburg (JNB)</option>
+            <option value="Cape Town (CPT)" th:selected="${origin == 'Cape Town (CPT)'}">Cape Town (CPT)</option>
+            <option value="Durban (DUR)" th:selected="${origin == 'Durban (DUR)'}">Durban (DUR)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="fDest">To</label>
+          <select id="fDest" name="destination" class="form-select" required>
+            <option value="Cape Town (CPT)" th:selected="${destination == 'Cape Town (CPT)'}">Cape Town (CPT)</option>
+            <option value="Johannesburg (JNB)" th:selected="${destination == 'Johannesburg (JNB)'}">Johannesburg (JNB)</option>
+            <option value="Durban (DUR)" th:selected="${destination == 'Durban (DUR)'}">Durban (DUR)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="fDate">Departure Date</label>
+          <input type="date" id="fDate" name="date" class="form-input" th:value="${date}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="fPax">Passengers</label>
+          <select id="fPax" class="form-select">
+            <option>1 Passenger</option>
+            <option>2 Passengers</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="height: 44px; white-space: nowrap;">
+          Update Search
+        </button>
+      </form>
+    </div>
+
+    <!-- Error Alert if Route Validation Fails -->
+    <div th:if="${searchError != null}" class="alert-error" style="max-width: 980px; margin: 0 auto 24px auto;">
+      <strong>Search Note:</strong> <span th:text="${searchError}">Validation issue</span>
+    </div>
+
+    <!-- =============================================================== -->
+    <!-- Flight Results Section                                          -->
+    <!-- =============================================================== -->
+    <div class="flight-results-list">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+        <h2 style="font-size: 20px; font-weight: 800; color: var(--sv-text);"
+            th:text="${'Available Flights (' + origin + ' &rarr; ' + destination + ')'}">
+          Available Flights
+        </h2>
+        <span style="font-size: 13px; color: var(--sv-muted);" th:text="${'Date: ' + date}">Date: 2026-11-02</span>
+      </div>
+
+      <!-- TEMPLATE PLACEHOLDER: No Flights Empty State (Do Not Remove) -->
+      <div th:if="${flights.isEmpty() and searchError == null}"
+           class="search-card" style="text-align: center; padding: 48px 24px;">
+        <div style="font-size: 36px; margin-bottom: 12px;">✈</div>
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">No Direct Flights Found</h3>
+        <p style="font-size: 14px; color: var(--sv-muted); max-width: 480px; margin: 0 auto 20px auto;">
+          We could not locate scheduled flights for this corridor on the selected date. Please verify your origin/destination or select another departure day (e.g. 2 Nov 2026).
+        </p>
+        <a href="/flights?origin=Johannesburg+(JNB)&destination=Cape+Town+(CPT)&date=2026-11-02" class="btn btn-primary">
+          View Available JNB &rarr; CPT Flights
+        </a>
+      </div>
+
+      <!-- TEMPLATE PLACEHOLDER: Dynamic Flight Cards (Do Not Remove) -->
+      <div th:each="f : ${flights}" class="flight-card">
+        <div class="flight-meta">
+          <span class="flight-num" th:text="${f.flightNumber}">GRP 204</span>
+          <span class="flight-aircraft">Boeing 737-800 &middot; Jet</span>
+          <span style="font-size: 11px; font-weight: 700; color: var(--sv-green-status); margin-top: 4px;">&bull; Scheduled On-Time</span>
+        </div>
+
+        <div class="flight-schedule">
+          <div class="schedule-point">
+            <div class="schedule-time" th:text="${f.departureTime}">06:30</div>
+            <div class="schedule-city" th:text="${origin}">JNB</div>
+          </div>
+
+          <div class="schedule-duration">
+            <span class="duration-label" th:text="${f.duration}">2h 10m</span>
+            <div class="duration-track"></div>
+            <span class="duration-label" style="font-size: 10px; margin-top: 4px;">Non-stop</span>
+          </div>
+
+          <div class="schedule-point">
+            <div class="schedule-time" th:text="${f.arrivalTime}">08:40</div>
+            <div class="schedule-city" th:text="${destination}">CPT</div>
+          </div>
+        </div>
+
+        <div class="flight-action-col">
+          <div class="flight-price">
+            <small>From </small><span th:text="${f.priceFormatted}">R 1,200</span>
+          </div>
+          <a th:href="@{'/flights/' + ${f.flightId} + '/seats'(origin=${origin},destination=${destination},departureDate=${date})}"
+             class="btn btn-primary btn-block">
+            Select Flight &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- Footer                                                            -->
+  <!-- ================================================================= -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col">
+        <div class="brand-name" style="margin-bottom: 12px;">
+          <span class="logo-sky" th:text="${logoPrefix}">Sky</span><span class="logo-voyage" style="color: #ffffff;" th:text="${logoSuffix}">Voyage</span>
+        </div>
+        <p>Premium air travel designed for seamless comfort, exceptional reliability, and human-centred hospitality across Southern Africa.</p>
+      </div>
+
+      <div class="footer-col">
+        <h5>Direct Routes</h5>
+        <ul class="footer-links">
+          <li><a href="/flights?origin=Johannesburg+(JNB)&destination=Cape+Town+(CPT)&date=2026-11-02">Johannesburg &ndash; Cape Town</a></li>
+          <li><a href="/flights?origin=Cape+Town+(CPT)&destination=Johannesburg+(JNB)&date=2026-11-02">Cape Town &ndash; Johannesburg</a></li>
+          <li><a href="/flights?origin=Johannesburg+(JNB)&destination=Durban+(DUR)&date=2026-11-02">Johannesburg &ndash; Durban</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Company</h5>
+        <ul class="footer-links">
+          <li><a href="/about">About Us</a></li>
+          <li><a href="/about#fleet">Our Fleet</a></li>
+          <li><a href="/contact">Support</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Support</h5>
+        <p th:text="${'Email: ' + supportEmail}">support@skyroyal.com</p>
+        <p th:text="${'Toll-Free: ' + supportPhone}">0800 123 456</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>&copy; 2026 <span th:text="${appName}">Sky Royal</span> Ltd. All rights reserved.</div>
+      <div>Privacy Policy &middot; Terms &amp; Conditions</div>
+    </div>
+  </footer>
+
+</body>
+</html>

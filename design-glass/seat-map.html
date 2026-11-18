@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glass Seat Map</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter','Segoe UI',sans-serif;color:#fff}
+a{color:inherit;text-decoration:none}
+.bgp{position:absolute;inset:-60px;background:url(/_blob/fce3bf62584c7d1fa3f755135682dc99) center/cover no-repeat;filter:blur(26px) brightness(.5) saturate(1.2)}
+.bgs{position:absolute;inset:0;background:radial-gradient(circle at 80% 0%,rgba(212,166,60,.16),transparent 50%),linear-gradient(180deg,rgba(11,18,32,.4),rgba(11,18,32,.72))}
+.glass{background:rgba(255,255,255,.085);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(28px) saturate(1.3);backdrop-filter:blur(28px) saturate(1.3);border-radius:28px;box-shadow:0 34px 90px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.2)}
+.inner{background:rgba(8,12,22,.34);border:1px solid rgba(255,255,255,.08);border-radius:20px}
+.mut{color:rgba(255,255,255,.6)}
+.sec{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#e8c46a}
+.dl{flex-grow:1;border-top:1.5px dashed rgba(255,255,255,.35)}
+.dot{width:7px;height:7px;border-radius:50%;background:#e8c46a;flex-shrink:0}
+.tab{padding:8px 18px;border-radius:999px;font-size:13px;font-weight:600;color:rgba(255,255,255,.65);border:0;background:transparent;font-family:inherit;cursor:pointer}
+.tab.on{background:linear-gradient(180deg,#d9ac47,#c4952f);color:#0b1220}
+.rb{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.chip{padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.1);font-size:12px;font-weight:500}
+</style>
+</helmet>
+<div style="position:relative;width:1280px;height:860px;overflow:hidden;background:#0b1220">
+  <div class="bgp"></div><div class="bgs"></div>
+
+  <div style="position:absolute;left:0;right:0;top:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 56px">
+    <div style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:.14em"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a63c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l18-8-6 16-3-7-9-1z"></path></svg>APP_NAME</div>
+    <div style="display:flex;gap:30px;font-size:14px;font-weight:500"><a href="#" style="color:#e8c46a">Flights</a><a href="#">My Bookings</a><a href="#">Offers</a><a href="#">About</a><a href="#">Contact</a></div>
+    <span style="width:34px;height:34px;border-radius:50%;background:#d4a63c;color:#0b1220;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">AM</span>
+  </div>
+
+  <div class="glass" style="position:absolute;left:56px;right:56px;top:68px;bottom:32px;padding:14px;display:flex;flex-direction:column;gap:14px">
+
+    <div class="inner" style="height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">
+      <sc-for list="{{steps}}" as="st" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center">
+          <div style="display:flex;align-items:center;gap:9px;color:{{st.fg}}"><span style="width:26px;height:26px;border-radius:50%;background:{{st.bg}};color:{{st.nfg}};display:flex;align-items:center;justify-content:center;font-size:12px">{{st.n}}</span>{{st.label}}</div>
+          <span style="width:64px;height:2px;margin:0 16px;background:{{st.line}}"></span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="flex-grow:1;display:flex;gap:14px;min-height:0">
+
+      <!-- left: plane + section -->
+      <div style="flex-grow:1;min-width:0;display:flex;flex-direction:column;gap:14px">
+
+        <div class="inner" style="height:236px;flex-shrink:0;position:relative;padding:16px 22px 0;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div><div style="font-size:19px;font-weight:600">Choose your seat</div><div class="mut" style="font-size:13px;margin-top:2px">JNB to CPT · Fri 14 Nov · Airbus A320</div></div>
+            <div style="display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.08)">
+              <button type="button" class="tab on">Section 1</button><button type="button" class="tab">Section 2</button><button type="button" class="tab">Section 3</button>
+            </div>
+          </div>
+          <div style="position:absolute;left:20px;top:84px;display:flex;flex-direction:column;gap:10px">
+            <span class="rb" role="button" aria-label="Cabin view"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"></path><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"></path></svg></span>
+            <span class="rb" role="button" aria-label="Zoom"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l5 5M11 8v6M8 11h6"></path></svg></span>
+          </div>
+          <svg viewBox="0 0 900 190" width="100%" height="168" role="img" aria-label="Side view of the aircraft with section 1 highlighted" style="position:absolute;left:40px;right:0;top:62px;width:calc(100% - 60px)">
+            <defs>
+              <linearGradient id="fus" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".95"></stop><stop offset="1" stop-color="#cfd6e4" stop-opacity=".78"></stop></linearGradient>
+              <linearGradient id="wing" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8ecf4" stop-opacity=".9"></stop><stop offset="1" stop-color="#9aa5bb" stop-opacity=".7"></stop></linearGradient>
+            </defs>
+            <ellipse cx="450" cy="176" rx="380" ry="7" fill="rgba(0,0,0,.35)"></ellipse>
+            <path d="M440 112 L640 112 L700 160 L560 160 Z" fill="url(#wing)"></path>
+            <path d="M30 108 C30 84 70 66 130 64 L780 64 C820 64 850 56 872 24 L892 24 L874 96 C862 124 822 134 772 134 L110 134 C60 134 30 124 30 108 Z" fill="url(#fus)"></path>
+            <path d="M58 88 L96 84 L102 96 L64 98 Z" fill="#1a2233" opacity=".85"></path>
+            <rect x="{{hl.x}}" y="70" width="{{hl.w}}" height="58" rx="14" fill="rgba(212,166,60,.28)" stroke="#e8c46a" stroke-width="2"></rect>
+            <sc-for list="{{wins}}" as="w" hint-placeholder-count="38"><rect x="{{w.x}}" y="84" width="9" height="12" rx="4" fill="{{w.c}}"></rect></sc-for>
+            <ellipse cx="410" cy="150" rx="46" ry="17" fill="#e4e8f1"></ellipse><ellipse cx="368" cy="150" rx="8" ry="14" fill="#8793aa"></ellipse>
+            <circle cx="125" cy="152" r="9" fill="#1a2233"></circle><circle cx="520" cy="156" r="10" fill="#1a2233"></circle>
+            <circle cx="{{hl.cx}}" cy="99" r="19" fill="#0b1220" stroke="rgba(255,255,255,.55)" stroke-width="2"></circle>
+            <g transform="translate({{hl.cxm}} 90)" fill="none" stroke="#e8c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M0 0l9 5v10l-9 5l-9 -5v-10z"></path><path d="M0 10l9 -5M0 10v10M0 10l-9 -5"></path></g>
+            <text x="{{hl.cx}}" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#f3d98b">SECTION 1</text>
+          </svg>
+        </div>
+
+        <div style="flex-grow:1;display:flex;gap:14px;min-height:0">
+          <div class="inner" style="width:206px;flex-shrink:0;padding:18px;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(160deg,rgba(212,166,60,.2),rgba(8,12,22,.5) 70%)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start"><span style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#e8c46a,#b98a2e);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"></path><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"></path></svg></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg></div>
+            <div><div style="font-size:17px;font-weight:600">Cabin view</div><div class="mut" style="font-size:12px;line-height:1.5;margin-top:6px">Look down the aisle before you choose. See legroom and row spacing for this section.</div></div>
+          </div>
+
+          <div class="inner" style="flex-grow:1;min-width:0;padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:14px;font-weight:600">Section 1 <span class="mut" style="font-weight:400">· First class and front economy · rows 1 to 9</span></div>
+              <div style="display:flex;gap:14px;font-size:12px" class="mut">
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:rgba(34,197,94,.35);border:1px solid rgba(74,222,128,.7)"></span>Free</span>
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:rgba(220,38,38,.3);border:1px solid rgba(248,113,113,.5)"></span>Taken</span>
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:#d4a63c"></span>Yours</span>
+              </div>
+            </div>
+            <div style="flex-grow:1;display:flex;flex-direction:column;justify-content:center;gap:7px;align-items:center">
+              <div style="display:flex;gap:8px;font-size:11px;font-weight:600" class="mut"><span style="width:26px"></span><sc-for list="{{nums}}" as="n" hint-placeholder-count="9"><span style="width:40px;text-align:center">{{n}}</span></sc-for></div>
+              <sc-for list="{{lines}}" as="ln" hint-placeholder-count="7">
+                <div style="display:flex;gap:8px;align-items:center;height:{{ln.lh}}px">
+                  <span style="width:26px;font-size:11px;font-weight:600;text-align:center" class="mut">{{ln.letter}}</span>
+                  <sc-for list="{{ln.seats}}" as="s" hint-placeholder-count="9"><div style="width:40px;height:34px;border-radius:8px 8px 6px 6px;background:{{s.bg}};border:1px solid {{s.bd}};box-shadow:{{s.glow}};color:{{s.fg}};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;opacity:{{s.op}}">{{s.label}}</div></sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- right -->
+      <div style="width:330px;flex-shrink:0;display:flex;flex-direction:column;gap:14px">
+        <div class="inner" style="padding:20px 22px;background:linear-gradient(160deg,rgba(212,166,60,.22),rgba(8,12,22,.4) 60%)">
+          <div class="sec">Your selection</div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px">
+            <div style="font-size:72px;font-weight:700;line-height:1;letter-spacing:-.02em;color:#f3d98b">9E</div>
+            <div style="text-align:right;padding-bottom:8px"><div class="mut" style="font-size:12px">Seat price</div><div style="font-size:26px;font-weight:700">R 1,522</div></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><span class="chip">Economy</span><span class="chip">Middle seat</span><span class="chip">Standard legroom</span></div>
+          <div style="display:flex;align-items:center;gap:14px;margin-top:16px;padding:12px 14px;border-radius:14px;background:rgba(0,0,0,.25)">
+            <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="4"></circle><circle cx="22" cy="22" r="18" fill="none" stroke="#e8c46a" stroke-width="4" stroke-linecap="round" stroke-dasharray="{{ring}}" transform="rotate(-90 22 22)"></circle></svg>
+            <div><div style="font-size:18px;font-weight:700">08:42</div><div class="mut" style="font-size:12px">Held for you. Nobody else can take it.</div></div>
+          </div>
+          <button type="button" style="margin-top:16px;width:100%;height:54px;border:0;border-radius:14px;background:linear-gradient(180deg,#d9ac47,#c4952f);color:#0b1220;font:700 16px 'Inter',sans-serif;display:flex;align-items:center;justify-content:space-between;padding:0 22px;cursor:pointer;box-shadow:0 10px 24px rgba(196,149,47,.35)"><span>Continue to checkout</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+          <button type="button" style="margin-top:10px;width:100%;height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;font:600 14px 'Inter',sans-serif;cursor:pointer">Release seat and choose another</button>
+        </div>
+        <div class="inner" style="padding:18px 22px;flex-grow:1">
+          <div class="sec">Flight</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+            <div><div style="font-size:26px;font-weight:700;line-height:1">JNB</div><div class="mut" style="font-size:12px;margin-top:4px">06:30</div></div>
+            <div style="flex-grow:1;display:flex;align-items:center;gap:6px"><span class="dot"></span><span class="dl"></span><svg width="16" height="16" viewBox="0 0 24 24" fill="#e8c46a" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" transform="rotate(90 12 12)"></path></svg></div>
+            <div style="text-align:right"><div style="font-size:26px;font-weight:700;line-height:1">CPT</div><div class="mut" style="font-size:12px;margin-top:4px">08:35</div></div>
+          </div>
+          <div style="height:1px;background:rgba(255,255,255,.1);margin:14px 0 12px"></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px" class="mut"><span>Flight</span><b style="color:#fff">FL 204</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px" class="mut"><span>Duration</span><b style="color:#fff">2h 05m, direct</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px" class="mut"><span>Free seats</span><b style="color:#4ade80">18 of 162</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const taken = {'1A':1,'2C':1,'3B':1,'3D':1,'4A':1,'4F':1,'5C':1,'5E':1,'6B':1,'6F':1,'7A':1,'7D':1,'8C':1,'8E':1,'9A':1,'9F':1};
+    const mine = '9E';
+    const seat = (id) => {
+      if (id === mine) return { bg: 'linear-gradient(180deg,#f0cf74,#d4a63c)', bd: '#f3d98b', glow: '0 0 0 3px rgba(243,217,139,.3),0 6px 18px rgba(212,166,60,.55)', fg: '#0b1220', label: id, op: 1 };
+      if (taken[id]) return { bg: 'rgba(220,38,38,.28)', bd: 'rgba(248,113,113,.5)', glow: 'none', fg: 'transparent', label: '', op: 0.7 };
+      return { bg: 'rgba(34,197,94,.3)', bd: 'rgba(74,222,128,.65)', glow: 'none', fg: 'rgba(255,255,255,.7)', label: '', op: 1 };
+    };
+    const gap = { bg: 'transparent', bd: 'transparent', glow: 'none', fg: 'transparent', label: '', op: 1 };
+    const nums = []; for (let r = 1; r <= 9; r++) nums.push(r);
+    const letters = ['A','B','C','_','D','E','F'];
+    const lines = letters.map((L) => {
+      if (L === '_') return { letter: '', lh: 18, seats: nums.map(() => gap) };
+      return { letter: L, lh: 34, seats: nums.map((r) => {
+        if (r <= 2 && (L === 'B' || L === 'E')) return gap;
+        return seat(r + L);
+      }) };
+    });
+    const wins = []; for (let x = 128; x < 745; x += 16) { const inSec = x >= 126 && x <= 330; wins.push({ x, c: inSec ? '#e8c46a' : '#8793aa' }); }
+    const C = 2 * Math.PI * 18;
+    const steps = [
+      { n: '✓', label: 'Search', bg: '#16a34a', nfg: '#fff', fg: '#fff', line: '#16a34a' },
+      { n: '2', label: 'Select seat', bg: '#d4a63c', nfg: '#0b1220', fg: '#fff', line: 'rgba(255,255,255,.2)' },
+      { n: '3', label: 'Checkout', bg: 'rgba(255,255,255,.14)', nfg: 'rgba(255,255,255,.7)', fg: 'rgba(255,255,255,.55)', line: 'rgba(255,255,255,.2)' },
+      { n: '4', label: 'Confirmed', bg: 'rgba(255,255,255,.14)', nfg: 'rgba(255,255,255,.7)', fg: 'rgba(255,255,255,.55)', line: 'transparent' }
+    ];
+    return { nums, lines, wins, steps, hl: { x: 118, w: 220, cx: 228, cxm: 228 }, ring: (C * 0.84).toFixed(1) + ' ' + C.toFixed(1) };
+  }
+}
+</script>
+</body>
+</html>

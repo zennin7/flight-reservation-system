@@ -1,0 +1,71 @@
+/* ===================================================================
+ * SkyVoyage Theme - Light (Elevate Spec v2)
+ * Looked-up colour variables and design tokens.
+ * =================================================================== */
+.root {
+    /* Canvas & Surfaces */
+    -sv-canvas: #f4f6f9;
+    -sv-page: #f4f6f9;
+    -sv-surface: #ffffff;
+    -sv-surface-elevated: #f8fafc;
+    -sv-surface-frosted: rgba(255, 255, 255, 0.88);
+
+    /* Borders */
+    -sv-border: #e2e8f0;
+    -sv-border-subtle: rgba(13, 27, 42, 0.08);
+    -sv-field-border: #cbd5e1;
+
+    /* Typography */
+    -sv-text-primary: #0d1b2a;
+    -sv-text: #0d1b2a;
+    -sv-text-secondary: #475569;
+    -sv-muted: #64748b;
+    -sv-text-muted: #94a3b8;
+
+    /* Brand Gold */
+    -sv-gold-primary: #c5a028;
+    -sv-gold: #c5a028;
+    -sv-gold-hover: #b38f1e;
+    -sv-gold-surface: #fffdf5;
+    -sv-gold-from: #d4af37;
+    -sv-gold-to: #b38f1e;
+    -sv-gold-gradient: linear-gradient(to bottom, #d4af37, #b38f1e);
+
+    /* Brand Navy */
+    -sv-navy-deep: #0d1b2a;
+    -sv-navy-surface: #1e293b;
+    -sv-table-header: #0d1b2a;
+    -sv-table-header-text: #ffffff;
+    -sv-icon-circle: #fcf6e8;
+
+    /* Secondary Controls */
+    -sv-grey-button-bg: #e2e8f0;
+    -sv-grey-button-text: #334155;
+    -sv-grey-button-hover: #cbd5e1;
+
+    /* Status Colors */
+    -sv-green-status: #16a34a;
+    -sv-available-green: #16a34a;
+    -sv-seat-available: #16a34a;
+    -sv-green-bg: #dcfce7;
+
+    -sv-red-status: #dc2626;
+    -sv-taken-red: #dc2626;
+    -sv-seat-taken: #dc2626;
+    -sv-error-red: #dc2626;
+    -sv-error-text: #ef4444;
+    -sv-red: #dc2626;
+    -sv-red-bg: #fee2e2;
+
+    /* Shadows & Effects */
+    -sv-card-shadow: dropshadow(gaussian, rgba(13, 27, 42, 0.08), 12, 0, 0, 3);
+    -sv-card-shadow-elevated: dropshadow(gaussian, rgba(13, 27, 42, 0.16), 20, 0, 0, 6);
+
+    /* Stepper & Chart */
+    -sv-stepper-pending-bg: #94a3b8;
+    -sv-stepper-pending-text: #64748b;
+    -sv-chart-bar: linear-gradient(to bottom, #d4af37, #b38f1e);
+
+    /* Hero */
+    -sv-hero-bg: linear-gradient(from 0% 0% to 100% 10%, #ffffff 0%, #ffffff 42%, #fbeed6 70%, #f0c486 100%);
+}

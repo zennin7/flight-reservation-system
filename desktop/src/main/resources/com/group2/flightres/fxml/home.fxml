@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.group2.flightres.controller.HomeController"
+      styleClass="home-root"
+      alignment="TOP_CENTER"
+      spacing="0">
+
+    <!-- Hero Section (290px high) with Photographic Background -->
+    <StackPane alignment="TOP_LEFT" minHeight="290" prefHeight="290" maxHeight="290" styleClass="hero-banner">
+        <!-- Hero Background Photo -->
+        <ImageView fitWidth="1000" fitHeight="290" preserveRatio="false">
+            <image>
+                <Image url="@../photos/home-hero.jpg"/>
+            </image>
+        </ImageView>
+
+        <!-- Dark Gradient Vignette Overlay for High Contrast Text -->
+        <Region styleClass="hero-overlay" prefWidth="1000" prefHeight="290"/>
+
+        <!-- Hero Text on Left -->
+        <VBox spacing="-4" alignment="TOP_LEFT" maxWidth="520">
+            <StackPane.margin>
+                <Insets top="42" left="40"/>
+            </StackPane.margin>
+
+            <Label text="Your Next Adventure" styleClass="hero-title" />
+            <Label text="Starts Here" styleClass="hero-title-gold" />
+            <Label text="Book your flights with ease and explore South Africa with confidence. Premium service, great fares, and unforgettable journeys."
+                   styleClass="hero-description"
+                   wrapText="true"
+                   maxWidth="380">
+                <VBox.margin>
+                    <Insets top="18"/>
+                </VBox.margin>
+            </Label>
+        </VBox>
+    </StackPane>
+
+    <!-- Overlapping Card and Features Area -->
+    <VBox alignment="TOP_CENTER" spacing="34" translateY="-54">
+        <!-- Search Card -->
+        <HBox alignment="BOTTOM_CENTER" spacing="12" styleClass="card, home-search-card" maxWidth="928">
+            <VBox.margin>
+                <Insets left="36" right="36"/>
+            </VBox.margin>
+
+            <!-- FROM -->
+            <VBox spacing="6" HBox.hgrow="ALWAYS" minWidth="160" prefWidth="175">
+                <Label text="FROM" styleClass="form-label" />
+                <ComboBox fx:id="fromCombo" maxWidth="Infinity" />
+            </VBox>
+
+            <!-- TO -->
+            <VBox spacing="6" HBox.hgrow="ALWAYS" minWidth="150" prefWidth="160">
+                <Label text="TO" styleClass="form-label" />
+                <ComboBox fx:id="toCombo" maxWidth="Infinity" />
+            </VBox>
+
+            <!-- DEPARTURE DATE -->
+            <VBox spacing="6" HBox.hgrow="ALWAYS" minWidth="125" prefWidth="135">
+                <Label text="DEPARTURE DATE" styleClass="form-label" />
+                <DatePicker fx:id="departureDatePicker" promptText="Select date" maxWidth="Infinity" />
+            </VBox>
+
+            <!-- RETURN DATE -->
+            <VBox spacing="6" HBox.hgrow="ALWAYS" minWidth="125" prefWidth="135">
+                <Label text="RETURN DATE" styleClass="form-label" />
+                <DatePicker fx:id="returnDatePicker" promptText="Select date" maxWidth="Infinity" />
+            </VBox>
+
+            <!-- PASSENGERS -->
+            <VBox spacing="6" minWidth="95" prefWidth="105">
+                <Label text="PASSENGERS" styleClass="form-label" />
+                <ComboBox fx:id="passengersCombo" maxWidth="Infinity" />
+            </VBox>
+
+            <!-- SEARCH BUTTON -->
+            <Button fx:id="searchFlightsButton" text="Search Flights" styleClass="btn-gold, search-flights-btn" minWidth="160" prefWidth="160">
+                <graphic>
+                    <SVGPath content="M 7 2.5 A 4.5 4.5 0 1 0 7 11.5 A 4.5 4.5 0 1 0 7 2.5 M 10.2 10.2 L 15 15"
+                             stroke="WHITE" strokeWidth="2" strokeLineCap="ROUND" fill="TRANSPARENT" />
+                </graphic>
+            </Button>
+        </HBox>
+
+        <!-- 4 Feature Items -->
+        <HBox alignment="CENTER" spacing="14" styleClass="home-features-box" maxWidth="928">
+            <VBox.margin>
+                <Insets left="36" right="36"/>
+            </VBox.margin>
+
+            <!-- Item 1: Best Prices -->
+            <HBox alignment="CENTER_LEFT" spacing="12" HBox.hgrow="ALWAYS" styleClass="home-feature-card">
+                <StackPane styleClass="feature-icon-circle">
+                    <SVGPath content="M3 21 L35 4 L38 7 L26 16 L28 28 L24 29 L18 19 L9 24 L6 22 Z"
+                             styleClass="feature-icon" scaleX="0.5" scaleY="0.5" />
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="Best Prices" styleClass="feature-title" />
+                    <Label text="Get the most competitive fares for your journey." styleClass="feature-desc" wrapText="true" maxWidth="150" />
+                </VBox>
+            </HBox>
+
+            <!-- Item 2: Safe & Secure -->
+            <HBox alignment="CENTER_LEFT" spacing="12" HBox.hgrow="ALWAYS" styleClass="home-feature-card">
+                <StackPane styleClass="feature-icon-circle">
+                    <SVGPath content="M 12 2 L 4 5 L 4 11 C 4 16.5 7.5 21.5 12 22.8 C 16.5 21.5 20 16.5 20 11 L 20 5 Z M 12 7 C 13.1 7 14 7.9 14 9 L 14 10 L 15 10 C 15.6 10 16 10.4 16 11 L 16 15 C 16 15.6 15.6 16 15 16 L 9 16 C 8.4 16 8 15.6 8 15 L 8 11 C 8 10.4 8.4 10 9 10 L 10 10 L 10 9 C 10 7.9 10.9 7 12 7 Z"
+                             styleClass="feature-icon" scaleX="0.8" scaleY="0.8" />
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="Safe &amp; Secure" styleClass="feature-title" />
+                    <Label text="Your information is always protected." styleClass="feature-desc" wrapText="true" maxWidth="150" />
+                </VBox>
+            </HBox>
+
+            <!-- Item 3: 24/7 Support -->
+            <HBox alignment="CENTER_LEFT" spacing="12" HBox.hgrow="ALWAYS" styleClass="home-feature-card">
+                <StackPane styleClass="feature-icon-circle">
+                    <SVGPath content="M 6.6 10.8 C 8 13.6 10.4 16 13.2 17.4 L 15.4 15.2 C 15.7 14.9 16.1 14.8 16.5 15 C 17.6 15.4 18.8 15.6 20 15.6 C 20.6 15.6 21 16 21 16.6 L 21 20 C 21 20.6 20.6 21 20 21 C 10.6 21 3 13.4 3 4 C 3 3.4 3.4 3 4 3 L 7.4 3 C 8 3 8.4 3.4 8.4 4 C 8.4 5.2 8.6 6.4 9 7.5 C 9.1 7.9 9 8.3 8.8 8.6 Z"
+                             styleClass="feature-icon" scaleX="0.8" scaleY="0.8" />
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="24/7 Support" styleClass="feature-title" />
+                    <Label text="We are here whenever you need us." styleClass="feature-desc" wrapText="true" maxWidth="150" />
+                </VBox>
+            </HBox>
+
+            <!-- Item 4: Global Destinations -->
+            <HBox alignment="CENTER_LEFT" spacing="12" HBox.hgrow="ALWAYS" styleClass="home-feature-card">
+                <StackPane styleClass="feature-icon-circle">
+                    <SVGPath content="M 12 2 C 7.6 2 4 5.6 4 10 C 4 15.2 12 22 12 22 C 12 22 20 15.2 20 10 C 20 5.6 16.4 2 12 2 Z M 12 13 C 10.3 13 9 11.7 9 10 C 9 8.3 10.3 7 12 7 C 13.7 7 15 8.3 15 10 C 15 11.7 13.7 13 12 13 Z"
+                             styleClass="feature-icon" scaleX="0.8" scaleY="0.8" />
+                </StackPane>
+                <VBox spacing="2">
+                    <Label text="South Africa" styleClass="feature-title" />
+                    <Label text="Connecting JNB, CPT, and DUR daily." styleClass="feature-desc" wrapText="true" maxWidth="150" />
+                </VBox>
+            </HBox>
+        </HBox>
+    </VBox>
+
+</VBox>
