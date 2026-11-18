@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.group2.flightres.config.BrandConfig?>
+<?import com.group2.flightres.util.GlassBackground?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.shape.SVGPath?>
+
+<GlassBackground xmlns="http://javafx.com/javafx"
+                 xmlns:fx="http://javafx.com/fxml"
+                 fx:controller="com.group2.flightres.controller.LoginController"
+                 photoPath="/com/group2/flightres/photos/login-side.jpg"
+                 blurRadius="26.0"
+                 darkness="-0.50"
+                 saturation="0.15"
+                 linearOverlay="linear-gradient(to bottom, rgba(11,18,32,0.30) 0%, rgba(11,18,32,0.75) 100%)"
+                 radialGlow="radial-gradient(center 85% 10%, radius 45%, rgba(212,166,60,0.18) 0%, transparent 100%)"
+                 enableSecondaryGlow="false"
+                 stylesheets="@../css/glass.css"
+                 styleClass="login-root"
+                 prefWidth="1280"
+                 prefHeight="800">
+
+    <!-- Centered Glass Card (1280x800 design: 150 margins left/right, 90 top/bottom -> 980x620) -->
+    <HBox styleClass="login-split-card"
+          alignment="CENTER_LEFT"
+          maxWidth="980"
+          maxHeight="620"
+          prefWidth="980"
+          prefHeight="620"
+          spacing="14">
+        <padding>
+            <Insets top="14" right="14" bottom="14" left="14"/>
+        </padding>
+
+        <!-- Left Half: Cape Town window-view photo card (520px of 980px, radius 20, padding 32) -->
+        <StackPane prefWidth="520"
+                   minWidth="520"
+                   maxWidth="520"
+                   prefHeight="592"
+                   maxHeight="592">
+            <clip>
+                <Rectangle width="520" height="592" arcWidth="40" arcHeight="40"/>
+            </clip>
+
+            <ImageView fitWidth="520" fitHeight="592" preserveRatio="false">
+                <image>
+                    <Image url="@../photos/login-side.jpg"/>
+                </image>
+            </ImageView>
+
+            <!-- Subtle overlay: rgba(11,18,32,0.05) at 40% to rgba(11,18,32,0.88) at 100% -->
+            <Region styleClass="login-photo-gradient" prefWidth="520" prefHeight="592"/>
+
+            <VBox alignment="TOP_LEFT">
+                <padding>
+                    <Insets top="32" right="32" bottom="32" left="32"/>
+                </padding>
+
+                <!-- Brand row: gold paper plane icon (stroke #d4a63c) + app name from BrandConfig -->
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" styleClass="brand-plane-icon"/>
+                    <Label styleClass="brand-label">
+                        <text><BrandConfig fx:constant="APP_NAME"/></text>
+                    </Label>
+                </HBox>
+
+                <Region VBox.vgrow="ALWAYS"/>
+
+                <!-- Headline & pagination dots -->
+                <VBox spacing="18" alignment="BOTTOM_LEFT">
+                    <Label text="Your next&#10;horizon is&#10;one seat away."
+                           styleClass="login-hero-headline"
+                           wrapText="true"/>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Region styleClass="carousel-pill-active"/>
+                        <Region styleClass="carousel-dot"/>
+                        <Region styleClass="carousel-dot"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </StackPane>
+
+        <!-- Right Side: padding 30/40/24, content vertically centred, gap 20 -->
+        <VBox alignment="CENTER_LEFT"
+              spacing="20"
+              HBox.hgrow="ALWAYS">
+            <padding>
+                <Insets top="30" right="40" bottom="24" left="40"/>
+            </padding>
+
+            <!-- Title & Subtitle block -->
+            <VBox spacing="6">
+                <Label text="WELCOME BACK" styleClass="login-kicker"/>
+                <Label text="Sign in" styleClass="login-title-serif"/>
+                <Label text="Manage flights, seats and bookings in one place."
+                       styleClass="login-subtitle"
+                       wrapText="true"/>
+            </VBox>
+
+            <!-- Email Field -->
+            <VBox spacing="8" alignment="CENTER_LEFT" maxWidth="Infinity">
+                <Label text="Email" styleClass="login-field-label"/>
+                <HBox styleClass="login-field-box" alignment="CENTER_LEFT" spacing="12">
+                    <SVGPath content="M6 5 h12 a3 3 0 0 1 3 3 v8 a3 3 0 0 1 -3 3 h-12 a3 3 0 0 1 -3 -3 v-8 a3 3 0 0 1 3 -3 z M3 8 l9 6 9 -6"
+                             styleClass="login-input-icon"/>
+                    <TextField fx:id="usernameField"
+                               promptText="david@example.com"
+                               styleClass="login-field-input"
+                               HBox.hgrow="ALWAYS"/>
+                </HBox>
+            </VBox>
+
+            <!-- Password Field & Forgot Link -->
+            <VBox spacing="8" alignment="CENTER_LEFT" maxWidth="Infinity">
+                <HBox alignment="CENTER_LEFT" maxWidth="Infinity">
+                    <Label text="Password" styleClass="login-field-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Hyperlink text="Forgot?"
+                               onAction="#handleForgotPassword"
+                               styleClass="login-forgot-link"/>
+                </HBox>
+                <HBox styleClass="login-field-box" alignment="CENTER_LEFT" spacing="12">
+                    <SVGPath content="M8 11 V8 a4 4 0 0 1 8 0 v3 M7.5 11 h9 a2.5 2.5 0 0 1 2.5 2.5 v4 a2.5 2.5 0 0 1 -2.5 2.5 h-9 a2.5 2.5 0 0 1 -2.5 -2.5 v-4 a2.5 2.5 0 0 1 2.5 -2.5 z"
+                             styleClass="login-input-icon"/>
+                    <PasswordField fx:id="passwordField"
+                                   promptText="••••••••••"
+                                   styleClass="login-field-input"
+                                   HBox.hgrow="ALWAYS"/>
+                </HBox>
+            </VBox>
+
+            <!-- Keep me signed in CheckBox -->
+            <HBox alignment="CENTER_LEFT">
+                <CheckBox fx:id="rememberMeCheckBox"
+                          text="Keep me signed in"
+                          styleClass="glass-checkbox"/>
+            </HBox>
+
+            <!-- Error Label (hidden until login fails) -->
+            <Label fx:id="errorLabel"
+                   text="Incorrect username or password."
+                   styleClass="login-error-text"
+                   visible="false"
+                   managed="false"
+                   wrapText="true"/>
+
+            <!-- Sign In Button (height 52, radius 14, gradient #d9ac47 to #c4952f) -->
+            <Button fx:id="loginButton"
+                    text="Sign in"
+                    onAction="#handleLogin"
+                    styleClass="btn-login-gold"
+                    maxWidth="Infinity"/>
+
+            <!-- Create Account Link -->
+            <HBox alignment="CENTER" spacing="4">
+                <Label text="New here?" styleClass="login-muted-text"/>
+                <Hyperlink text="Create an account"
+                           onAction="#handleSignUp"
+                           styleClass="login-signup-link"/>
+            </HBox>
+
+            <!-- Small ghost social buttons -->
+            <HBox alignment="CENTER" spacing="10" maxWidth="Infinity">
+                <Button text="Google"
+                        onAction="#handleGoogleSignIn"
+                        styleClass="btn-ghost-sm"
+                        HBox.hgrow="ALWAYS"
+                        maxWidth="Infinity"/>
+                <Button text="Apple"
+                        onAction="#handleAppleSignIn"
+                        styleClass="btn-ghost-sm"
+                        HBox.hgrow="ALWAYS"
+                        maxWidth="Infinity"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+</GlassBackground>

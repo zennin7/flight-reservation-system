@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.group2.flightres.component.StepperBar?>
+<?import com.group2.flightres.config.BrandConfig?>
+<?import com.group2.flightres.util.GlassBackground?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.shape.SVGPath?>
+
+<GlassBackground xmlns="http://javafx.com/javafx"
+                 xmlns:fx="http://javafx.com/fxml"
+                 fx:controller="com.group2.flightres.controller.CheckoutController"
+                 photoPath="/images/destinations/cpt.jpg"
+                 blurRadius="26.0"
+                 darkness="-0.50"
+                 saturation="0.20"
+                 linearOverlay="linear-gradient(to bottom, rgba(11,18,32,0.40) 0%, rgba(11,18,32,0.74) 100%)"
+                 radialGlow="radial-gradient(center 15% 100%, radius 50%, rgba(212,166,60,0.16) 0%, transparent 100%)"
+                 enableSecondaryGlow="false"
+                 stylesheets="@../css/glass.css"
+                 styleClass="seat-map-glass-root"
+                 prefWidth="1280"
+                 prefHeight="860"
+                 minWidth="1280"
+                 minHeight="860"
+                 maxWidth="1280"
+                 maxHeight="860">
+
+    <VBox alignment="TOP_CENTER" spacing="0" prefWidth="1280" prefHeight="860" minWidth="1280" minHeight="860" maxWidth="1280" maxHeight="860">
+
+        <!-- ===================================================================
+             TOP NAV (64 high, padding 0 56)
+             =================================================================== -->
+        <HBox alignment="CENTER_LEFT" prefHeight="64" minHeight="64" maxHeight="64" styleClass="glass-nav-bar">
+            <!-- Brand row: gold plane icon + APP_NAME -->
+            <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleNavHome" style="-fx-cursor: hand;">
+                <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" styleClass="nav-brand-plane"/>
+                <Label styleClass="nav-brand-text">
+                    <text><BrandConfig fx:constant="APP_NAME"/></text>
+                </Label>
+            </HBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Center nav links: Flights (active pill), My Bookings, Offers, About, Contact -->
+            <HBox alignment="CENTER" spacing="30" styleClass="glass-nav-links-box">
+                <Button text="Flights" styleClass="glass-nav-link, glass-nav-link-active" onAction="#handleNavFlights"/>
+                <Button text="My Bookings" styleClass="glass-nav-link" onAction="#handleComingSoonMyBookings"/>
+                <Button text="Offers" styleClass="glass-nav-link" onAction="#handleComingSoonOffers"/>
+                <Button text="About" styleClass="glass-nav-link" onAction="#handleNavAbout"/>
+                <Button text="Contact" styleClass="glass-nav-link" onAction="#handleNavContact"/>
+            </HBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Right avatar circle: 34px diameter, #d4a63c with initials AM -->
+            <StackPane styleClass="glass-avatar-circle" onMouseClicked="#handleNavAvatar" style="-fx-cursor: hand;">
+                <Label text="AM" styleClass="glass-avatar-initials"/>
+            </StackPane>
+        </HBox>
+
+        <!-- ===================================================================
+             MAIN GLASS CARD (Margins: left/right 56, top 4, bottom 32)
+             =================================================================== -->
+        <VBox VBox.vgrow="ALWAYS" spacing="14" styleClass="search-main-glass"
+              prefWidth="1168" minWidth="1168" maxWidth="1168">
+            <VBox.margin>
+                <Insets top="4" right="56" bottom="32" left="56"/>
+            </VBox.margin>
+
+            <!-- 1. Stepper Bar (height 52, inner card) -->
+            <HBox alignment="CENTER" prefHeight="52" minHeight="52" maxHeight="52" styleClass="glass-stepper-card">
+                <StepperBar fx:id="stepperBar" alignment="CENTER" prefHeight="52"/>
+            </HBox>
+
+            <!-- 2. Main Split: Left Column (540w) + Right Column (flex) -->
+            <HBox VBox.vgrow="ALWAYS" spacing="16" minHeight="0">
+
+                <!-- =======================================================
+                     LEFT COLUMN: Trip Card + Passenger Details Card (540w)
+                     ======================================================= -->
+                <VBox prefWidth="540" minWidth="540" maxWidth="540" spacing="14">
+
+                    <!-- A. Trip Card -->
+                    <VBox styleClass="inner-card" style="-fx-padding: 0; -fx-background-radius: 20px; -fx-border-radius: 20px;">
+                        <!-- Trip Hero Photo Banner (clipped to top 20px rounded corners) -->
+                        <StackPane prefHeight="150" minHeight="150" maxHeight="150">
+                            <clip>
+                                <Rectangle width="540" height="190" arcWidth="40" arcHeight="40"/>
+                            </clip>
+                            <ImageView fx:id="tripHeroImageView" fitWidth="540" fitHeight="150" preserveRatio="false" opacity="0.32"/>
+                            <Region style="-fx-background-color: linear-gradient(to bottom, rgba(11,18,32,0.10) 0%, rgba(11,18,32,0.85) 100%);"/>
+                            <VBox alignment="CENTER_LEFT" spacing="0" style="-fx-padding: 18px 24px;">
+                                <HBox alignment="CENTER_LEFT">
+                                    <Label text="YOUR TRIP" styleClass="section-badge-gold" style="-fx-text-fill: rgba(255,255,255,0.90);"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="tripDateBadge" text="Sat, 14 Nov 2026"
+                                           style="-fx-background-color: rgba(255,255,255,0.20); -fx-background-radius: 999px; -fx-padding: 5px 12px; -fx-text-fill: #ffffff; -fx-font-family: 'Inter SemiBold', sans-serif; -fx-font-size: 12px;"/>
+                                </HBox>
+                                <Region VBox.vgrow="ALWAYS"/>
+                                <Label text="FROM JOHANNESBURG TO" style="-fx-font-size: 11px; -fx-font-family: 'Inter Medium', sans-serif; -fx-text-fill: rgba(255,255,255,0.85); -fx-letter-spacing: 0.16em;"/>
+                                <Label fx:id="tripOriginDestLabel" text="Cape Town" style="-fx-font-family: 'Lora Medium', Georgia, serif; -fx-font-size: 36px; -fx-font-weight: 500; -fx-text-fill: #ffffff;"/>
+                            </VBox>
+                        </StackPane>
+
+                        <!-- Times & Route Line -->
+                        <HBox alignment="CENTER_LEFT" spacing="14" style="-fx-padding: 16px 24px 6px 24px;">
+                            <VBox spacing="4" minWidth="120">
+                                <Label fx:id="tripDepTimeLabel" text="" style="-fx-font-family: 'Inter Bold', sans-serif; -fx-font-size: 28px; -fx-font-weight: 700; -fx-text-fill: #ffffff;"/>
+                                <Label fx:id="tripOriginSubLabel" text="" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                            </VBox>
+                            <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="4">
+                                <Label fx:id="tripDurationLabel" text="" style="-fx-font-family: 'Inter SemiBold', sans-serif; -fx-font-size: 11px; -fx-font-weight: 600; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                                <HBox alignment="CENTER" spacing="6" maxWidth="Infinity">
+                                    <Region style="-fx-pref-width: 7px; -fx-pref-height: 7px; -fx-background-color: #e8c46a; -fx-background-radius: 50%;"/>
+                                    <Region HBox.hgrow="ALWAYS" style="-fx-border-color: rgba(255,255,255,0.35); -fx-border-width: 1.5 0 0 0; -fx-border-style: dashed;"/>
+                                    <SVGPath content="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"
+                                             fill="#e8c46a" scaleX="0.75" scaleY="0.75" rotate="90"/>
+                                </HBox>
+                            </VBox>
+                            <VBox spacing="4" alignment="TOP_RIGHT" minWidth="120">
+                                <Label fx:id="tripArrTimeLabel" text="" style="-fx-font-family: 'Inter Bold', sans-serif; -fx-font-size: 28px; -fx-font-weight: 700; -fx-text-fill: #ffffff;"/>
+                                <Label fx:id="tripDestSubLabel" text="" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                            </VBox>
+                        </HBox>
+
+                        <!-- Dashed Divider -->
+                        <Region style="-fx-border-color: rgba(255,255,255,0.18); -fx-border-width: 1.5 0 0 0; -fx-border-style: dashed; -fx-margin: 10px 24px 0 24px;"/>
+
+                        <!-- Flight / Seat / Baggage Metadata Grid -->
+                        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 12px 24px 16px 24px;">
+                            <VBox HBox.hgrow="ALWAYS" spacing="2">
+                                <Label text="Flight" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                                <Label fx:id="tripFlightLabel" text="" style="-fx-font-family: 'Inter SemiBold', sans-serif; -fx-font-size: 15px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                            </VBox>
+                            <VBox HBox.hgrow="ALWAYS" spacing="2">
+                                <Label text="Seat" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                                <Label fx:id="tripSeatLabel" text="" style="-fx-font-family: 'Inter SemiBold', sans-serif; -fx-font-size: 15px; -fx-font-weight: 600; -fx-text-fill: #f3d98b;"/>
+                            </VBox>
+                            <VBox HBox.hgrow="ALWAYS" spacing="2">
+                                <Label text="Baggage" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.58);"/>
+                                <Label fx:id="baggageAllowanceLabel" text="" style="-fx-font-family: 'Inter SemiBold', sans-serif; -fx-font-size: 15px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <!-- B. Passenger Details Card -->
+                    <VBox VBox.vgrow="ALWAYS" styleClass="inner-card" style="-fx-padding: 18px 24px;" spacing="12">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Passenger" style="-fx-font-family: 'Inter SemiBold', sans-serif; -fx-font-size: 16px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="Adult 1 of 1"
+                                   style="-fx-background-color: rgba(212,166,60,0.20); -fx-background-radius: 999px; -fx-padding: 4px 11px; -fx-text-fill: #f3d98b; -fx-font-family: 'Inter SemiBold', sans-serif; -fx-font-size: 12px;"/>
+                        </HBox>
+
+                        <GridPane hgap="10" vgap="8">
+                            <columnConstraints>
+                                <ColumnConstraints percentWidth="50"/>
+                                <ColumnConstraints percentWidth="50"/>
+                            </columnConstraints>
+
+                            <!-- First name -->
+                            <VBox spacing="4" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label text="First name" style="-fx-font-family: 'Inter Medium', sans-serif; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.65);"/>
+                                <TextField fx:id="firstNameField" promptText="First name" styleClass="checkout-input"/>
+                            </VBox>
+
+                            <!-- Last name -->
+                            <VBox spacing="4" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label text="Last name" style="-fx-font-family: 'Inter Medium', sans-serif; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.65);"/>
+                                <TextField fx:id="lastNameField" promptText="Last name" styleClass="checkout-input"/>
+                            </VBox>
+
+                            <!-- Passport number -->
+                            <VBox spacing="4" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <Label text="Passport number" style="-fx-font-family: 'Inter Medium', sans-serif; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.65);"/>
+                                <TextField fx:id="passportField" promptText="A91827364" styleClass="checkout-input"/>
+                            </VBox>
+
+                            <!-- Date of birth -->
+                            <VBox spacing="4" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                <Label text="Date of birth" style="-fx-font-family: 'Inter Medium', sans-serif; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.65);"/>
+                                <TextField fx:id="dobField" promptText="12 May 1998" styleClass="checkout-input"/>
+                            </VBox>
+
+                            <!-- Email (span 2 columns) -->
+                            <VBox spacing="4" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2">
+                                <Label text="Email for your boarding pass" style="-fx-font-family: 'Inter Medium', sans-serif; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.65);"/>
+                                <TextField fx:id="emailField" promptText="passenger@example.com" styleClass="checkout-input"/>
+                            </VBox>
+                        </GridPane>
+
+                        <!-- Preserved existing baseline controls (managed=false, invisible) -->
+                        <TextField fx:id="fullNameField" visible="false" managed="false"/>
+                        <Label fx:id="flightLabel" visible="false" managed="false"/>
+                        <Label fx:id="departsLabel" visible="false" managed="false"/>
+                        <Label fx:id="passengerLabel" visible="false" managed="false"/>
+                        <Label fx:id="seatLabel" visible="false" managed="false"/>
+                    </VBox>
+                </VBox>
+
+                <!-- =======================================================
+                     RIGHT COLUMN: Payment Method Card + Order Summary Card
+                     ======================================================= -->
+                <VBox HBox.hgrow="ALWAYS" spacing="14" minWidth="0">
+
+                    <!-- A. Payment Method Card -->
+                    <VBox styleClass="inner-card" style="-fx-padding: 18px 24px;" spacing="14">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="Payment method" style="-fx-font-family: 'Inter SemiBold', sans-serif; -fx-font-size: 16px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+
+                            <HBox styleClass="demo-payment-badge" alignment="CENTER">
+                                <Label text="Demo payment, no real card is charged" styleClass="demo-payment-text"/>
+                            </HBox>
+                        </HBox>
+
+                        <!-- Payment Method: Card (only) -->
+                        <HBox styleClass="tab-group" spacing="4">
+                            <Button fx:id="cardTabButton" text="Card" styleClass="tab-btn, tab-btn-active" HBox.hgrow="ALWAYS" maxWidth="Infinity" onAction="#handleCardTab"/>
+                        </HBox>
+
+                        <!-- Card Preview + Card Form Inputs -->
+                        <HBox spacing="18" alignment="CENTER_LEFT">
+
+                            <!-- Live Credit Card Preview (240x150) -->
+                            <VBox styleClass="paycard" prefWidth="240" minWidth="240" maxWidth="240" prefHeight="150" minHeight="150" maxHeight="150"
+                                  style="-fx-padding: 16px 18px;" spacing="0">
+                                <HBox alignment="CENTER_LEFT">
+                                    <Region styleClass="paycard-chip" prefWidth="34" prefHeight="26"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <!-- Contactless Icon -->
+                                    <SVGPath content="M8 8a6 6 0 010 8M12 5.5a10 10 0 010 13M16 3a14 14 0 010 18"
+                                             stroke="rgba(255,255,255,0.8)" strokeWidth="1.8" fill="transparent" scaleX="0.8" scaleY="0.8"/>
+                                </HBox>
+                                <Region VBox.vgrow="ALWAYS"/>
+                                <Label fx:id="cardPreviewNumber" text="•••• •••• •••• 4242"
+                                       style="-fx-font-family: 'Inter Medium', sans-serif; -fx-font-size: 16px; -fx-font-weight: 500; -fx-letter-spacing: 0.14em; -fx-text-fill: #ffffff;"/>
+                                <Region VBox.vgrow="ALWAYS"/>
+                                <HBox alignment="CENTER_LEFT">
+                                    <Label fx:id="cardPreviewHolder" text="AMAHLE MOKOENA"
+                                           style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 10px; -fx-letter-spacing: 0.08em; -fx-text-fill: rgba(255,255,255,0.85);"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="cardPreviewExpiry" text="08 / 28"
+                                           style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 10px; -fx-letter-spacing: 0.08em; -fx-text-fill: rgba(255,255,255,0.85);"/>
+                                </HBox>
+                            </VBox>
+
+                            <!-- Card Inputs Form -->
+                            <VBox HBox.hgrow="ALWAYS" spacing="10" alignment="CENTER_LEFT">
+                                <VBox spacing="4">
+                                    <Label text="Card number" style="-fx-font-family: 'Inter Medium', sans-serif; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.65);"/>
+                                    <TextField fx:id="cardNumberField" promptText="4242 4242 4242 4242" styleClass="checkout-input"/>
+                                </VBox>
+                                <HBox spacing="10">
+                                    <VBox HBox.hgrow="ALWAYS" spacing="4">
+                                        <Label text="Expiry" style="-fx-font-family: 'Inter Medium', sans-serif; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.65);"/>
+                                        <TextField fx:id="expiryField" promptText="08 / 28" styleClass="checkout-input"/>
+                                    </VBox>
+                                    <VBox HBox.hgrow="ALWAYS" spacing="4">
+                                        <Label text="CVV" style="-fx-font-family: 'Inter Medium', sans-serif; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.65);"/>
+                                        <PasswordField fx:id="cvvField" promptText="123" styleClass="checkout-input"/>
+                                    </VBox>
+                                </HBox>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <!-- B. Order Summary Card -->
+                    <VBox VBox.vgrow="ALWAYS" styleClass="order-summary-card" style="-fx-padding: 20px 24px;" spacing="0">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="ORDER SUMMARY" styleClass="order-summary-overline"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="orderSummaryBadge" text=""
+                                   style="-fx-background-color: rgba(255,255,255,0.12); -fx-background-radius: 999px; -fx-padding: 5px 12px; -fx-text-fill: #ffffff; -fx-font-family: 'Inter SemiBold', sans-serif; -fx-font-size: 12px;"/>
+                        </HBox>
+
+                        <VBox spacing="4" style="-fx-padding: 12px 0 0 0;">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Base fare" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.72);"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="baseFareLabel" text="" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.72);"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Demand pricing" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.72);"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="demandPricingLabel" text="" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.72);"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Taxes and fees" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.72);"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="taxesFeesLabel" text="" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.72);"/>
+                            </HBox>
+                        </VBox>
+
+                        <Region style="-fx-background-color: rgba(255,255,255,0.16); -fx-pref-height: 1px; -fx-margin: 10px 0;"/>
+
+                        <HBox alignment="BASELINE_LEFT">
+                            <Label text="Total" style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 15px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="totalLabel" text="" styleClass="gold-total-text"/>
+                        </HBox>
+
+                        <Region VBox.vgrow="ALWAYS"/>
+
+                        <!-- Gold Confirm and Pay Button (Height 56) -->
+                        <Button fx:id="confirmBookingButton" text="" onAction="#handleConfirm"
+                                prefHeight="56" minHeight="56" maxHeight="56" maxWidth="Infinity"
+                                styleClass="btn-checkout-gold">
+                            <graphic>
+                                <HBox alignment="CENTER" spacing="10" prefWidth="510">
+                                    <Label text="Confirm and pay" style="-fx-font-family: 'Inter Bold', sans-serif; -fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #0b1220;"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="confirmTotalLabel" text="" style="-fx-font-family: 'Inter Bold', sans-serif; -fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #0b1220;"/>
+                                    <SVGPath content="M9 6l6 6-6 6" stroke="#0b1220" strokeWidth="2.6" fill="transparent"/>
+                                </HBox>
+                            </graphic>
+                        </Button>
+
+                        <!-- Hold countdown notification text -->
+                        <Label fx:id="holdTimerLabel"
+                               text="Your seat is held for 04:42. You are only charged when you confirm."
+                               alignment="CENTER" maxWidth="Infinity"
+                               style="-fx-font-family: 'Inter', sans-serif; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.58); -fx-padding: 10px 0 0 0;"/>
+
+                        <!-- Preserved backButton (available for keybindings / accessibility) -->
+                        <Button fx:id="backButton" text="Back to seat map" onAction="#handleBack" visible="false" managed="false"/>
+                        <VBox fx:id="errorContainer" visible="false" managed="false" styleClass="glass-card" style="-fx-padding: 20px; -fx-background-color: rgba(239, 68, 68, 0.15); -fx-border-color: rgba(239, 68, 68, 0.5); -fx-border-radius: 12px; -fx-background-radius: 12px;" spacing="10" alignment="CENTER">
+                            <Label fx:id="errorMessageLabel" text="" visible="false" managed="false" wrapText="true" style="-fx-font-family: 'Inter Medium'; -fx-font-size: 14px; -fx-text-fill: #fca5a5; -fx-alignment: CENTER;"/>
+                            <Button fx:id="errorBackButton" text="Back to seat map" onAction="#handleBack" visible="false" managed="false" styleClass="btn-release-ghost" prefWidth="200"/>
+                        </VBox>
+                    </VBox>
+                </VBox>
+            </HBox>
+        </VBox>
+    </VBox>
+</GlassBackground>

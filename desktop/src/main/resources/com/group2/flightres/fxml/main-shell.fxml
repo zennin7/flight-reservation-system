@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import com.group2.flightres.component.NavBar?>
+<?import com.group2.flightres.component.StepperBar?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.group2.flightres.controller.MainShellController"
+            styleClass="shell-root">
+
+    <top>
+        <VBox alignment="TOP_CENTER" spacing="0">
+            <NavBar fx:id="navBar" />
+            <VBox fx:id="stepperWrapper" alignment="CENTER" styleClass="stepper-wrapper">
+                <StepperBar fx:id="stepperBar" alignment="CENTER" />
+            </VBox>
+        </VBox>
+    </top>
+
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-area"/>
+    </center>
+
+</BorderPane>

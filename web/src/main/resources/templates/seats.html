@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title th:text="${appName + ' – Seat Selection &amp; Checkout'}">Sky Royal – Seat Selection &amp; Checkout</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ================================================================= -->
+  <!-- Navigation Bar (Shared Component)                                 -->
+  <!-- ================================================================= -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="/" class="brand-logo">
+        <svg class="brand-icon" viewBox="0 0 40 32">
+          <path d="M3 21 L35 4 L38 7 L26 16 L28 28 L24 29 L18 19 L9 24 L6 22 Z"/>
+        </svg>
+        <div>
+          <div class="brand-name">
+            <span class="logo-sky" th:text="${logoPrefix}">Sky</span><span class="logo-voyage" th:text="${logoSuffix}">Voyage</span>
+          </div>
+          <div class="brand-tagline">Flight Reservations</div>
+        </div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link">Home</a></li>
+        <li><a href="/flights" class="nav-link active">Flights</a></li>
+        <li><a href="/about" class="nav-link">About</a></li>
+        <li><a href="/contact" class="nav-link">Contact</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <!-- TEMPLATE PLACEHOLDER: User Auth Status -->
+        <span th:if="${user != null}" class="user-badge" th:text="${user.username}">Traveller</span>
+        <a th:if="${user != null}" href="/logout" class="btn btn-secondary btn-sm">Log Out</a>
+        <a th:if="${user == null}" href="/login" class="btn btn-primary btn-sm">Log In</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================================================================= -->
+  <!-- Stepper Bar (Step 2: Select Seat & Checkout Active)              -->
+  <!-- ================================================================= -->
+  <nav class="stepper-bar" aria-label="Booking Progress">
+    <div class="step-item completed">
+      <div class="step-circle">&#10003;</div>
+      <span class="step-title">Search</span>
+    </div>
+    <span class="step-arrow">&rarr;</span>
+    <div class="step-item active">
+      <div class="step-circle">2</div>
+      <span class="step-title">Select Seat</span>
+    </div>
+    <span class="step-arrow">&rarr;</span>
+    <div class="step-item active">
+      <div class="step-circle">3</div>
+      <span class="step-title">Checkout</span>
+    </div>
+    <span class="step-arrow">&rarr;</span>
+    <div class="step-item">
+      <div class="step-circle">4</div>
+      <span class="step-title">Confirmation</span>
+    </div>
+  </nav>
+
+  <main class="section" style="padding-top: 10px;">
+    <!-- Flight Header Card -->
+    <div class="search-card" style="margin-bottom: 24px; padding: 18px 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <span style="font-size: 11px; font-weight: 700; color: var(--sv-gold-primary); text-transform: uppercase; letter-spacing: 1px;">Selected Flight</span>
+          <h2 style="font-size: 22px; font-weight: 800; color: var(--sv-text);" th:text="${flight.flightNumber + ' &middot; ' + origin + ' &rarr; ' + destination}">
+            GRP 204 &middot; Johannesburg (JNB) &rarr; Cape Town (CPT)
+          </h2>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 14px; font-weight: 600; color: var(--sv-text);" th:text="${departureDate + ' &middot; ' + flight.departureTime + ' - ' + flight.arrivalTime}">
+            2 Nov 2026 &middot; 06:30 - 08:40
+          </div>
+          <div style="font-size: 12px; color: var(--sv-muted);" th:text="${'Duration: ' + flight.duration + ' &middot; Boeing 737-800'}">
+            Duration: 2h 10m &middot; Boeing 737-800
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Alert if Seat Selection or Booking Fails -->
+    <div th:if="${bookingError != null}" class="alert-error" style="max-width: 1100px; margin: 0 auto 20px auto;">
+      <strong>Notice:</strong> <span th:text="${bookingError}">Seat hold issue</span>
+    </div>
+
+    <!-- =============================================================== -->
+    <!-- Booking & Seat Selection Form                                   -->
+    <!-- =============================================================== -->
+    <form id="bookingForm" action="/book" method="POST" class="booking-checkout-container">
+      <!-- CSRF & Flight Meta Hidden Fields -->
+      <input type="hidden" name="csrf_token" th:value="${csrf_token}">
+      <input type="hidden" name="flightId" th:value="${flight.flightId}">
+      <input type="hidden" name="flightNumber" th:value="${flight.flightNumber}">
+      <input type="hidden" name="origin" th:value="${origin}">
+      <input type="hidden" name="destination" th:value="${destination}">
+      <input type="hidden" name="departureDate" th:value="${departureDate}">
+
+      <!-- ------------------------------------------------------------- -->
+      <!-- Left Column: Fuselage Cabin Top-Down Seat Map                 -->
+      <!-- ------------------------------------------------------------- -->
+      <div class="cabin-container">
+        <div class="cockpit-nose">Cockpit</div>
+
+        <!-- Section: FIRST CLASS (Rows 1-2, 2x2) -->
+        <div class="cabin-section-title">First Class &middot; 2 x 2</div>
+        <div th:each="r : ${firstClassRows}" class="seat-row">
+          <span class="seat-row-number" th:text="${r}">1</span>
+
+          <!-- TEMPLATE PLACEHOLDER: First Class Row Seats -->
+          <th:block th:if="${seatsByRow.containsKey(r)}">
+            <!-- Left pair: Cols A, B -->
+            <th:block th:each="s : ${seatsByRow.get(r)}" th:if="${s.seatCol == 'A' or s.seatCol == 'B'}">
+              <label th:class="${'seat-radio-label ' + (s.status.name() == 'AVAILABLE' ? 'available' : 'taken')}">
+                <input type="radio" name="flightSeatId" th:value="${s.flightSeatId}"
+                       th:disabled="${s.status.name() != 'AVAILABLE'}" required>
+                <span class="seat-badge" th:text="${s.seatLabel}">1A</span>
+              </label>
+            </th:block>
+
+            <!-- Aisle -->
+            <div class="seat-aisle"></div>
+
+            <!-- Right pair: Cols C, D -->
+            <th:block th:each="s : ${seatsByRow.get(r)}" th:if="${s.seatCol == 'C' or s.seatCol == 'D'}">
+              <label th:class="${'seat-radio-label ' + (s.status.name() == 'AVAILABLE' ? 'available' : 'taken')}">
+                <input type="radio" name="flightSeatId" th:value="${s.flightSeatId}"
+                       th:disabled="${s.status.name() != 'AVAILABLE'}" required>
+                <span class="seat-badge" th:text="${s.seatLabel}">1C</span>
+              </label>
+            </th:block>
+          </th:block>
+        </div>
+
+        <!-- Section: ECONOMY (Rows 6-11, 3x3) -->
+        <div class="cabin-section-title" style="margin-top: 24px;">Economy Cabin &middot; 3 x 3</div>
+        <div th:each="r : ${economyRows}" class="seat-row">
+          <span class="seat-row-number" th:text="${r}">6</span>
+
+          <!-- TEMPLATE PLACEHOLDER: Economy Row Seats -->
+          <th:block th:if="${seatsByRow.containsKey(r)}">
+            <!-- Left trio: Cols A, B, C -->
+            <th:block th:each="s : ${seatsByRow.get(r)}" th:if="${s.seatCol == 'A' or s.seatCol == 'B' or s.seatCol == 'C'}">
+              <label th:class="${'seat-radio-label ' + (s.status.name() == 'AVAILABLE' ? 'available' : 'taken')}">
+                <input type="radio" name="flightSeatId" th:value="${s.flightSeatId}"
+                       th:disabled="${s.status.name() != 'AVAILABLE'}" required>
+                <span class="seat-badge" th:text="${s.seatLabel}">6A</span>
+              </label>
+            </th:block>
+
+            <!-- Aisle -->
+            <div class="seat-aisle"></div>
+
+            <!-- Right trio: Cols D, E, F -->
+            <th:block th:each="s : ${seatsByRow.get(r)}" th:if="${s.seatCol == 'D' or s.seatCol == 'E' or s.seatCol == 'F'}">
+              <label th:class="${'seat-radio-label ' + (s.status.name() == 'AVAILABLE' ? 'available' : 'taken')}">
+                <input type="radio" name="flightSeatId" th:value="${s.flightSeatId}"
+                       th:disabled="${s.status.name() != 'AVAILABLE'}" required>
+                <span class="seat-badge" th:text="${s.seatLabel}">6D</span>
+              </label>
+            </th:block>
+          </th:block>
+        </div>
+
+        <!-- Seat Map Legend -->
+        <div class="seat-legend">
+          <div class="legend-item">
+            <div class="legend-box available"></div>
+            <span>Available (Click to Pick)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-box selected"></div>
+            <span>Selected</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-box taken"></div>
+            <span>Taken</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------------------------- -->
+      <!-- Right Column: Passenger Form & Price Summary                  -->
+      <!-- ------------------------------------------------------------- -->
+      <div class="checkout-card">
+        <h3>Passenger &amp; Checkout</h3>
+        <p style="font-size: 13px; color: var(--sv-muted); margin-bottom: 20px;">
+          Choose your seat in the cabin to the left, enter your details below, and confirm your booking.
+        </p>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label for="pName">Passenger Full Name *</label>
+          <input type="text" id="pName" name="passengerName" class="form-input"
+                 placeholder="e.g. David Miller" required
+                 th:value="${user != null ? user.username : 'David Miller'}">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label for="pEmail">Email Address *</label>
+          <input type="email" id="pEmail" name="passengerEmail" class="form-input"
+                 placeholder="e.g. david@example.com" required
+                 value="david@example.com">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label for="pPassport">Passport or National ID</label>
+          <input type="text" id="pPassport" name="passportNumber" class="form-input"
+                 placeholder="e.g. A12345678" value="A12345678">
+        </div>
+
+        <!-- Price Breakdown Summary -->
+        <div class="price-summary-box">
+          <div class="price-row">
+            <span>Base Fare</span>
+            <span th:text="${flight.priceFormatted}">R 1,200</span>
+          </div>
+          <div class="price-row">
+            <span>Demand &amp; Peak Pricing</span>
+            <span>+R 180</span>
+          </div>
+          <div class="price-row">
+            <span>Airport Security &amp; Taxes</span>
+            <span>+R 142</span>
+          </div>
+          <div class="price-row total">
+            <span>Total Payable</span>
+            <span class="total-amount">R 1,522</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="height: 48px; font-size: 15px;">
+          Confirm Booking &rarr;
+        </button>
+
+        <div style="font-size: 11px; color: var(--sv-muted); text-align: center; margin-top: 14px;">
+          🔒 256-bit encrypted transaction &middot; Instant confirmation &middot; No hidden fees
+        </div>
+      </div>
+    </form>
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- Footer                                                            -->
+  <!-- ================================================================= -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col">
+        <div class="brand-name" style="margin-bottom: 12px;">
+          <span class="logo-sky" th:text="${logoPrefix}">Sky</span><span class="logo-voyage" style="color: #ffffff;" th:text="${logoSuffix}">Voyage</span>
+        </div>
+        <p>Premium air travel designed for seamless comfort, exceptional reliability, and human-centred hospitality across Southern Africa.</p>
+      </div>
+
+      <div class="footer-col">
+        <h5>Company</h5>
+        <ul class="footer-links">
+          <li><a href="/about">About Us</a></li>
+          <li><a href="/about#fleet">Our Fleet</a></li>
+          <li><a href="/contact">Support</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Assurance</h5>
+        <ul class="footer-links">
+          <li><a href="#">Safe &amp; Secure Payments</a></li>
+          <li><a href="#">Passenger Rights</a></li>
+          <li><a href="#">Baggage Guidelines</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Direct Support</h5>
+        <p th:text="${'Email: ' + supportEmail}">support@skyroyal.com</p>
+        <p th:text="${'Toll-Free: ' + supportPhone}">0800 123 456</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>&copy; 2026 <span th:text="${appName}">Sky Royal</span> Ltd. All rights reserved.</div>
+      <div>Privacy Policy &middot; Terms &amp; Conditions</div>
+    </div>
+  </footer>
+
+</body>
+</html>
