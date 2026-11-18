@@ -4,3 +4,5 @@ target/
 .vscode/
 .DS_Store
 *.log
+# Local database credentials
+src/main/resources/com/group2/flightres/app.json
