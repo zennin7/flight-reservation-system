@@ -35,13 +35,13 @@ public class ThemeManager {
     private Theme currentTheme;
     private final String lightThemeUrl;
     private final String darkThemeUrl;
-    private final String Sky RoyalCssUrl;
+    private final String skyRoyalCssUrl;
     private final String glassCssUrl;
 
     private ThemeManager() {
         this.lightThemeUrl = getResourceUrl("/com/group2/flightres/css/theme-light.css");
         this.darkThemeUrl = getResourceUrl("/com/group2/flightres/css/theme-dark.css");
-        this.Sky RoyalCssUrl = getResourceUrl("/com/group2/flightres/css/skyroyal.css");
+        this.skyRoyalCssUrl = getResourceUrl("/com/group2/flightres/css/skyroyal.css");
         this.glassCssUrl = getResourceUrl("/com/group2/flightres/css/glass.css");
 
         // Load stored preference, defaulting to LIGHT
@@ -99,7 +99,7 @@ public class ThemeManager {
         var stylesheets = scene.getStylesheets();
         stylesheets.remove(lightThemeUrl);
         stylesheets.remove(darkThemeUrl);
-        stylesheets.remove(Sky RoyalCssUrl);
+        stylesheets.remove(skyRoyalCssUrl);
 
         if (currentTheme == Theme.DARK) {
             if (darkThemeUrl != null) stylesheets.add(darkThemeUrl);
@@ -107,8 +107,8 @@ public class ThemeManager {
             if (lightThemeUrl != null) stylesheets.add(lightThemeUrl);
         }
 
-        if (Sky RoyalCssUrl != null) {
-            stylesheets.add(Sky RoyalCssUrl);
+        if (skyRoyalCssUrl != null) {
+            stylesheets.add(skyRoyalCssUrl);
         }
 
         if (scene.getRoot() != null) {
