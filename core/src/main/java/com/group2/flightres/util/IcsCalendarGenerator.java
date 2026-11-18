@@ -66,7 +66,7 @@ public final class IcsCalendarGenerator {
         sb.append("CALSCALE:GREGORIAN").append(CRLF);
         sb.append("METHOD:PUBLISH").append(CRLF);
         sb.append("BEGIN:VEVENT").append(CRLF);
-        sb.append("UID:FLIGHT-").append(ref).append("-").append(dtStart).append("@skyvoyage.com").append(CRLF);
+        sb.append("UID:FLIGHT-").append(ref).append("-").append(dtStart).append("@skyroyal.com").append(CRLF);
         sb.append("SUMMARY:Flight ").append(flightNo).append(": ").append(origin).append(" to ").append(dest).append(CRLF);
         sb.append("DESCRIPTION:Booking Reference: ").append(ref)
                 .append("\\nFlight: ").append(flightNo)

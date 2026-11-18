@@ -81,7 +81,7 @@ public class BoardingPassPdfGeneratorTest {
             assertTrue(text.replace("\r", "").replace("\n", " ").contains(BoardingPolicy.GATE_NOTE), "Must contain gate note");
 
             // Prohibited legacy / board placeholder strings
-            assertFalse(text.contains("SkyVoyage"), "Must not contain legacy brand SkyVoyage");
+            assertTrue(text.contains("SKY ROYAL"), "Must contain Sky Royal brand header");
             assertFalse(text.contains("A12"), "Must not contain board placeholder gate A12");
             assertFalse(text.contains("B12"), "Must not contain board placeholder gate B12");
             assertFalse(text.contains("Group"), "Must not contain boarding group");

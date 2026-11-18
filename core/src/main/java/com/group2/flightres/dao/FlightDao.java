@@ -59,4 +59,12 @@ public interface FlightDao {
     default Optional<com.group2.flightres.model.Route> findEarliestOpenFlightRoute(Instant minDepartureInstant) {
         return Optional.empty();
     }
+
+    /**
+     * Returns aggregated route summaries (origin, destination, min duration, cheapest fare, count)
+     * for scheduled flights departing on or after minDepartureInstant.
+     */
+    default List<com.group2.flightres.model.RouteSummary> findRouteSummaries(Instant minDepartureInstant) {
+        return List.of();
+    }
 }

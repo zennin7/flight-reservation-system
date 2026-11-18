@@ -31,7 +31,7 @@ class ValidationUtilTest {
     @DisplayName("Valid email formats pass validation")
     void testValidEmail() {
         assertEquals("jane.doe@example.com", ValidationUtil.validateEmail(" jane.doe@example.com "));
-        assertEquals("admin@skyvoyage.co.za", ValidationUtil.validateEmail("admin@skyvoyage.co.za"));
+        assertEquals("admin@skyroyal.co.za", ValidationUtil.validateEmail("admin@skyroyal.co.za"));
     }
 
     @Test

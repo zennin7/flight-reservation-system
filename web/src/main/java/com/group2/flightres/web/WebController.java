@@ -18,7 +18,7 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 
 /**
- * Controller handling HTTP requests and view rendering for the SkyVoyage website.
+ * Controller handling HTTP requests and view rendering for the Sky Royal website.
  */
 public class WebController {
 
@@ -51,7 +51,87 @@ public class WebController {
 
     public void handleHome(Context ctx) {
         Map<String, Object> model = baseModel(ctx);
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        LocalDate returnDate = tomorrow.plusDays(2);
+        model.put("tomorrowDate", tomorrow.toString());
+        model.put("returnDate", returnDate.toString());
+        model.put("holdDurationText", (com.group2.flightres.config.SeatHoldPolicy.HOLD_SECONDS / 60) + " min");
+
+        List<Airport> airports = Collections.emptyList();
+        List<RouteSummary> allRoutes = Collections.emptyList();
+        String homeError = null;
+        try {
+            airports = flightService.listAirports();
+            allRoutes = flightService.listRouteSummaries();
+        } catch (Exception e) {
+            logger.warn("Failed to load live home routes: {}", e.getMessage());
+            homeError = "Unable to load live schedules right now. Please try searching directly.";
+        }
+
+        List<HomeDestinationCard> popularRoutes = new ArrayList<>();
+        List<RouteSummary> moreRoutes = new ArrayList<>();
+        List<HomeDestinationCard> internationalRoutes = new ArrayList<>();
+        Set<String> seenPopularDest = new HashSet<>();
+        Set<String> seenIntlDest = new HashSet<>();
+
+        int gradIdx = 1;
+        // Prefer flagship domestic routes with photos first (CPT, DUR, JNB), then any remaining domestic routes
+        List<String> preferredPopular = List.of("CPT", "DUR", "JNB");
+        for (String pref : preferredPopular) {
+            for (RouteSummary route : allRoutes) {
+                if (!route.isInternational() && pref.equals(route.getDestCode())
+                        && seenPopularDest.add(route.getDestCode()) && popularRoutes.size() < 3) {
+                    popularRoutes.add(toDestinationCard(route, gradIdx++));
+                    break;
+                }
+            }
+        }
+        for (RouteSummary route : allRoutes) {
+            if (!route.isInternational() && popularRoutes.size() < 3
+                    && seenPopularDest.add(route.getDestCode())) {
+                popularRoutes.add(toDestinationCard(route, gradIdx++));
+            }
+            if (moreRoutes.size() < 12) {
+                moreRoutes.add(route);
+            }
+            if (route.isInternational() && seenIntlDest.add(route.getDestCode())) {
+                internationalRoutes.add(toDestinationCard(route, gradIdx++));
+            }
+        }
+
+        model.put("airports", airports);
+        model.put("popularRoutes", popularRoutes);
+        model.put("moreRoutes", moreRoutes);
+        model.put("internationalRoutes", internationalRoutes);
+        model.put("homeError", homeError);
         ctx.render("home.html", model);
+    }
+
+    private HomeDestinationCard toDestinationCard(RouteSummary route, int gradIdx) {
+        String photo = switch (route.getDestCode()) {
+            case "CPT" -> "/photos/dest-capetown.jpg";
+            case "DUR" -> "/photos/dest-durban.jpg";
+            case "JNB" -> "/photos/dest-johannesburg.jpg";
+            default -> null;
+        };
+        String gradientClass = "dest-grad-" + (((gradIdx - 1) % 6) + 1);
+        return new HomeDestinationCard(route, photo, gradientClass);
+    }
+
+    public static class HomeDestinationCard {
+        private final RouteSummary route;
+        private final String photoPath;
+        private final String gradientClass;
+
+        public HomeDestinationCard(RouteSummary route, String photoPath, String gradientClass) {
+            this.route = route;
+            this.photoPath = photoPath;
+            this.gradientClass = gradientClass;
+        }
+
+        public RouteSummary getRoute() { return route; }
+        public String getPhotoPath() { return photoPath; }
+        public String getGradientClass() { return gradientClass; }
     }
 
     public void handleFlights(Context ctx) {

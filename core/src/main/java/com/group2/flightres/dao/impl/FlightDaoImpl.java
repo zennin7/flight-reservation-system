@@ -328,4 +328,46 @@ public class FlightDaoImpl implements FlightDao {
         }
         return Optional.empty();
     }
+
+    private static final String FIND_ROUTE_SUMMARIES_QUERY = """
+            SELECT o.iata_code AS orig_code, o.city AS orig_city, o.country AS orig_country,
+                   a.iata_code AS dest_code, a.city AS dest_city, a.country AS dest_country,
+                   MIN(EXTRACT(EPOCH FROM (f.arrival_time - f.departure_time)) / 60)::bigint AS min_dur_mins,
+                   MIN(f.base_price) AS min_fare,
+                   COUNT(*) AS flight_count
+            FROM flights f
+            JOIN airports o ON o.airport_id = f.origin_airport_id
+            JOIN airports a ON a.airport_id = f.dest_airport_id
+            WHERE f.status = 'SCHEDULED'
+              AND f.departure_time >= ?
+            GROUP BY o.iata_code, o.city, o.country, a.iata_code, a.city, a.country
+            ORDER BY COUNT(*) DESC, MIN(f.base_price) ASC, o.iata_code ASC, a.iata_code ASC
+            """;
+
+    @Override
+    public List<com.group2.flightres.model.RouteSummary> findRouteSummaries(Instant minDepartureInstant) {
+        List<com.group2.flightres.model.RouteSummary> summaries = new ArrayList<>();
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement(FIND_ROUTE_SUMMARIES_QUERY)) {
+            ps.setTimestamp(1, Timestamp.from(minDepartureInstant));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    summaries.add(new com.group2.flightres.model.RouteSummary(
+                            rs.getString("orig_code"),
+                            rs.getString("orig_city"),
+                            rs.getString("orig_country"),
+                            rs.getString("dest_code"),
+                            rs.getString("dest_city"),
+                            rs.getString("dest_country"),
+                            rs.getLong("min_dur_mins"),
+                            rs.getBigDecimal("min_fare"),
+                            rs.getInt("flight_count")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to query route summaries: {}", e.getMessage(), e);
+        }
+        return summaries;
+    }
 }

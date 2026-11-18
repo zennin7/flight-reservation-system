@@ -35,7 +35,7 @@ public class IcsCalendarGeneratorTest {
         assertNotNull(ics);
         assertTrue(ics.contains("BEGIN:VCALENDAR"));
         assertTrue(ics.contains("END:VCALENDAR"));
-        assertTrue(ics.contains("UID:FLIGHT-K7QX2M-20261114T063000@skyvoyage.com"));
+        assertTrue(ics.contains("UID:FLIGHT-K7QX2M-20261114T063000@skyroyal.com"));
         assertTrue(ics.contains("DTSTART:20261114T063000"));
         assertTrue(ics.contains("DTEND:20261114T083500"));
         assertTrue(ics.contains("SUMMARY:Flight FL 204: Johannesburg (JNB) to Cape Town (CPT)"));

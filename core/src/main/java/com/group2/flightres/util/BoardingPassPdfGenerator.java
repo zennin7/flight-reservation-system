@@ -32,7 +32,7 @@ import java.io.InputStream;
 import java.util.Optional;
 
 /**
- * Generates Altitude luxury glass-styled Boarding Pass PDFs via OpenPDF.
+ * Generates Sky Royal luxury glass-styled Boarding Pass PDFs via OpenPDF.
  * Renders a full ticket with destination photo panel, route overview with dashed flight line,
  * passenger metadata grid, wide Code 128 barcode on a light strip, and tear-off stub.
  */
@@ -180,11 +180,11 @@ public final class BoardingPassPdfGenerator {
         PdfPTable inner = new PdfPTable(1);
         inner.setWidthPercentage(100f);
 
-        // Top Brand Header: "ALTITUDE"
+        // Top Brand Header
         PdfPCell brandCell = new PdfPCell();
         brandCell.setBorder(Rectangle.NO_BORDER);
         brandCell.setPadding(0);
-        Paragraph brand = new Paragraph("ALTITUDE", fontInterBold(11f, Color.WHITE));
+        Paragraph brand = new Paragraph(com.group2.flightres.config.BrandConfig.APP_NAME.toUpperCase(java.util.Locale.ROOT), fontInterBold(11f, Color.WHITE));
         brandCell.addElement(brand);
         inner.addCell(brandCell);
 

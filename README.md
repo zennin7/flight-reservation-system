@@ -1,4 +1,4 @@
-# ✈️ SkyVoyage — Flight Reservation System
+# ✈️ Sky Royal — Flight Reservation System
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 [![Java](https://img.shields.io/badge/Java-17%2B-blue.svg)]()
@@ -13,7 +13,7 @@
 
 ## 📖 About the Project
 
-**SkyVoyage** was engineered to go far beyond a typical university database project. Instead of basic forms wired to tables, the platform delivers an authentic, end-to-end airline booking experience across both desktop and web channels:
+**Sky Royal** was engineered to go far beyond a typical university database project. Instead of basic forms wired to tables, the platform delivers an authentic, end-to-end airline booking experience across both desktop and web channels:
 
 - 🪑 **Interactive Top-Down Cabin Fuselage** — Real 2D seat map with First Class (2×2) and Economy (3×3) seating layouts, live color-coded seat statuses (Available, Held, Booked), and optimistic concurrency locks.
 - ⚡ **Optimistic Seat Hold Concurrency** — Atomic SQL seat holds (`UPDATE flight_seats SET status='HELD' WHERE status='AVAILABLE'`) that automatically expire if abandoned and prevent race conditions.

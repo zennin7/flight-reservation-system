@@ -161,4 +161,12 @@ public class FlightService {
         LocalDate fromDate = LocalDate.now(route.origin().zoneId());
         return nextAvailableDate(route.origin().code(), route.destination().code(), fromDate);
     }
+
+    /**
+     * Lists aggregated route summaries for open scheduled flights from the database.
+     */
+    public List<com.group2.flightres.model.RouteSummary> listRouteSummaries() {
+        Instant minDeparture = clock.instant().plus(FlightSalesPolicy.SALES_CLOSE_BEFORE_DEPARTURE);
+        return flightDao.findRouteSummaries(minDeparture);
+    }
 }

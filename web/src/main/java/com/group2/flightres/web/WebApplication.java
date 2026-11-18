@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Server-rendered web application for SkyVoyage.
+ * Server-rendered web application for Sky Royal.
  * Uses Javalin 6 and Thymeleaf with shared core services.
  */
 public class WebApplication {
@@ -53,6 +53,11 @@ public class WebApplication {
                 staticFiles.directory = "/public";
                 staticFiles.location = Location.CLASSPATH;
             });
+            config.staticFiles.add(staticFiles -> {
+                staticFiles.hostedPath = "/";
+                staticFiles.directory = "/static";
+                staticFiles.location = Location.CLASSPATH;
+            });
             config.fileRenderer(new JavalinThymeleaf(templateEngine));
         });
 
@@ -67,12 +72,12 @@ public class WebApplication {
 
     public void start(int port) {
         app.start(port);
-        logger.info("SkyVoyage Web Application started at http://localhost:{}", port);
+        logger.info("Sky Royal Web Application started at http://localhost:{}", port);
     }
 
     public void stop() {
         app.stop();
-        logger.info("SkyVoyage Web Application stopped.");
+        logger.info("Sky Royal Web Application stopped.");
     }
 
     private void setupSecurityAndFilters() {
