@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.LoginController"
+      alignment="CENTER"
+      stylesheets="@login.css"
+      styleClass="login-root">
+
+    <VBox alignment="CENTER"
+          spacing="20"
+          maxWidth="380"
+          styleClass="login-card">
+
+        <padding>
+            <Insets top="40" bottom="40" left="35" right="35"/>
+        </padding>
+
+        <Label text="✈" styleClass="plane-icon"/>
+
+        <Label text="WELCOME BACK"
+               styleClass="login-title"/>
+
+        <Label text="Your next destination starts here."
+               styleClass="login-subtitle"/>
+
+        <VBox spacing="8">
+            <Label text="USERNAME" styleClass="field-label"/>
+            <TextField fx:id="usernameField"
+                       promptText="Enter your username"
+                       styleClass="login-input"/>
+        </VBox>
+
+        <VBox spacing="8">
+            <Label text="PASSWORD" styleClass="field-label"/>
+            <PasswordField fx:id="passwordField"
+                           promptText="Enter your password"
+                           styleClass="login-input"/>
+        </VBox>
+
+
+        <Hyperlink text="Forgot Password?"
+                   onAction="#handleForgotPassword"
+                   styleClass="forgot-password"/>
+
+
+        <Label fx:id="errorLabel"
+               styleClass="login-error"
+               visible="false"
+               managed="false"
+               wrapText="true"/>
+
+        <Button fx:id="loginButton"
+                text="SIGN IN  →"
+                onAction="#handleLogin"
+                maxWidth="Infinity"
+                styleClass="login-button"/>
+
+
+        <Label text="OR CONTINUE WITH"
+               styleClass="divider-text"/>
+
+        <Button text="Continue with Google"
+                onAction="#handleGoogleLogin"
+                maxWidth="Infinity"
+                styleClass="social-login-button"/>
+
+        <Button text="Continue with Apple"
+                onAction="#handleAppleLogin"
+                maxWidth="Infinity"
+                styleClass="social-login-button"/>
+
+
+        <Label text="FLIGHT BOOKING SYSTEM"
+               styleClass="footer-text"/>
+
+    </VBox>
+</VBox>
