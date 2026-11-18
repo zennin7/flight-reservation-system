@@ -8,16 +8,16 @@ import javafx.scene.control.Label;
 import javafx.util.Duration;
 
 /**
- * Central animation and transition helper for SkyVoyage JavaFX.
+ * Central animation and transition helper for Sky Royal JavaFX.
  * Conforms to the timing and easing rules of the javafx-motion skill.
- * Automatically disabled during ScreenshotRunner or when altitude.motion=false.
+ * Automatically disabled during ScreenshotRunner or when Sky Royal.motion=false.
  */
 public final class Motion {
 
-    private static boolean enabled = !Boolean.getBoolean("altitude.screenshots");
+    private static boolean enabled = !Boolean.getBoolean("skyroyal.screenshots");
 
     public static boolean isEnabled() {
-        return enabled && !"false".equalsIgnoreCase(System.getProperty("altitude.motion"));
+        return enabled && !"false".equalsIgnoreCase(System.getProperty("Sky Royal.motion"));
     }
 
     public static void setEnabled(boolean value) {

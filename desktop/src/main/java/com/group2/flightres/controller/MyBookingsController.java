@@ -521,7 +521,7 @@ public class MyBookingsController {
         } catch (Exception e) {
             logger.error("Failed to open ticket for booking {}", summary.getBookingReference(), e);
             showErrorState("Unable to open ticket: " + e.getMessage());
-            if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
+            if (!Boolean.getBoolean("skyroyal.testing") && !Boolean.getBoolean("skyroyal.screenshots")) {
                 Alert alert = new Alert(Alert.AlertType.ERROR, "Unable to open ticket: " + e.getMessage());
                 alert.showAndWait();
             }

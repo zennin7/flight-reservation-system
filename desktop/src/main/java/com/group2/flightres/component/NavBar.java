@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Reusable SkyVoyage navigation bar (64px high).
+ * Reusable Sky Royal navigation bar (64px high).
  * Supports standard customer mode and admin variant, active link underline,
  * and integrated theme toggling.
  */

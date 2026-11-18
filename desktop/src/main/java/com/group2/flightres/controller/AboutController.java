@@ -7,7 +7,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 
 /**
- * Controller for SkyVoyage About screen.
+ * Controller for Sky Royal About screen.
  */
 public class AboutController implements WizardStepController {
 

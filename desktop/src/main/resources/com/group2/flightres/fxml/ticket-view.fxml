@@ -45,7 +45,7 @@
                 <VBox style="-fx-padding: 24 14 22 14;" alignment="TOP_LEFT">
                     <HBox alignment="CENTER_LEFT" spacing="6">
                         <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" styleClass="ticket-brand-plane"/>
-                        <Label text="ALTITUDE" styleClass="ticket-brand-label"/>
+                        <Label text="Sky Royal" styleClass="ticket-brand-label"/>
                     </HBox>
 
                     <Region VBox.vgrow="ALWAYS"/>

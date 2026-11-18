@@ -26,7 +26,7 @@ class CheckoutHomeNavigationTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("altitude.testing", "true");
+        System.setProperty("skyroyal.testing", "true");
                 try (java.sql.Connection conn = com.group2.flightres.config.DatabaseConfig.getConnection()) {
             // Warm database connection pool
         } catch (Exception ignored) {}

@@ -107,7 +107,7 @@ public class GlassConfirmationScreenshotRunner extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        System.setProperty("altitude.screenshots", "true");
+        System.setProperty("skyroyal.screenshots", "true");
         FontLoader.loadFonts();
 
         long beforeCount = countBookings();

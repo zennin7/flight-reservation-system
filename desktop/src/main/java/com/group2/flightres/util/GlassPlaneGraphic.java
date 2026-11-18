@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Side-view vector aircraft representation for the SkyVoyage Glass Seat Map screen.
+ * Side-view vector aircraft representation for the Sky Royal Glass Seat Map screen.
  * Exactly renders the fuselage, wing, engine, wheels, cabin windows, and dynamic section
  * highlight box with pin badge matching design-glass/seat-map.html.
  */

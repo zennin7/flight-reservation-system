@@ -118,7 +118,7 @@ class PriceAlignmentTest {
         ctx.setDepartureInstant(flight.getDeparture());
         ctx.setArrivalInstant(flight.getArrival());
         ctx.setPassengerName("Price Reconciliation Passenger");
-        ctx.setPassengerEmail("recon@skyvoyage.com");
+        ctx.setPassengerEmail("recon@skyroyal.com");
         ctx.setPassportNumber("RC123456");
         ctx.setDateOfBirth(LocalDate.of(1992, 4, 15));
         ctx.setPriceQuotes(List.of(quote));

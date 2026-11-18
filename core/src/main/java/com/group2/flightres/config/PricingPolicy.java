@@ -5,7 +5,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Transparent dynamic pricing policy rules for Altitude flight reservations.
+ * Transparent dynamic pricing policy rules for SKY ROYAL flight reservations.
  *
  * Demand multipliers based on flight occupancy (booked + currently held seats / total seats):
  *   - < 40%: 1.00

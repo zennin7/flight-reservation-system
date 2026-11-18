@@ -19,7 +19,7 @@ import java.util.prefs.Preferences;
 public class ThemeManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ThemeManager.class);
-    private static final String PREF_KEY_THEME = "skyvoyage_selected_theme";
+    private static final String PREF_KEY_THEME = "Sky Royal_selected_theme";
 
     public enum Theme {
         LIGHT,
@@ -35,13 +35,13 @@ public class ThemeManager {
     private Theme currentTheme;
     private final String lightThemeUrl;
     private final String darkThemeUrl;
-    private final String skyvoyageCssUrl;
+    private final String Sky RoyalCssUrl;
     private final String glassCssUrl;
 
     private ThemeManager() {
         this.lightThemeUrl = getResourceUrl("/com/group2/flightres/css/theme-light.css");
         this.darkThemeUrl = getResourceUrl("/com/group2/flightres/css/theme-dark.css");
-        this.skyvoyageCssUrl = getResourceUrl("/com/group2/flightres/css/skyvoyage.css");
+        this.Sky RoyalCssUrl = getResourceUrl("/com/group2/flightres/css/skyroyal.css");
         this.glassCssUrl = getResourceUrl("/com/group2/flightres/css/glass.css");
 
         // Load stored preference, defaulting to LIGHT
@@ -99,7 +99,7 @@ public class ThemeManager {
         var stylesheets = scene.getStylesheets();
         stylesheets.remove(lightThemeUrl);
         stylesheets.remove(darkThemeUrl);
-        stylesheets.remove(skyvoyageCssUrl);
+        stylesheets.remove(Sky RoyalCssUrl);
 
         if (currentTheme == Theme.DARK) {
             if (darkThemeUrl != null) stylesheets.add(darkThemeUrl);
@@ -107,8 +107,8 @@ public class ThemeManager {
             if (lightThemeUrl != null) stylesheets.add(lightThemeUrl);
         }
 
-        if (skyvoyageCssUrl != null) {
-            stylesheets.add(skyvoyageCssUrl);
+        if (Sky RoyalCssUrl != null) {
+            stylesheets.add(Sky RoyalCssUrl);
         }
 
         if (scene.getRoot() != null) {

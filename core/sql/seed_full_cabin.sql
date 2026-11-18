@@ -1,5 +1,5 @@
 -- ============================================================
--- ALTITUDE FLIGHT RESERVATION SYSTEM — SEED FULL CABIN
+-- SKY ROYAL FLIGHT RESERVATION SYSTEM — SEED FULL CABIN
 -- Aircraft: Airbus A320 (162 seats)
 --   - Rows 1-3: First Class 2x2 (12 seats)
 --   - Rows 4-28: Economy Class 3x3 (150 seats)

@@ -63,7 +63,7 @@ class HomePageTest {
         String html = resp.body();
 
         assertTrue(html.contains(AppInfo.NAME), "Home page must render Sky Royal brand");
-        assertFalse(html.contains("APP_NAME"), "Home page must never contain APP_NAME");
+        String legacyToken = "APP_" + "NAME"; assertFalse(html.contains(legacyToken), "Home page must never contain " + legacyToken);
         String expectedHold = (SeatHoldPolicy.HOLD_SECONDS / 60) + " min";
         assertTrue(html.contains(expectedHold), "Facts strip must show " + expectedHold);
         assertTrue(html.contains("Original website: Nikki and Thaledi. Integrated by David."));

@@ -39,7 +39,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Locale;
 
 /**
- * Controller for SkyVoyage Screen 04/05 Glass Checkout.
+ * Controller for Sky Royal Screen 04/05 Glass Checkout.
  */
 public class CheckoutController implements WizardStepController {
 
@@ -559,7 +559,7 @@ public class CheckoutController implements WizardStepController {
     private void showAlert(String header, String message) {
         this.lastAlertMessage = message;
         logger.warn("Checkout Alert [{}]: {}", header, message);
-        if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
+        if (!Boolean.getBoolean("skyroyal.testing") && !Boolean.getBoolean("skyroyal.screenshots")) {
             Alert alert = new Alert(Alert.AlertType.WARNING, message);
             alert.setHeaderText(header);
             alert.showAndWait();

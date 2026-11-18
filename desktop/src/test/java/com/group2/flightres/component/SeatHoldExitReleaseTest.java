@@ -41,7 +41,7 @@ class SeatHoldExitReleaseTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("altitude.testing", "true");
+        System.setProperty("skyroyal.testing", "true");
         try (Connection conn = DatabaseConfig.getConnection()) {} catch (Exception ignored) {}
         try {
             Platform.startup(() -> {});

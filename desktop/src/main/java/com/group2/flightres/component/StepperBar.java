@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Reusable SkyVoyage Stepper component showing the 4 booking steps:
+ * Reusable Sky Royal Stepper component showing the 4 booking steps:
  * 1 Search -> 2 Select Seat -> 3 Checkout -> 4 Confirmed.
  * - Done: Green circle with white checkmark
  * - Active: Gold circle with navy/white step number

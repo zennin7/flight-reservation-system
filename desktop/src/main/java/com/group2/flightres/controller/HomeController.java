@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Controller for the SkyVoyage 01 Home screen.
+ * Controller for the Sky Royal 01 Home screen.
  */
 public class HomeController implements WizardStepController {
 

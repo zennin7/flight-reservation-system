@@ -19,7 +19,7 @@ class SeatMapZoomTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("altitude.testing", "true");
+        System.setProperty("skyroyal.testing", "true");
         try {
             Platform.startup(() -> {});
         } catch (IllegalStateException ignored) {

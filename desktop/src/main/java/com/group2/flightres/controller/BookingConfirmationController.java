@@ -52,7 +52,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Locale;
 
 /**
- * Controller for SkyVoyage / Altitude Screen 05 / 06 Booking Confirmation.
+ * Controller for Sky Royal Screen 05 / 06 Booking Confirmation.
  */
 public class BookingConfirmationController implements WizardStepController {
 
@@ -409,7 +409,7 @@ public class BookingConfirmationController implements WizardStepController {
             successAlert.setTitle("Boarding Pass Downloaded");
             successAlert.setHeaderText("Success!");
             successAlert.setContentText("Boarding pass successfully saved to:\n" + targetFile.getAbsolutePath());
-            if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
+            if (!Boolean.getBoolean("skyroyal.testing") && !Boolean.getBoolean("skyroyal.screenshots")) {
                 successAlert.show();
             }
 
@@ -427,7 +427,7 @@ public class BookingConfirmationController implements WizardStepController {
             errorAlert.setTitle("Download Failed");
             errorAlert.setHeaderText("Error Generating PDF");
             errorAlert.setContentText("Could not create boarding pass: " + e.getMessage());
-            if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
+            if (!Boolean.getBoolean("skyroyal.testing") && !Boolean.getBoolean("skyroyal.screenshots")) {
                 errorAlert.showAndWait();
             }
         }
@@ -462,7 +462,7 @@ public class BookingConfirmationController implements WizardStepController {
             successAlert.setTitle("Calendar Event Saved");
             successAlert.setHeaderText("Success!");
             successAlert.setContentText("Calendar event successfully saved to:\n" + targetFile.getAbsolutePath());
-            if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
+            if (!Boolean.getBoolean("skyroyal.testing") && !Boolean.getBoolean("skyroyal.screenshots")) {
                 successAlert.show();
             }
 
@@ -472,7 +472,7 @@ public class BookingConfirmationController implements WizardStepController {
             errorAlert.setTitle("Calendar Export Failed");
             errorAlert.setHeaderText("Error Creating Calendar Event");
             errorAlert.setContentText("Could not create .ics file: " + e.getMessage());
-            if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
+            if (!Boolean.getBoolean("skyroyal.testing") && !Boolean.getBoolean("skyroyal.screenshots")) {
                 errorAlert.showAndWait();
             }
         }
@@ -500,7 +500,7 @@ public class BookingConfirmationController implements WizardStepController {
     private void showComingSoonAlert(String feature) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, feature + " isn't available yet.");
         alert.setHeaderText("Coming soon");
-        if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
+        if (!Boolean.getBoolean("skyroyal.testing") && !Boolean.getBoolean("skyroyal.screenshots")) {
             alert.showAndWait();
         }
     }

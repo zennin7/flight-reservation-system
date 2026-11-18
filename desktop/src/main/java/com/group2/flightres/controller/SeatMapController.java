@@ -35,7 +35,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Controller for SkyVoyage Screen 04 Seat Map.
+ * Controller for Sky Royal Screen 04 Seat Map.
  * Manages seat selection, live database seat holds, dynamic price quotes via PricingService,
  * and transparent breakdown summary rows.
  */
@@ -81,7 +81,7 @@ public class SeatMapController implements WizardStepController {
     }
 
     public static boolean isPreselectForScreenshots() {
-        return preselectForScreenshots || Boolean.getBoolean("altitude.screenshots");
+        return preselectForScreenshots || Boolean.getBoolean("skyroyal.screenshots");
     }
 
     private final SeatMapService seatMapService;
@@ -515,7 +515,7 @@ public class SeatMapController implements WizardStepController {
     private void showInfoAlert(String header, String message) {
         this.lastAlertMessage = message;
         logger.warn("SeatMap Alert [{}]: {}", header, message);
-        if (!Boolean.getBoolean("altitude.testing") && !Boolean.getBoolean("altitude.screenshots")) {
+        if (!Boolean.getBoolean("skyroyal.testing") && !Boolean.getBoolean("skyroyal.screenshots")) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION, message);
             alert.setHeaderText(header);
             alert.showAndWait();

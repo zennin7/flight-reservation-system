@@ -1,5 +1,5 @@
 -- ============================================================
--- SKYVOYAGE FLIGHT RESERVATION SYSTEM — SEED FLIGHTS DATA
+-- SKY ROYAL FLIGHT RESERVATION SYSTEM — SEED FLIGHTS DATA
 -- ============================================================
 -- Populates:
 -- 1. Airports (JNB, CPT)

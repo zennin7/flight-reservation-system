@@ -52,7 +52,7 @@ public class ScreenshotRunner extends Application {
     public void start(Stage stage) {
         this.primaryStage = stage;
         SeatMapController.setPreselectForScreenshots(true);
-        System.setProperty("altitude.screenshots", "true");
+        System.setProperty("skyroyal.screenshots", "true");
         stage.setTitle(BrandConfig.WINDOW_TITLE + " - Screenshot Runner");
         stage.setWidth(WIDTH);
         stage.setHeight(HEIGHT);

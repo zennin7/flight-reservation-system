@@ -46,7 +46,7 @@ public class DesktopBookingRunner {
         ctx.setTotalPrice(quote.total());
 
         ctx.setPassengerName("Thabo Ndlovu");
-        ctx.setPassengerEmail("thabo.ndlovu@skyvoyage.com");
+        ctx.setPassengerEmail("thabo.ndlovu@skyroyal.com");
         ctx.setPassportNumber("TB11223344");
         ctx.setDateOfBirth(java.time.LocalDate.of(1990, 5, 14));
         ctx.setPaymentResult(new com.group2.flightres.service.PaymentResult(true, "TXN-RUNNER-1", "VISA", "4242", null));

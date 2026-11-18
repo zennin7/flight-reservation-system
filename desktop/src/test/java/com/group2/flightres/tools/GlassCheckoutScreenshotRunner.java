@@ -60,7 +60,7 @@ public class GlassCheckoutScreenshotRunner extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        System.setProperty("altitude.screenshots", "true");
+        System.setProperty("skyroyal.screenshots", "true");
         FontLoader.loadFonts();
 
         TestFlightFinder.OpenAltFlight flight = TestFlightFinder.findEarliestOpenAltFlight();
@@ -118,7 +118,7 @@ public class GlassCheckoutScreenshotRunner extends Application {
         Scene scene = new Scene(root, 1280, 800);
         ThemeManager.getInstance().applyGlassTheme(scene);
 
-        stage.setTitle("Altitude Glass Checkout Preview");
+        stage.setTitle((com.group2.flightres.config.AppInfo.NAME + " Glass Checkout Preview"));
         stage.setScene(scene);
         stage.setWidth(1280);
         stage.setHeight(800);
