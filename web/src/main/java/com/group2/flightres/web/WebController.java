@@ -99,6 +99,13 @@ public class WebController {
             }
         }
 
+        // Order international cards to match the Go Further bento layout
+        List<String> intlOrder = List.of("ZRH", "MXP", "FCO", "NCE", "JTR", "DXB", "PSA", "GVA");
+        internationalRoutes.sort(Comparator.comparingInt(c -> {
+            int idx = intlOrder.indexOf(c.getRoute().getDestCode());
+            return idx >= 0 ? idx : intlOrder.size();
+        }));
+
         model.put("airports", airports);
         model.put("popularRoutes", popularRoutes);
         model.put("moreRoutes", moreRoutes);
@@ -112,6 +119,14 @@ public class WebController {
             case "CPT" -> "/photos/dest-capetown.jpg";
             case "DUR" -> "/photos/dest-durban.jpg";
             case "JNB" -> "/photos/dest-johannesburg.jpg";
+            case "DXB" -> "/photos/dest-dubai.jpg";
+            case "FCO" -> "/photos/dest-rome.jpg";
+            case "ZRH" -> "/photos/dest-swiss-alps.jpg";
+            case "MXP" -> "/photos/dest-lake-como.jpg";
+            case "JTR" -> "/photos/dest-santorini.jpg";
+            case "NCE" -> "/photos/dest-monaco.jpg";
+            case "PSA" -> "/photos/dest-cinque-terre.jpg";
+            case "GVA" -> "/photos/dest-valais.jpg";
             default -> null;
         };
         String gradientClass = "dest-grad-" + (((gradIdx - 1) % 6) + 1);
