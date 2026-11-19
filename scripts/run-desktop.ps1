@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+$env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User")
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $repoRoot
 
@@ -8,6 +9,6 @@ if (-not (Test-Path $appJsonPath)) {
 }
 
 Write-Host "Installing core and starting Sky Royal Desktop App (com.group2.flightres.App via javafx:run)..."
-mvn -pl core -DskipTests install -q
+mvn -pl core -am -DskipTests install -q
 if ($LASTEXITCODE -ne 0) { throw "Failed to build core module." }
 mvn -pl desktop javafx:run

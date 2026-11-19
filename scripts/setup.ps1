@@ -3,6 +3,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User")
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $repoRoot
 
@@ -45,18 +46,33 @@ if (-not $psqlExe -or -not (Test-Path $psqlExe)) {
 Write-Host "[OK] psql detected ($psqlExe)"
 
 # 4. Collect DB connection settings
+$detectedPorts = @(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
+    Where-Object { $_.LocalPort -in 5432, 5433 } |
+    Select-Object -ExpandProperty LocalPort -Unique |
+    Sort-Object)
+$defaultPort = if ($detectedPorts.Count -gt 0) { [int]$detectedPorts[0] } else { 5432 }
+if ($detectedPorts.Count -gt 0) {
+    Write-Host "[INFO] Detected listening PostgreSQL port(s): $($detectedPorts -join ', ') (defaulting to $defaultPort)"
+}
+
 if ($NonInteractive) {
-    $dbHost = if ($env:LAUNCH_DB_HOST) { $env:LAUNCH_DB_HOST } else { "localhost" }
-    $dbPort = if ($env:LAUNCH_DB_PORT) { [int]$env:LAUNCH_DB_PORT } else { 5432 }
-    $dbName = if ($env:LAUNCH_DB_NAME) { $env:LAUNCH_DB_NAME } else { "flight_reservation" }
-    $dbUser = if ($env:LAUNCH_DB_USER) { $env:LAUNCH_DB_USER } else { "postgres" }
+    $dbHost = if ($env:LAUNCH_DB_HOST) { $env:LAUNCH_DB_HOST.Trim() } else { "127.0.0.1" }
+    if ($dbHost -match '://|/') { Write-Error "Invalid PostgreSQL host '$dbHost': enter a hostname or IP (e.g. 127.0.0.1), not a URL." }
+    $dbPort = if ($env:LAUNCH_DB_PORT) { [int]$env:LAUNCH_DB_PORT } else { $defaultPort }
+    $dbName = if ($env:LAUNCH_DB_NAME) { $env:LAUNCH_DB_NAME.Trim() } else { "flight_reservation" }
+    $dbUser = if ($env:LAUNCH_DB_USER) { $env:LAUNCH_DB_USER.Trim() } else { "postgres" }
     $dbPass = $env:LAUNCH_DB_PASSWORD
     if (-not $dbPass) { Write-Error "LAUNCH_DB_PASSWORD must be set in -NonInteractive mode." }
 } else {
-    $hIn = Read-Host "PostgreSQL host [localhost]"
-    $dbHost = if ([string]::IsNullOrWhiteSpace($hIn)) { "localhost" } else { $hIn.Trim() }
-    $pIn = Read-Host "PostgreSQL port [5432]"
-    $dbPort = if ([string]::IsNullOrWhiteSpace($pIn)) { 5432 } else { [int]$pIn.Trim() }
+    do {
+        $hIn = Read-Host "PostgreSQL host [127.0.0.1]"
+        $dbHost = if ([string]::IsNullOrWhiteSpace($hIn)) { "127.0.0.1" } else { $hIn.Trim() }
+        if ($dbHost -match '://|/') {
+            Write-Warning "Host must be a hostname or IP (for example 127.0.0.1), not a URL containing '://' or '/'."
+        }
+    } while ($dbHost -match '://|/')
+    $pIn = Read-Host "PostgreSQL port [$defaultPort]"
+    $dbPort = if ([string]::IsNullOrWhiteSpace($pIn)) { $defaultPort } else { [int]$pIn.Trim() }
     $nIn = Read-Host "Database name [flight_reservation]"
     $dbName = if ([string]::IsNullOrWhiteSpace($nIn)) { "flight_reservation" } else { $nIn.Trim() }
     $uIn = Read-Host "PostgreSQL user [postgres]"
@@ -67,6 +83,15 @@ if ($NonInteractive) {
 
 $env:PGPASSWORD = $dbPass
 try {
+    # Quick connectivity & auth probe
+    $probeErr = (& $psqlExe -w -h $dbHost -p $dbPort -U $dbUser -d postgres -tAc "SELECT 1;" 2>&1) | Out-String
+    if ($LASTEXITCODE -ne 0) {
+        if ($probeErr -match 'password authentication failed|no password supplied') {
+            throw "PostgreSQL connection failed: wrong password for user '$dbUser', or wrong port ($dbPort)."
+        }
+        throw "PostgreSQL connection failed on ${dbHost}:${dbPort} for user '$dbUser' (wrong port, host, or PostgreSQL service stopped). Details: $($probeErr.Trim())"
+    }
+
     function Get-PgScalar([string]$targetDb, [string]$sqlText) {
         $raw = & $psqlExe -w -h $dbHost -p $dbPort -U $dbUser -d $targetDb -tAc $sqlText 2>$null
         if ($null -eq $raw) { return "" }
@@ -134,4 +159,7 @@ $cfgObj.dbPassword = $dbPass
 $jsonOut = $cfgObj | ConvertTo-Json -Depth 4
 [System.IO.File]::WriteAllText($appJsonPath, $jsonOut, [System.Text.UTF8Encoding]::new($false))
 Write-Host "[OK] Wrote local config: core/src/main/resources/com/group2/flightres/app.json (gitignored)."
-Write-Host "=== Setup complete. Next: .\scripts\run-web.ps1 or .\scripts\run-desktop.ps1 ==="
+Write-Host "[BUILD] Installing Maven artifacts (mvn -DskipTests install)..."
+mvn -DskipTests install -q
+if ($LASTEXITCODE -ne 0) { throw "Maven install failed." }
+Write-Host "=== Setup complete. Next: .\scripts\run-web.cmd or .\scripts\run-desktop.cmd ==="

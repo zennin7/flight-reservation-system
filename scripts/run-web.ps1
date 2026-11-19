@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+$env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User")
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $repoRoot
 
@@ -21,6 +22,6 @@ if ($lanIp) {
     Write-Host "LAN URL:   http://${lanIp}:$($env:PORT)"
 }
 
-mvn -pl core -DskipTests install -q
+mvn -pl core -am -DskipTests install -q
 if ($LASTEXITCODE -ne 0) { throw "Failed to build core module." }
 mvn -pl web compile exec:java
