@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.group2.flightres.controller.BookingConfirmationController"
+      alignment="CENTER"
+      spacing="18"
+      styleClass="confirmation-container">
+
+    <padding>
+        <Insets top="35" right="35"
+                bottom="35" left="35"/>
+    </padding>
+
+    <VBox alignment="CENTER" spacing="8"
+          styleClass="confirmation-card">
+
+        <Label text="✈️" styleClass="confirmation-icon"/>
+
+        <Label text="✓ Booking Confirmed!"
+               styleClass="confirmation-title"/>
+
+        <Label text="Your flight has been successfully booked."
+               styleClass="confirmation-subtitle"/>
+
+        <Separator/>
+
+        <Label text="YOUR BOOKING DETAILS"
+               styleClass="section-heading"/>
+
+        <VBox spacing="12"
+              alignment="CENTER_LEFT"
+              styleClass="confirmation-details">
+
+            <Label text="BOOKING REFERENCE"
+                   styleClass="detail-heading"/>
+            <Label text="7X2QA1"
+                   styleClass="reference-value"/>
+
+            <Separator/>
+
+            <Label text="FLIGHT NUMBER"
+                   styleClass="detail-heading"/>
+            <Label text="FL204"
+                   styleClass="detail-value"/>
+
+            <Label text="ROUTE"
+                   styleClass="detail-heading"/>
+            <Label text="Johannesburg  →  Cape Town"
+                   styleClass="detail-value"/>
+
+            <Separator/>
+
+            <Label text="PASSENGER NAME"
+                   styleClass="detail-heading"/>
+            <Label text="Jane Doe"
+                   styleClass="detail-value"/>
+
+            <Label text="SEAT NUMBER"
+                   styleClass="detail-heading"/>
+            <Label text="12A"
+                   styleClass="detail-value"/>
+
+            <Label text="DEPARTURE DATE &amp; TIME"
+                   styleClass="detail-heading"/>
+            <Label text="15 October 2026, 08:30"
+                   styleClass="detail-value"/>
+
+        </VBox>
+
+        <Separator/>
+
+        <HBox alignment="CENTER"
+              spacing="12">
+
+            <Button fx:id="downloadButton"
+                    text="Download Boarding Pass"
+                    onAction="#handleDownload"
+                    styleClass="confirmation-primary-button"/>
+
+            <Button fx:id="homeButton"
+                    text="Back to Home"
+                    onAction="#handleBackToHome"
+                    styleClass="confirmation-secondary-button"/>
+
+        </HBox>
+
+        <Label text="Thank you for choosing our airline!"
+               styleClass="footer-message"/>
+
+    </VBox>
+
+</VBox>

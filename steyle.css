@@ -1,0 +1,116 @@
+/* =================================
+   BOOKING CONFIRMATION SCREEN
+   Premium Airline Theme
+   ================================= */
+
+.confirmation-container {
+    fx-background-color: #0F172A;
+}
+
+/* Main confirmation card */
+.confirmation-card {
+    -fx-background-color: #1E293B;
+    -fx-background-radius: 18px;
+    -fx-border-color: #D4AF37;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 18px;
+    -fx-padding: 30px;
+    -fx-max-width: 650px;
+}
+
+/* Airline icon */
+.confirmation-icon {
+    -fx-font-size: 42px;
+    -fx-text-fill: #D4AF37;
+}
+
+/* Success heading */
+.confirmation-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #22C55E;
+}
+
+/* Subtitle */
+.confirmation-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #CBD5E1;
+}
+
+/* Section heading */
+.section-heading {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #D4AF37;
+    -fx-padding: 8px 0 4px 0;
+}
+
+/* Booking details */
+.confirmation-details {
+    -fx-padding: 12px 5px;
+}
+
+/* Small labels */
+.detail-heading {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #94A3B8;
+}
+
+/* Detail values */
+.detail-value {
+    -fx-font-size: 15px;
+    -fx-text-fill: #F8FAFC;
+    -fx-font-weight: bold;
+}
+
+/* Booking reference */
+.reference-value {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #D4AF37;
+}
+
+/* Dividers */
+.confirmation-card .separator .line {
+    -fx-border-color: #475569;
+    -fx-border-width: 0.5px;
+}
+
+/* Primary button */
+.confirmation-primary-button {
+    -fx-background-color: #D4AF37;
+    -fx-text-fill: #0F172A;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 12px 18px;
+    -fx-background-radius: 7px;
+    -fx-cursor: hand;
+}
+
+.confirmation-primary-button:hover {
+    -fx-background-color: #F1D36B;
+}
+
+/* Secondary button */
+.confirmation-secondary-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #D4AF37;
+    -fx-border-width: 1px;
+    -fx-border-radius: 7px;
+    -fx-text-fill: #F8FAFC;
+    -fx-font-size: 13px;
+    -fx-padding: 11px 18px;
+    -fx-cursor: hand;
+}
+
+.confirmation-secondary-button:hover {
+    -fx-background-color: #334155;
+}
+
+/* Footer */
+.footer-message {
+    -fx-font-size: 12px;
+    -fx-text-fill: #94A3B8;
+    -fx-padding: 8px 0 0 0;
+}
