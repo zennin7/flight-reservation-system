@@ -281,6 +281,11 @@ public class WebController {
 
         try {
             User user = authService.authenticate(username, password);
+            String csrfToken = ctx.sessionAttribute("csrf_token");
+            ctx.req().changeSessionId();
+            if (csrfToken != null) {
+                ctx.sessionAttribute("csrf_token", csrfToken);
+            }
             ctx.sessionAttribute("user", user);
             logger.info("Web login successful for user '{}' (Role: {})", user.getUsername(), user.getRole());
             ctx.redirect("/");

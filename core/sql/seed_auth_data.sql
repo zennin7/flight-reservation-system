@@ -1,9 +1,12 @@
 -- ============================================================
--- SEED DATA — test user for local Auth testing
--- Password for this user is: Passw0rd!
--- Hash below is a real, verified BCrypt hash of that password.
+-- SEED DATA — auth users for local login & testing
+-- Password for both accounts is: Passw0rd!
+-- Hashes below are real, verified $2a$12$ BCrypt hashes.
 -- ============================================================
 
 INSERT INTO users (username, password_hash, role, full_name, email, is_active) VALUES
-    ('testadmin', '$2b$12$Mxh/5oczFTWNSNOP.yx2JutGuTVdCxyCtDRg00QqZrkCTWl7xai42', 'ADMIN', 'Test Admin', 'testadmin@example.com', TRUE);
-
+    ('testadmin', '$2a$12$PbLU1N1783HPCUauaurDb.dhCCkT2YhRtGe5iFruRMvWXCUX16GxG', 'ADMIN', 'Test Admin', 'testadmin@example.com', TRUE),
+    ('customer', '$2a$12$wlq6HDixf4yVSCGKvxkjP.a9g1hpAErPgaUXUIIuovvqbFIV7mm8a', 'CUSTOMER', 'Demo Customer', 'customer@example.com', TRUE)
+ON CONFLICT (username) DO UPDATE SET
+    password_hash = EXCLUDED.password_hash,
+    is_active = TRUE;

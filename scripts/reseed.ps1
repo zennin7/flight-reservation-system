@@ -19,7 +19,7 @@ if (-not $psqlExe -or -not (Test-Path $psqlExe)) {
 
 $env:PGPASSWORD = $cfg.dbPassword
 try {
-    foreach ($script in @("core/sql/seed_flights_relative.sql", "core/sql/seed_destinations_relative.sql")) {
+    foreach ($script in @("core/sql/seed_auth_data.sql", "core/sql/seed_flights_relative.sql", "core/sql/seed_destinations_relative.sql")) {
         Write-Host "[RESEED] Running $script on $($cfg.dbHost):$($cfg.dbPort)/$($cfg.dbName)..."
         & $psqlExe -w -h $cfg.dbHost -p $cfg.dbPort -U $cfg.dbUsername -d $cfg.dbName -v ON_ERROR_STOP=1 -f (Join-Path $repoRoot $script) | Out-Null
     }

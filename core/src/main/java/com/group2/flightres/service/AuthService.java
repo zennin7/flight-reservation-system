@@ -10,10 +10,18 @@ import java.util.Optional;
 
 public class AuthService {
 
-    private final UserDao userDao = new UserDaoImpl();
+    private final UserDao userDao;
+
+    public AuthService() {
+        this(new UserDaoImpl());
+    }
+
+    public AuthService(UserDao userDao) {
+        this.userDao = userDao;
+    }
 
     public User authenticate(String username, String password) {
-        Optional<User> userOpt = userDao.findByUsername(username);
+        Optional<User> userOpt = userDao.findByUsernameOrEmail(username);
 
         if (userOpt.isEmpty()) {
             throw new AuthenticationException("Incorrect username or password.");

@@ -105,13 +105,8 @@ try {
     }
     Invoke-SqlFile "core/sql/migration_payments_card_meta.sql"
 
-    # 8. Auth seed (only if testadmin user missing)
-    $hasAdmin = Get-PgScalar $dbName "SELECT COUNT(*) FROM users WHERE username = 'testadmin';"
-    if ($hasAdmin -eq "0") {
-        Invoke-SqlFile "core/sql/seed_auth_data.sql"
-    } else {
-        Write-Host "[SKIP] core/sql/seed_auth_data.sql (testadmin already present)."
-    }
+    # 8. Auth seed (idempotent upsert)
+    Invoke-SqlFile "core/sql/seed_auth_data.sql"
 
     # 9. Flight & destination seeds (idempotent, in dependency order)
     $hasAircraft = Get-PgScalar $dbName "SELECT COUNT(*) FROM aircraft_types;"
