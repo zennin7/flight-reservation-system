@@ -1,5 +1,9 @@
 package com.group2.flightres.web;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.oned.Code128Writer;
 import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.exception.AuthenticationException;
 import com.group2.flightres.exception.SeatUnavailableException;
@@ -9,11 +13,16 @@ import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.service.SeatMapService;
+import com.group2.flightres.util.BoardingPassPdfGenerator;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -271,6 +280,58 @@ public class WebController {
             ctx.redirect("/confirmation/" + ref.trim().toUpperCase(Locale.ROOT));
         } else {
             ctx.redirect("/");
+        }
+    }
+
+    public void handleConfirmationBarcode(Context ctx) {
+        String reference = ctx.pathParam("reference");
+        Optional<BookingRecord> recordOpt = bookingService.getBookingByReference(reference);
+        if (recordOpt.isEmpty()) {
+            ctx.status(404).result("Booking reference not found.");
+            return;
+        }
+        String code = recordOpt.get().getBookingReference();
+        try {
+            BitMatrix matrix = new Code128Writer().encode(code, BarcodeFormat.CODE_128, 380, 96);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            MatrixToImageWriter.writeToStream(matrix, "PNG", baos);
+            ctx.contentType("image/png");
+            ctx.header("Cache-Control", "private, max-age=300");
+            ctx.result(baos.toByteArray());
+        } catch (IOException e) {
+            logger.error("Failed to render barcode PNG for {}", code, e);
+            ctx.status(500).result("Could not generate barcode.");
+        }
+    }
+
+    public void handleConfirmationPdf(Context ctx) {
+        String reference = ctx.pathParam("reference");
+        Optional<BookingRecord> recordOpt = bookingService.getBookingByReference(reference);
+        if (recordOpt.isEmpty()) {
+            ctx.status(404).result("Booking reference not found.");
+            return;
+        }
+        BookingRecord record = recordOpt.get();
+        String safeRef = record.getBookingReference().replaceAll("[^A-Za-z0-9_-]", "");
+        Path tmpFile = null;
+        try {
+            tmpFile = Files.createTempFile("boarding-pass-" + safeRef + "-", ".pdf");
+            BoardingPassPdfGenerator.generate(TicketData.from(record), tmpFile.toFile());
+            byte[] pdfBytes = Files.readAllBytes(tmpFile);
+            ctx.contentType("application/pdf");
+            ctx.header("Content-Disposition", "inline; filename=\"boarding-pass-" + safeRef + ".pdf\"");
+            ctx.header("Cache-Control", "private, max-age=300");
+            ctx.result(pdfBytes);
+        } catch (Exception e) {
+            logger.error("Failed to generate boarding pass PDF for {}", safeRef, e);
+            ctx.status(500).result("Could not generate boarding pass PDF.");
+        } finally {
+            if (tmpFile != null) {
+                try {
+                    Files.deleteIfExists(tmpFile);
+                } catch (IOException ignored) {
+                }
+            }
         }
     }
 

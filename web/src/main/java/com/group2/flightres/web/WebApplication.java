@@ -125,6 +125,8 @@ public class WebApplication {
         // Booking Confirmation & Lookup
         app.get("/confirmation", controller::handleConfirmationLookup);
         app.get("/confirmation/{reference}", controller::handleConfirmation);
+        app.get("/confirmation/{reference}/barcode.png", controller::handleConfirmationBarcode);
+        app.get("/confirmation/{reference}/boarding-pass.pdf", controller::handleConfirmationPdf);
 
         // Authentication
         app.get("/login", controller::handleLoginGet);

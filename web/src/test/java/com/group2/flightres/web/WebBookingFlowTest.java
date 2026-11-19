@@ -153,8 +153,11 @@ class WebBookingFlowTest {
             rec.setFlightNumber(context.getFlightNumber() != null ? context.getFlightNumber() : "GRP 204");
             rec.setOrigin("Johannesburg (JNB)");
             rec.setDestination("Cape Town (CPT)");
+            rec.setDepartureDate(context.getDepartureDate() != null ? context.getDepartureDate() : "2026-11-02");
             rec.setDepartureTime("06:30");
             rec.setArrivalTime("08:40");
+            rec.setDepartureInstant(MOCK_DEP);
+            rec.setArrivalInstant(MOCK_ARR);
             rec.setPassengerName(context.getPassengerName());
             rec.setPassengerEmail(context.getPassengerEmail());
             rec.setPassportNumber(context.getPassportNumber());
@@ -276,6 +279,38 @@ class WebBookingFlowTest {
         assertTrue(confirmHtml.contains("David Miller"), "Confirmation page must display passenger name");
         assertTrue(confirmHtml.contains("GRP 204"), "Confirmation page must display flight number");
         assertTrue(confirmHtml.contains("CONFIRMED"), "Confirmation page must show confirmed status");
+        assertTrue(confirmHtml.contains("/confirmation/WTEST1/barcode.png"), "Confirmation page must embed barcode image");
+        assertTrue(confirmHtml.contains("/confirmation/WTEST1/boarding-pass.pdf"), "Confirmation page must link boarding-pass PDF");
+
+        // 4. GET /confirmation/WTEST1/barcode.png
+        HttpResponse<byte[]> barcodeResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/confirmation/WTEST1/barcode.png")).GET().build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertEquals(200, barcodeResp.statusCode());
+        assertTrue(barcodeResp.headers().firstValue("Content-Type").orElse("").contains("image/png"));
+        byte[] png = barcodeResp.body();
+        assertTrue(png.length > 8 && png[0] == (byte) 0x89 && png[1] == 0x50 && png[2] == 0x4E && png[3] == 0x47,
+                "Barcode endpoint must return valid PNG bytes");
+
+        // 5. GET /confirmation/WTEST1/boarding-pass.pdf
+        HttpResponse<byte[]> pdfResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/confirmation/WTEST1/boarding-pass.pdf")).GET().build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertEquals(200, pdfResp.statusCode());
+        assertTrue(pdfResp.headers().firstValue("Content-Type").orElse("").contains("application/pdf"));
+        byte[] pdf = pdfResp.body();
+        assertTrue(pdf.length > 5 && new String(pdf, 0, 5, StandardCharsets.US_ASCII).equals("%PDF-"),
+                "PDF endpoint must return valid PDF bytes");
+
+        // 6. Unknown reference returns 404 on barcode & PDF
+        HttpResponse<byte[]> badBarcode = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/confirmation/UNKNOWN99/barcode.png")).GET().build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertEquals(404, badBarcode.statusCode());
+        HttpResponse<byte[]> badPdf = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/confirmation/UNKNOWN99/boarding-pass.pdf")).GET().build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertEquals(404, badPdf.statusCode());
     }
 
     @Test
