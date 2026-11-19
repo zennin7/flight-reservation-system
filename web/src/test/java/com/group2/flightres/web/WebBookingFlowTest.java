@@ -47,6 +47,8 @@ class WebBookingFlowTest {
     private static WebApplication webApp;
     private static int port;
     private static String baseUrl;
+    private static MockBookingDao mockBookingDao;
+    private static MockSeatDao mockSeatDao;
 
     // --- Mock DAOs ---
 
@@ -180,8 +182,8 @@ class WebBookingFlowTest {
     @BeforeAll
     static void setUp() {
         MockFlightDao mockFlightDao = new MockFlightDao();
-        MockSeatDao mockSeatDao = new MockSeatDao();
-        MockBookingDao mockBookingDao = new MockBookingDao();
+        mockSeatDao = new MockSeatDao();
+        mockBookingDao = new MockBookingDao();
 
         java.time.Clock testClock = java.time.Clock.fixed(java.time.Instant.parse("2026-11-01T00:00:00Z"), java.time.ZoneOffset.UTC);
         FlightService flightService = new FlightService(mockFlightDao, testClock);
@@ -277,11 +279,12 @@ class WebBookingFlowTest {
     }
 
     @Test
-    @DisplayName("CSRF rejection on POST /book with missing token")
+    @DisplayName("CSRF rejection on POST /book with missing token creates no booking row")
     void testCsrfProtectionRejectsRequest() throws IOException, InterruptedException {
+        int bookingsBefore = mockBookingDao.store.size();
         HttpClient client = HttpClient.newHttpClient();
 
-        String invalidBody = "flightId=1&flightSeatId=101&passengerName=Test";
+        String invalidBody = "flightId=1&flightSeatId=101&passengerName=Test&passengerEmail=test@example.com&passportNumber=A12345678";
         HttpRequest postReq = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/book"))
                 .header("Content-Type", "application/x-www-form-urlencoded")
@@ -290,6 +293,75 @@ class WebBookingFlowTest {
 
         HttpResponse<String> resp = client.send(postReq, HttpResponse.BodyHandlers.ofString());
         assertEquals(403, resp.statusCode(), "Missing CSRF token must result in 403 Forbidden");
+        assertEquals(bookingsBefore, mockBookingDao.store.size(), "CSRF rejection must not execute booking handler");
+    }
+
+    @Test
+    @DisplayName("Invalid passenger name re-renders seats form preserving inputs without raw error")
+    void testValidationErrorPreservesInputsAndHighlightsField() throws IOException, InterruptedException {
+        CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+        HttpClient client = HttpClient.newBuilder().cookieHandler(cookieManager).build();
+
+        HttpResponse<String> seatsResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/flights/1/seats")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        Matcher m = Pattern.compile("name=\"csrf_token\" value=\"([^\"]+)\"").matcher(seatsResp.body());
+        assertTrue(m.find());
+        String csrfToken = m.group(1);
+
+        String badBody = "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
+                + "&flightId=1&flightSeatId=101"
+                + "&passengerName=" + URLEncoder.encode("1234!!!", StandardCharsets.UTF_8)
+                + "&passengerEmail=" + URLEncoder.encode("keepme@example.com", StandardCharsets.UTF_8)
+                + "&passportNumber=" + URLEncoder.encode("AB 12-3456", StandardCharsets.UTF_8);
+
+        HttpResponse<String> resp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/book"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(badBody)).build(),
+                HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(200, resp.statusCode());
+        String html = resp.body();
+        assertTrue(html.contains("keepme@example.com"), "Email input must be preserved on error");
+        assertTrue(html.contains("AB 12-3456"), "Passport input must be preserved on error");
+        assertTrue(html.contains("is-invalid"), "Failed field must be highlighted");
+        assertTrue(!html.contains("Booking failed:"), "Raw 'Booking failed:' prefix must not appear");
+    }
+
+    @Test
+    @DisplayName("Passport with spaces and hyphens is normalized before validation")
+    void testPassportNormalizedBeforeValidation() throws IOException, InterruptedException {
+        // Ensure seat 101 is available
+        mockSeatDao.releaseSeat(101L);
+        CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+        HttpClient client = HttpClient.newBuilder()
+                .cookieHandler(cookieManager)
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build();
+
+        HttpResponse<String> seatsResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/flights/1/seats")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        Matcher m = Pattern.compile("name=\"csrf_token\" value=\"([^\"]+)\"").matcher(seatsResp.body());
+        assertTrue(m.find());
+        String csrfToken = m.group(1);
+
+        String postBody = "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
+                + "&flightId=1&flightSeatId=101"
+                + "&passengerName=" + URLEncoder.encode("Nomsa Dlamini", StandardCharsets.UTF_8)
+                + "&passengerEmail=" + URLEncoder.encode("nomsa@example.com", StandardCharsets.UTF_8)
+                + "&passportNumber=" + URLEncoder.encode("ab 12-3456", StandardCharsets.UTF_8);
+
+        HttpResponse<String> bookResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/book"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(postBody)).build(),
+                HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(302, bookResp.statusCode());
+        BookingRecord saved = mockBookingDao.findByReference("WTEST1").orElseThrow();
+        assertEquals("AB123456", saved.getPassportNumber());
     }
 
     @Test

@@ -199,21 +199,25 @@
         <div class="form-group" style="margin-bottom: 16px;">
           <label for="pName">Passenger Full Name *</label>
           <input type="text" id="pName" name="passengerName" class="form-input"
-                 placeholder="e.g. David Miller" required
-                 th:value="${user != null ? user.username : 'David Miller'}">
+                 th:classappend="${errorField == 'passengerName'} ? ' is-invalid' : ''"
+                 placeholder="Enter passenger full name" required
+                 th:value="${passengerName != null ? passengerName : (user != null and user.fullName != null ? user.fullName : '')}">
         </div>
 
         <div class="form-group" style="margin-bottom: 16px;">
           <label for="pEmail">Email Address *</label>
           <input type="email" id="pEmail" name="passengerEmail" class="form-input"
-                 placeholder="e.g. david@example.com" required
-                 value="david@example.com">
+                 th:classappend="${errorField == 'passengerEmail'} ? ' is-invalid' : ''"
+                 placeholder="name@example.com" required
+                 th:value="${passengerEmail != null ? passengerEmail : (user != null and user.email != null ? user.email : '')}">
         </div>
 
         <div class="form-group" style="margin-bottom: 20px;">
           <label for="pPassport">Passport or National ID</label>
           <input type="text" id="pPassport" name="passportNumber" class="form-input"
-                 placeholder="e.g. A12345678" value="A12345678">
+                 th:classappend="${errorField == 'passportNumber'} ? ' is-invalid' : ''"
+                 placeholder="e.g. A12345678"
+                 th:value="${passportNumber != null ? passportNumber : ''}">
         </div>
 
         <!-- Price Breakdown Summary -->

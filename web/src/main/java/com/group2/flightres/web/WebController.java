@@ -3,6 +3,7 @@ package com.group2.flightres.web;
 import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.exception.AuthenticationException;
 import com.group2.flightres.exception.SeatUnavailableException;
+import com.group2.flightres.exception.ValidationException;
 import com.group2.flightres.model.*;
 import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BookingService;
@@ -234,10 +235,15 @@ public class WebController {
             BookingContext bookingContext = buildBookingContext(ctx, flight, targetSeat);
             BookingRecord record = bookingService.createBooking(bookingContext);
             ctx.redirect("/confirmation/" + record.getBookingReference());
-        } catch (Exception e) {
-            logger.error("Booking creation failed: {}", e.getMessage());
+        } catch (ValidationException e) {
+            logger.warn("Booking validation failed: {}", e.getMessage());
             seatMapService.deselectSeat(targetSeat);
-            renderSeatsWithError(ctx, flightId, "Booking failed: " + e.getMessage());
+            renderSeatsWithError(ctx, flightId, e.getMessage(), resolveErrorField(e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Booking creation failed: {}", e.getMessage(), e);
+            seatMapService.deselectSeat(targetSeat);
+            renderSeatsWithError(ctx, flightId,
+                    "We could not complete your booking right now. Please check your details and try again.", null);
         }
     }
 
@@ -342,7 +348,8 @@ public class WebController {
 
         bc.setPassengerName(ctx.formParam("passengerName"));
         bc.setPassengerEmail(ctx.formParam("passengerEmail"));
-        bc.setPassportNumber(ctx.formParam("passportNumber"));
+        String rawPassport = ctx.formParam("passportNumber");
+        bc.setPassportNumber(normalizePassport(rawPassport));
         bc.setSelectedSeats(List.of(targetSeat));
 
         BigDecimal basePrice = flight.getBasePrice();
@@ -359,11 +366,42 @@ public class WebController {
         return bc;
     }
 
+    private static String normalizePassport(String rawPassport) {
+        if (rawPassport == null) {
+            return null;
+        }
+        String trimmed = rawPassport.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        return trimmed.replaceAll("[\\s-]+", "").toUpperCase(Locale.ROOT);
+    }
+
+    private static String resolveErrorField(String message) {
+        if (message == null) {
+            return null;
+        }
+        String lower = message.toLowerCase(Locale.ROOT);
+        if (lower.contains("name")) return "passengerName";
+        if (lower.contains("email")) return "passengerEmail";
+        if (lower.contains("passport")) return "passportNumber";
+        if (lower.contains("seat")) return "flightSeatId";
+        return null;
+    }
+
     private void renderSeatsWithError(Context ctx, long flightId, String error) {
-        renderSeatsPage(ctx, flightId, error);
+        renderSeatsPage(ctx, flightId, error, null);
+    }
+
+    private void renderSeatsWithError(Context ctx, long flightId, String error, String errorField) {
+        renderSeatsPage(ctx, flightId, error, errorField);
     }
 
     private void renderSeatsPage(Context ctx, long flightId, String error) {
+        renderSeatsPage(ctx, flightId, error, null);
+    }
+
+    private void renderSeatsPage(Context ctx, long flightId, String error, String errorField) {
         Optional<FlightSearchResult> flightOpt = flightService.getFlightById(flightId);
         if (flightOpt.isEmpty()) {
             ctx.redirect("/flights");
@@ -397,6 +435,21 @@ public class WebController {
         model.put("economyRows", List.of(6, 7, 8, 9, 10, 11));
         if (error != null) {
             model.put("bookingError", error);
+        }
+        if (errorField != null) {
+            model.put("errorField", errorField);
+        }
+        String typedName = ctx.formParam("passengerName");
+        if (typedName != null) {
+            model.put("passengerName", typedName);
+        }
+        String typedEmail = ctx.formParam("passengerEmail");
+        if (typedEmail != null) {
+            model.put("passengerEmail", typedEmail);
+        }
+        String typedPassport = ctx.formParam("passportNumber");
+        if (typedPassport != null) {
+            model.put("passportNumber", typedPassport);
         }
 
         ctx.render("seats.html", model);

@@ -1437,3 +1437,8 @@ a {
     display: none; /* Icon only on mobile stepper */
   }
 }
+
+.form-input.is-invalid {
+  border-color: var(--sv-red-status);
+  background-color: var(--sv-red-bg);
+}
