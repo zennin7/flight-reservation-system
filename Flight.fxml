@@ -1,0 +1,78 @@
+<ComboBox fx:id="originCombo"/>
+
+
+<?xml version="1.0" encoding="UTF-8"?> 
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.group2.flightres.controller.FlightSearchController"
+      spacing="20"
+      styleClass="search-container">
+
+    <padding>
+        <Insets top="30" bottom="30"
+                left="30" right="30"/>
+    </padding>
+
+    <Label text="Search Flights"
+           styleClass="search-title"/>
+
+    <!-- Flight search section -->
+
+    <HBox spacing="12"
+          alignment="CENTER_LEFT"
+          styleClass="search-bar">
+
+        <ComboBox fx:id="originCombo"
+                  promptText="Origin"
+                  prefWidth="180"/>
+
+        <ComboBox fx:id="destinationCombo"
+                  promptText="Destination"
+                  prefWidth="180"/>
+
+        <DatePicker fx:id="departureDatePicker"
+                    promptText="Departure Date"/>
+
+        <Button fx:id="searchButton"
+                text="Search"
+                onAction="#handleSearch"
+                styleClass="search-button"/>
+
+    </HBox>
+
+    <!-- Flight results section -->
+
+    <TableView fx:id="resultsTable"
+               VBox.vgrow="ALWAYS"
+               onMouseClicked="#handleFlightSelection">
+
+        <columns>
+
+            <TableColumn fx:id="flightNumberCol"
+                         text="Flight Number"
+                         prefWidth="130"/>
+
+            <TableColumn fx:id="departureCol"
+                         text="Departure"
+                         prefWidth="180"/>
+
+            <TableColumn fx:id="arrivalCol"
+                         text="Arrival"
+                         prefWidth="180"/>
+
+            <TableColumn fx:id="priceCol"
+                         text="Base Price"
+                         prefWidth="130"/>
+
+        </columns>
+
+    </TableView>
+
+</VBox>
+
