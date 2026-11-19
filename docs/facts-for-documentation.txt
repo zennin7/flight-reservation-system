@@ -1,0 +1,150 @@
+======================================================================
+SKY ROYAL - FACTS FOR DOCUMENTATION (PHASE 3)
+======================================================================
+
+1. LIBRARIES & VERSIONS (from pom.xml, core/pom.xml, desktop/pom.xml, web/pom.xml)
+---------------------------------------------------------------------------------
+pom.xml: <javafx.version>21.0.3</javafx.version>
+pom.xml: <postgresql.version>42.7.4</postgresql.version>
+pom.xml: <hikaricp.version>5.1.0</hikaricp.version>
+pom.xml: <openpdf.version>1.3.42</openpdf.version>
+pom.xml: <jbcrypt.version>0.4</jbcrypt.version>
+pom.xml: <jackson.version>2.17.2</jackson.version>
+pom.xml: <slf4j.version>2.0.16</slf4j.version>
+pom.xml: <logback.version>1.5.8</logback.version>
+pom.xml: <junit.version>5.11.0</junit.version>
+pom.xml: <zxing.version>3.5.3</zxing.version>
+pom.xml: <pdfbox.version>2.0.31</pdfbox.version>
+pom.xml: <artifactId>maven-compiler-plugin</artifactId>
+pom.xml: <artifactId>maven-surefire-plugin</artifactId>
+pom.xml: <artifactId>javafx-maven-plugin</artifactId>
+pom.xml: <artifactId>maven-compiler-plugin</artifactId>
+pom.xml: <artifactId>maven-surefire-plugin</artifactId>
+desktop\pom.xml: <mainClass>com.group2.flightres.App</mainClass>
+desktop\pom.xml: <artifactId>javafx-maven-plugin</artifactId>
+desktop\pom.xml: <mainClass>${mainClass}</mainClass>
+desktop\pom.xml: <mainClass>com.group2.flightres.tools.ScreenshotRunner</mainClass>
+desktop\pom.xml: <mainClass>com.group2.flightres.tools.GlassFlightSearchScreenshotRunner</mainClass>
+desktop\pom.xml: <mainClass>com.group2.flightres.tools.GlassSeatMapScreenshotRunner</mainClass>
+desktop\pom.xml: <mainClass>com.group2.flightres.tools.GlassCheckoutScreenshotRunner</mainClass>
+desktop\pom.xml: <mainClass>com.group2.flightres.tools.GlassConfirmationScreenshotRunner</mainClass>
+desktop\pom.xml: <mainClass>com.group2.flightres.tools.GlassMyBookingsScreenshotRunner</mainClass>
+desktop\pom.xml: <mainClass>com.group2.flightres.tools.GlassAdminDashboardScreenshotRunner</mainClass>
+desktop\pom.xml: <mainClass>com.group2.flightres.tools.GlassAdminBookingsScreenshotRunner</mainClass>
+web\pom.xml: <artifactId>javalin</artifactId>
+web\pom.xml: <version>6.1.3</version>
+web\pom.xml: <artifactId>javalin-rendering</artifactId>
+web\pom.xml: <version>6.1.3</version>
+web\pom.xml: <artifactId>thymeleaf</artifactId>
+web\pom.xml: <version>3.1.2.RELEASE</version>
+web\pom.xml: <mainClass>com.group2.flightres.web.WebApplication</mainClass>
+
+2. PRICING, HOLD & SALES POLICIES
+---------------------------------
+PricingPolicy.java:10: * Demand multipliers based on flight occupancy (booked + currently held seats / total seats):
+PricingPolicy.java:16: * Booking-time multipliers based on remaining hours until departure:
+PricingPolicy.java:24: * All quoted fares are VAT-inclusive; VAT_RATE is used solely for the informational
+PricingPolicy.java:29: public static final BigDecimal DEMAND_TIER_UNDER_40 = new BigDecimal("1.00");
+PricingPolicy.java:30: public static final BigDecimal DEMAND_TIER_40_TO_60 = new BigDecimal("1.05");
+PricingPolicy.java:31: public static final BigDecimal DEMAND_TIER_60_TO_80 = new BigDecimal("1.12");
+PricingPolicy.java:32: public static final BigDecimal DEMAND_TIER_80_PLUS = new BigDecimal("1.20");
+PricingPolicy.java:34: public static final BigDecimal TIMING_TIER_240_PLUS = new BigDecimal("0.95");
+PricingPolicy.java:35: public static final BigDecimal TIMING_TIER_120_TO_240 = new BigDecimal("1.00");
+PricingPolicy.java:36: public static final BigDecimal TIMING_TIER_48_TO_120 = new BigDecimal("1.07");
+PricingPolicy.java:37: public static final BigDecimal TIMING_TIER_24_TO_48 = new BigDecimal("1.12");
+PricingPolicy.java:38: public static final BigDecimal TIMING_TIER_UNDER_24 = new BigDecimal("1.20");
+PricingPolicy.java:40: public static final BigDecimal VAT_RATE = new BigDecimal("0.15");
+PricingPolicy.java:47: * Resolves the demand multiplier based on seat occupancy percentage [0.0, 1.0].
+PricingPolicy.java:49: public static BigDecimal getDemandMultiplier(double occupancy) {
+PricingPolicy.java:51: return DEMAND_TIER_UNDER_40;
+PricingPolicy.java:53: return DEMAND_TIER_40_TO_60;
+PricingPolicy.java:55: return DEMAND_TIER_60_TO_80;
+PricingPolicy.java:57: return DEMAND_TIER_80_PLUS;
+PricingPolicy.java:62: * Resolves the booking-time multiplier based on hours until flight departure.
+PricingPolicy.java:64: public static BigDecimal getTimingMultiplier(double hoursToDeparture) {
+PricingPolicy.java:66: return TIMING_TIER_240_PLUS;
+PricingPolicy.java:68: return TIMING_TIER_120_TO_240;
+PricingPolicy.java:70: return TIMING_TIER_48_TO_120;
+PricingPolicy.java:72: return TIMING_TIER_24_TO_48;
+PricingPolicy.java:74: return TIMING_TIER_UNDER_24;
+PricingPolicy.java:79: * Convenience method to calculate timing multiplier from departure instant and current instant.
+PricingPolicy.java:81: public static BigDecimal getTimingMultiplier(Instant now, Instant departure) {
+PricingPolicy.java:83: return TIMING_TIER_120_TO_240;
+PricingPolicy.java:87: return getTimingMultiplier(hours);
+PricingService.java:28: * live seat class pricing multipliers, flight occupancy, and departure timing.
+PricingService.java:93: Map<SeatClass, BigDecimal> classMultipliers = seatDao.getSeatClassMultipliers();
+PricingService.java:94: BigDecimal classMultiplier = classMultipliers.getOrDefault(seatClass, BigDecimal.ONE);
+PricingService.java:104: BigDecimal basePrice = rs.getBigDecimal("base_price");
+PricingService.java:118: BigDecimal demandMultiplier = PricingPolicy.getDemandMultiplier(occupancy);
+PricingService.java:119: BigDecimal timingMultiplier = PricingPolicy.getTimingMultiplier(effectiveClock.instant(), departureTime);
+PricingService.java:121: return PriceQuote.calculate(basePrice, classMultiplier, demandMultiplier, timingMultiplier);
+PricingService.java:149: Map<SeatClass, BigDecimal> classMultipliers = seatDao.getSeatClassMultipliers();
+PricingService.java:150: BigDecimal classMultiplier = classMultipliers.getOrDefault(seatClass, BigDecimal.ONE);
+PricingService.java:162: BigDecimal basePrice = rs.getBigDecimal("base_price");
+PricingService.java:171: BigDecimal demandMultiplier = PricingPolicy.getDemandMultiplier(occupancy);
+PricingService.java:172: BigDecimal timingMultiplier = PricingPolicy.getTimingMultiplier(effectiveClock.instant(), departureTime);
+PricingService.java:174: PriceQuote quote = PriceQuote.calculate(basePrice, classMultiplier, demandMultiplier, timingMultiplier);
+SeatHoldPolicy.java:11: public static final int HOLD_SECONDS = 300;
+FlightSalesPolicy.java:13: public static final Duration SALES_CLOSE_BEFORE_DEPARTURE = Duration.ofMinutes(60);
+FlightSalesPolicy.java:34: Instant cutoff = departure.minus(SALES_CLOSE_BEFORE_DEPARTURE);
+(PricingService cabin multipliers: SeatClass.FIRST -> 2.50x, SeatClass.ECONOMY -> 1.00x;
+ Demand tiers: <40% = 1.00, 40-60% = 1.05, 60-80% = 1.12, >=80% = 1.20;
+ Timing tiers: >=240h = 0.95, 120-240h = 1.00, 48-120h = 1.07, 24-48h = 1.12, <24h = 1.20;
+ VAT rate = 0.15 (15% VAT-inclusive); HOLD_SECONDS = 300 (5 min); Sales cutoff = 60 minutes)
+
+3. AUTH, POOL, ROLES, MAIN CLASSES & RUN COMMANDS
+-------------------------------------------------
+- bcrypt cost factor: 12 (PasswordUtil.java:10 -> BCrypt.gensalt(12))
+- HikariCP maximumPoolSize: configured from app.json poolSize (10 in app.json.example), DatabaseConfig.java:22
+- Roles (UserRole.java): ADMIN, CUSTOMER
+- Desktop main class: <mainClass>com.group2.flightres.App</mainClass> (com.group2.flightres.App)
+  Run command: mvn -pl desktop -am javafx:run
+- Web main class: com.group2.flightres.web.WebApplication (port 7070 or PORT env)
+  Run command: mvn -pl web -am exec:java -Dexec.mainClass=com.group2.flightres.web.WebApplication
+
+4. TEST COUNTS PER MODULE
+-------------------------
+- core (surefire XML reports): 105
+- web (surefire XML reports): 6
+- desktop (@Test annotations grep): 42
+
+5. SQL SCRIPTS IN core/sql
+--------------------------
+migration_airports_timezone.sql :: BEGIN; ALTER TABLE airports ADD COLUMN timezone VARCHAR(50); UPDATE airports SET timezone = 'Africa/Johannesburg' WHERE iata_code IN ('JNB','CPT');
+migration_payments_card_meta.sql :: -- Migration: Add card_brand and card_last4 metadata columns to payments table -- Phase B: payments card metadata for transaction records (PCI compliant, no PAN or CVV stored)
+schema.sql :: -- ============================================================ -- FLIGHT RESERVATION SYSTEM â€” SCHEMA v1 -- ============================================================
+seed_auth_data.sql :: -- ============================================================ -- SEED DATA â€” test user for local Auth testing -- Password for this user is: Passw0rd!
+seed_destinations_relative.sql :: -- seed_destinations_relative.sql -- Rolling 14-day schedule of Sky Royal (ALT) domestic and international destination flights -- on the existing A320 type, generated from the South African calendar date.
+seed_flights_data.sql :: -- ============================================================ -- SKY ROYAL FLIGHT RESERVATION SYSTEM â€” SEED FLIGHTS DATA -- ============================================================
+seed_flights_relative.sql :: -- seed_flights_relative.sql -- Rolling 14-day schedule of ALT flights on the existing A320 type, generated from the -- South African calendar date. Safe to run repeatedly (idempotent); run it again on any
+seed_full_cabin.sql :: -- ============================================================ -- SKY ROYAL FLIGHT RESERVATION SYSTEM â€” SEED FULL CABIN -- Aircraft: Airbus A320 (162 seats)
+
+6. CANCEL / REFUND & PASSPORT STORAGE
+-------------------------------------
+- Control search ('bookings' across src/main): 466 hits.
+- Cancel/Refund: SimulatedPaymentGateway implements PaymentService.refund(String reference) (in-memory Set<String> for rollback/compensation on booking failure); there is no customer/admin cancel-booking endpoint or UI button.
+- Passport storage: stored as plaintext VARCHAR in booking_seats.passport_number (BookingDaoImpl.java:58,231).
+BookingDaoImpl.java:58: INSERT INTO booking_seats (booking_id, flight_seat_id, passenger_name, passport_number, date_of_birth, price_paid)
+BookingDaoImpl.java:80: bs.passenger_name, bs.passport_number,
+BookingDaoImpl.java:204: String passport = context.getPassportNumber();
+BookingDaoImpl.java:298: String passport = context.getPassportNumber();
+BookingDaoImpl.java:322: record.setPassportNumber(passport);
+BookingDaoImpl.java:602: rec.setPassportNumber(rs.getString("passport_number"));
+BookingContext.java:43: private String passportNumber;
+BookingContext.java:129: public String getPassportNumber() { return passportNumber; }
+BookingContext.java:130: public void setPassportNumber(String passportNumber) { this.passportNumber = passportNumber; }
+BookingRecord.java:31: private String passportNumber;
+BookingRecord.java:93: public String getPassportNumber() { return passportNumber; }
+BookingRecord.java:94: public void setPassportNumber(String passportNumber) { this.passportNumber = passportNumber; }
+BookingService.java:80: if (context.getPassportNumber() != null && !context.getPassportNumber().isBlank()) {
+BookingService.java:81: ValidationUtil.validatePassportNumber(context.getPassportNumber());
+SimulatedPaymentGateway.java:65: public void refund(String reference) {
+SimulatedPaymentGateway.java:73: public boolean isRefunded(String reference) {
+ValidationUtil.java:73: public static String validatePassportNumber(String passport) {
+ValidationUtil.java:76: throw new ValidationException("passportNumber", "Passport number is required.");
+ValidationUtil.java:81: throw new ValidationException("passportNumber", "Passport number must be 6 to 20 alphanumeric characters.");
+CheckoutController.java:413: ValidationUtil.validatePassportNumber(passport);
+CheckoutController.java:428: bookingContext.setPassportNumber(passport);
+MyBookingsController.java:500: ctx.setPassportNumber(record.getPassportNumber() != null ? record.getPassportNumber() : "DT123456");
+WebController.java:340: bc.setPassportNumber(ctx.formParam("passportNumber"));
+seats.html:215: <input type="text" id="pPassport" name="passportNumber" class="form-input"

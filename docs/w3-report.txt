@@ -1,0 +1,54 @@
+======================================================================
+TASK W3 - WINDOWS LAUNCH KIT REPORT
+Generated: 2026-11-19 00:04:23 +02:00
+======================================================================
+
+1. BRANCH & COMMITS (LOCAL ONLY - NOT PUSHED)
+----------------------------------------------
+e0a24f0 Docs: add Windows LAUNCH.md quick-start guide
+d92e293 Launch: Windows setup, reseed, and run scripts
+50d88cb Merge pull request #8 from zennin7/integration/multimodule-glass
+
+2. GIT STATUS (-sb)
+-------------------
+## chore/launch-kit
+?? docs/facts-for-documentation.txt
+?? docs/schema-export.txt
+?? docs/w2-report.txt
+
+3. SQL SCRIPT EXECUTION ORDER & REASONING
+-----------------------------------------
+1) core/sql/schema.sql (only if public.airports does not exist)
+   - Creates enums, tables, triggers, and views. Already includes airports.timezone NOT NULL.
+2) core/sql/migration_airports_timezone.sql (only if airports.timezone column is missing)
+   - Backfills timezone for legacy pre-timezone DBs; skipped on fresh schema.sql DBs to avoid duplicate column error.
+3) core/sql/migration_payments_card_meta.sql
+   - Uses ADD COLUMN IF NOT EXISTS for card_brand and card_last4 (idempotent).
+4) core/sql/seed_auth_data.sql (only if username 'testadmin' is missing)
+   - Inserts demo user testadmin@example.com (role: ADMIN) without ON CONFLICT.
+5) core/sql/seed_flights_data.sql (only if aircraft_types is empty)
+   - Populates JNB, CPT, and aircraft_type_id = 1 required as foreign keys by relative seeds.
+   - Note: seed_full_cabin.sql is intentionally omitted when seed_flights_data.sql runs because both insert display_row=5, display_col=0 for aircraft_type_id=1.
+6) core/sql/seed_flights_relative.sql
+   - Idempotent 14-day rolling domestic schedule (JNB, CPT, DUR).
+7) core/sql/seed_destinations_relative.sql
+   - Idempotent 14-day rolling domestic + international schedule (PLZ, GRJ, DXB, FCO, ZRH, MXP, JTR, NCE, PSA, GVA).
+
+4. WEB INTERFACE BINDING & LAN URL CONFIRMATION
+-----------------------------------------------
+- WebApplication.java:74 calls app.start(port), which in Javalin 6 binds Jetty to 0.0.0.0 (all network interfaces).
+- scripts/run-web.ps1 sets PORT=8080 (if unset) and prints both http://localhost:8080 and http://<lan-ip>:8080.
+- To restrict to localhost only, change WebApplication.java:74 to app.start("127.0.0.1", port).
+
+5. DEMO ACCOUNT (FROM core/sql/seed_auth_data.sql)
+--------------------------------------------------
+- Email: testadmin@example.com | Role: ADMIN (password documented in LAUNCH.md)
+
+6. VERIFICATION OUTPUT (THROWAWAY DB flight_reservation_launchtest ON PORT 5433)
+---------------------------------------------------------------------------------
+- setup.ps1 (1st run): created DB flight_reservation_launchtest on 5433, ran schema + migrations + seeds (224 ALT flights, 9856 ALT seats), wrote ignored app.json.
+- reseed.ps1: refreshed rolling 14-day schedule (406 ALT flights, 17864 ALT seats).
+- run-web.ps1: HTTP=200 | hasBrand=True | hasFare=True | WEB_CHECK=True | Local URL: http://localhost:8080 | LAN URL: http://192.168.56.1:8080.
+- run-desktop.ps1 (25s): DESKTOP_ALIVE_AT_25S=True | HAS_EXCEPTION=False.
+- setup.ps1 (2nd run - idempotence): skipped existing DB/schema/timezone/testadmin/aircraft_types, re-ran idempotent seeds (422 ALT flights, 18568 ALT seats).
+- Cleanup: DROP DATABASE flight_reservation_launchtest succeeded; original app.json restored.

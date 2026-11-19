@@ -1,0 +1,58 @@
+======================================================================
+TASK W2 - MULTIMODULE INTEGRATION REPORT (TEAM REPO)
+Generated: 2026-11-18 22:48:48 +02:00
+======================================================================
+
+1. GIT LOG (--oneline --graph -12)
+----------------------------------
+* 668a3b2 Brand: fix skyRoyalCssUrl identifier in ThemeManager
+* def7e09 Test: airport count oracle from SQL, not a fixed number
+* ec6f26d Brand: Sky Royal in tests and templates
+*   f23546d Merge remote-tracking branch 'shadow/feature/website-glass' into integration/multimodule-glass
+|\  
+| * 5af4042 Website: destination photos, bento grid, and glossy seat map
+| * f659fcc Website: glass home page
+| * fe86c8d Seed: destination airports and flights
+| * a8e9731 Admin screens polish: money format, filters, nav, CSS tokens
+| * 2ea5652 S9B: Admin Bookings and Flights rebuilt to board
+| * 01ee005 S8B: Admin Dashboard rebuilt to board on real data
+| * b676930 Remove stray backup file; guard against build artefacts
+| * e33070b S9: Admin Bookings with server-side search, pagination, RBAC, and ticket drawer
+
+2. GIT STATUS (-sb)
+-------------------
+## integration/multimodule-glass
+?? docs/facts-for-documentation.txt
+?? docs/schema-export.txt
+
+3. SUBMISSIONS BYTE-IDENTITY CHECK (git diff dev --stat -- Submissions submissions)
+-----------------------------------------------------------------------------------
+(empty - byte-identical to dev)
+
+4. STEP A & STEP B MUTATION PROOFS
+----------------------------------
+- BrandGuardTest GREEN1 (w2-brand-green1.log): Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 (exit 0)
+- BrandGuardTest RED (w2-brand-red.log, Altitude in README.md): exit 1 (FAIL)
+- BrandGuardTest GREEN2 (w2-brand-green2.log): Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 (exit 0)
+- PostgresIntegrationTest#testAirportDaoFindAll RED (w2-airport-red.log, LIMIT 2): exit 1 (FAIL)
+- PostgresIntegrationTest#testAirportDaoFindAll GREEN (w2-airport-green.log): Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 (exit 0)
+
+5. STEP C VERIFICATION (PORT 5433 ONLY)
+---------------------------------------
+- mvn -pl web -am clean verify (w2-web-verify2.log):
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.088 s -- in com.group2.flightres.util.ValidationUtilTest
+[INFO] Tests run: 105, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.69 s -- in com.group2.flightres.web.HomePageTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.583 s -- in com.group2.flightres.web.WebBookingFlowTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+- mvn -pl desktop -am -DskipTests compile (w2-desktop-compile2.log):
+[INFO] BUILD SUCCESS
+
+6. GENERATED DOCUMENTATION ARTIFACTS (UNTRACKED)
+------------------------------------------------
+- docs/facts-for-documentation.txt
+- docs/schema-export.txt
+- docs/w2-report.txt
+- Placeholder to-do for David: web/src/main/resources/public/photos/CREDITS_TO_FILL.md
+- TEAM untracked backup moved prior to merge: C:\Users\tttttttttttttttttttt\Desktop\team-untracked-backup\{design-glass,docs}

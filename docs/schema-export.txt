@@ -1,0 +1,204 @@
+=== 1. TABLES & COLUMNS ===
+     table_name     | ordinal_position |    column_name    |        data_type         | is_nullable |                      column_default                      
+--------------------+------------------+-------------------+--------------------------+-------------+----------------------------------------------------------
+ aircraft_types     |                1 | aircraft_type_id  | integer                  | NO          | nextval('aircraft_types_aircraft_type_id_seq'::regclass)
+ aircraft_types     |                2 | model             | character varying        | NO          | 
+ aircraft_types     |                3 | total_rows        | smallint                 | NO          | 
+ aircraft_types     |                4 | grid_width        | smallint                 | NO          | 
+ airports           |                1 | airport_id        | integer                  | NO          | nextval('airports_airport_id_seq'::regclass)
+ airports           |                2 | iata_code         | character                | NO          | 
+ airports           |                3 | name              | character varying        | NO          | 
+ airports           |                4 | city              | character varying        | NO          | 
+ airports           |                5 | country           | character varying        | NO          | 
+ airports           |                6 | timezone          | character varying        | NO          | 
+ booking_seats      |                1 | booking_seat_id   | bigint                   | NO          | nextval('booking_seats_booking_seat_id_seq'::regclass)
+ booking_seats      |                2 | booking_id        | bigint                   | NO          | 
+ booking_seats      |                3 | flight_seat_id    | bigint                   | NO          | 
+ booking_seats      |                4 | passenger_name    | character varying        | NO          | 
+ booking_seats      |                5 | passport_number   | character varying        | NO          | 
+ booking_seats      |                6 | date_of_birth     | date                     | NO          | 
+ booking_seats      |                7 | price_paid        | numeric                  | NO          | 
+ bookings           |                1 | booking_id        | bigint                   | NO          | nextval('bookings_booking_id_seq'::regclass)
+ bookings           |                2 | booking_ref       | character varying        | NO          | 
+ bookings           |                3 | user_id           | bigint                   | NO          | 
+ bookings           |                4 | flight_id         | bigint                   | NO          | 
+ bookings           |                5 | status            | USER-DEFINED             | NO          | 'PENDING'::booking_status
+ bookings           |                6 | total_amount      | numeric                  | NO          | 
+ bookings           |                7 | created_at        | timestamp with time zone | NO          | now()
+ flight_seats       |                1 | flight_seat_id    | bigint                   | NO          | nextval('flight_seats_flight_seat_id_seq'::regclass)
+ flight_seats       |                2 | flight_id         | bigint                   | NO          | 
+ flight_seats       |                3 | seat_template_id  | bigint                   | NO          | 
+ flight_seats       |                4 | status            | USER-DEFINED             | NO          | 'AVAILABLE'::seat_status
+ flight_seats       |                5 | held_until        | timestamp with time zone | YES         | 
+ flights            |                1 | flight_id         | bigint                   | NO          | nextval('flights_flight_id_seq'::regclass)
+ flights            |                2 | flight_number     | character varying        | NO          | 
+ flights            |                3 | aircraft_type_id  | smallint                 | NO          | 
+ flights            |                4 | origin_airport_id | smallint                 | NO          | 
+ flights            |                5 | dest_airport_id   | smallint                 | NO          | 
+ flights            |                6 | departure_time    | timestamp with time zone | NO          | 
+ flights            |                7 | arrival_time      | timestamp with time zone | NO          | 
+ flights            |                8 | base_price        | numeric                  | NO          | 
+ flights            |                9 | status            | USER-DEFINED             | NO          | 'SCHEDULED'::flight_status
+ flights            |               10 | created_at        | timestamp with time zone | NO          | now()
+ payments           |                1 | payment_id        | bigint                   | NO          | nextval('payments_payment_id_seq'::regclass)
+ payments           |                2 | booking_id        | bigint                   | NO          | 
+ payments           |                3 | amount            | numeric                  | NO          | 
+ payments           |                4 | method            | character varying        | NO          | 
+ payments           |                5 | status            | USER-DEFINED             | NO          | 'PENDING'::payment_status
+ payments           |                6 | transaction_ref   | character varying        | YES         | 
+ payments           |                7 | processed_at      | timestamp with time zone | NO          | now()
+ payments           |                8 | card_brand        | character varying        | YES         | 
+ payments           |                9 | card_last4        | character                | YES         | 
+ seat_class_pricing |                1 | seat_class        | USER-DEFINED             | NO          | 
+ seat_class_pricing |                2 | price_multiplier  | numeric                  | NO          | 
+ seat_pricing_view  |                1 | flight_seat_id    | bigint                   | YES         | 
+ seat_pricing_view  |                2 | flight_id         | bigint                   | YES         | 
+ seat_pricing_view  |                3 | seat_row          | smallint                 | YES         | 
+ seat_pricing_view  |                4 | seat_col          | character                | YES         | 
+ seat_pricing_view  |                5 | seat_class        | USER-DEFINED             | YES         | 
+ seat_pricing_view  |                6 | display_row       | smallint                 | YES         | 
+ seat_pricing_view  |                7 | display_col       | smallint                 | YES         | 
+ seat_pricing_view  |                8 | status            | USER-DEFINED             | YES         | 
+ seat_pricing_view  |                9 | calculated_price  | numeric                  | YES         | 
+ seat_templates     |                1 | seat_template_id  | bigint                   | NO          | nextval('seat_templates_seat_template_id_seq'::regclass)
+ seat_templates     |                2 | aircraft_type_id  | smallint                 | NO          | 
+ seat_templates     |                3 | seat_row          | smallint                 | NO          | 
+ seat_templates     |                4 | seat_col          | character                | NO          | 
+ seat_templates     |                5 | seat_class        | USER-DEFINED             | NO          | 
+ seat_templates     |                6 | display_row       | smallint                 | NO          | 
+ seat_templates     |                7 | display_col       | smallint                 | NO          | 
+ seat_templates     |                8 | is_window         | boolean                  | NO          | false
+ seat_templates     |                9 | is_aisle          | boolean                  | NO          | false
+ users              |                1 | user_id           | bigint                   | NO          | nextval('users_user_id_seq'::regclass)
+ users              |                2 | username          | character varying        | NO          | 
+ users              |                3 | password_hash     | character varying        | NO          | 
+ users              |                4 | role              | USER-DEFINED             | NO          | 'CUSTOMER'::user_role
+ users              |                5 | full_name         | character varying        | NO          | 
+ users              |                6 | email             | character varying        | NO          | 
+ users              |                7 | is_active         | boolean                  | NO          | true
+ users              |                8 | created_at        | timestamp with time zone | NO          | now()
+(76 rows)
+
+
+=== 2. PRIMARY KEYS & UNIQUE CONSTRAINTS ===
+     table_name     |                       constraint_name                       | constraint_type |   column_name    
+--------------------+-------------------------------------------------------------+-----------------+------------------
+ aircraft_types     | aircraft_types_pkey                                         | PRIMARY KEY     | aircraft_type_id
+ airports           | airports_pkey                                               | PRIMARY KEY     | airport_id
+ airports           | airports_iata_code_key                                      | UNIQUE          | iata_code
+ booking_seats      | booking_seats_pkey                                          | PRIMARY KEY     | booking_seat_id
+ booking_seats      | booking_seats_flight_seat_id_key                            | UNIQUE          | flight_seat_id
+ bookings           | bookings_pkey                                               | PRIMARY KEY     | booking_id
+ bookings           | bookings_booking_ref_key                                    | UNIQUE          | booking_ref
+ flight_seats       | flight_seats_pkey                                           | PRIMARY KEY     | flight_seat_id
+ flight_seats       | flight_seats_flight_id_seat_template_id_key                 | UNIQUE          | flight_id
+ flight_seats       | flight_seats_flight_id_seat_template_id_key                 | UNIQUE          | seat_template_id
+ flights            | flights_pkey                                                | PRIMARY KEY     | flight_id
+ payments           | payments_pkey                                               | PRIMARY KEY     | payment_id
+ seat_class_pricing | seat_class_pricing_pkey                                     | PRIMARY KEY     | seat_class
+ seat_templates     | seat_templates_pkey                                         | PRIMARY KEY     | seat_template_id
+ seat_templates     | seat_templates_aircraft_type_id_display_row_display_col_key | UNIQUE          | aircraft_type_id
+ seat_templates     | seat_templates_aircraft_type_id_seat_row_seat_col_key       | UNIQUE          | aircraft_type_id
+ seat_templates     | seat_templates_aircraft_type_id_seat_row_seat_col_key       | UNIQUE          | seat_row
+ seat_templates     | seat_templates_aircraft_type_id_display_row_display_col_key | UNIQUE          | display_row
+ seat_templates     | seat_templates_aircraft_type_id_seat_row_seat_col_key       | UNIQUE          | seat_col
+ seat_templates     | seat_templates_aircraft_type_id_display_row_display_col_key | UNIQUE          | display_col
+ users              | users_pkey                                                  | PRIMARY KEY     | user_id
+ users              | users_email_key                                             | UNIQUE          | email
+ users              | users_username_key                                          | UNIQUE          | username
+(23 rows)
+
+
+=== 3. FOREIGN KEYS ===
+           source_col            |           target_col            |           constraint_name            
+---------------------------------+---------------------------------+--------------------------------------
+ booking_seats.booking_id        | bookings.booking_id             | booking_seats_booking_id_fkey
+ booking_seats.flight_seat_id    | flight_seats.flight_seat_id     | booking_seats_flight_seat_id_fkey
+ bookings.flight_id              | flights.flight_id               | bookings_flight_id_fkey
+ bookings.user_id                | users.user_id                   | bookings_user_id_fkey
+ flight_seats.flight_id          | flights.flight_id               | flight_seats_flight_id_fkey
+ flight_seats.seat_template_id   | seat_templates.seat_template_id | flight_seats_seat_template_id_fkey
+ flights.aircraft_type_id        | aircraft_types.aircraft_type_id | flights_aircraft_type_id_fkey
+ flights.dest_airport_id         | airports.airport_id             | flights_dest_airport_id_fkey
+ flights.origin_airport_id       | airports.airport_id             | flights_origin_airport_id_fkey
+ payments.booking_id             | bookings.booking_id             | payments_booking_id_fkey
+ seat_templates.aircraft_type_id | aircraft_types.aircraft_type_id | seat_templates_aircraft_type_id_fkey
+(11 rows)
+
+
+=== 4. CHECK CONSTRAINTS ===
+     table_name     |               constraint_name                |              check_clause              
+--------------------+----------------------------------------------+----------------------------------------
+ aircraft_types     | aircraft_types_aircraft_type_id_not_null     | aircraft_type_id IS NOT NULL
+ aircraft_types     | aircraft_types_grid_width_check              | (grid_width > 0)
+ aircraft_types     | aircraft_types_grid_width_not_null           | grid_width IS NOT NULL
+ aircraft_types     | aircraft_types_model_not_null                | model IS NOT NULL
+ aircraft_types     | aircraft_types_total_rows_check              | (total_rows > 0)
+ aircraft_types     | aircraft_types_total_rows_not_null           | total_rows IS NOT NULL
+ airports           | airports_airport_id_not_null                 | airport_id IS NOT NULL
+ airports           | airports_city_not_null                       | city IS NOT NULL
+ airports           | airports_country_not_null                    | country IS NOT NULL
+ airports           | airports_iata_code_not_null                  | iata_code IS NOT NULL
+ airports           | airports_name_not_null                       | name IS NOT NULL
+ airports           | airports_timezone_not_null                   | timezone IS NOT NULL
+ booking_seats      | booking_seats_booking_id_not_null            | booking_id IS NOT NULL
+ booking_seats      | booking_seats_booking_seat_id_not_null       | booking_seat_id IS NOT NULL
+ booking_seats      | booking_seats_date_of_birth_not_null         | date_of_birth IS NOT NULL
+ booking_seats      | booking_seats_flight_seat_id_not_null        | flight_seat_id IS NOT NULL
+ booking_seats      | booking_seats_passenger_name_not_null        | passenger_name IS NOT NULL
+ booking_seats      | booking_seats_passport_number_not_null       | passport_number IS NOT NULL
+ booking_seats      | booking_seats_price_paid_check               | (price_paid >= (0)::numeric)
+ booking_seats      | booking_seats_price_paid_not_null            | price_paid IS NOT NULL
+ bookings           | bookings_booking_id_not_null                 | booking_id IS NOT NULL
+ bookings           | bookings_booking_ref_not_null                | booking_ref IS NOT NULL
+ bookings           | bookings_created_at_not_null                 | created_at IS NOT NULL
+ bookings           | bookings_flight_id_not_null                  | flight_id IS NOT NULL
+ bookings           | bookings_status_not_null                     | status IS NOT NULL
+ bookings           | bookings_total_amount_check                  | (total_amount >= (0)::numeric)
+ bookings           | bookings_total_amount_not_null               | total_amount IS NOT NULL
+ bookings           | bookings_user_id_not_null                    | user_id IS NOT NULL
+ flight_seats       | flight_seats_flight_id_not_null              | flight_id IS NOT NULL
+ flight_seats       | flight_seats_flight_seat_id_not_null         | flight_seat_id IS NOT NULL
+ flight_seats       | flight_seats_seat_template_id_not_null       | seat_template_id IS NOT NULL
+ flight_seats       | flight_seats_status_not_null                 | status IS NOT NULL
+ flights            | flights_aircraft_type_id_not_null            | aircraft_type_id IS NOT NULL
+ flights            | flights_arrival_time_not_null                | arrival_time IS NOT NULL
+ flights            | flights_base_price_check                     | (base_price > (0)::numeric)
+ flights            | flights_base_price_not_null                  | base_price IS NOT NULL
+ flights            | flights_check                                | (dest_airport_id <> origin_airport_id)
+ flights            | flights_check1                               | (arrival_time > departure_time)
+ flights            | flights_created_at_not_null                  | created_at IS NOT NULL
+ flights            | flights_departure_time_not_null              | departure_time IS NOT NULL
+ flights            | flights_dest_airport_id_not_null             | dest_airport_id IS NOT NULL
+ flights            | flights_flight_id_not_null                   | flight_id IS NOT NULL
+ flights            | flights_flight_number_not_null               | flight_number IS NOT NULL
+ flights            | flights_origin_airport_id_not_null           | origin_airport_id IS NOT NULL
+ flights            | flights_status_not_null                      | status IS NOT NULL
+ payments           | payments_amount_check                        | (amount > (0)::numeric)
+ payments           | payments_amount_not_null                     | amount IS NOT NULL
+ payments           | payments_booking_id_not_null                 | booking_id IS NOT NULL
+ payments           | payments_method_not_null                     | method IS NOT NULL
+ payments           | payments_payment_id_not_null                 | payment_id IS NOT NULL
+ payments           | payments_processed_at_not_null               | processed_at IS NOT NULL
+ payments           | payments_status_not_null                     | status IS NOT NULL
+ seat_class_pricing | seat_class_pricing_price_multiplier_check    | (price_multiplier > (0)::numeric)
+ seat_class_pricing | seat_class_pricing_price_multiplier_not_null | price_multiplier IS NOT NULL
+ seat_class_pricing | seat_class_pricing_seat_class_not_null       | seat_class IS NOT NULL
+ seat_templates     | seat_templates_aircraft_type_id_not_null     | aircraft_type_id IS NOT NULL
+ seat_templates     | seat_templates_display_col_not_null          | display_col IS NOT NULL
+ seat_templates     | seat_templates_display_row_not_null          | display_row IS NOT NULL
+ seat_templates     | seat_templates_is_aisle_not_null             | is_aisle IS NOT NULL
+ seat_templates     | seat_templates_is_window_not_null            | is_window IS NOT NULL
+ seat_templates     | seat_templates_seat_class_not_null           | seat_class IS NOT NULL
+ seat_templates     | seat_templates_seat_col_not_null             | seat_col IS NOT NULL
+ seat_templates     | seat_templates_seat_row_not_null             | seat_row IS NOT NULL
+ seat_templates     | seat_templates_seat_template_id_not_null     | seat_template_id IS NOT NULL
+ users              | users_created_at_not_null                    | created_at IS NOT NULL
+ users              | users_email_not_null                         | email IS NOT NULL
+ users              | users_full_name_not_null                     | full_name IS NOT NULL
+ users              | users_is_active_not_null                     | is_active IS NOT NULL
+ users              | users_password_hash_not_null                 | password_hash IS NOT NULL
+ users              | users_role_not_null                          | role IS NOT NULL
+ users              | users_user_id_not_null                       | user_id IS NOT NULL
+ users              | users_username_not_null                      | username IS NOT NULL
+(72 rows)
