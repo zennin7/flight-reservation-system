@@ -1,0 +1,125 @@
+[11/02, 10:25] Şűğæř Petja: admin-dashboard.fxml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+xmlns:fx="http://javafx.com/fxml"
+fx:controller="com.group2.flightres.controller.AdminDashboardController"
+spacing="20"
+styleClass="dashboard-container">
+
+<padding>
+<Insets top="0" bottom="30" left="30" right="30"/>
+</padding>
+
+<!-- Header bar -->
+<HBox alignment="CENTER_LEFT" spacing="10" styleClass="dashboard-header">
+<Label text="Admin Dashboard" styleClass="dashboard-header-title"/>
+<Region HBox.hgrow="ALWAYS"/>
+<Button fx:id="logoutButton" text="Log Out" onAction="#handleLogout"
+styleClass="dashboard-logout-button"/>
+</HBox>
+
+<!-- Summary cards -->
+<HBox spacing="16">
+<VBox styleClass="dashboard-card" alignment="CENTER" HBox.hgrow="ALWAYS">
+<Label text="Total Flights" styleClass="dashboard-card-title"/>
+<Label text="24" styleClass="dashboard-card-value"/>
+</VBox>
+<VBox styleClass="dashboard-card" alignment="CENTER" HBox.hgrow="ALWAYS">
+<Label text="Total Bookings" styleClass="dashboard-card-title"/>
+<Label text="312" styleClass="dashboard-card-value"/>
+</VBox>
+<VBox styleClass="dashboard-card" alignment="CENTER" HBox.hgrow="ALWAYS">
+<Label text="Revenue (This Month)" styleClass="dashboard-card-title"/>
+<Label text="R 458,200" styleClass="dashboard-card-value"/>
+</VBox>
+</HBox>
+
+<!-- Chart placeholder -->
+<StackPane styleClass="dashboard-chart-placeholder" VBox.vgrow="ALWAYS">
+<Label text="Booking Trends (Chart Coming Soon)" styleClass="dashboard-placeholder-text"/>
+</StackPane>
+
+</VBox>
+[11/02, 10:25] Şűğæř Petja: styles.css
+
+.dashboard-container {
+-fx-background-color: #f1f5f9;
+}
+
+.dashboard-header {
+-fx-padding: 20 0 0 0;
+}
+
+.dashboard-header-title {
+-fx-font-size: 22px;
+-fx-font-weight: bold;
+}
+
+.dashboard-logout-button {
+-fx-background-color: #ef4444;
+-fx-text-fill: white;
+-fx-font-weight: bold;
+-fx-padding: 8 16;
+-fx-background-radius: 6;
+-fx-cursor: hand;
+}
+
+.dashboard-card {
+-fx-background-color: white;
+-fx-background-radius: 10;
+-fx-padding: 20;
+-fx-spacing: 8;
+-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);
+}
+
+.dashboard-card-title {
+-fx-font-size: 13px;
+-fx-text-fill: #64748b;
+}
+
+.dashboard-card-value {
+-fx-font-size: 24px;
+-fx-font-weight: bold;
+-fx-text-fill: #0f172a;
+}
+
+.dashboard-chart-placeholder {
+-fx-background-color: white;
+-fx-background-radius: 10;
+-fx-border-color: #cbd5e1;
+-fx-border-style: dashed;
+-fx-border-radius: 10;
+-fx-min-height: 220px;
+}
+
+.dashboard-placeholder-text {
+-fx-text-fill: #94a3b8;
+-fx-font-size: 14px;
+}
+[11/02, 10:26] Şűğæř Petja: If the CSS has no effect, check that styles.css is linked in your Main class:
+
+scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+
+java -version # must show 17
+git checkout dev
+git pull origin dev
+git checkout -b feature/petja-yanda-admin-dashboard-ui
+
+after the header works
+git add .
+git commit -m "feat: add admin dashboard header bar"
+
+after the cards work
+git add .
+git commit -m "feat: add summary cards and chart placeholder"
+
+git push -u origin feature/petja-yanda-admin-dashboard-ui
