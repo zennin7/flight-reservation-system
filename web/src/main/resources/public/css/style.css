@@ -1442,3 +1442,92 @@ a {
   border-color: var(--sv-red-status);
   background-color: var(--sv-red-bg);
 }
+
+@media (max-width: 640px) {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  .section {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .booking-checkout-container {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .cabin-container, .checkout-card, .flight-summary-bar {
+    max-width: 100%;
+    padding: 16px 12px;
+  }
+  .flight-summary-bar > div {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px;
+  }
+  .flight-summary-bar > div > div[style*="text-align: right"] {
+    text-align: left !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .seat-row {
+    gap: 4px;
+  }
+  .seat-row-number {
+    width: 16px;
+    font-size: 11px;
+  }
+  .seat-aisle {
+    width: 10px;
+  }
+  .seat-badge {
+    width: 34px;
+    height: 34px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 640px) {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  .section {
+    width: 100%;
+    max-width: 100vw;
+    padding: 12px 10px;
+    overflow-x: hidden;
+  }
+  .flight-summary-bar, .booking-checkout-container, .cabin-container, .checkout-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .flight-summary-bar h2 {
+    font-size: 16px !important;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 480px) {
+  .seat-badge {
+    width: 30px;
+    height: 30px;
+    font-size: 10px;
+  }
+  .seat-row {
+    gap: 3px;
+  }
+  .seat-aisle {
+    width: 8px;
+  }
+  .seat-row-number {
+    width: 14px;
+    font-size: 10px;
+  }
+}

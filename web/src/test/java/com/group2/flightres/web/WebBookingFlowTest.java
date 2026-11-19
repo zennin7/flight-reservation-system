@@ -247,7 +247,8 @@ class WebBookingFlowTest {
                 + "&flightSeatId=101"
                 + "&passengerName=" + URLEncoder.encode("David Miller", StandardCharsets.UTF_8)
                 + "&passengerEmail=" + URLEncoder.encode("david@example.com", StandardCharsets.UTF_8)
-                + "&passportNumber=A12345678";
+                + "&passportNumber=A12345678"
+                + "&dateOfBirth=1995-05-15";
 
         HttpRequest postBookReq = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/book"))
@@ -348,7 +349,8 @@ class WebBookingFlowTest {
                 + "&flightId=1&flightSeatId=101"
                 + "&passengerName=" + URLEncoder.encode("1234!!!", StandardCharsets.UTF_8)
                 + "&passengerEmail=" + URLEncoder.encode("keepme@example.com", StandardCharsets.UTF_8)
-                + "&passportNumber=" + URLEncoder.encode("AB 12-3456", StandardCharsets.UTF_8);
+                + "&passportNumber=" + URLEncoder.encode("AB 12-3456", StandardCharsets.UTF_8)
+                + "&dateOfBirth=1995-05-15";
 
         HttpResponse<String> resp = client.send(
                 HttpRequest.newBuilder().uri(URI.create(baseUrl + "/book"))
@@ -386,7 +388,8 @@ class WebBookingFlowTest {
                 + "&flightId=1&flightSeatId=101"
                 + "&passengerName=" + URLEncoder.encode("Nomsa Dlamini", StandardCharsets.UTF_8)
                 + "&passengerEmail=" + URLEncoder.encode("nomsa@example.com", StandardCharsets.UTF_8)
-                + "&passportNumber=" + URLEncoder.encode("ab 12-3456", StandardCharsets.UTF_8);
+                + "&passportNumber=" + URLEncoder.encode("ab 12-3456", StandardCharsets.UTF_8)
+                + "&dateOfBirth=1995-05-15";
 
         HttpResponse<String> bookResp = client.send(
                 HttpRequest.newBuilder().uri(URI.create(baseUrl + "/book"))

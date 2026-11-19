@@ -12,6 +12,7 @@ import com.group2.flightres.model.*;
 import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.FlightService;
+import com.group2.flightres.service.PaymentResult;
 import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.util.BoardingPassPdfGenerator;
 import io.javalin.http.Context;
@@ -411,6 +412,19 @@ public class WebController {
         bc.setPassengerEmail(ctx.formParam("passengerEmail"));
         String rawPassport = ctx.formParam("passportNumber");
         bc.setPassportNumber(normalizePassport(rawPassport));
+        String rawDob = ctx.formParam("dateOfBirth");
+        if (rawDob == null || rawDob.isBlank()) {
+            throw new ValidationException("dateOfBirth", "Passenger date of birth is required.");
+        }
+        try {
+            LocalDate dob = LocalDate.parse(rawDob.trim());
+            if (!dob.isBefore(LocalDate.now())) {
+                throw new ValidationException("dateOfBirth", "Passenger date of birth must be in the past.");
+            }
+            bc.setDateOfBirth(dob);
+        } catch (DateTimeParseException e) {
+            throw new ValidationException("dateOfBirth", "Please enter a valid date of birth (YYYY-MM-DD).");
+        }
         bc.setSelectedSeats(List.of(targetSeat));
 
         BigDecimal basePrice = flight.getBasePrice();
@@ -419,6 +433,10 @@ public class WebController {
         bc.setBaseFare(basePrice);
         bc.setPriceQuotes(List.of(quote));
         bc.setTotalPrice(quote.total());
+        bc.setPaymentResult(PaymentResult.approved(
+                "WEB-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT),
+                "CARD",
+                "0000"));
 
         User currentUser = ctx.sessionAttribute("user");
         if (currentUser != null) {
@@ -446,6 +464,7 @@ public class WebController {
         if (lower.contains("name")) return "passengerName";
         if (lower.contains("email")) return "passengerEmail";
         if (lower.contains("passport")) return "passportNumber";
+        if (lower.contains("birth")) return "dateOfBirth";
         if (lower.contains("seat")) return "flightSeatId";
         return null;
     }
@@ -511,6 +530,10 @@ public class WebController {
         String typedPassport = ctx.formParam("passportNumber");
         if (typedPassport != null) {
             model.put("passportNumber", typedPassport);
+        }
+        String typedDob = ctx.formParam("dateOfBirth");
+        if (typedDob != null) {
+            model.put("dateOfBirth", typedDob);
         }
 
         ctx.render("seats.html", model);
