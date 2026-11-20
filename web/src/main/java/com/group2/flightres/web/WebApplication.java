@@ -3,6 +3,7 @@ package com.group2.flightres.web;
 import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.FlightService;
+import com.group2.flightres.service.LoginThrottle;
 import com.group2.flightres.service.SeatMapService;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
@@ -26,6 +27,7 @@ public class WebApplication {
 
     private final Javalin app;
     private final WebController controller;
+    private final AuthService authService;
 
     public WebApplication() {
         this(new FlightService(), new SeatMapService(), new BookingService(), new AuthService());
@@ -33,7 +35,14 @@ public class WebApplication {
 
     public WebApplication(FlightService flightService, SeatMapService seatMapService,
                           BookingService bookingService, AuthService authService) {
-        this.controller = new WebController(flightService, seatMapService, bookingService, authService);
+        this(flightService, seatMapService, bookingService, authService, new LoginThrottle());
+    }
+
+    public WebApplication(FlightService flightService, SeatMapService seatMapService,
+                          BookingService bookingService, AuthService authService,
+                          LoginThrottle loginThrottle) {
+        this.authService = authService;
+        this.controller = new WebController(flightService, seatMapService, bookingService, authService, loginThrottle);
 
         // Configure Thymeleaf
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
@@ -73,6 +82,19 @@ public class WebApplication {
     public void start(int port) {
         app.start(port);
         logger.info("Sky Royal Web Application started at http://localhost:{}", port);
+        logAuthSeedStatus();
+    }
+
+    private void logAuthSeedStatus() {
+        try {
+            boolean hasAdmin = authService.userExists("testadmin");
+            boolean hasCustomer = authService.userExists("customer");
+            logger.info("Auth seed check: testadmin={}, customer={}",
+                    hasAdmin ? "present" : "missing",
+                    hasCustomer ? "present" : "missing");
+        } catch (Exception e) {
+            logger.warn("Auth seed check skipped: {}", e.getMessage());
+        }
     }
 
     public void stop() {

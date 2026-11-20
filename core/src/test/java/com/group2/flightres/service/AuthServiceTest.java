@@ -2,6 +2,7 @@ package com.group2.flightres.service;
 
 import com.group2.flightres.dao.UserDao;
 import com.group2.flightres.exception.AuthenticationException;
+import com.group2.flightres.exception.AuthenticationException.AuthFailureReason;
 import com.group2.flightres.model.User;
 import com.group2.flightres.model.UserRole;
 import com.group2.flightres.util.PasswordUtil;
@@ -77,26 +78,39 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("Wrong password throws same generic AuthenticationException")
+    @DisplayName("Wrong password throws same generic AuthenticationException with BAD_PASSWORD reason")
     void testWrongPassword() {
         AuthenticationException ex = assertThrows(AuthenticationException.class,
                 () -> authService.authenticate("customer", "WrongPass!"));
         assertEquals("Incorrect username or password.", ex.getMessage());
+        assertEquals(AuthFailureReason.BAD_PASSWORD, ex.getReason());
     }
 
     @Test
-    @DisplayName("Unknown user throws same generic AuthenticationException")
+    @DisplayName("Unknown user throws same generic AuthenticationException with UNKNOWN_USER reason")
     void testUnknownUser() {
         AuthenticationException ex = assertThrows(AuthenticationException.class,
                 () -> authService.authenticate("nobody@example.com", "Passw0rd!"));
         assertEquals("Incorrect username or password.", ex.getMessage());
+        assertEquals(AuthFailureReason.UNKNOWN_USER, ex.getReason());
     }
 
     @Test
-    @DisplayName("Inactive user throws deactivated message")
+    @DisplayName("Inactive user throws deactivated message with INACTIVE reason")
     void testInactiveUser() {
         AuthenticationException ex = assertThrows(AuthenticationException.class,
                 () -> authService.authenticate("disabled", "Passw0rd!"));
         assertEquals("This account has been deactivated.", ex.getMessage());
+        assertEquals(AuthFailureReason.INACTIVE, ex.getReason());
+    }
+
+    @Test
+    @DisplayName("maskIdentifier keeps at most first 2 characters + ***")
+    void testMaskIdentifier() {
+        assertEquals("cu***", AuthService.maskIdentifier("customer@example.com"));
+        assertEquals("ab***", AuthService.maskIdentifier("  ab "));
+        assertEquals("a***", AuthService.maskIdentifier("a"));
+        assertEquals("***", AuthService.maskIdentifier("   "));
+        assertEquals("***", AuthService.maskIdentifier(null));
     }
 }

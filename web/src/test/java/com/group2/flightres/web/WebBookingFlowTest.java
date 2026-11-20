@@ -192,7 +192,30 @@ class WebBookingFlowTest {
         FlightService flightService = new FlightService(mockFlightDao, testClock);
         SeatMapService seatMapService = new SeatMapService(mockSeatDao, mockFlightDao, testClock);
         BookingService bookingService = new BookingService(mockBookingDao, mockFlightDao, testClock);
-        AuthService authService = new AuthService();
+        com.group2.flightres.model.User mockUser = new com.group2.flightres.model.User();
+        mockUser.setUserId(7L);
+        mockUser.setUsername("throttleuser");
+        mockUser.setEmail("throttle@example.com");
+        mockUser.setFullName("Throttle User");
+        mockUser.setRole(com.group2.flightres.model.UserRole.CUSTOMER);
+        mockUser.setActive(true);
+        mockUser.setPasswordHash(com.group2.flightres.util.PasswordUtil.hash("Passw0rd!"));
+        com.group2.flightres.dao.UserDao mockUserDao = new com.group2.flightres.dao.UserDao() {
+            @Override
+            public Optional<com.group2.flightres.model.User> findByUsername(String username) {
+                return "throttleuser".equals(username) ? Optional.of(mockUser) : Optional.empty();
+            }
+
+            @Override
+            public Optional<com.group2.flightres.model.User> findByUsernameOrEmail(String identifier) {
+                if (identifier == null) return Optional.empty();
+                String t = identifier.trim();
+                return ("throttleuser".equalsIgnoreCase(t) || "throttle@example.com".equalsIgnoreCase(t))
+                        ? Optional.of(mockUser)
+                        : Optional.empty();
+            }
+        };
+        AuthService authService = new AuthService(mockUserDao);
 
         webApp = new WebApplication(flightService, seatMapService, bookingService, authService);
         webApp.start(0);
@@ -417,5 +440,73 @@ class WebBookingFlowTest {
         HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
         assertEquals(302, resp.statusCode());
         assertEquals("/confirmation/WTEST1", resp.headers().firstValue("Location").orElse(""));
+    }
+
+    @Test
+    @DisplayName("Brute-force throttle returns HTTP 429 on 5th failed login and preserves success counter reset")
+    void testLoginThrottleReturns429AndSuccessClearsCounter() throws IOException, InterruptedException {
+        CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+        HttpClient client = HttpClient.newBuilder()
+                .cookieHandler(cookieManager)
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build();
+
+        HttpResponse<String> loginGet = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/login")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        Matcher m = Pattern.compile("name=\"csrf_token\" value=\"([^\"]+)\"").matcher(loginGet.body());
+        assertTrue(m.find());
+        String csrf = m.group(1);
+
+        // 1. Successful login clears counter
+        String okBody = "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
+                + "&username=throttleuser&password=" + URLEncoder.encode("Passw0rd!", StandardCharsets.UTF_8);
+        HttpResponse<String> okResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/login"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(okBody)).build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(302, okResp.statusCode());
+
+        // Re-fetch CSRF token after session rotation
+        HttpResponse<String> loginGet2 = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/login")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        Matcher m2 = Pattern.compile("name=\"csrf_token\" value=\"([^\"]+)\"").matcher(loginGet2.body());
+        assertTrue(m2.find());
+        String csrf2 = m2.group(1);
+
+        String badBody = "csrf_token=" + URLEncoder.encode(csrf2, StandardCharsets.UTF_8)
+                + "&username=throttleuser&password=WrongPassword!";
+
+        for (int i = 1; i <= 4; i++) {
+            HttpResponse<String> failResp = client.send(
+                    HttpRequest.newBuilder().uri(URI.create(baseUrl + "/login"))
+                            .header("Content-Type", "application/x-www-form-urlencoded")
+                            .POST(HttpRequest.BodyPublishers.ofString(badBody)).build(),
+                    HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, failResp.statusCode(), "Attempt " + i + " should render 200 login error");
+            assertTrue(failResp.body().contains("Incorrect username or password."));
+        }
+
+        // 5th failure triggers 429 with wait time
+        HttpResponse<String> fifthResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/login"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(badBody)).build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(429, fifthResp.statusCode(), "5th failed attempt must return HTTP 429");
+        assertTrue(fifthResp.body().contains("Too many failed login attempts."));
+        assertTrue(fifthResp.body().contains("minute"));
+
+        // 6th attempt even with right password stays blocked at 429
+        String retryGoodBody = "csrf_token=" + URLEncoder.encode(csrf2, StandardCharsets.UTF_8)
+                + "&username=throttleuser&password=" + URLEncoder.encode("Passw0rd!", StandardCharsets.UTF_8);
+        HttpResponse<String> sixthResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/login"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(retryGoodBody)).build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(429, sixthResp.statusCode(), "Locked user must still receive 429 within window");
     }
 }
