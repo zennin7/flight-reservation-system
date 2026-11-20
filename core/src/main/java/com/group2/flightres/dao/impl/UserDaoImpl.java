@@ -19,12 +19,34 @@ public class UserDaoImpl implements UserDao {
         WHERE username = ?
         """;
 
+    private static final String FIND_BY_USERNAME_OR_EMAIL_QUERY = """
+        SELECT user_id, username, password_hash, role, full_name, email, is_active
+        FROM users
+        WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)
+        """;
+
     @Override
     public Optional<User> findByUsername(String username) {
-        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(FIND_BY_USERNAME_QUERY)) {
+        return findOne(FIND_BY_USERNAME_QUERY, username, null);
+    }
 
-            stmt.setString(1, username);
+    @Override
+    public Optional<User> findByUsernameOrEmail(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            return Optional.empty();
+        }
+        String trimmed = identifier.trim();
+        return findOne(FIND_BY_USERNAME_OR_EMAIL_QUERY, trimmed, trimmed);
+    }
+
+    private Optional<User> findOne(String sql, String firstParam, String secondParam) {
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, firstParam);
+            if (secondParam != null) {
+                stmt.setString(2, secondParam);
+            }
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -41,7 +63,7 @@ public class UserDaoImpl implements UserDao {
                 return Optional.empty();
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to look up user " + username, e);
+            throw new RuntimeException("Failed to look up user " + firstParam, e);
         }
     }
 }

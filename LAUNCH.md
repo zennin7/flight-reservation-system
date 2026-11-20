@@ -14,48 +14,52 @@ winget install Apache.Maven
 winget install PostgreSQL.PostgreSQL.18
 ```
 
-Close and reopen PowerShell after installing so `java`, `mvn`, and `psql` are on your `PATH`.
+Close and reopen your terminal after installing (the launch scripts also refresh `PATH` automatically from the Windows registry).
 
 ---
 
 ## 5 Steps to Launch
 
-1. **Open PowerShell in the repo root** (`flight-reservation-system`).
-2. **Run initial database & config setup** (creates the DB if missing, runs schema + migrations + seeds, and creates your local `app.json`):
-   ```powershell
-   .\scripts\setup.ps1
+1. **Open PowerShell or Command Prompt in the repo root** (`flight-reservation-system`).
+2. **Run initial database, config, and Maven install setup** (auto-detects PostgreSQL port `5432`/`5433`, creates the DB if missing, runs schema + migrations + seeds, writes local `app.json`, and runs `mvn -DskipTests install`):
+   ```cmd
+   .\scripts\setup.cmd
    ```
-3. **Refresh rolling 14-day flights before any demo** (optional if you just ran `setup.ps1`):
-   ```powershell
-   .\scripts\reseed.ps1
+3. **Refresh rolling 14-day flights & auth accounts before any demo** (optional if you just ran `setup.cmd`):
+   ```cmd
+   .\scripts\reseed.cmd
    ```
 4. **Start the Sky Royal Website** (prints both `http://localhost:8080` and your LAN URL `http://<your-ip>:8080`):
-   ```powershell
-   .\scripts\run-web.ps1
+   ```cmd
+   .\scripts\run-web.cmd
    ```
-5. **Start the Sky Royal Desktop App** (in a second PowerShell window):
-   ```powershell
-   .\scripts\run-desktop.ps1
+5. **Start the Sky Royal Desktop App** (in a second terminal window):
+   ```cmd
+   .\scripts\run-desktop.cmd
    ```
+
+*(You can also run the underlying `.ps1` scripts directly if PowerShell execution policy allows it.)*
 
 ---
 
-## Demo Account (`core/sql/seed_auth_data.sql`)
+## Demo Accounts (`core/sql/seed_auth_data.sql`)
+
+Username or email both work on the login page (`/login`) and desktop app:
 
 | Role | Username | Email | Password |
 |---|---|---|---|
 | `ADMIN` | `testadmin` | `testadmin@example.com` | `Passw0rd!` |
+| `CUSTOMER` | `customer` | `customer@example.com` | `Passw0rd!` |
 
 ---
 
-## Troubleshooting
+## If You See X
 
-1. **`java` not found / wrong Java version**: Install Temurin JDK 17 (`winget install EclipseAdoptium.Temurin.17.JDK`), reopen PowerShell, and check `java -version` shows `17` or newer.
-2. **`psql` not found**: Install PostgreSQL 18 (`winget install PostgreSQL.PostgreSQL.18`) or add `C:\Program Files\PostgreSQL\18\bin` to your Windows `PATH`.
-3. **Connection refused / wrong port**: Make sure the PostgreSQL Windows service is running (`services.msc`) and check whether your instance listens on `5432` or `5433`. Re-run `.\scripts\setup.ps1` with the matching port.
-4. **Password authentication failed**: Re-run `.\scripts\setup.ps1` and enter the exact `postgres` password you set during PostgreSQL installation.
-5. **Port `8080` already in use**: Set a different port before launching the website:
-   ```powershell
-   $env:PORT = "8081"
-   .\scripts\run-web.ps1
-   ```
+| If you see... | Why it happened & how to fix it |
+|---|---|
+| `running scripts is disabled on this system` | Use the `.cmd` wrappers (`.\scripts\setup.cmd`, `.\scripts\run-web.cmd`, etc.) which bypass PowerShell's script execution policy. |
+| `Could not find artifact com.group2.flightres:flight-reservation-system:pom:1.0.0` | Run `.\scripts\setup.cmd` (or `mvn -pl core -am -DskipTests install`). `run-web.cmd` and `run-desktop.cmd` now pass `-am` automatically. |
+| `PostgreSQL connection failed: wrong password for user ..., or wrong port` | Re-run `.\scripts\setup.cmd`, accept the detected port (`5432` or `5433`), and enter the exact `postgres` password set during PostgreSQL installation. |
+| `Host must be a hostname or IP ... not a URL` | Enter `127.0.0.1` or `localhost` (without `http://` or `/`). |
+| `Port 8080 already in use` | Set `$env:PORT = "8081"` (PowerShell) or `set PORT=8081` (CMD) before running `.\scripts\run-web.cmd`. |
+| `java` / `mvn` / `psql` not found after `winget install` | Open a fresh terminal window; `setup.cmd` also refreshes `PATH` from the Windows Machine & User registry. |

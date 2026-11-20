@@ -47,6 +47,8 @@ class WebBookingFlowTest {
     private static WebApplication webApp;
     private static int port;
     private static String baseUrl;
+    private static MockBookingDao mockBookingDao;
+    private static MockSeatDao mockSeatDao;
 
     // --- Mock DAOs ---
 
@@ -151,8 +153,11 @@ class WebBookingFlowTest {
             rec.setFlightNumber(context.getFlightNumber() != null ? context.getFlightNumber() : "GRP 204");
             rec.setOrigin("Johannesburg (JNB)");
             rec.setDestination("Cape Town (CPT)");
+            rec.setDepartureDate(context.getDepartureDate() != null ? context.getDepartureDate() : "2026-11-02");
             rec.setDepartureTime("06:30");
             rec.setArrivalTime("08:40");
+            rec.setDepartureInstant(MOCK_DEP);
+            rec.setArrivalInstant(MOCK_ARR);
             rec.setPassengerName(context.getPassengerName());
             rec.setPassengerEmail(context.getPassengerEmail());
             rec.setPassportNumber(context.getPassportNumber());
@@ -180,8 +185,8 @@ class WebBookingFlowTest {
     @BeforeAll
     static void setUp() {
         MockFlightDao mockFlightDao = new MockFlightDao();
-        MockSeatDao mockSeatDao = new MockSeatDao();
-        MockBookingDao mockBookingDao = new MockBookingDao();
+        mockSeatDao = new MockSeatDao();
+        mockBookingDao = new MockBookingDao();
 
         java.time.Clock testClock = java.time.Clock.fixed(java.time.Instant.parse("2026-11-01T00:00:00Z"), java.time.ZoneOffset.UTC);
         FlightService flightService = new FlightService(mockFlightDao, testClock);
@@ -242,7 +247,8 @@ class WebBookingFlowTest {
                 + "&flightSeatId=101"
                 + "&passengerName=" + URLEncoder.encode("David Miller", StandardCharsets.UTF_8)
                 + "&passengerEmail=" + URLEncoder.encode("david@example.com", StandardCharsets.UTF_8)
-                + "&passportNumber=A12345678";
+                + "&passportNumber=A12345678"
+                + "&dateOfBirth=1995-05-15";
 
         HttpRequest postBookReq = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/book"))
@@ -274,14 +280,47 @@ class WebBookingFlowTest {
         assertTrue(confirmHtml.contains("David Miller"), "Confirmation page must display passenger name");
         assertTrue(confirmHtml.contains("GRP 204"), "Confirmation page must display flight number");
         assertTrue(confirmHtml.contains("CONFIRMED"), "Confirmation page must show confirmed status");
+        assertTrue(confirmHtml.contains("/confirmation/WTEST1/barcode.png"), "Confirmation page must embed barcode image");
+        assertTrue(confirmHtml.contains("/confirmation/WTEST1/boarding-pass.pdf"), "Confirmation page must link boarding-pass PDF");
+
+        // 4. GET /confirmation/WTEST1/barcode.png
+        HttpResponse<byte[]> barcodeResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/confirmation/WTEST1/barcode.png")).GET().build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertEquals(200, barcodeResp.statusCode());
+        assertTrue(barcodeResp.headers().firstValue("Content-Type").orElse("").contains("image/png"));
+        byte[] png = barcodeResp.body();
+        assertTrue(png.length > 8 && png[0] == (byte) 0x89 && png[1] == 0x50 && png[2] == 0x4E && png[3] == 0x47,
+                "Barcode endpoint must return valid PNG bytes");
+
+        // 5. GET /confirmation/WTEST1/boarding-pass.pdf
+        HttpResponse<byte[]> pdfResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/confirmation/WTEST1/boarding-pass.pdf")).GET().build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertEquals(200, pdfResp.statusCode());
+        assertTrue(pdfResp.headers().firstValue("Content-Type").orElse("").contains("application/pdf"));
+        byte[] pdf = pdfResp.body();
+        assertTrue(pdf.length > 5 && new String(pdf, 0, 5, StandardCharsets.US_ASCII).equals("%PDF-"),
+                "PDF endpoint must return valid PDF bytes");
+
+        // 6. Unknown reference returns 404 on barcode & PDF
+        HttpResponse<byte[]> badBarcode = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/confirmation/UNKNOWN99/barcode.png")).GET().build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertEquals(404, badBarcode.statusCode());
+        HttpResponse<byte[]> badPdf = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/confirmation/UNKNOWN99/boarding-pass.pdf")).GET().build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertEquals(404, badPdf.statusCode());
     }
 
     @Test
-    @DisplayName("CSRF rejection on POST /book with missing token")
+    @DisplayName("CSRF rejection on POST /book with missing token creates no booking row")
     void testCsrfProtectionRejectsRequest() throws IOException, InterruptedException {
+        int bookingsBefore = mockBookingDao.store.size();
         HttpClient client = HttpClient.newHttpClient();
 
-        String invalidBody = "flightId=1&flightSeatId=101&passengerName=Test";
+        String invalidBody = "flightId=1&flightSeatId=101&passengerName=Test&passengerEmail=test@example.com&passportNumber=A12345678";
         HttpRequest postReq = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/book"))
                 .header("Content-Type", "application/x-www-form-urlencoded")
@@ -290,6 +329,77 @@ class WebBookingFlowTest {
 
         HttpResponse<String> resp = client.send(postReq, HttpResponse.BodyHandlers.ofString());
         assertEquals(403, resp.statusCode(), "Missing CSRF token must result in 403 Forbidden");
+        assertEquals(bookingsBefore, mockBookingDao.store.size(), "CSRF rejection must not execute booking handler");
+    }
+
+    @Test
+    @DisplayName("Invalid passenger name re-renders seats form preserving inputs without raw error")
+    void testValidationErrorPreservesInputsAndHighlightsField() throws IOException, InterruptedException {
+        CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+        HttpClient client = HttpClient.newBuilder().cookieHandler(cookieManager).build();
+
+        HttpResponse<String> seatsResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/flights/1/seats")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        Matcher m = Pattern.compile("name=\"csrf_token\" value=\"([^\"]+)\"").matcher(seatsResp.body());
+        assertTrue(m.find());
+        String csrfToken = m.group(1);
+
+        String badBody = "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
+                + "&flightId=1&flightSeatId=101"
+                + "&passengerName=" + URLEncoder.encode("1234!!!", StandardCharsets.UTF_8)
+                + "&passengerEmail=" + URLEncoder.encode("keepme@example.com", StandardCharsets.UTF_8)
+                + "&passportNumber=" + URLEncoder.encode("AB 12-3456", StandardCharsets.UTF_8)
+                + "&dateOfBirth=1995-05-15";
+
+        HttpResponse<String> resp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/book"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(badBody)).build(),
+                HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(200, resp.statusCode());
+        String html = resp.body();
+        assertTrue(html.contains("keepme@example.com"), "Email input must be preserved on error");
+        assertTrue(html.contains("AB 12-3456"), "Passport input must be preserved on error");
+        assertTrue(html.contains("is-invalid"), "Failed field must be highlighted");
+        assertTrue(!html.contains("Booking failed:"), "Raw 'Booking failed:' prefix must not appear");
+    }
+
+    @Test
+    @DisplayName("Passport with spaces and hyphens is normalized before validation")
+    void testPassportNormalizedBeforeValidation() throws IOException, InterruptedException {
+        // Ensure seat 101 is available
+        mockSeatDao.releaseSeat(101L);
+        CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+        HttpClient client = HttpClient.newBuilder()
+                .cookieHandler(cookieManager)
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build();
+
+        HttpResponse<String> seatsResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/flights/1/seats")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        Matcher m = Pattern.compile("name=\"csrf_token\" value=\"([^\"]+)\"").matcher(seatsResp.body());
+        assertTrue(m.find());
+        String csrfToken = m.group(1);
+
+        String postBody = "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
+                + "&flightId=1&flightSeatId=101"
+                + "&passengerName=" + URLEncoder.encode("Nomsa Dlamini", StandardCharsets.UTF_8)
+                + "&passengerEmail=" + URLEncoder.encode("nomsa@example.com", StandardCharsets.UTF_8)
+                + "&passportNumber=" + URLEncoder.encode("ab 12-3456", StandardCharsets.UTF_8)
+                + "&dateOfBirth=1995-05-15";
+
+        HttpResponse<String> bookResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/book"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(postBody)).build(),
+                HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(302, bookResp.statusCode());
+        BookingRecord saved = mockBookingDao.findByReference("WTEST1").orElseThrow();
+        assertEquals("AB123456", saved.getPassportNumber());
     }
 
     @Test

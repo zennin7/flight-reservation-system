@@ -103,6 +103,7 @@ public class WebApplication {
                     Map<String, Object> model = controller.baseModel(ctx);
                     model.put("error", "Your session or security token has expired. Please try again.");
                     ctx.render("error.html", model);
+                    ctx.skipRemainingHandlers();
                 }
             }
         });
@@ -124,6 +125,8 @@ public class WebApplication {
         // Booking Confirmation & Lookup
         app.get("/confirmation", controller::handleConfirmationLookup);
         app.get("/confirmation/{reference}", controller::handleConfirmation);
+        app.get("/confirmation/{reference}/barcode.png", controller::handleConfirmationBarcode);
+        app.get("/confirmation/{reference}/boarding-pass.pdf", controller::handleConfirmationPdf);
 
         // Authentication
         app.get("/login", controller::handleLoginGet);

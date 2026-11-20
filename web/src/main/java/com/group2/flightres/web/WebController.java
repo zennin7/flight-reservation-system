@@ -1,18 +1,29 @@
 package com.group2.flightres.web;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.oned.Code128Writer;
 import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.exception.AuthenticationException;
 import com.group2.flightres.exception.SeatUnavailableException;
+import com.group2.flightres.exception.ValidationException;
 import com.group2.flightres.model.*;
 import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.FlightService;
+import com.group2.flightres.service.PaymentResult;
 import com.group2.flightres.service.SeatMapService;
+import com.group2.flightres.util.BoardingPassPdfGenerator;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -234,10 +245,15 @@ public class WebController {
             BookingContext bookingContext = buildBookingContext(ctx, flight, targetSeat);
             BookingRecord record = bookingService.createBooking(bookingContext);
             ctx.redirect("/confirmation/" + record.getBookingReference());
-        } catch (Exception e) {
-            logger.error("Booking creation failed: {}", e.getMessage());
+        } catch (ValidationException e) {
+            logger.warn("Booking validation failed: {}", e.getMessage());
             seatMapService.deselectSeat(targetSeat);
-            renderSeatsWithError(ctx, flightId, "Booking failed: " + e.getMessage());
+            renderSeatsWithError(ctx, flightId, e.getMessage(), resolveErrorField(e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Booking creation failed: {}", e.getMessage(), e);
+            seatMapService.deselectSeat(targetSeat);
+            renderSeatsWithError(ctx, flightId,
+                    "We could not complete your booking right now. Please check your details and try again.", null);
         }
     }
 
@@ -268,6 +284,58 @@ public class WebController {
         }
     }
 
+    public void handleConfirmationBarcode(Context ctx) {
+        String reference = ctx.pathParam("reference");
+        Optional<BookingRecord> recordOpt = bookingService.getBookingByReference(reference);
+        if (recordOpt.isEmpty()) {
+            ctx.status(404).result("Booking reference not found.");
+            return;
+        }
+        String code = recordOpt.get().getBookingReference();
+        try {
+            BitMatrix matrix = new Code128Writer().encode(code, BarcodeFormat.CODE_128, 380, 96);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            MatrixToImageWriter.writeToStream(matrix, "PNG", baos);
+            ctx.contentType("image/png");
+            ctx.header("Cache-Control", "private, max-age=300");
+            ctx.result(baos.toByteArray());
+        } catch (IOException e) {
+            logger.error("Failed to render barcode PNG for {}", code, e);
+            ctx.status(500).result("Could not generate barcode.");
+        }
+    }
+
+    public void handleConfirmationPdf(Context ctx) {
+        String reference = ctx.pathParam("reference");
+        Optional<BookingRecord> recordOpt = bookingService.getBookingByReference(reference);
+        if (recordOpt.isEmpty()) {
+            ctx.status(404).result("Booking reference not found.");
+            return;
+        }
+        BookingRecord record = recordOpt.get();
+        String safeRef = record.getBookingReference().replaceAll("[^A-Za-z0-9_-]", "");
+        Path tmpFile = null;
+        try {
+            tmpFile = Files.createTempFile("boarding-pass-" + safeRef + "-", ".pdf");
+            BoardingPassPdfGenerator.generate(TicketData.from(record), tmpFile.toFile());
+            byte[] pdfBytes = Files.readAllBytes(tmpFile);
+            ctx.contentType("application/pdf");
+            ctx.header("Content-Disposition", "inline; filename=\"boarding-pass-" + safeRef + ".pdf\"");
+            ctx.header("Cache-Control", "private, max-age=300");
+            ctx.result(pdfBytes);
+        } catch (Exception e) {
+            logger.error("Failed to generate boarding pass PDF for {}", safeRef, e);
+            ctx.status(500).result("Could not generate boarding pass PDF.");
+        } finally {
+            if (tmpFile != null) {
+                try {
+                    Files.deleteIfExists(tmpFile);
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
+
     public void handleLoginGet(Context ctx) {
         Map<String, Object> model = baseModel(ctx);
         ctx.render("login.html", model);
@@ -281,6 +349,11 @@ public class WebController {
 
         try {
             User user = authService.authenticate(username, password);
+            String csrfToken = ctx.sessionAttribute("csrf_token");
+            ctx.req().changeSessionId();
+            if (csrfToken != null) {
+                ctx.sessionAttribute("csrf_token", csrfToken);
+            }
             ctx.sessionAttribute("user", user);
             logger.info("Web login successful for user '{}' (Role: {})", user.getUsername(), user.getRole());
             ctx.redirect("/");
@@ -337,7 +410,21 @@ public class WebController {
 
         bc.setPassengerName(ctx.formParam("passengerName"));
         bc.setPassengerEmail(ctx.formParam("passengerEmail"));
-        bc.setPassportNumber(ctx.formParam("passportNumber"));
+        String rawPassport = ctx.formParam("passportNumber");
+        bc.setPassportNumber(normalizePassport(rawPassport));
+        String rawDob = ctx.formParam("dateOfBirth");
+        if (rawDob == null || rawDob.isBlank()) {
+            throw new ValidationException("dateOfBirth", "Passenger date of birth is required.");
+        }
+        try {
+            LocalDate dob = LocalDate.parse(rawDob.trim());
+            if (!dob.isBefore(LocalDate.now())) {
+                throw new ValidationException("dateOfBirth", "Passenger date of birth must be in the past.");
+            }
+            bc.setDateOfBirth(dob);
+        } catch (DateTimeParseException e) {
+            throw new ValidationException("dateOfBirth", "Please enter a valid date of birth (YYYY-MM-DD).");
+        }
         bc.setSelectedSeats(List.of(targetSeat));
 
         BigDecimal basePrice = flight.getBasePrice();
@@ -346,6 +433,10 @@ public class WebController {
         bc.setBaseFare(basePrice);
         bc.setPriceQuotes(List.of(quote));
         bc.setTotalPrice(quote.total());
+        bc.setPaymentResult(PaymentResult.approved(
+                "WEB-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT),
+                "CARD",
+                "0000"));
 
         User currentUser = ctx.sessionAttribute("user");
         if (currentUser != null) {
@@ -354,11 +445,43 @@ public class WebController {
         return bc;
     }
 
+    private static String normalizePassport(String rawPassport) {
+        if (rawPassport == null) {
+            return null;
+        }
+        String trimmed = rawPassport.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        return trimmed.replaceAll("[\\s-]+", "").toUpperCase(Locale.ROOT);
+    }
+
+    private static String resolveErrorField(String message) {
+        if (message == null) {
+            return null;
+        }
+        String lower = message.toLowerCase(Locale.ROOT);
+        if (lower.contains("name")) return "passengerName";
+        if (lower.contains("email")) return "passengerEmail";
+        if (lower.contains("passport")) return "passportNumber";
+        if (lower.contains("birth")) return "dateOfBirth";
+        if (lower.contains("seat")) return "flightSeatId";
+        return null;
+    }
+
     private void renderSeatsWithError(Context ctx, long flightId, String error) {
-        renderSeatsPage(ctx, flightId, error);
+        renderSeatsPage(ctx, flightId, error, null);
+    }
+
+    private void renderSeatsWithError(Context ctx, long flightId, String error, String errorField) {
+        renderSeatsPage(ctx, flightId, error, errorField);
     }
 
     private void renderSeatsPage(Context ctx, long flightId, String error) {
+        renderSeatsPage(ctx, flightId, error, null);
+    }
+
+    private void renderSeatsPage(Context ctx, long flightId, String error, String errorField) {
         Optional<FlightSearchResult> flightOpt = flightService.getFlightById(flightId);
         if (flightOpt.isEmpty()) {
             ctx.redirect("/flights");
@@ -392,6 +515,25 @@ public class WebController {
         model.put("economyRows", List.of(6, 7, 8, 9, 10, 11));
         if (error != null) {
             model.put("bookingError", error);
+        }
+        if (errorField != null) {
+            model.put("errorField", errorField);
+        }
+        String typedName = ctx.formParam("passengerName");
+        if (typedName != null) {
+            model.put("passengerName", typedName);
+        }
+        String typedEmail = ctx.formParam("passengerEmail");
+        if (typedEmail != null) {
+            model.put("passengerEmail", typedEmail);
+        }
+        String typedPassport = ctx.formParam("passportNumber");
+        if (typedPassport != null) {
+            model.put("passportNumber", typedPassport);
+        }
+        String typedDob = ctx.formParam("dateOfBirth");
+        if (typedDob != null) {
+            model.put("dateOfBirth", typedDob);
         }
 
         ctx.render("seats.html", model);
