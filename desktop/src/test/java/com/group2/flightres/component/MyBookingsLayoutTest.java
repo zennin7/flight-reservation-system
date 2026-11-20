@@ -105,8 +105,14 @@ class MyBookingsLayoutTest {
         Platform.runLater(() -> {
             Stage stage = new Stage();
             try {
+                BookingService stubService = new BookingService() {
+                    @Override
+                    public List<BookingSummary> listBookingsForUser(long userId, Clock clock) {
+                        return createMockSummaries(6);
+                    }
+                };
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/my-bookings.fxml"));
-                loader.setControllerFactory(cls -> new MyBookingsController(new BookingService(), FIXED_CLOCK));
+                loader.setControllerFactory(cls -> new MyBookingsController(stubService, FIXED_CLOCK));
                 Parent root = loader.load();
                 MyBookingsController controller = loader.getController();
 

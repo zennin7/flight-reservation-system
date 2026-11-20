@@ -4,6 +4,7 @@ import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.model.BookingSummary;
 import com.group2.flightres.service.BookingService;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -58,8 +59,41 @@ class MyBookingsSourceGuardTest {
     }
 
     @Test
-    @DisplayName("SQL Reconciliation (R8h): numbers shown reconcile against independent SQL count for demo user")
+    @DisplayName("SQL Reconciliation (R8h): BookingService counts match independent SQL count for all DB users")
     void testSqlReconciliation() throws Exception {
+        BookingService service = new BookingService();
+        List<Long> userIds = new java.util.ArrayList<>();
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT user_id FROM users ORDER BY user_id");
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                userIds.add(rs.getLong(1));
+            }
+        }
+        assertFalse(userIds.isEmpty(), "Seeded database must contain at least one user");
+
+        String sql = "SELECT count(*) FROM bookings WHERE user_id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (long uid : userIds) {
+                stmt.setLong(1, uid);
+                long dbCount = 0;
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbCount = rs.getLong(1);
+                    }
+                }
+                List<BookingSummary> list = service.listBookingsForUser(uid);
+                assertEquals(dbCount, list.size(),
+                        "Number of bookings returned by BookingService must match independent SQL count (" + dbCount + ") for user " + uid);
+            }
+        }
+    }
+
+    @Test
+    @Tag("integration-full")
+    @DisplayName("SQL Reconciliation (demo DB): authorised demo user 12 has at least 4 bookings matching SQL")
+    void testDemoUser12SqlReconciliation() throws Exception {
         long userId = 12L;
         long dbCount = 0;
         String sql = "SELECT count(*) FROM bookings WHERE user_id = ?";

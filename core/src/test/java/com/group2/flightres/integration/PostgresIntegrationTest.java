@@ -27,6 +27,7 @@ import com.group2.flightres.util.DatabaseAssumption;
 import com.group2.flightres.util.FlightTimes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,38 +69,67 @@ class PostgresIntegrationTest {
         try {
             java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("America/Los_Angeles"));
 
+            ZoneId sast = ZoneId.of("Africa/Johannesburg");
+            LocalDate tomorrowSast = LocalDate.now(sast).plusDays(1);
             FlightDaoImpl flightDao = new FlightDaoImpl();
-            List<FlightSearchResult> flights = flightDao.searchFlights("JNB", "CPT", LocalDate.of(2026, 11, 2));
+            List<FlightSearchResult> flights = flightDao.searchFlights("JNB", "CPT", tomorrowSast);
             assertNotNull(flights);
-            assertEquals(4, flights.size(), "Should return all 4 scheduled flights for JNB -> CPT on 2026-11-02");
+            assertFalse(flights.isEmpty(), "Should return scheduled flights for JNB -> CPT on " + tomorrowSast);
 
-            FlightSearchResult grp204 = flights.stream()
-                    .filter(f -> "GRP 204".equals(f.getFlightNumber()))
-                    .findFirst()
-                    .orElseThrow(() -> new AssertionError("Flight GRP 204 not found"));
-
-            assertEquals("06:30", grp204.getDepartureTime());
-            assertEquals("08:40", grp204.getArrivalTime());
-            assertEquals("2h 10m", grp204.getDuration());
-            assertEquals("JNB", grp204.getOriginCode());
-            assertEquals("O. R. Tambo International Airport", grp204.getOriginAirportName());
-            assertEquals("Johannesburg", grp204.getOriginCity());
-            assertEquals("CPT", grp204.getDestCode());
-            assertEquals("Cape Town International Airport", grp204.getDestAirportName());
-            assertEquals("Cape Town", grp204.getDestCity());
-            assertEquals("Airbus A320", grp204.getAircraftModel());
-
-            int independentAvailableCount = 0;
+            java.time.Instant dayStart = tomorrowSast.atStartOfDay(sast).toInstant();
+            java.time.Instant dayEnd = tomorrowSast.plusDays(1).atStartOfDay(sast).toInstant();
+            int expectedFlightCount = 0;
             try (Connection conn = DatabaseConfig.getDataSource().getConnection();
                  PreparedStatement stmt = conn.prepareStatement(
-                         "SELECT COUNT(*) FROM flight_seats WHERE flight_id = 1 AND (status = 'AVAILABLE' OR (status = 'HELD' AND held_until < NOW()))")) {
+                         "SELECT COUNT(*) FROM flights f "
+                         + "JOIN airports o ON o.airport_id = f.origin_airport_id "
+                         + "JOIN airports d ON d.airport_id = f.dest_airport_id "
+                         + "WHERE o.iata_code = 'JNB' AND d.iata_code = 'CPT' "
+                         + "AND f.status = 'SCHEDULED' AND f.departure_time >= ? AND f.departure_time < ?")) {
+                stmt.setTimestamp(1, java.sql.Timestamp.from(dayStart));
+                stmt.setTimestamp(2, java.sql.Timestamp.from(dayEnd));
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        independentAvailableCount = rs.getInt(1);
+                        expectedFlightCount = rs.getInt(1);
                     }
                 }
             }
-            assertEquals(independentAvailableCount, grp204.getAvailableSeats());
+            assertEquals(expectedFlightCount, flights.size(),
+                    "Should return all scheduled flights for JNB -> CPT on " + tomorrowSast);
+
+            FlightSearchResult alt204 = flights.stream()
+                    .filter(f -> "ALT 204".equals(f.getFlightNumber()))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Flight ALT 204 not found on " + tomorrowSast));
+
+            assertEquals("06:30", alt204.getDepartureTime());
+            assertEquals("08:40", alt204.getArrivalTime());
+            assertEquals("2h 10m", alt204.getDuration());
+            assertEquals("JNB", alt204.getOriginCode());
+            assertEquals("O. R. Tambo International Airport", alt204.getOriginAirportName());
+            assertEquals("Johannesburg", alt204.getOriginCity());
+            assertEquals("CPT", alt204.getDestCode());
+            assertEquals("Cape Town International Airport", alt204.getDestAirportName());
+            assertEquals("Cape Town", alt204.getDestCity());
+
+            int independentAvailableCount = 0;
+            String expectedModel = null;
+            try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(
+                         "SELECT at.model, "
+                         + "(SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW()))) "
+                         + "FROM flights f JOIN aircraft_types at ON at.aircraft_type_id = f.aircraft_type_id WHERE f.flight_id = ?")) {
+                stmt.setLong(1, alt204.getFlightId());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        expectedModel = rs.getString(1);
+                        independentAvailableCount = rs.getInt(2);
+                    }
+                }
+            }
+            assertNotNull(expectedModel);
+            assertEquals(expectedModel, alt204.getAircraftModel());
+            assertEquals(independentAvailableCount, alt204.getAvailableSeats());
         } finally {
             java.util.TimeZone.setDefault(originalTz);
         }
@@ -406,8 +436,19 @@ class PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("Cabin availability per flight: tomorrow's ALT 204 matches DB available and capacity (economy 150, first 12)")
+    @DisplayName("Cabin availability per flight: tomorrow's ALT 204 matches DB available and aircraft template capacity")
     void testCabinAvailabilityAlt204() throws SQLException {
+        assertAlt204CabinAvailability(false);
+    }
+
+    @Test
+    @Tag("integration-full")
+    @DisplayName("Full-cabin seeded DB: tomorrow's ALT 204 has full A320 capacity (economy 150, first 12)")
+    void testFullCabinCapacityAlt204() throws SQLException {
+        assertAlt204CabinAvailability(true);
+    }
+
+    private void assertAlt204CabinAvailability(boolean requireFullCabin) throws SQLException {
         FlightDaoImpl flightDao = new FlightDaoImpl();
         LocalDate tomorrow = LocalDate.now(ZoneId.of("Africa/Johannesburg")).plusDays(1);
         List<FlightSearchResult> flights = flightDao.searchFlights("JNB", "CPT", tomorrow);
@@ -421,21 +462,22 @@ class PostgresIntegrationTest {
         int dbFirst = 0;
         int dbTotalEconomy = 0;
         int dbTotalFirst = 0;
+        int templateEconomy = 0;
+        int templateFirst = 0;
         try (Connection conn = DatabaseConfig.getDataSource().getConnection();
              PreparedStatement stmt = conn.prepareStatement(
                      """
                      SELECT
-                       (SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = ? AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until <= NOW()))) AS avail,
-                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = ? AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until <= NOW())) AND st.seat_class = 'ECONOMY') AS econ,
-                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = ? AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until <= NOW())) AND st.seat_class = 'FIRST') AS fst,
-                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = ? AND st.seat_class = 'ECONOMY') AS total_econ,
-                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = ? AND st.seat_class = 'FIRST') AS total_fst
+                       (SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until <= NOW()))) AS avail,
+                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until <= NOW())) AND st.seat_class = 'ECONOMY') AS econ,
+                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until <= NOW())) AND st.seat_class = 'FIRST') AS fst,
+                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = f.flight_id AND st.seat_class = 'ECONOMY') AS total_econ,
+                       (SELECT COUNT(*) FROM flight_seats fs JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id WHERE fs.flight_id = f.flight_id AND st.seat_class = 'FIRST') AS total_fst,
+                       (SELECT COUNT(*) FROM seat_templates st WHERE st.aircraft_type_id = f.aircraft_type_id AND st.seat_class = 'ECONOMY') AS tpl_econ,
+                       (SELECT COUNT(*) FROM seat_templates st WHERE st.aircraft_type_id = f.aircraft_type_id AND st.seat_class = 'FIRST') AS tpl_fst
+                     FROM flights f WHERE f.flight_id = ?
                      """)) {
             stmt.setLong(1, alt204.getFlightId());
-            stmt.setLong(2, alt204.getFlightId());
-            stmt.setLong(3, alt204.getFlightId());
-            stmt.setLong(4, alt204.getFlightId());
-            stmt.setLong(5, alt204.getFlightId());
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     dbAvailable = rs.getInt("avail");
@@ -443,6 +485,8 @@ class PostgresIntegrationTest {
                     dbFirst = rs.getInt("fst");
                     dbTotalEconomy = rs.getInt("total_econ");
                     dbTotalFirst = rs.getInt("total_fst");
+                    templateEconomy = rs.getInt("tpl_econ");
+                    templateFirst = rs.getInt("tpl_fst");
                 }
             }
         }
@@ -451,7 +495,12 @@ class PostgresIntegrationTest {
         assertEquals(dbEconomy, alt204.getAvailableEconomy());
         assertEquals(dbFirst, alt204.getAvailableFirst());
         assertEquals(alt204.getAvailableSeats(), alt204.getAvailableEconomy() + alt204.getAvailableFirst());
-        assertEquals(150, dbTotalEconomy);
-        assertEquals(12, dbTotalFirst);
+        assertTrue(templateEconomy > 0 && templateFirst > 0, "Seat templates must exist for both cabins");
+        assertEquals(templateEconomy, dbTotalEconomy);
+        assertEquals(templateFirst, dbTotalFirst);
+        if (requireFullCabin) {
+            assertEquals(150, dbTotalEconomy);
+            assertEquals(12, dbTotalFirst);
+        }
     }
 }

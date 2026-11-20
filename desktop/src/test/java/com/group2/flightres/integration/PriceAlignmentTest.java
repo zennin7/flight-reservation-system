@@ -48,7 +48,9 @@ class PriceAlignmentTest {
     @Test
     @DisplayName("Flight search price == seat map cheapest economy quote == checkout total for a real flight")
     void testPriceAlignmentEndToEnd() {
-        Clock clock = Clock.fixed(Instant.parse("2026-11-08T12:00:00Z"), ZoneId.of("Africa/Johannesburg"));
+        ZoneId sast = ZoneId.of("Africa/Johannesburg");
+        LocalDate todaySast = LocalDate.now(sast);
+        Clock clock = Clock.fixed(todaySast.atTime(12, 0).atZone(sast).toInstant(), sast);
 
         SeatDao seatDao = new SeatDaoImpl();
         FlightDao flightDao = new FlightDaoImpl();
@@ -56,7 +58,7 @@ class PriceAlignmentTest {
         PricingService pricingService = new PricingService(seatDao, clock);
         FlightService flightService = new FlightService(flightDao, airportDao, pricingService, clock);
 
-        LocalDate tomorrow = LocalDate.of(2026, 11, 9);
+        LocalDate tomorrow = todaySast.plusDays(1);
         List<FlightSearchResult> searchResults = flightService.searchFlights("Johannesburg (JNB)", "Cape Town (CPT)", tomorrow);
         assertFalse(searchResults.isEmpty(), "Must find flights for tomorrow on JNB -> CPT");
 
