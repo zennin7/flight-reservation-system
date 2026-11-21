@@ -76,7 +76,13 @@ class WelcomeEmailTemplateTest {
         assertTrue(html.contains("zoe.muller"));
         assertTrue(html.contains("Pick your exact seat on a live seat map"));
         assertTrue(html.contains("Fares you can see the reason for"));
+        assertTrue(html.contains("See the base fare plus any demand and timing adjustment before you pay."));
         assertTrue(html.contains("A boarding pass with a QR code you can verify"));
+        assertTrue(html.contains("View it online or download the PDF boarding pass."));
+        assertTrue(html.contains("your Sky Royal profile is active."));
+        assertFalse(html.toLowerCase().contains("you are signed in"));
+        assertFalse(html.toLowerCase().contains("no hidden checkout fees"));
+        assertFalse(html.toLowerCase().contains("voucher"));
         assertTrue(html.contains("href=\"https://skyroyal.example/flights\""));
         assertTrue(html.contains("Search flights"));
         assertTrue(html.contains("Sky Royal is a university project - no real flights, payments or bookings."));
@@ -95,11 +101,15 @@ class WelcomeEmailTemplateTest {
 
         // Plain-text parity
         assertTrue(txt.contains("Welcome aboard, Zoë."));
+        assertTrue(txt.contains("your Sky Royal profile is active."));
         assertTrue(txt.contains("zoe.muller"));
         assertTrue(txt.contains("https://skyroyal.example/flights"));
         assertTrue(txt.contains("Pick your exact seat on a live seat map"));
-        assertTrue(txt.contains("Fares you can see the reason for"));
-        assertTrue(txt.contains("A boarding pass with a QR code you can verify"));
+        assertTrue(txt.contains("Fares you can see the reason for: see the base fare plus any demand and timing adjustment before you pay."));
+        assertTrue(txt.contains("A boarding pass with a QR code you can verify: view it online or download the PDF boarding pass."));
+        assertFalse(txt.toLowerCase().contains("you are signed in"));
+        assertFalse(txt.toLowerCase().contains("no hidden checkout fees"));
+        assertFalse(txt.toLowerCase().contains("voucher"));
         assertTrue(txt.contains("Sky Royal is a university project - no real flights, payments or bookings."));
 
         // Escaping check

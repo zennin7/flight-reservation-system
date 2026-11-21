@@ -39,6 +39,12 @@
     --glass-seat-free-edge: rgba(165, 180, 252, 0.78);
     --glass-seat-free-glow: 0 0 12px rgba(129, 140, 248, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.32);
     --glass-seat-yours-glow: 0 0 18px rgba(255, 255, 255, 0.58);
+    --glass-input-bg: rgba(9, 13, 18, 0.72);
+    --glass-input-bg-focus: rgba(12, 18, 25, 0.86);
+    --glass-input-border: rgba(255, 255, 255, 0.56);
+    --glass-input-border-hover: rgba(255, 255, 255, 0.80);
+    --glass-input-placeholder: rgba(255, 255, 255, 0.65);
+    --glass-input-focus-ring: 0 0 0 3px rgba(77, 163, 255, 0.44);
 }
 
 *, *::before, *::after {
@@ -182,6 +188,8 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     font-weight: 700;
     font-size: 17px;
     letter-spacing: -0.02em;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .nav-brand-badge {
@@ -215,6 +223,7 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     font-size: 14px;
     font-weight: 500;
     color: var(--glass-text-muted);
+    white-space: nowrap;
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
@@ -1070,6 +1079,12 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     pointer-events: none;
 }
 
+.auth-form .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .field-group,
 .field-group .field-control {
     min-width: 0;
@@ -1077,7 +1092,40 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     width: 100%;
 }
 
-.field-control.is-invalid {
+.auth-form .field-control {
+    background: var(--glass-input-bg);
+    border: 1px solid var(--glass-input-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    min-height: 44px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--glass-text);
+    transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+.auth-form .field-control::placeholder {
+    color: var(--glass-input-placeholder);
+    font-weight: 400;
+    opacity: 1;
+}
+
+.auth-form .field-control:hover {
+    border-color: var(--glass-input-border-hover);
+}
+
+.auth-form .field-control:focus,
+.auth-form .field-control:focus-visible {
+    background: var(--glass-input-bg-focus);
+    border-color: var(--glass-accent);
+    box-shadow: var(--glass-input-focus-ring);
+    outline: 2px solid var(--glass-accent);
+    outline-offset: 2px;
+}
+
+.field-control.is-invalid,
+.auth-form .field-control.is-invalid {
     border-color: var(--glass-danger);
     outline: 1px solid var(--glass-danger);
 }
@@ -1165,9 +1213,50 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
 }
 
 .consent-check {
+    appearance: none;
+    -webkit-appearance: none;
     margin-top: 2px;
+    width: 18px;
+    height: 18px;
     flex: 0 0 auto;
-    accent-color: var(--glass-accent);
+    border-radius: 5px;
+    border: 1.5px solid var(--glass-input-border);
+    background: var(--glass-input-bg);
+    display: inline-grid;
+    place-content: center;
+    cursor: pointer;
+    transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.consent-check::after {
+    content: "";
+    width: 5px;
+    height: 9px;
+    border-right: 2px solid var(--glass-ink);
+    border-bottom: 2px solid var(--glass-ink);
+    transform: rotate(42deg) scale(0);
+    transform-origin: center;
+    margin-top: -2px;
+    transition: transform 120ms ease;
+}
+
+.consent-check:hover {
+    border-color: var(--glass-input-border-hover);
+}
+
+.consent-check:focus-visible {
+    outline: 2px solid var(--glass-accent);
+    outline-offset: 2px;
+    box-shadow: var(--glass-input-focus-ring);
+}
+
+.consent-check:checked {
+    background: var(--glass-accent);
+    border-color: var(--glass-accent);
+}
+
+.consent-check:checked::after {
+    transform: rotate(42deg) scale(1);
 }
 
 .consent-copy {
