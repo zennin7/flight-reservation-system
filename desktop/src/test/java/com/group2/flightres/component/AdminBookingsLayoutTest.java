@@ -3,12 +3,15 @@ package com.group2.flightres.component;
 
 import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.controller.AdminBookingsController;
+import com.group2.flightres.dao.AdminBookingsDao;
 import com.group2.flightres.model.AdminBookingRow;
 import com.group2.flightres.model.AdminBookingsPage;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.User;
 import com.group2.flightres.model.UserRole;
-import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.service.AdminBookingsService;
+import com.group2.flightres.service.AdminDashboardService;
+import com.group2.flightres.util.JavaFxTestSupport;
 import com.group2.flightres.util.ThemeManager;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -48,17 +51,10 @@ class AdminBookingsLayoutTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyroyal.testing", "true");
         try (Connection conn = DatabaseConfig.getConnection()) {
             // Warm database connection pool
         } catch (Exception ignored) {}
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {}
-        Platform.setImplicitExit(false);
-        try {
-            FontLoader.loadFonts();
-        } catch (Throwable ignored) {}
+        JavaFxTestSupport.ensureStartedWithFonts();
     }
 
     private static User adminUser() {
@@ -103,7 +99,9 @@ class AdminBookingsLayoutTest {
             java.util.logging.Logger cssLogger = java.util.logging.Logger.getLogger("javafx.scene.CssStyleHelper");
             cssLogger.addHandler(cssHandler);
             try {
+                AdminBookingsService stubBookingsService = createStubBookingsService();
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/admin-bookings.fxml"));
+                loader.setControllerFactory(cls -> new AdminBookingsController(stubBookingsService, new AdminDashboardService()));
                 Parent root = loader.load();
                 AdminBookingsController controller = loader.getController();
                 controller.init(adminUser());
@@ -294,6 +292,52 @@ class AdminBookingsLayoutTest {
                 collectLabeledNodes(p, out);
             }
         }
+    }
+
+    private static AdminBookingsService createStubBookingsService() {
+        ZoneId sast = ZoneId.of("Africa/Johannesburg");
+        Instant base = Instant.now().plusSeconds(7200);
+        List<AdminBookingRow> rows = List.of(
+                new AdminBookingRow(1L, "PNR101", "Amahle Mokoena", "amahle@example.com", "Amahle Mokoena",
+                        1L, "ALT 204", "JNB", "Johannesburg", "CPT", "Cape Town",
+                        base, sast, base.plusSeconds(7800), sast,
+                        "9E", SeatClass.ECONOMY, new BigDecimal("1522.00"), "CONFIRMED"),
+                new AdminBookingRow(2L, "PNR102", "Thabo Khumalo", "thabo@example.com", "Thabo Khumalo",
+                        2L, "ALT 310", "JNB", "Johannesburg", "CPT", "Cape Town",
+                        base.plusSeconds(3600), sast, base.plusSeconds(11400), sast,
+                        "1A", SeatClass.FIRST, new BigDecimal("3500.00"), "CONFIRMED"),
+                new AdminBookingRow(3L, "PNR103", "Lerato Ndlovu", "lerato@example.com", "Lerato Ndlovu",
+                        3L, "ALT 602", "JNB", "Johannesburg", "DUR", "Durban",
+                        base.plusSeconds(7200), sast, base.plusSeconds(12300), sast,
+                        "7B", SeatClass.ECONOMY, new BigDecimal("1140.00"), "CANCELLED")
+        );
+        AdminBookingsDao dao = new AdminBookingsDao() {
+            @Override
+            public AdminBookingsPage searchBookings(AdminBookingsFilter filter, int page, int pageSize) {
+                return new AdminBookingsPage(rows, rows.size(), new BigDecimal("6162.00"), page, pageSize);
+            }
+
+            @Override
+            public AdminBookingsPage searchBookings(Connection conn, AdminBookingsFilter filter, int page, int pageSize) {
+                return searchBookings(filter, page, pageSize);
+            }
+
+            @Override
+            public List<AdminBookingRow> findAllMatching(AdminBookingsFilter filter) {
+                return rows;
+            }
+
+            @Override
+            public List<AdminBookingRow> findAllMatching(Connection conn, AdminBookingsFilter filter) {
+                return rows;
+            }
+
+            @Override
+            public List<FlightFilterOption> listFlightOptions() {
+                return List.of(new FlightFilterOption(1L, "ALT 204 · JNB -> CPT"));
+            }
+        };
+        return new AdminBookingsService(dao);
     }
 
     private static boolean isTreeVisible(Node node) {

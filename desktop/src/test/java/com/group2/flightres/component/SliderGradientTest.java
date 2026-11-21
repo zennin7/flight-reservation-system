@@ -1,7 +1,7 @@
 package com.group2.flightres.component;
 
 import com.group2.flightres.util.GlassFlightResultsBridge;
-import javafx.application.Platform;
+import com.group2.flightres.util.JavaFxTestSupport;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.StackPane;
 import org.junit.jupiter.api.BeforeAll;
@@ -14,12 +14,7 @@ class SliderGradientTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyroyal.testing", "true");
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {
-            // Already started
-        }
+        JavaFxTestSupport.ensureStarted();
     }
 
     @Test

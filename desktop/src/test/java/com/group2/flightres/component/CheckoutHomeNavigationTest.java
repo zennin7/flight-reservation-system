@@ -2,7 +2,7 @@ package com.group2.flightres.component;
 
 import com.group2.flightres.controller.CheckoutController;
 import com.group2.flightres.model.BookingContext;
-import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.util.JavaFxTestSupport;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -26,17 +26,10 @@ class CheckoutHomeNavigationTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyroyal.testing", "true");
-                try (java.sql.Connection conn = com.group2.flightres.config.DatabaseConfig.getConnection()) {
+        try (java.sql.Connection conn = com.group2.flightres.config.DatabaseConfig.getConnection()) {
             // Warm database connection pool
         } catch (Exception ignored) {}
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {}
-        Platform.setImplicitExit(false);
-        try {
-            FontLoader.loadFonts();
-        } catch (Throwable ignored) {}
+        JavaFxTestSupport.ensureStartedWithFonts();
     }
 
     @Test
@@ -46,12 +39,13 @@ class CheckoutHomeNavigationTest {
         AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
         Platform.runLater(() -> {
+            CheckoutController controller = null;
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/checkout.fxml"));
                 Parent checkoutView = loader.load();
                 assertNotNull(checkoutView);
 
-                CheckoutController controller = loader.getController();
+                controller = loader.getController();
                 assertNotNull(controller);
 
                 BookingContext ctx = new BookingContext();
@@ -89,6 +83,9 @@ class CheckoutHomeNavigationTest {
             } catch (Throwable t) {
                 errorRef.set(t);
             } finally {
+                if (controller != null && controller.getGlassBridge() != null) {
+                    controller.getGlassBridge().stopTimer();
+                }
                 latch.countDown();
             }
         });

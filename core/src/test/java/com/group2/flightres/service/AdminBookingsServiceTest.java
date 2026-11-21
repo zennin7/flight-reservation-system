@@ -82,6 +82,49 @@ class AdminBookingsServiceTest {
         try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
             conn.setAutoCommit(false);
             try {
+                // Seed 2 self-contained fixture bookings (rolled back cleanly in finally)
+                long userId;
+                try (PreparedStatement ps = conn.prepareStatement("SELECT user_id FROM users ORDER BY user_id LIMIT 1");
+                     ResultSet rs = ps.executeQuery()) {
+                    assertTrue(rs.next(), "At least one user must exist in schema seed");
+                    userId = rs.getLong(1);
+                }
+
+                long firstSeatFlightId;
+                long firstSeatId;
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT fs.flight_id, fs.flight_seat_id FROM flight_seats fs "
+                        + "JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id "
+                        + "WHERE st.seat_class = 'FIRST' "
+                        + "AND NOT EXISTS (SELECT 1 FROM booking_seats bs WHERE bs.flight_seat_id = fs.flight_seat_id) "
+                        + "LIMIT 1");
+                     ResultSet rs = ps.executeQuery()) {
+                    assertTrue(rs.next(), "Need an unbooked FIRST seat fixture");
+                    firstSeatFlightId = rs.getLong(1);
+                    firstSeatId = rs.getLong(2);
+                }
+
+                long econSeatFlightId;
+                long econSeatId;
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT fs.flight_id, fs.flight_seat_id FROM flight_seats fs "
+                        + "JOIN seat_templates st ON st.seat_template_id = fs.seat_template_id "
+                        + "WHERE st.seat_class = 'ECONOMY' AND fs.flight_seat_id <> ? "
+                        + "AND NOT EXISTS (SELECT 1 FROM booking_seats bs WHERE bs.flight_seat_id = fs.flight_seat_id) "
+                        + "LIMIT 1")) {
+                    ps.setLong(1, firstSeatId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        assertTrue(rs.next(), "Need an unbooked ECONOMY seat fixture");
+                        econSeatFlightId = rs.getLong(1);
+                        econSeatId = rs.getLong(2);
+                    }
+                }
+
+                insertFixtureBooking(conn, "ITF101", userId, firstSeatFlightId, "CONFIRMED",
+                        new BigDecimal("3500.00"), firstSeatId, "Fixture First");
+                insertFixtureBooking(conn, "ITE202", userId, econSeatFlightId, "CANCELLED",
+                        new BigDecimal("1200.00"), econSeatId, "Fixture Economy");
+
                 // 1. ALL filter reconciliation
                 AdminBookingsPage allPage = service.searchBookings(adminUser(), AdminBookingsFilter.defaults(), 1, conn);
                 long sqlCount = 0;
@@ -134,6 +177,42 @@ class AdminBookingsServiceTest {
             } finally {
                 conn.rollback();
             }
+        }
+    }
+
+    private static void insertFixtureBooking(Connection conn, String bookingRef, long userId, long flightId,
+                                             String status, BigDecimal amount, long flightSeatId,
+                                             String passengerName) throws Exception {
+        long bookingId;
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO bookings (booking_ref, user_id, flight_id, status, total_amount) "
+                + "VALUES (?, ?, ?, ?::booking_status, ?) RETURNING booking_id")) {
+            ps.setString(1, bookingRef);
+            ps.setLong(2, userId);
+            ps.setLong(3, flightId);
+            ps.setString(4, status);
+            ps.setBigDecimal(5, amount);
+            try (ResultSet rs = ps.executeQuery()) {
+                assertTrue(rs.next());
+                bookingId = rs.getLong(1);
+            }
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO booking_seats (booking_id, flight_seat_id, passenger_name, passport_number, date_of_birth, price_paid) "
+                + "VALUES (?, ?, ?, 'ITFIX123', DATE '1992-04-10', ?)")) {
+            ps.setLong(1, bookingId);
+            ps.setLong(2, flightSeatId);
+            ps.setString(3, passengerName);
+            ps.setBigDecimal(4, amount);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO payments (booking_id, amount, method, status, transaction_ref) "
+                + "VALUES (?, ?, 'CARD', 'COMPLETED'::payment_status, ?)")) {
+            ps.setLong(1, bookingId);
+            ps.setBigDecimal(2, amount);
+            ps.setString(3, "TXN-" + bookingRef);
+            ps.executeUpdate();
         }
     }
 }

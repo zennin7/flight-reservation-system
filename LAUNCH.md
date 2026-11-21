@@ -21,15 +21,19 @@ Close and reopen your terminal after installing (the launch scripts also refresh
 ## 5 Steps to Launch
 
 1. **Open PowerShell or Command Prompt in the repo root** (`flight-reservation-system`).
-2. **Run initial database, config, and Maven install setup** (auto-detects PostgreSQL port `5432`/`5433`, creates the DB if missing, runs schema + migrations + seeds, writes local `app.json`, and runs `mvn -DskipTests install`):
+2. **Run initial database, config, and Maven install setup** (auto-detects PostgreSQL port `5432`/`5433`, creates the DB if missing, runs schema + migrations + seeds, and writes local `app.json`):
    ```cmd
    .\scripts\setup.cmd
+   ```
+   To run the full test suite against your fresh database right away:
+   ```cmd
+   mvn clean install
    ```
 3. **Refresh rolling 14-day flights & auth accounts before any demo** (optional if you just ran `setup.cmd`):
    ```cmd
    .\scripts\reseed.cmd
    ```
-4. **Start the Sky Royal Website** (prints both `http://localhost:8080` and your LAN URL `http://<your-ip>:8080`):
+4. **Start the Sky Royal Website** (prints both `http://localhost:8080` and your LAN URL `http://<your-ip>:8080` after the build succeeds):
    ```cmd
    .\scripts\run-web.cmd
    ```
@@ -39,6 +43,13 @@ Close and reopen your terminal after installing (the launch scripts also refresh
    ```
 
 *(You can also run the underlying `.ps1` scripts directly if PowerShell execution policy allows it.)*
+
+---
+
+## Maven Verification Profiles
+
+- **Standard tests** (`mvn clean install` or `mvn clean verify`): runs all unit, web, JavaFX layout, and self-contained PostgreSQL integration tests on a fresh `setup.cmd` database.
+- **Full-cabin & demo-DB suite** (`mvn verify -Pfull-it`): additionally runs `@Tag("integration-full")` tests that expect full A320 cabin templates (`seed_full_cabin.sql`) and seeded bookings for demo user `12`.
 
 ---
 
@@ -58,6 +69,7 @@ Username or email both work on the login page (`/login`) and desktop app:
 | If you see... | Why it happened & how to fix it |
 |---|---|
 | `running scripts is disabled on this system` | Use the `.cmd` wrappers (`.\scripts\setup.cmd`, `.\scripts\run-web.cmd`, etc.) which bypass PowerShell's script execution policy. |
+| `The JAVA_HOME environment variable is not defined correctly` | `JAVA_HOME` is unset or points to a JRE (for example a VS Code embedded JRE without `bin\javac.exe`). The `scripts\*.cmd` / `scripts\*.ps1` scripts auto-detect an installed JDK 17+ for the current run and print `[FIX] JAVA_HOME set to ...`. If none is installed, run `winget install EclipseAdoptium.Temurin.17.JDK` and reopen PowerShell. |
 | `Could not find artifact com.group2.flightres:flight-reservation-system:pom:1.0.0` | Run `.\scripts\setup.cmd` (or `mvn -pl core -am -DskipTests install`). `run-web.cmd` and `run-desktop.cmd` now pass `-am` automatically. |
 | `PostgreSQL connection failed: wrong password for user ..., or wrong port` | Re-run `.\scripts\setup.cmd`, accept the detected port (`5432` or `5433`), and enter the exact `postgres` password set during PostgreSQL installation. |
 | `Host must be a hostname or IP ... not a URL` | Enter `127.0.0.1` or `localhost` (without `http://` or `/`). |

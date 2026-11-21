@@ -10,7 +10,7 @@ import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.User;
 import com.group2.flightres.model.UserRole;
 import com.group2.flightres.service.BookingService;
-import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.util.JavaFxTestSupport;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -21,6 +21,7 @@ import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -48,17 +49,10 @@ class MyBookingsStatesAndTicketTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyroyal.testing", "true");
         try (Connection conn = DatabaseConfig.getConnection()) {
             // Warm database connection pool for flight-search navigation target
         } catch (Exception ignored) {}
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {}
-        Platform.setImplicitExit(false);
-        try {
-            FontLoader.loadFonts();
-        } catch (Throwable ignored) {}
+        JavaFxTestSupport.ensureStartedWithFonts();
     }
 
     private static User createUser(long userId, String email, String name) {
@@ -440,12 +434,80 @@ class MyBookingsStatesAndTicketTest {
     }
 
     @Test
-    @DisplayName("Step 0A: Real DB user with Upcoming empty (0) and Past rows (N) shows Upcoming (0), Past (N), and empty message")
+    @DisplayName("Step 0A: User with Upcoming empty (0) and Past rows (4) shows Upcoming (0), Past (4), and empty message")
     void testUpcomingEmptyButPastHasRows() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
-        // Use real BookingService against DB with a future clock (2027-01-01) so all user 12 bookings are in the past
+        Clock futureClock = Clock.fixed(Instant.parse("2027-01-01T00:00:00Z"), ZoneOffset.UTC);
+        ZoneId sast = ZoneId.of("Africa/Johannesburg");
+        List<BookingSummary> pastRows = List.of(
+                new BookingSummary(1L, "PST101", 12L, "ALT 204", "JNB", "Johannesburg",
+                        Instant.parse("2026-11-10T04:30:00Z"), sast, "CPT", "Cape Town",
+                        Instant.parse("2026-11-10T06:40:00Z"), sast, "COMPLETED", "CONFIRMED",
+                        List.of("6A"), new BigDecimal("1522.00"), "Demo Traveller", "demo.traveller@example.com", "Boeing 737-800"),
+                new BookingSummary(2L, "PST102", 12L, "ALT 310", "JNB", "Johannesburg",
+                        Instant.parse("2026-11-11T07:15:00Z"), sast, "CPT", "Cape Town",
+                        Instant.parse("2026-11-11T09:25:00Z"), sast, "COMPLETED", "CONFIRMED",
+                        List.of("7B"), new BigDecimal("1450.00"), "Demo Traveller", "demo.traveller@example.com", "Boeing 737-800"),
+                new BookingSummary(3L, "PST103", 12L, "ALT 602", "JNB", "Johannesburg",
+                        Instant.parse("2026-11-12T05:00:00Z"), sast, "DUR", "Durban",
+                        Instant.parse("2026-11-12T06:25:00Z"), sast, "COMPLETED", "CONFIRMED",
+                        List.of("8C"), new BigDecimal("950.00"), "Demo Traveller", "demo.traveller@example.com", "Boeing 737-800"),
+                new BookingSummary(4L, "PST104", 12L, "ALT 702", "CPT", "Cape Town",
+                        Instant.parse("2026-11-13T06:30:00Z"), sast, "DUR", "Durban",
+                        Instant.parse("2026-11-13T08:30:00Z"), sast, "COMPLETED", "CONFIRMED",
+                        List.of("2A"), new BigDecimal("2100.00"), "Demo Traveller", "demo.traveller@example.com", "Boeing 737-800")
+        );
+        BookingDao pastDao = new BookingDao() {
+            @Override public BookingRecord createBooking(BookingContext c) { throw new UnsupportedOperationException(); }
+            @Override public Optional<BookingRecord> findByReference(String r) { return Optional.empty(); }
+            @Override public List<BookingRecord> findByUserId(long u) { return List.of(); }
+            @Override public List<BookingSummary> listSummariesForUser(long userId, Clock c) { return pastRows; }
+        };
+        BookingService stubPastService = new BookingService(pastDao, new FlightDaoImpl(), futureClock);
+
+        Platform.runLater(() -> {
+            Stage stage = new Stage();
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group2/flightres/fxml/my-bookings.fxml"));
+                loader.setControllerFactory(cls -> new MyBookingsController(stubPastService, futureClock));
+                Parent root = loader.load();
+                MyBookingsController controller = loader.getController();
+
+                BookingContext ctx = new BookingContext();
+                ctx.setCurrentUser(createUser(12L, "demo.traveller@example.com", "Demo Traveller"));
+                controller.init(ctx, () -> {});
+
+                int totalPast = controller.getAllBookings().size();
+                assertEquals(4, totalPast);
+                assertEquals("Upcoming (0)", controller.getUpcomingTabBtn().getText());
+                assertEquals("Past (4)", controller.getPastTabBtn().getText());
+                assertTrue(controller.getEmptyStateContainer().isVisible(), "Empty message must show when Upcoming is 0");
+                Label emptyTitle = (Label) controller.getEmptyStateContainer().lookup("#emptyTitleLabel");
+                assertNotNull(emptyTitle);
+                assertEquals("No upcoming trips", emptyTitle.getText());
+            } catch (Throwable t) {
+                errorRef.set(t);
+            } finally {
+                stage.close();
+                latch.countDown();
+            }
+        });
+
+        assertTrue(latch.await(20, TimeUnit.SECONDS), "Upcoming empty / Past populated test timed out");
+        if (errorRef.get() != null) {
+            throw new AssertionError("Upcoming empty / Past populated test failed", errorRef.get());
+        }
+    }
+
+    @Test
+    @Tag("integration-full")
+    @DisplayName("Step 0A (demo DB): Real DB user 12 with Upcoming empty (0) and Past rows (N) shows Upcoming (0), Past (N), and empty message")
+    void testDemoUser12UpcomingEmptyButPastHasRows() throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<Throwable> errorRef = new AtomicReference<>();
+
         Clock futureClock = Clock.fixed(Instant.parse("2027-01-01T00:00:00Z"), ZoneOffset.UTC);
 
         Platform.runLater(() -> {

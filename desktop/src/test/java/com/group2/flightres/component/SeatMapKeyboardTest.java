@@ -2,8 +2,8 @@ package com.group2.flightres.component;
 
 import com.group2.flightres.controller.SeatMapController;
 import com.group2.flightres.model.BookingContext;
-import com.group2.flightres.util.FontLoader;
 import com.group2.flightres.util.GlassSeatMapBridge;
+import com.group2.flightres.util.JavaFxTestSupport;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -26,17 +26,10 @@ class SeatMapKeyboardTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyroyal.testing", "true");
-                try (java.sql.Connection conn = com.group2.flightres.config.DatabaseConfig.getConnection()) {
+        try (java.sql.Connection conn = com.group2.flightres.config.DatabaseConfig.getConnection()) {
             // Warm database connection pool
         } catch (Exception ignored) {}
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {}
-        Platform.setImplicitExit(false);
-        try {
-            FontLoader.loadFonts();
-        } catch (Throwable ignored) {}
+        JavaFxTestSupport.ensureStartedWithFonts();
     }
 
     @Test

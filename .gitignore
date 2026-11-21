@@ -11,3 +11,6 @@ target/
 src/main/resources/com/group2/flightres/app.json
 **/app.json
 !**/app.json.example
+
+# Agent customizations
+.agents/

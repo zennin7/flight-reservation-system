@@ -11,7 +11,7 @@ import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.service.SeatMapService;
-import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.util.JavaFxTestSupport;
 import com.group2.flightres.util.TestFlightFinder;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -41,15 +41,8 @@ class SeatHoldExitReleaseTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyroyal.testing", "true");
         try (Connection conn = DatabaseConfig.getConnection()) {} catch (Exception ignored) {}
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {}
-        Platform.setImplicitExit(false);
-        try {
-            FontLoader.loadFonts();
-        } catch (Throwable ignored) {}
+        JavaFxTestSupport.ensureStartedWithFonts();
     }
 
     private static String querySeatStatus(long flightSeatId) {

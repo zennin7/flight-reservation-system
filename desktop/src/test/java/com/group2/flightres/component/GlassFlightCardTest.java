@@ -1,8 +1,8 @@
 package com.group2.flightres.component;
 
 import com.group2.flightres.model.FlightSearchResult;
-import com.group2.flightres.util.FontLoader;
 import com.group2.flightres.util.GlassFlightResultsBridge;
+import com.group2.flightres.util.JavaFxTestSupport;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
@@ -35,14 +35,7 @@ class GlassFlightCardTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyroyal.testing", "true");
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {}
-        Platform.setImplicitExit(false);
-        try {
-            FontLoader.loadFonts();
-        } catch (Throwable ignored) {}
+        JavaFxTestSupport.ensureStartedWithFonts();
     }
 
     @Test
@@ -224,14 +217,14 @@ class GlassFlightCardTest {
                         } catch (Throwable t) {
                             errorRef.set(t);
                         } finally {
-                            stage.hide();
+                            stage.close();
                             latch.countDown();
                         }
                     });
                 });
             } catch (Throwable t) {
                 errorRef.set(t);
-                stage.hide();
+                stage.close();
                 latch.countDown();
             }
         });

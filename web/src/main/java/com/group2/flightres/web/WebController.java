@@ -12,6 +12,7 @@ import com.group2.flightres.model.*;
 import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.FlightService;
+import com.group2.flightres.service.LoginThrottle;
 import com.group2.flightres.service.PaymentResult;
 import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.util.BoardingPassPdfGenerator;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -39,13 +41,21 @@ public class WebController {
     private final SeatMapService seatMapService;
     private final BookingService bookingService;
     private final AuthService authService;
+    private final LoginThrottle loginThrottle;
 
     public WebController(FlightService flightService, SeatMapService seatMapService,
                          BookingService bookingService, AuthService authService) {
+        this(flightService, seatMapService, bookingService, authService, new LoginThrottle());
+    }
+
+    public WebController(FlightService flightService, SeatMapService seatMapService,
+                         BookingService bookingService, AuthService authService,
+                         LoginThrottle loginThrottle) {
         this.flightService = flightService;
         this.seatMapService = seatMapService;
         this.bookingService = bookingService;
         this.authService = authService;
+        this.loginThrottle = loginThrottle != null ? loginThrottle : new LoginThrottle();
     }
 
     public Map<String, Object> baseModel(Context ctx) {
@@ -344,11 +354,25 @@ public class WebController {
     public void handleLoginPost(Context ctx) {
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
+        String clientIp = ctx.ip();
 
-        logger.info("Web login attempt for user '{}'", username);
+        logger.info("Web login attempt for user '{}'", AuthService.maskIdentifier(username));
+
+        Optional<Duration> activeLockout = loginThrottle.remainingLockout(username, clientIp);
+        if (activeLockout.isPresent()) {
+            String waitText = LoginThrottle.formatWait(activeLockout.get());
+            logger.info("Login throttled: identifier={} wait={}", AuthService.maskIdentifier(username), waitText);
+            ctx.status(429);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("loginError", "Too many failed login attempts. Please wait " + waitText + " before trying again.");
+            model.put("username", username);
+            ctx.render("login.html", model);
+            return;
+        }
 
         try {
             User user = authService.authenticate(username, password);
+            loginThrottle.recordSuccess(username, clientIp);
             String csrfToken = ctx.sessionAttribute("csrf_token");
             ctx.req().changeSessionId();
             if (csrfToken != null) {
@@ -358,8 +382,17 @@ public class WebController {
             logger.info("Web login successful for user '{}' (Role: {})", user.getUsername(), user.getRole());
             ctx.redirect("/");
         } catch (AuthenticationException e) {
+            loginThrottle.recordFailure(username, clientIp);
+            Optional<Duration> triggeredLockout = loginThrottle.remainingLockout(username, clientIp);
             Map<String, Object> model = baseModel(ctx);
-            model.put("loginError", e.getMessage());
+            if (triggeredLockout.isPresent()) {
+                String waitText = LoginThrottle.formatWait(triggeredLockout.get());
+                logger.info("Login throttled: identifier={} wait={}", AuthService.maskIdentifier(username), waitText);
+                ctx.status(429);
+                model.put("loginError", "Too many failed login attempts. Please wait " + waitText + " before trying again.");
+            } else {
+                model.put("loginError", e.getMessage());
+            }
             model.put("username", username);
             ctx.render("login.html", model);
         }

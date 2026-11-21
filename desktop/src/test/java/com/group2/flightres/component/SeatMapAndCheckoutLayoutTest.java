@@ -7,7 +7,7 @@ import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.PriceQuote;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
-import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.util.JavaFxTestSupport;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
@@ -39,17 +39,10 @@ class SeatMapAndCheckoutLayoutTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyroyal.testing", "true");
-                try (java.sql.Connection conn = com.group2.flightres.config.DatabaseConfig.getConnection()) {
+        try (java.sql.Connection conn = com.group2.flightres.config.DatabaseConfig.getConnection()) {
             // Warm database connection pool
         } catch (Exception ignored) {}
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {}
-        Platform.setImplicitExit(false);
-        try {
-            FontLoader.loadFonts();
-        } catch (Throwable ignored) {}
+        JavaFxTestSupport.ensureStartedWithFonts();
     }
 
     private static BookingContext createTestContext() {
@@ -101,6 +94,7 @@ class SeatMapAndCheckoutLayoutTest {
 
         Platform.runLater(() -> {
             Stage stage = new Stage();
+            AtomicReference<CheckoutController> checkoutCtrlRef = new AtomicReference<>();
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
                 Parent root = loader.load();
@@ -113,6 +107,7 @@ class SeatMapAndCheckoutLayoutTest {
                     ctrl.selectSeatByLabel("7C");
                 } else {
                     CheckoutController ctrl = loader.getController();
+                    checkoutCtrlRef.set(ctrl);
                     ctrl.init(ctx, () -> {});
                 }
 
@@ -171,14 +166,22 @@ class SeatMapAndCheckoutLayoutTest {
                         } catch (Throwable t) {
                             errorRef.set(t);
                         } finally {
-                            stage.hide();
+                            CheckoutController cc = checkoutCtrlRef.get();
+                            if (cc != null && cc.getGlassBridge() != null) {
+                                cc.getGlassBridge().stopTimer();
+                            }
+                            stage.close();
                             latch.countDown();
                         }
                     });
                 });
             } catch (Throwable t) {
                 errorRef.set(t);
-                stage.hide();
+                CheckoutController cc = checkoutCtrlRef.get();
+                if (cc != null && cc.getGlassBridge() != null) {
+                    cc.getGlassBridge().stopTimer();
+                }
+                stage.close();
                 latch.countDown();
             }
         });
