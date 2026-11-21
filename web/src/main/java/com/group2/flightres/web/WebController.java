@@ -13,6 +13,7 @@ import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.exception.ValidationException;
 import com.group2.flightres.model.*;
 import com.group2.flightres.service.AuthService;
+import com.group2.flightres.service.BoardingPassVerificationService;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.service.LoginThrottle;
@@ -23,7 +24,9 @@ import com.group2.flightres.service.RegistrationService;
 import com.group2.flightres.service.RegistrationThrottle;
 import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.service.SimulatedPaymentGateway;
+import com.group2.flightres.service.VerifyThrottle;
 import com.group2.flightres.util.BoardingPassPdfGenerator;
+import com.group2.flightres.util.QrCodeGenerator;
 import com.group2.flightres.util.ValidationUtil;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
@@ -59,6 +62,8 @@ public class WebController {
     private final RegistrationThrottle registrationThrottle;
     private final PaymentService paymentService;
     private final PaymentThrottle paymentThrottle;
+    private final BoardingPassVerificationService verificationService;
+    private final VerifyThrottle verifyThrottle;
 
     public WebController(FlightService flightService, SeatMapService seatMapService,
                          BookingService bookingService, AuthService authService) {
@@ -89,6 +94,17 @@ public class WebController {
                          LoginThrottle loginThrottle, RegistrationService registrationService,
                          RegistrationThrottle registrationThrottle,
                          PaymentService paymentService, PaymentThrottle paymentThrottle) {
+        this(flightService, seatMapService, bookingService, authService, loginThrottle,
+                registrationService, registrationThrottle, paymentService, paymentThrottle,
+                new BoardingPassVerificationService(bookingService), new VerifyThrottle());
+    }
+
+    public WebController(FlightService flightService, SeatMapService seatMapService,
+                         BookingService bookingService, AuthService authService,
+                         LoginThrottle loginThrottle, RegistrationService registrationService,
+                         RegistrationThrottle registrationThrottle,
+                         PaymentService paymentService, PaymentThrottle paymentThrottle,
+                         BoardingPassVerificationService verificationService, VerifyThrottle verifyThrottle) {
         this.flightService = flightService;
         this.seatMapService = seatMapService;
         this.bookingService = bookingService;
@@ -98,6 +114,10 @@ public class WebController {
         this.registrationThrottle = registrationThrottle != null ? registrationThrottle : new RegistrationThrottle();
         this.paymentService = paymentService != null ? paymentService : new SimulatedPaymentGateway();
         this.paymentThrottle = paymentThrottle != null ? paymentThrottle : new PaymentThrottle();
+        this.verificationService = verificationService != null
+                ? verificationService
+                : new BoardingPassVerificationService(bookingService);
+        this.verifyThrottle = verifyThrottle != null ? verifyThrottle : new VerifyThrottle();
     }
 
     public Map<String, Object> baseModel(Context ctx) {
@@ -587,6 +607,7 @@ public class WebController {
         Map<String, Object> model = baseModel(ctx);
         BookingRecord record = recordOpt.get();
         model.put("record", record);
+        model.put("isBookingOwner", isBookingOwner(ctx, record));
         ctx.render("confirmation.html", model);
     }
 
@@ -620,6 +641,30 @@ public class WebController {
         }
     }
 
+    public void handleConfirmationQr(Context ctx) {
+        String reference = ctx.pathParam("reference");
+        Optional<BookingRecord> recordOpt = bookingService.getBookingByReference(reference);
+        if (recordOpt.isEmpty()) {
+            ctx.status(404).result("Booking reference not found.");
+            return;
+        }
+        BookingRecord record = recordOpt.get();
+        if (!isBookingOwner(ctx, record)) {
+            ctx.status(403).result("Forbidden.");
+            return;
+        }
+        String verifyUrl = verificationService.buildVerificationUrl(resolveBaseUrl(ctx), record);
+        try {
+            byte[] qrPng = QrCodeGenerator.generateQrPng(verifyUrl, QrCodeGenerator.MIN_SIZE_PX);
+            applyNoStoreHeaders(ctx);
+            ctx.contentType("image/png");
+            ctx.result(qrPng);
+        } catch (IOException e) {
+            logger.error("Failed to render QR PNG for {}", record.getBookingReference(), e);
+            ctx.status(500).result("Could not generate verification QR code.");
+        }
+    }
+
     public void handleConfirmationPdf(Context ctx) {
         String reference = ctx.pathParam("reference");
         Optional<BookingRecord> recordOpt = bookingService.getBookingByReference(reference);
@@ -628,11 +673,12 @@ public class WebController {
             return;
         }
         BookingRecord record = recordOpt.get();
+        String verifyUrl = verificationService.buildVerificationUrl(resolveBaseUrl(ctx), record);
         String safeRef = record.getBookingReference().replaceAll("[^A-Za-z0-9_-]", "");
         Path tmpFile = null;
         try {
             tmpFile = Files.createTempFile("boarding-pass-" + safeRef + "-", ".pdf");
-            BoardingPassPdfGenerator.generate(TicketData.from(record), tmpFile.toFile());
+            BoardingPassPdfGenerator.generate(TicketData.from(record), verifyUrl, tmpFile.toFile());
             byte[] pdfBytes = Files.readAllBytes(tmpFile);
             ctx.contentType("application/pdf");
             ctx.header("Content-Disposition", "inline; filename=\"boarding-pass-" + safeRef + ".pdf\"");
@@ -649,6 +695,52 @@ public class WebController {
                 }
             }
         }
+    }
+
+    public void handleVerifyGet(Context ctx) {
+        applyNoStoreHeaders(ctx);
+        ctx.header("X-Robots-Tag", "noindex, nofollow");
+
+        String clientIp = ctx.ip();
+        Optional<Duration> lockout = verifyThrottle.remainingLockout(clientIp);
+        if (lockout.isPresent()) {
+            ctx.status(429);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("verifyState", "THROTTLED");
+            model.put("throttleMessage", "Too many verification requests. Please wait a minute and try again.");
+            ctx.render("verify.html", model);
+            return;
+        }
+        verifyThrottle.recordRequest(clientIp);
+
+        var result = verificationService.verify(ctx.pathParam("pnr"), ctx.queryParam("sig"));
+        if (result.status() == BoardingPassVerificationService.Status.INVALID) {
+            ctx.status(404);
+            Map<String, Object> invalidModel = new HashMap<>();
+            invalidModel.put("appName", BrandConfig.APP_NAME);
+            invalidModel.put("verifyState", "INVALID");
+            ctx.render("verify.html", invalidModel);
+            return;
+        }
+
+        Map<String, Object> model = baseModel(ctx);
+        model.put("verifyState", result.status().name());
+        model.put("verifyResult", result);
+        ctx.render("verify.html", model);
+    }
+
+    private boolean isBookingOwner(Context ctx, BookingRecord record) {
+        if (record == null) {
+            return false;
+        }
+        User user = ctx.sessionAttribute("user");
+        if (user != null && record.getUserId() != null && user.getUserId() == record.getUserId()) {
+            return true;
+        }
+        @SuppressWarnings("unchecked")
+        Set<String> owned = ctx.sessionAttribute("owned_booking_refs");
+        return owned != null && record.getBookingReference() != null
+                && owned.contains(record.getBookingReference().trim().toUpperCase(Locale.ROOT));
     }
 
     public void handleLoginGet(Context ctx) {

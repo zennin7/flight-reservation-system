@@ -61,16 +61,14 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- ZXing Barcode Decoder for Unit Tests -->
+        <!-- ZXing Barcode & QR Code Generator / Decoder -->
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>javase</artifactId>
-            <scope>test</scope>
         </dependency>
         <!-- Apache PDFBox (test scope PDF verification & rendering) -->
         <dependency>

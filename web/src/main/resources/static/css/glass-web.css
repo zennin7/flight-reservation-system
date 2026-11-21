@@ -981,6 +981,78 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     color: var(--glass-ink);
 }
 
+.bp-qr-box {
+    background: var(--glass-white);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.bp-qr-img {
+    width: 164px;
+    height: 164px;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    display: block;
+    image-rendering: pixelated;
+}
+
+.bp-qr-locked {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--glass-tile);
+    border: 1px solid var(--glass-line);
+    font-size: 12px;
+    color: var(--glass-text-muted);
+    text-align: center;
+}
+
+.verify-shell {
+    max-width: 560px;
+}
+
+.verify-card {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.verify-status-pill {
+    align-self: flex-start;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border: 1px solid var(--glass-panel-edge);
+    background: var(--glass-tile-hi);
+}
+
+.verify-status-pill.is-valid {
+    border-color: var(--glass-ok);
+    color: var(--glass-ok);
+}
+
+.verify-status-pill.is-cancelled,
+.verify-status-pill.is-invalid {
+    border-color: var(--glass-danger);
+    background: var(--glass-seat-taken);
+    color: var(--glass-danger);
+}
+
+.verify-val-ok {
+    color: var(--glass-ok);
+}
+
+.verify-val-danger {
+    color: var(--glass-danger);
+}
+
 .bp-footer-links {
     display: flex;
     justify-content: center;

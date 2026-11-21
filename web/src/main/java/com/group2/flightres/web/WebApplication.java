@@ -2,6 +2,7 @@ package com.group2.flightres.web;
 
 import com.group2.flightres.dao.impl.UserDaoImpl;
 import com.group2.flightres.service.AuthService;
+import com.group2.flightres.service.BoardingPassVerificationService;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.EmailServiceFactory;
 import com.group2.flightres.service.FlightService;
@@ -12,6 +13,7 @@ import com.group2.flightres.service.RegistrationService;
 import com.group2.flightres.service.RegistrationThrottle;
 import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.service.SimulatedPaymentGateway;
+import com.group2.flightres.service.VerifyThrottle;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinThymeleaf;
@@ -67,10 +69,21 @@ public class WebApplication {
                           LoginThrottle loginThrottle, RegistrationService registrationService,
                           RegistrationThrottle registrationThrottle,
                           PaymentService paymentService, PaymentThrottle paymentThrottle) {
+        this(flightService, seatMapService, bookingService, authService, loginThrottle,
+                registrationService, registrationThrottle, paymentService, paymentThrottle,
+                new BoardingPassVerificationService(bookingService), new VerifyThrottle());
+    }
+
+    public WebApplication(FlightService flightService, SeatMapService seatMapService,
+                          BookingService bookingService, AuthService authService,
+                          LoginThrottle loginThrottle, RegistrationService registrationService,
+                          RegistrationThrottle registrationThrottle,
+                          PaymentService paymentService, PaymentThrottle paymentThrottle,
+                          BoardingPassVerificationService verificationService, VerifyThrottle verifyThrottle) {
         this.authService = authService;
         this.controller = new WebController(flightService, seatMapService, bookingService, authService,
                 loginThrottle, registrationService, registrationThrottle,
-                paymentService, paymentThrottle);
+                paymentService, paymentThrottle, verificationService, verifyThrottle);
 
         // Configure Thymeleaf
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
@@ -174,11 +187,13 @@ public class WebApplication {
         app.get("/checkout", controller::handleCheckoutGet);
         app.post("/pay", controller::handlePayPost);
 
-        // Booking Confirmation & Lookup
+        // Booking Confirmation, QR & Public Verify
         app.get("/confirmation", controller::handleConfirmationLookup);
         app.get("/confirmation/{reference}", controller::handleConfirmation);
         app.get("/confirmation/{reference}/barcode.png", controller::handleConfirmationBarcode);
+        app.get("/confirmation/{reference}/qr.png", controller::handleConfirmationQr);
         app.get("/confirmation/{reference}/boarding-pass.pdf", controller::handleConfirmationPdf);
+        app.get("/verify/{pnr}", controller::handleVerifyGet);
 
         // Authentication & Registration
         app.get("/login", controller::handleLoginGet);
@@ -195,6 +210,9 @@ public class WebApplication {
 
     private void setupErrorHandling() {
         app.error(404, ctx -> {
+            if (ctx.path().startsWith("/verify/")) {
+                return;
+            }
             Map<String, Object> model = controller.baseModel(ctx);
             model.put("error", "The requested page (" + ctx.path() + ") could not be found.");
             ctx.render("error.html", model);

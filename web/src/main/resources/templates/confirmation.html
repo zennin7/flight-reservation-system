@@ -107,6 +107,16 @@
             <div class="bp-meta-val" th:text="${record.status != null ? record.status : 'CONFIRMED'}">CONFIRMED</div>
           </div>
 
+          <div th:if="${isBookingOwner}" class="bp-qr-box">
+            <img class="bp-qr-img"
+                 th:src="@{/confirmation/{ref}/qr.png(ref=${record.bookingReference})}"
+                 th:alt="${'QR verification code for booking ' + record.bookingReference}">
+            <span class="bp-barcode-caption">SCAN TO VERIFY</span>
+          </div>
+          <div th:unless="${isBookingOwner}" class="bp-qr-locked">
+            Sign in as booking owner to display QR pass
+          </div>
+
           <div class="bp-barcode-box">
             <img class="bp-barcode-img"
                  th:src="@{/confirmation/{ref}/barcode.png(ref=${record.bookingReference})}"
