@@ -141,6 +141,17 @@ public class BookingService {
         return bookingDao.findByReference(bookingRef.trim().toUpperCase());
     }
 
+    public Optional<BookingRecord> findByIdempotencyKey(String idempotencyKey) {
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            return Optional.empty();
+        }
+        return bookingDao.findByIdempotencyKey(idempotencyKey.trim());
+    }
+
+    public Clock getClock() {
+        return clock;
+    }
+
     /**
      * Retrieves all bookings for a user.
      */

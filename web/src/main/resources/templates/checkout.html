@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title th:text="${appName + ' – Checkout &amp; Payment'}">Sky Royal – Checkout &amp; Payment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/glass-web.css">
+</head>
+<body>
+  <div class="glass-backdrop" aria-hidden="true"></div>
+  <div class="glass-backdrop-scrim" aria-hidden="true"></div>
+
+  <div class="page-shell">
+    <header class="glass-panel floating-nav">
+      <a href="/" class="nav-brand">
+        <span class="nav-brand-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+        </span>
+        <span th:text="${appName}">Sky Royal</span>
+      </a>
+
+      <nav aria-label="Primary navigation">
+        <ul class="nav-links">
+          <li><a href="/flights" class="nav-link">Flights</a></li>
+          <li><a href="/#destinations" class="nav-link">Destinations</a></li>
+          <li><a href="/confirmation" class="nav-link">Manage booking</a></li>
+          <li><a href="/about" class="nav-link">About</a></li>
+          <li><a href="/contact" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-auth">
+        <span th:if="${user != null}" class="user-pill" th:text="${user.username}">Traveller</span>
+        <a th:if="${user != null}" href="/logout" class="btn-pill btn-translucent">Log out</a>
+        <a th:if="${user == null}" href="/login" class="btn-pill btn-translucent">Log in</a>
+        <a href="/flights" class="btn-pill btn-white">Browse flights</a>
+      </div>
+    </header>
+
+    <main>
+      <div class="checkout-wrap">
+        <div class="glass-panel checkout-head">
+          <div>
+            <span class="eyebrow">Step 3 of 3 &middot; Secure Checkout</span>
+            <h1 class="checkout-title" th:text="${checkoutState == 'active' ? 'Complete your booking payment' : 'Seat hold update'}">Complete your booking payment</h1>
+            <p class="auth-sub" th:if="${checkoutSession != null}"
+               th:text="${checkoutSession.flightNumber + ' &middot; ' + checkoutSession.origin + ' to ' + checkoutSession.destination + ' &middot; Seat ' + checkoutSession.seatLabel}">
+              GRP 204 &middot; Seat 6A
+            </p>
+          </div>
+          <div class="hold-timer-pill" th:if="${checkoutState == 'active'}" id="holdTimerBox"
+               th:attr="data-expires-ms=${holdExpiresEpochMs}">
+            <span class="hold-timer-label">Seat Hold</span>
+            <span class="hold-timer-clock" id="holdCountdown" th:text="${remainingHoldFormatted}">05:00</span>
+          </div>
+        </div>
+
+        <section th:if="${checkoutState != 'active'}" class="glass-panel checkout-state-card" role="alert">
+          <div class="checkout-state-badge" th:text="${checkoutState == 'forbidden' ? 'Access Denied' : (checkoutState == 'taken' ? 'Seat Taken' : 'Hold Expired')}">
+            Hold Expired
+          </div>
+          <h2 class="checkout-section-title" th:text="${stateHeading != null ? stateHeading : 'Your seat hold is no longer active'}">
+            Your seat hold has expired
+          </h2>
+          <p class="auth-sub" th:text="${payError != null ? payError : 'Please return to the seat map to choose an available seat and start a new 5-minute hold.'}">
+            Please return to the seat map to choose an available seat.
+          </p>
+          <div class="checkout-state-actions">
+            <a th:if="${checkoutSession != null}"
+               th:href="${'/flights/' + checkoutSession.flightId + '/seats'}"
+               class="btn-pill btn-white">Back to Seat Map &rarr;</a>
+            <a href="/flights" class="btn-pill btn-translucent">Search Flights</a>
+          </div>
+        </section>
+
+        <div th:if="${checkoutState == 'active'}" class="checkout-grid">
+          <aside class="glass-panel checkout-summary">
+            <div>
+              <span class="eyebrow">Fare Summary</span>
+              <h2 class="checkout-section-title" th:text="${checkoutSession.flightNumber}">GRP 204</h2>
+              <p class="auth-sub">
+                <span th:text="${checkoutSession.origin}">Johannesburg (JNB)</span>
+                &rarr;
+                <span th:text="${checkoutSession.destination}">Cape Town (CPT)</span>
+              </p>
+            </div>
+
+            <div class="checkout-meta-list">
+              <div class="checkout-meta-row">
+                <span>Departure</span>
+                <strong th:text="${checkoutSession.departureDate + ' · ' + checkoutSession.departureTime}">2026-11-02 · 06:30</strong>
+              </div>
+              <div class="checkout-meta-row">
+                <span>Passenger</span>
+                <strong th:text="${checkoutSession.passengerName}">Traveller</strong>
+              </div>
+              <div class="checkout-meta-row">
+                <span>Assigned Seat</span>
+                <strong th:text="${checkoutSession.seatLabel + ' (' + checkoutSession.seat.seatClass + ')'}">6A (ECONOMY)</strong>
+              </div>
+            </div>
+
+            <div class="checkout-breakdown">
+              <div class="checkout-price-row">
+                <span>Base Fare</span>
+                <span th:text="${baseFareFormatted}">R 1,200.00</span>
+              </div>
+              <div class="checkout-price-row" th:if="${hasClassPremium}">
+                <span>First Class Cabin Upgrade</span>
+                <span th:text="${classUpgradeFormatted}">+R 0.00</span>
+              </div>
+              <div class="checkout-price-row">
+                <span>Demand Adjustment</span>
+                <span th:text="${demandAdjFormatted}">+R 0.00</span>
+              </div>
+              <div class="checkout-price-row">
+                <span>Timing Adjustment</span>
+                <span th:text="${timingAdjFormatted}">+R 0.00</span>
+              </div>
+              <div class="checkout-price-total">
+                <span>Total Payable</span>
+                <strong th:text="${totalFormatted}">R 1,200.00</strong>
+              </div>
+              <div class="checkout-vat-note" th:text="${'Includes 15% VAT (' + vatFormatted + ')'}">
+                Includes 15% VAT (R 156.52)
+              </div>
+            </div>
+          </aside>
+
+          <section class="glass-panel checkout-form-card" aria-label="Payment details">
+            <div class="checkout-form-head">
+              <div>
+                <span class="eyebrow">Simulated Card Gateway</span>
+                <h2 class="checkout-section-title">Card details</h2>
+              </div>
+              <span class="brand-badge-pill" id="cardBrandBadge">CARD</span>
+            </div>
+
+            <div class="auth-notice checkout-sim-note" role="note">
+              Simulated payment. Test card 4242 4242 4242 4242 approves; 4000 0000 0000 0002 declines. No real money moves.
+            </div>
+
+            <div th:if="${payError != null}" class="auth-error" role="alert">
+              <span th:text="${payError}">Payment could not be processed.</span>
+            </div>
+
+            <div id="holdExpiredInlineAlert" class="auth-error" role="alert" hidden>
+              Your 5-minute seat hold has expired. <a th:href="${'/flights/' + checkoutSession.flightId + '/seats'}">Return to seat map</a> to hold a seat again.
+            </div>
+
+            <form action="/pay" method="POST" class="auth-form checkout-form" id="checkoutPayForm" autocomplete="on">
+              <input type="hidden" name="csrf_token" th:value="${csrf_token}">
+
+              <div class="field-group">
+                <label for="cardNumber" class="field-label">Card number</label>
+                <input type="text" id="cardNumber" name="cardNumber" class="field-control"
+                       inputmode="numeric" autocomplete="cc-number" maxlength="23"
+                       placeholder="4242 4242 4242 4242" required>
+              </div>
+
+              <div class="field-group">
+                <label for="cardholderName" class="field-label">Name on card</label>
+                <input type="text" id="cardholderName" name="cardholderName" class="field-control"
+                       autocomplete="cc-name" maxlength="100"
+                       placeholder="Name as shown on card" required>
+              </div>
+
+              <div class="checkout-card-split">
+                <div class="field-group">
+                  <label for="cardExpiry" class="field-label">Expiry (MM/YY)</label>
+                  <input type="text" id="cardExpiry" name="expiry" class="field-control"
+                         inputmode="numeric" autocomplete="cc-exp" maxlength="7"
+                         placeholder="12/28" required>
+                </div>
+
+                <div class="field-group">
+                  <label for="cardCvv" class="field-label">CVV</label>
+                  <input type="password" id="cardCvv" name="cvv" class="field-control"
+                         inputmode="numeric" autocomplete="cc-csc" maxlength="4"
+                         placeholder="123" required>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-pill btn-white auth-submit" id="paySubmitBtn">
+                Pay <span th:text="${totalFormatted}">R 1,200.00</span> &rarr;
+              </button>
+
+              <div class="auth-switch">
+                Changed your mind? <a th:href="${'/flights/' + checkoutSession.flightId + '/seats'}">Pick a different seat</a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="glass-panel site-footer">
+      <div>&copy; 2026 <span th:text="${appName}">Sky Royal</span>. All rights reserved.</div>
+      <div>Sky Royal is a university project. No real bookings are made.</div>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var cardInput = document.getElementById('cardNumber');
+      var badge = document.getElementById('cardBrandBadge');
+      var expInput = document.getElementById('cardExpiry');
+      var cvvInput = document.getElementById('cardCvv');
+      var timerBox = document.getElementById('holdTimerBox');
+      var timerClock = document.getElementById('holdCountdown');
+      var expiredAlert = document.getElementById('holdExpiredInlineAlert');
+      var payBtn = document.getElementById('paySubmitBtn');
+
+      function detectBrand(digits) {
+        if (!digits) return 'CARD';
+        if (digits.charAt(0) === '4') return 'VISA';
+        if (/^(5[1-5]|2[2-7])/.test(digits)) return 'MASTERCARD';
+        if (/^(34|37)/.test(digits)) return 'AMEX';
+        return 'CARD';
+      }
+
+      if (cardInput && badge) {
+        cardInput.addEventListener('input', function () {
+          var digits = (cardInput.value || '').replace(/\D/g, '').slice(0, 19);
+          var grouped = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+          cardInput.value = grouped;
+          badge.textContent = detectBrand(digits);
+        });
+      }
+
+      if (expInput) {
+        expInput.addEventListener('input', function () {
+          var digits = (expInput.value || '').replace(/\D/g, '').slice(0, 4);
+          if (digits.length >= 3) {
+            expInput.value = digits.slice(0, 2) + '/' + digits.slice(2);
+          } else {
+            expInput.value = digits;
+          }
+        });
+      }
+
+      if (cvvInput) {
+        cvvInput.addEventListener('input', function () {
+          cvvInput.value = (cvvInput.value || '').replace(/\D/g, '').slice(0, 4);
+        });
+      }
+
+      if (timerBox && timerClock) {
+        var expiresMs = parseInt(timerBox.getAttribute('data-expires-ms') || '0', 10);
+        if (expiresMs > 0) {
+          function tick() {
+            var secs = Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
+            var m = Math.floor(secs / 60);
+            var s = secs % 60;
+            timerClock.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+            if (secs <= 0) {
+              timerBox.classList.add('is-expired');
+              if (expiredAlert) expiredAlert.hidden = false;
+              if (payBtn) payBtn.disabled = true;
+            }
+          }
+          tick();
+          setInterval(tick, 1000);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

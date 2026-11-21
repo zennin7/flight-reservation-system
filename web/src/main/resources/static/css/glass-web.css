@@ -1265,7 +1265,178 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     color: var(--glass-text-muted);
 }
 
+/* Checkout & Payment Layout */
+.checkout-wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.checkout-head {
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.checkout-title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-top: 4px;
+}
+
+.hold-timer-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: var(--glass-tile-hi);
+    border: 1px solid var(--glass-panel-edge);
+}
+
+.hold-timer-pill.is-expired {
+    background: var(--glass-seat-taken);
+    border-color: var(--glass-danger);
+    color: var(--glass-danger);
+}
+
+.hold-timer-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--glass-text-muted);
+}
+
+.hold-timer-clock {
+    font-size: 18px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.checkout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.checkout-summary,
+.checkout-form-card,
+.checkout-state-card {
+    padding: 26px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.checkout-section-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-top: 4px;
+}
+
+.checkout-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: var(--glass-tile);
+    border: 1px solid var(--glass-line);
+}
+
+.checkout-meta-row,
+.checkout-price-row,
+.checkout-price-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.checkout-meta-row span,
+.checkout-price-row span {
+    color: var(--glass-text-muted);
+}
+
+.checkout-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--glass-line);
+}
+
+.checkout-price-total {
+    padding-top: 10px;
+    border-top: 1px solid var(--glass-panel-edge);
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.checkout-vat-note {
+    font-size: 12px;
+    color: var(--glass-text-muted);
+    text-align: right;
+}
+
+.checkout-form-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.brand-badge-pill {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--glass-input-bg);
+    border: 1px solid var(--glass-input-border);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--glass-text);
+}
+
+.checkout-card-split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.checkout-state-badge {
+    align-self: flex-start;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--glass-seat-taken);
+    border: 1px solid var(--glass-seat-taken-edge);
+    color: var(--glass-danger);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.checkout-state-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
 @media (max-width: 780px) {
+    .checkout-grid,
+    .checkout-card-split {
+        grid-template-columns: 1fr;
+    }
     .bp-ticket {
         grid-template-columns: 1fr;
     }

@@ -5,8 +5,10 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.oned.Code128Writer;
 import com.group2.flightres.config.BrandConfig;
+import com.group2.flightres.config.SeatHoldPolicy;
 import com.group2.flightres.exception.AuthenticationException;
 import com.group2.flightres.exception.DuplicateEmailException;
+import com.group2.flightres.exception.PriceChangedException;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.exception.ValidationException;
 import com.group2.flightres.model.*;
@@ -15,10 +17,14 @@ import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.service.LoginThrottle;
 import com.group2.flightres.service.PaymentResult;
+import com.group2.flightres.service.PaymentService;
+import com.group2.flightres.service.PaymentThrottle;
 import com.group2.flightres.service.RegistrationService;
 import com.group2.flightres.service.RegistrationThrottle;
 import com.group2.flightres.service.SeatMapService;
+import com.group2.flightres.service.SimulatedPaymentGateway;
 import com.group2.flightres.util.BoardingPassPdfGenerator;
+import com.group2.flightres.util.ValidationUtil;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +34,14 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Controller handling HTTP requests and view rendering for the Sky Royal website.
@@ -47,24 +57,38 @@ public class WebController {
     private final LoginThrottle loginThrottle;
     private final RegistrationService registrationService;
     private final RegistrationThrottle registrationThrottle;
+    private final PaymentService paymentService;
+    private final PaymentThrottle paymentThrottle;
 
     public WebController(FlightService flightService, SeatMapService seatMapService,
                          BookingService bookingService, AuthService authService) {
         this(flightService, seatMapService, bookingService, authService, new LoginThrottle(),
-                new RegistrationService(), new RegistrationThrottle());
+                new RegistrationService(), new RegistrationThrottle(),
+                new SimulatedPaymentGateway(), new PaymentThrottle());
     }
 
     public WebController(FlightService flightService, SeatMapService seatMapService,
                          BookingService bookingService, AuthService authService,
                          LoginThrottle loginThrottle) {
         this(flightService, seatMapService, bookingService, authService, loginThrottle,
-                new RegistrationService(), new RegistrationThrottle());
+                new RegistrationService(), new RegistrationThrottle(),
+                new SimulatedPaymentGateway(), new PaymentThrottle());
     }
 
     public WebController(FlightService flightService, SeatMapService seatMapService,
                          BookingService bookingService, AuthService authService,
                          LoginThrottle loginThrottle, RegistrationService registrationService,
                          RegistrationThrottle registrationThrottle) {
+        this(flightService, seatMapService, bookingService, authService, loginThrottle,
+                registrationService, registrationThrottle,
+                new SimulatedPaymentGateway(), new PaymentThrottle());
+    }
+
+    public WebController(FlightService flightService, SeatMapService seatMapService,
+                         BookingService bookingService, AuthService authService,
+                         LoginThrottle loginThrottle, RegistrationService registrationService,
+                         RegistrationThrottle registrationThrottle,
+                         PaymentService paymentService, PaymentThrottle paymentThrottle) {
         this.flightService = flightService;
         this.seatMapService = seatMapService;
         this.bookingService = bookingService;
@@ -72,6 +96,8 @@ public class WebController {
         this.loginThrottle = loginThrottle != null ? loginThrottle : new LoginThrottle();
         this.registrationService = registrationService != null ? registrationService : new RegistrationService();
         this.registrationThrottle = registrationThrottle != null ? registrationThrottle : new RegistrationThrottle();
+        this.paymentService = paymentService != null ? paymentService : new SimulatedPaymentGateway();
+        this.paymentThrottle = paymentThrottle != null ? paymentThrottle : new PaymentThrottle();
     }
 
     public Map<String, Object> baseModel(Context ctx) {
@@ -235,7 +261,11 @@ public class WebController {
             ctx.redirect("/flights");
             return;
         }
-        renderSeatsPage(ctx, flightId, null);
+        String flashError = ctx.sessionAttribute("seat_flash_error");
+        if (flashError != null) {
+            ctx.req().getSession().removeAttribute("seat_flash_error");
+        }
+        renderSeatsPage(ctx, flightId, flashError);
     }
 
     public void handleBook(Context ctx) {
@@ -260,9 +290,32 @@ public class WebController {
             return;
         }
 
-        // 1. Optimistic seat hold
+        // 1. Validate passenger input BEFORE placing any seat hold
+        String passengerName = ctx.formParam("passengerName");
+        String passengerEmail = ctx.formParam("passengerEmail");
+        String passportNumber = normalizePassport(ctx.formParam("passportNumber"));
+        LocalDate dob;
         try {
-            seatMapService.selectSeat(targetSeat);
+            ValidationUtil.validatePassengerName(passengerName);
+            ValidationUtil.validateEmail(passengerEmail);
+            ValidationUtil.validatePassportNumber(passportNumber);
+            dob = parseAndValidateDob(ctx.formParam("dateOfBirth"));
+        } catch (ValidationException e) {
+            logger.warn("Booking passenger validation failed: {}", e.getMessage());
+            renderSeatsWithError(ctx, flightId, e.getMessage(), resolveErrorField(e.getMessage()));
+            return;
+        }
+
+        String origin = firstNonBlank(ctx.formParam("origin"),
+                flight.getOriginCity() != null ? flight.getOriginCity() + " (" + flight.getOriginCode() + ")" : "Johannesburg (JNB)");
+        String destination = firstNonBlank(ctx.formParam("destination"),
+                flight.getDestCity() != null ? flight.getDestCity() + " (" + flight.getDestCode() + ")" : "Cape Town (CPT)");
+        String departureDate = firstNonBlank(ctx.formParam("departureDate"), "2026-11-02");
+
+        // 2. Acquire owner-bound seat hold
+        String holdOwner = resolveHoldOwner(ctx);
+        try {
+            seatMapService.selectSeat(targetSeat, holdOwner);
         } catch (SeatUnavailableException e) {
             renderSeatsWithError(ctx, flightId, e.getMessage());
             return;
@@ -271,20 +324,251 @@ public class WebController {
             return;
         }
 
-        // 2. Build BookingContext & complete transactional booking
+        // 3. Recompute authoritative fare server-side (ignore any client price input)
         try {
-            BookingContext bookingContext = buildBookingContext(ctx, flight, targetSeat);
-            BookingRecord record = bookingService.createBooking(bookingContext);
-            ctx.redirect("/confirmation/" + record.getBookingReference());
-        } catch (ValidationException e) {
-            logger.warn("Booking validation failed: {}", e.getMessage());
-            seatMapService.deselectSeat(targetSeat);
-            renderSeatsWithError(ctx, flightId, e.getMessage(), resolveErrorField(e.getMessage()));
+            PriceQuote quote = bookingService.getPricingService()
+                    .quote(flightId, targetSeat.getSeatClass(), bookingService.getClock());
+            Instant holdExpiresAt = targetSeat.getHeldUntil() != null
+                    ? targetSeat.getHeldUntil()
+                    : seatMapService.getClock().instant().plusSeconds(SeatHoldPolicy.HOLD_SECONDS);
+
+            CheckoutSession checkoutSession = new CheckoutSession(
+                    flight, origin, destination, departureDate, targetSeat,
+                    passengerName.trim(), passengerEmail.trim(), passportNumber, dob,
+                    quote, UUID.randomUUID().toString(), holdOwner, holdExpiresAt);
+
+            ctx.sessionAttribute("checkout_session", checkoutSession);
+            ctx.redirect("/checkout");
         } catch (Exception e) {
-            logger.error("Booking creation failed: {}", e.getMessage(), e);
-            seatMapService.deselectSeat(targetSeat);
+            logger.error("Could not prepare checkout session for seat {}: {}", targetSeat.getFlightSeatId(), e.getMessage(), e);
+            seatMapService.deselectSeat(targetSeat, holdOwner);
             renderSeatsWithError(ctx, flightId,
-                    "We could not complete your booking right now. Please check your details and try again.", null);
+                    "We could not prepare checkout right now. Please try selecting your seat again.", null);
+        }
+    }
+
+    public void handleCheckoutGet(Context ctx) {
+        applyNoStoreHeaders(ctx);
+        CheckoutSession cs = ctx.sessionAttribute("checkout_session");
+        if (cs == null) {
+            ctx.redirect("/flights");
+            return;
+        }
+        if (cs.getCompletedBookingRef() != null) {
+            ctx.redirect("/confirmation/" + cs.getCompletedBookingRef());
+            return;
+        }
+
+        String requesterOwner = resolveHoldOwner(ctx);
+        if (!Objects.equals(cs.getHoldOwner(), requesterOwner)) {
+            ctx.status(403);
+            renderCheckoutModel(ctx, cs, "forbidden", "This seat hold belongs to another user or session",
+                    "This seat hold belongs to another user or browser session. Please select your own seat.", null);
+            return;
+        }
+
+        Optional<FlightSeat> liveSeatOpt = seatMapService.findSeatById(cs.getFlightSeatId());
+        Instant now = seatMapService.getClock().instant();
+        if (liveSeatOpt.isPresent()) {
+            FlightSeat liveSeat = liveSeatOpt.get();
+            if (liveSeat.getStatus() == SeatStatus.BOOKED) {
+                ctx.status(409);
+                renderCheckoutModel(ctx, cs, "taken", "Seat is no longer available",
+                        "This seat has already been booked by another traveller. Please choose a different seat.", null);
+                return;
+            }
+            if (liveSeat.getStatus() == SeatStatus.HELD && liveSeat.getHeldBy() != null
+                    && !Objects.equals(liveSeat.getHeldBy(), requesterOwner)) {
+                ctx.status(403);
+                renderCheckoutModel(ctx, cs, "forbidden", "Seat hold owned by another traveller",
+                        "Another user or session holds this seat right now. Please pick another seat.", null);
+                return;
+            }
+            if (liveSeat.getStatus() != SeatStatus.HELD
+                    || (liveSeat.getHeldUntil() != null && !liveSeat.getHeldUntil().isAfter(now))
+                    || !cs.getHoldExpiresAt().isAfter(now)) {
+                ctx.status(410);
+                renderCheckoutModel(ctx, cs, "expired", "Your 5-minute seat hold has expired",
+                        "Your seat hold timed out before payment was completed. Please return to the seat map and select a seat again.", null);
+                return;
+            }
+        } else if (!cs.getHoldExpiresAt().isAfter(now)) {
+            ctx.status(410);
+            renderCheckoutModel(ctx, cs, "expired", "Your 5-minute seat hold has expired",
+                    "Your seat hold timed out before payment was completed. Please return to the seat map and select a seat again.", null);
+            return;
+        }
+
+        try {
+            PriceQuote freshQuote = bookingService.getPricingService()
+                    .quote(cs.getFlightId(), cs.getSeat().getSeatClass(), bookingService.getClock());
+            cs.setQuote(freshQuote);
+        } catch (Exception ignored) {
+        }
+
+        renderCheckoutModel(ctx, cs, "active", null, null, null);
+    }
+
+    public void handlePayPost(Context ctx) {
+        applyNoStoreHeaders(ctx);
+        String clientIp = ctx.ip();
+
+        Optional<Duration> lockout = paymentThrottle.remainingLockout(clientIp);
+        if (lockout.isPresent()) {
+            String waitText = LoginThrottle.formatWait(lockout.get());
+            logger.info("Payment throttled for IP wait={}", waitText);
+            CheckoutSession cs = ctx.sessionAttribute("checkout_session");
+            ctx.status(429);
+            if (cs != null) {
+                renderCheckoutModel(ctx, cs, "active", null,
+                        "Too many payment attempts. Please wait " + waitText + " before trying again.", null);
+            } else {
+                Map<String, Object> model = baseModel(ctx);
+                model.put("error", "Too many payment attempts. Please wait " + waitText + " before trying again.");
+                ctx.render("error.html", model);
+            }
+            return;
+        }
+        paymentThrottle.recordAttempt(clientIp);
+
+        CheckoutSession cs = ctx.sessionAttribute("checkout_session");
+        if (cs == null) {
+            ctx.status(410);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("checkoutState", "expired");
+            model.put("stateHeading", "Your checkout session has expired");
+            model.put("payError", "Please return to Flights to select a seat and start checkout again.");
+            ctx.render("checkout.html", model);
+            return;
+        }
+
+        synchronized (cs) {
+            if (cs.getCompletedBookingRef() != null) {
+                markSessionOwnedBooking(ctx, cs.getCompletedBookingRef());
+                ctx.redirect("/confirmation/" + cs.getCompletedBookingRef());
+                return;
+            }
+            Optional<BookingRecord> existingByIdem = bookingService.findByIdempotencyKey(cs.getIdempotencyKey());
+            if (existingByIdem.isPresent()) {
+                String ref = existingByIdem.get().getBookingReference();
+                cs.setCompletedBookingRef(ref);
+                markSessionOwnedBooking(ctx, ref);
+                ctx.redirect("/confirmation/" + ref);
+                return;
+            }
+
+            String requesterOwner = resolveHoldOwner(ctx);
+            if (!Objects.equals(cs.getHoldOwner(), requesterOwner)) {
+                ctx.status(403);
+                renderCheckoutModel(ctx, cs, "forbidden", "This seat hold belongs to another user or session",
+                        "This seat hold belongs to another user or browser session. Please select your own seat.", null);
+                return;
+            }
+
+            Instant now = seatMapService.getClock().instant();
+            Optional<FlightSeat> liveSeatOpt = seatMapService.findSeatById(cs.getFlightSeatId());
+            if (liveSeatOpt.isEmpty() || liveSeatOpt.get().getStatus() == SeatStatus.BOOKED) {
+                ctx.status(409);
+                renderCheckoutModel(ctx, cs, "taken", "Seat is no longer available",
+                        "This seat has already been booked. Please return to the seat map to choose another seat.", null);
+                return;
+            }
+            FlightSeat liveSeat = liveSeatOpt.get();
+            if (liveSeat.getStatus() == SeatStatus.HELD && liveSeat.getHeldBy() != null
+                    && !Objects.equals(liveSeat.getHeldBy(), requesterOwner)) {
+                ctx.status(403);
+                renderCheckoutModel(ctx, cs, "forbidden", "Seat hold owned by another traveller",
+                        "Another user or session holds this seat right now. Please select another seat.", null);
+                return;
+            }
+            if (liveSeat.getStatus() != SeatStatus.HELD
+                    || (liveSeat.getHeldUntil() != null && !liveSeat.getHeldUntil().isAfter(now))
+                    || !cs.getHoldExpiresAt().isAfter(now)) {
+                ctx.status(410);
+                renderCheckoutModel(ctx, cs, "expired", "Your 5-minute seat hold has expired",
+                        "Your seat hold expired before payment was submitted. Please pick a seat again on the seat map.", null);
+                return;
+            }
+
+            // Recompute server-side fare (completely ignoring any price/total submitted by client)
+            PriceQuote authoritativeQuote;
+            try {
+                authoritativeQuote = bookingService.getPricingService()
+                        .quote(cs.getFlightId(), cs.getSeat().getSeatClass(), bookingService.getClock());
+                cs.setQuote(authoritativeQuote);
+            } catch (Exception e) {
+                logger.error("Pricing recomputation failed at payment: {}", e.getMessage(), e);
+                ctx.status(500);
+                renderCheckoutModel(ctx, cs, "active", null,
+                        "We could not verify the current flight fare right now. Your card was not charged.", null);
+                return;
+            }
+
+            // Read sensitive card inputs into local variables only — NEVER store in session, DB, or logs
+            String rawCardNumber = ctx.formParam("cardNumber");
+            String rawExpiry = ctx.formParam("expiry");
+            String rawCvv = ctx.formParam("cvv");
+
+            PaymentResult paymentResult;
+            try {
+                paymentResult = paymentService.processPayment(
+                        rawCardNumber, rawExpiry, rawCvv, authoritativeQuote.total());
+            } catch (Exception e) {
+                logger.error("Payment gateway error during checkout {}: {}", cs.getIdempotencyKey(), e.getMessage());
+                ctx.status(502);
+                renderCheckoutModel(ctx, cs, "active", null,
+                        "The payment gateway encountered a temporary error. Your card was not charged; please try again.", null);
+                return;
+            }
+
+            if (!paymentResult.isApproved()) {
+                int attempts = cs.incrementFailedAttempts();
+                if (attempts >= CheckoutSession.MAX_PAYMENT_ATTEMPTS) {
+                    seatMapService.deselectSeat(cs.getSeat(), cs.getHoldOwner());
+                    ctx.req().getSession().removeAttribute("checkout_session");
+                    ctx.sessionAttribute("seat_flash_error",
+                            "Payment was declined 3 times, so your seat hold was released. Please choose a seat to start again.");
+                    ctx.redirect("/flights/" + cs.getFlightId() + "/seats");
+                    return;
+                }
+                ctx.status(402);
+                String reason = firstNonBlank(paymentResult.getErrorMessage(), "Card was declined.");
+                renderCheckoutModel(ctx, cs, "active", null,
+                        reason + " Please re-enter your card details (" + cs.getRemainingAttempts()
+                                + " attempt" + (cs.getRemainingAttempts() == 1 ? "" : "s") + " left while your hold is active).",
+                        null);
+                return;
+            }
+
+            BookingContext bc = buildBookingContext(ctx, cs, authoritativeQuote, paymentResult);
+            try {
+                BookingRecord record = bookingService.createBooking(bc);
+                cs.setCompletedBookingRef(record.getBookingReference());
+                markSessionOwnedBooking(ctx, record.getBookingReference());
+                ctx.redirect("/confirmation/" + record.getBookingReference());
+            } catch (SeatUnavailableException e) {
+                refundQuietly(paymentResult.getTransactionReference());
+                ctx.status(409);
+                renderCheckoutModel(ctx, cs, "expired", "Seat hold expired during checkout",
+                        "Your seat hold was lost before booking completed, so any card charge was reversed. Please select a seat again.",
+                        null);
+            } catch (PriceChangedException e) {
+                refundQuietly(paymentResult.getTransactionReference());
+                cs.setQuote(bookingService.getPricingService()
+                        .quote(cs.getFlightId(), cs.getSeat().getSeatClass(), bookingService.getClock()));
+                ctx.status(409);
+                renderCheckoutModel(ctx, cs, "active", null,
+                        "The flight price updated before confirmation. Your previous charge was reversed — review the updated total and submit again.",
+                        null);
+            } catch (Exception e) {
+                logger.error("Booking persistence failed after approved payment {}: {}",
+                        paymentResult.getTransactionReference(), e.getMessage());
+                refundQuietly(paymentResult.getTransactionReference());
+                ctx.status(500);
+                renderCheckoutModel(ctx, cs, "active", null,
+                        "We could not complete your booking due to a temporary database error. Your card charge has been reversed; please try again.",
+                        null);
+            }
         }
     }
 
@@ -555,58 +839,127 @@ public class WebController {
         ctx.render("contact.html", model);
     }
 
-    private BookingContext buildBookingContext(Context ctx, FlightSearchResult flight, FlightSeat targetSeat) {
+    private BookingContext buildBookingContext(Context ctx, CheckoutSession cs, PriceQuote quote, PaymentResult paymentResult) {
         BookingContext bc = new BookingContext();
-        bc.setFlightId(flight.getFlightId());
-        bc.setFlightNumber(flight.getFlightNumber());
-
-        String origin = ctx.formParam("origin");
-        bc.setOrigin(origin != null && !origin.isBlank() ? origin : "Johannesburg (JNB)");
-
-        String destination = ctx.formParam("destination");
-        bc.setDestination(destination != null && !destination.isBlank() ? destination : "Cape Town (CPT)");
-
-        String departureDate = ctx.formParam("departureDate");
-        bc.setDepartureDate(departureDate != null && !departureDate.isBlank() ? departureDate : "2026-11-02");
-
-        bc.setDepartureTime(flight.getDepartureTime());
-        bc.setArrivalTime(flight.getArrivalTime());
-
-        bc.setPassengerName(ctx.formParam("passengerName"));
-        bc.setPassengerEmail(ctx.formParam("passengerEmail"));
-        String rawPassport = ctx.formParam("passportNumber");
-        bc.setPassportNumber(normalizePassport(rawPassport));
-        String rawDob = ctx.formParam("dateOfBirth");
-        if (rawDob == null || rawDob.isBlank()) {
-            throw new ValidationException("dateOfBirth", "Passenger date of birth is required.");
-        }
-        try {
-            LocalDate dob = LocalDate.parse(rawDob.trim());
-            if (!dob.isBefore(LocalDate.now())) {
-                throw new ValidationException("dateOfBirth", "Passenger date of birth must be in the past.");
-            }
-            bc.setDateOfBirth(dob);
-        } catch (DateTimeParseException e) {
-            throw new ValidationException("dateOfBirth", "Please enter a valid date of birth (YYYY-MM-DD).");
-        }
-        bc.setSelectedSeats(List.of(targetSeat));
-
-        BigDecimal basePrice = flight.getBasePrice();
-        PriceQuote quote = bookingService.getPricingService().quote(flight.getFlightId(), targetSeat.getSeatClass());
-
-        bc.setBaseFare(basePrice);
+        bc.setFlightId(cs.getFlightId());
+        bc.setFlightNumber(cs.getFlightNumber());
+        bc.setOrigin(cs.getOrigin());
+        bc.setDestination(cs.getDestination());
+        bc.setDepartureDate(cs.getDepartureDate());
+        bc.setDepartureTime(cs.getDepartureTime());
+        bc.setArrivalTime(cs.getArrivalTime());
+        bc.setDepartureInstant(cs.getDepartureInstant());
+        bc.setArrivalInstant(cs.getArrivalInstant());
+        bc.setPassengerName(cs.getPassengerName());
+        bc.setPassengerEmail(cs.getPassengerEmail());
+        bc.setPassportNumber(cs.getPassportNumber());
+        bc.setDateOfBirth(cs.getDateOfBirth());
+        bc.setSelectedSeats(List.of(cs.getSeat()));
+        bc.setBaseFare(quote.baseFare());
         bc.setPriceQuotes(List.of(quote));
         bc.setTotalPrice(quote.total());
-        bc.setPaymentResult(PaymentResult.approved(
-                "WEB-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT),
-                "CARD",
-                "0000"));
+        bc.setPaymentResult(paymentResult);
+        bc.setIdempotencyKey(cs.getIdempotencyKey());
+        bc.setHoldOwner(cs.getHoldOwner());
 
         User currentUser = ctx.sessionAttribute("user");
         if (currentUser != null) {
             bc.setCurrentUser(currentUser);
         }
         return bc;
+    }
+
+    private void renderCheckoutModel(Context ctx, CheckoutSession cs, String state,
+                                     String stateHeading, String payError, String errorField) {
+        Map<String, Object> model = baseModel(ctx);
+        model.put("checkoutSession", cs);
+        model.put("checkoutState", state);
+        if (stateHeading != null) model.put("stateHeading", stateHeading);
+        if (payError != null) model.put("payError", payError);
+        if (errorField != null) model.put("errorField", errorField);
+
+        PriceQuote q = cs.getQuote();
+        BigDecimal classUpgrade = q.classFare().subtract(q.baseFare());
+        model.put("baseFareFormatted", formatRand(q.baseFare()));
+        model.put("hasClassPremium", classUpgrade.compareTo(BigDecimal.ZERO) > 0);
+        model.put("classUpgradeFormatted", formatSignedRand(classUpgrade));
+        model.put("demandAdjFormatted", formatSignedRand(q.demandAdjustment()));
+        model.put("timingAdjFormatted", formatSignedRand(q.timingAdjustment()));
+        model.put("totalFormatted", formatRand(q.total()));
+        model.put("vatFormatted", formatRand(q.vatIncluded()));
+
+        Instant now = seatMapService.getClock().instant();
+        long remSecs = Math.max(0L, Duration.between(now, cs.getHoldExpiresAt()).toSeconds());
+        model.put("remainingHoldSeconds", remSecs);
+        model.put("remainingHoldFormatted", String.format("%02d:%02d", remSecs / 60, remSecs % 60));
+        model.put("holdExpiresEpochMs", cs.getHoldExpiresAt().toEpochMilli());
+        ctx.render("checkout.html", model);
+    }
+
+    private String resolveHoldOwner(Context ctx) {
+        User user = ctx.sessionAttribute("user");
+        if (user != null && user.getUserId() > 0) {
+            return "user:" + user.getUserId();
+        }
+        return "session:" + ctx.req().getSession(true).getId();
+    }
+
+    private void markSessionOwnedBooking(Context ctx, String bookingRef) {
+        if (bookingRef == null || bookingRef.isBlank()) return;
+        @SuppressWarnings("unchecked")
+        Set<String> owned = ctx.sessionAttribute("owned_booking_refs");
+        if (owned == null) {
+            owned = ConcurrentHashMap.newKeySet();
+            ctx.sessionAttribute("owned_booking_refs", owned);
+        }
+        owned.add(bookingRef.trim().toUpperCase(Locale.ROOT));
+    }
+
+    private static void applyNoStoreHeaders(Context ctx) {
+        ctx.header("Cache-Control", "no-store, no-cache, must-revalidate");
+        ctx.header("Pragma", "no-cache");
+        ctx.header("Expires", "0");
+    }
+
+    private void refundQuietly(String txnRef) {
+        if (txnRef == null || txnRef.isBlank()) return;
+        try {
+            paymentService.refund(txnRef);
+        } catch (Exception ex) {
+            logger.error("Compensating refund failed for {}: {}", txnRef, ex.getMessage());
+        }
+    }
+
+    private LocalDate parseAndValidateDob(String rawDob) {
+        if (rawDob == null || rawDob.isBlank()) {
+            throw new ValidationException("dateOfBirth", "Passenger date of birth is required.");
+        }
+        try {
+            LocalDate dob = LocalDate.parse(rawDob.trim());
+            ValidationUtil.validateDateOfBirth(dob);
+            return dob;
+        } catch (DateTimeParseException e) {
+            throw new ValidationException("dateOfBirth", "Please enter a valid date of birth (YYYY-MM-DD).");
+        }
+    }
+
+    private static String firstNonBlank(String candidate, String fallback) {
+        return (candidate != null && !candidate.isBlank()) ? candidate.trim() : fallback;
+    }
+
+    private static String formatRand(BigDecimal amount) {
+        BigDecimal val = amount != null ? amount : BigDecimal.ZERO;
+        DecimalFormatSymbols syms = DecimalFormatSymbols.getInstance(Locale.US);
+        DecimalFormat df = new DecimalFormat("#,##0.00", syms);
+        return "R " + df.format(val);
+    }
+
+    private static String formatSignedRand(BigDecimal amount) {
+        BigDecimal val = amount != null ? amount : BigDecimal.ZERO;
+        if (val.compareTo(BigDecimal.ZERO) < 0) {
+            return "-" + formatRand(val.abs());
+        }
+        return "+" + formatRand(val);
     }
 
     private static String normalizePassport(String rawPassport) {

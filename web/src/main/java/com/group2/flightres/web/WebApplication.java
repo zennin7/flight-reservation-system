@@ -6,9 +6,12 @@ import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.EmailServiceFactory;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.service.LoginThrottle;
+import com.group2.flightres.service.PaymentService;
+import com.group2.flightres.service.PaymentThrottle;
 import com.group2.flightres.service.RegistrationService;
 import com.group2.flightres.service.RegistrationThrottle;
 import com.group2.flightres.service.SeatMapService;
+import com.group2.flightres.service.SimulatedPaymentGateway;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinThymeleaf;
@@ -54,9 +57,20 @@ public class WebApplication {
                           BookingService bookingService, AuthService authService,
                           LoginThrottle loginThrottle, RegistrationService registrationService,
                           RegistrationThrottle registrationThrottle) {
+        this(flightService, seatMapService, bookingService, authService, loginThrottle,
+                registrationService, registrationThrottle,
+                new SimulatedPaymentGateway(), new PaymentThrottle());
+    }
+
+    public WebApplication(FlightService flightService, SeatMapService seatMapService,
+                          BookingService bookingService, AuthService authService,
+                          LoginThrottle loginThrottle, RegistrationService registrationService,
+                          RegistrationThrottle registrationThrottle,
+                          PaymentService paymentService, PaymentThrottle paymentThrottle) {
         this.authService = authService;
         this.controller = new WebController(flightService, seatMapService, bookingService, authService,
-                loginThrottle, registrationService, registrationThrottle);
+                loginThrottle, registrationService, registrationThrottle,
+                paymentService, paymentThrottle);
 
         // Configure Thymeleaf
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
@@ -155,8 +169,10 @@ public class WebApplication {
         // Seat Selection & Checkout
         app.get("/flights/{id}/seats", controller::handleSeats);
 
-        // Book / Confirm Booking
+        // Book / Checkout & Pay
         app.post("/book", controller::handleBook);
+        app.get("/checkout", controller::handleCheckoutGet);
+        app.post("/pay", controller::handlePayPost);
 
         // Booking Confirmation & Lookup
         app.get("/confirmation", controller::handleConfirmationLookup);

@@ -39,6 +39,13 @@ public interface BookingDao {
     }
 
     /**
+     * Looks up a booking by its payment idempotency key.
+     */
+    default Optional<BookingRecord> findByIdempotencyKey(String idempotencyKey) {
+        return Optional.empty();
+    }
+
+    /**
      * Retrieves all bookings for a user.
      */
     List<BookingRecord> findByUserId(long userId);

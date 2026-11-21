@@ -33,13 +33,16 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BookingDaoImpl implements BookingDao {
 
     private static final Logger logger = LoggerFactory.getLogger(BookingDaoImpl.class);
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String PNR_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final Map<String, Boolean> COLUMN_EXISTS_CACHE = new ConcurrentHashMap<>();
 
     private static final String FIND_USER_BY_EMAIL = "SELECT user_id FROM users WHERE email = ?";
     private static final String INSERT_CUSTOMER_USER = """
@@ -124,10 +127,24 @@ public class BookingDaoImpl implements BookingDao {
             throw new IllegalArgumentException("BookingContext cannot be null");
         }
 
+        String idemKey = (context.getIdempotencyKey() != null && !context.getIdempotencyKey().isBlank())
+                ? context.getIdempotencyKey().trim()
+                : null;
+
         Connection conn = null;
         try {
             conn = DatabaseConfig.getDataSource().getConnection();
             conn.setAutoCommit(false);
+
+            if (idemKey != null) {
+                Optional<BookingRecord> existing = findByIdempotencyKey(conn, idemKey);
+                if (existing.isPresent()) {
+                    conn.rollback();
+                    logger.info("Idempotent replay detected for key {}; returning booking {}",
+                            idemKey, existing.get().getBookingReference());
+                    return existing.get();
+                }
+            }
 
             BookingRecord record = createBookingInTransaction(conn, context);
 
@@ -139,6 +156,14 @@ public class BookingDaoImpl implements BookingDao {
         } catch (SQLException e) {
             if (conn != null) {
                 try { conn.rollback(); } catch (SQLException ex) { logger.error("Rollback failed", ex); }
+            }
+            if ("23505".equals(e.getSQLState()) && idemKey != null) {
+                Optional<BookingRecord> existing = findByIdempotencyKey(idemKey);
+                if (existing.isPresent()) {
+                    logger.info("Concurrent idempotency conflict resolved to existing booking {}",
+                            existing.get().getBookingReference());
+                    return existing.get();
+                }
             }
             logger.error("Failed to execute booking transaction: {}", e.getMessage(), e);
             throw new RuntimeException("Booking transaction failed: " + e.getMessage(), e);
@@ -157,6 +182,16 @@ public class BookingDaoImpl implements BookingDao {
     public BookingRecord createBookingInTransaction(Connection conn, BookingContext context) throws SQLException {
         if (context == null) {
             throw new IllegalArgumentException("BookingContext cannot be null");
+        }
+
+        String idemKey = (context.getIdempotencyKey() != null && !context.getIdempotencyKey().isBlank())
+                ? context.getIdempotencyKey().trim()
+                : null;
+        if (idemKey != null) {
+            Optional<BookingRecord> existing = findByIdempotencyKey(conn, idemKey);
+            if (existing.isPresent()) {
+                return existing.get();
+            }
         }
 
         long userId = resolveUserId(conn, context);
@@ -210,17 +245,38 @@ public class BookingDaoImpl implements BookingDao {
             throw new IllegalStateException("Passenger date of birth is required to create a booking.");
         }
 
+        String holdOwner = (context.getHoldOwner() != null && !context.getHoldOwner().isBlank())
+                ? context.getHoldOwner().trim()
+                : null;
+        boolean hasHeldBy = hasColumn(conn, "flight_seats", "held_by");
+
         for (FlightSeat seat : seats) {
-            // Optimistic check: must be HELD or AVAILABLE
-            try (PreparedStatement stmt = conn.prepareStatement(BOOK_FLIGHT_SEAT_QUERY)) {
-                stmt.setLong(1, seat.getFlightSeatId());
-                int updated = stmt.executeUpdate();
-                if (updated == 0) {
-                    logger.warn("Transaction rollback: Seat {} ({}) is no longer available",
-                            seat.getSeatLabel(), seat.getFlightSeatId());
-                    conn.rollback();
-                    throw new SeatUnavailableException("Seat " + seat.getSeatLabel() + " is no longer available.");
+            int updated;
+            if (holdOwner != null && hasHeldBy) {
+                String sql = """
+                        UPDATE flight_seats
+                        SET status = 'BOOKED'::seat_status, held_until = NULL, held_by = NULL
+                        WHERE flight_seat_id = ? AND status = 'HELD' AND held_by = ? AND held_until >= NOW()
+                        """;
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setLong(1, seat.getFlightSeatId());
+                    stmt.setString(2, holdOwner);
+                    updated = stmt.executeUpdate();
                 }
+            } else {
+                String sql = hasHeldBy
+                        ? "UPDATE flight_seats SET status = 'BOOKED'::seat_status, held_until = NULL, held_by = NULL WHERE flight_seat_id = ? AND (status = 'HELD' OR status = 'AVAILABLE')"
+                        : BOOK_FLIGHT_SEAT_QUERY;
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setLong(1, seat.getFlightSeatId());
+                    updated = stmt.executeUpdate();
+                }
+            }
+            if (updated == 0) {
+                logger.warn("Transaction rollback: Seat {} ({}) is no longer available",
+                        seat.getSeatLabel(), seat.getFlightSeatId());
+                conn.rollback();
+                throw new SeatUnavailableException("Seat " + seat.getSeatLabel() + " is no longer available.");
             }
 
             // Insert into booking_seats
@@ -236,24 +292,25 @@ public class BookingDaoImpl implements BookingDao {
         }
     }
 
-    private static volatile Boolean paymentsHasCardMeta = null;
-
-    private boolean checkPaymentsHasCardMeta(Connection conn) {
-        if (paymentsHasCardMeta != null) {
-            return paymentsHasCardMeta;
-        }
+    private static boolean hasColumn(Connection conn, String table, String column) {
         try {
             var meta = conn.getMetaData();
-            try (ResultSet rs = meta.getColumns(null, null, "payments", "card_brand")) {
-                paymentsHasCardMeta = rs.next();
-                return paymentsHasCardMeta;
+            String url = meta.getURL();
+            String cacheKey = (url != null ? url : "") + "|" + table + "|" + column;
+            if (Boolean.TRUE.equals(COLUMN_EXISTS_CACHE.get(cacheKey))) {
+                return true;
             }
-        } catch (SQLException e) {
-            return false;
+            try (ResultSet rs = meta.getColumns(null, null, table, column)) {
+                if (rs.next()) {
+                    COLUMN_EXISTS_CACHE.put(cacheKey, Boolean.TRUE);
+                    return true;
+                }
+            }
+        } catch (SQLException ignored) {
         }
+        return false;
     }
 
-    // TODO: Remove column-exists check after migration_payments_card_meta.sql is applied to team DB
     private void persistPayment(Connection conn, long bookingId, String pnr, BookingContext context)
             throws SQLException {
         PaymentResult payResult = context.getPaymentResult();
@@ -273,18 +330,35 @@ public class BookingDaoImpl implements BookingDao {
             throw new IllegalStateException("Payment card last 4 digits are required to persist payment.");
         }
 
-        boolean hasCardMeta = checkPaymentsHasCardMeta(conn);
-        String sql = hasCardMeta
-                ? "INSERT INTO payments (booking_id, amount, method, status, transaction_ref, card_brand, card_last4) VALUES (?, ?, 'CARD', 'COMPLETED'::payment_status, ?, ?, ?)"
-                : "INSERT INTO payments (booking_id, amount, method, status, transaction_ref) VALUES (?, ?, 'CARD', 'COMPLETED'::payment_status, ?)";
+        boolean hasCardMeta = hasColumn(conn, "payments", "card_brand");
+        String idemKey = (context.getIdempotencyKey() != null && !context.getIdempotencyKey().isBlank())
+                ? context.getIdempotencyKey().trim()
+                : null;
+        boolean hasIdempotencyKey = idemKey != null && hasColumn(conn, "payments", "idempotency_key");
 
+        String sql;
+        if (hasCardMeta && hasIdempotencyKey) {
+            sql = "INSERT INTO payments (booking_id, amount, method, status, transaction_ref, card_brand, card_last4, idempotency_key) VALUES (?, ?, 'CARD', 'COMPLETED'::payment_status, ?, ?, ?, ?)";
+        } else if (hasCardMeta) {
+            sql = "INSERT INTO payments (booking_id, amount, method, status, transaction_ref, card_brand, card_last4) VALUES (?, ?, 'CARD', 'COMPLETED'::payment_status, ?, ?, ?)";
+        } else if (hasIdempotencyKey) {
+            sql = "INSERT INTO payments (booking_id, amount, method, status, transaction_ref, idempotency_key) VALUES (?, ?, 'CARD', 'COMPLETED'::payment_status, ?, ?)";
+        } else {
+            sql = INSERT_PAYMENT_QUERY;
+        }
+
+        BigDecimal amount = context.getTotalPrice() != null ? context.getTotalPrice() : BigDecimal.ZERO;
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, bookingId);
-            stmt.setBigDecimal(2, context.getTotalPrice() != null ? context.getTotalPrice() : BigDecimal.ZERO);
-            stmt.setString(3, txnRef);
+            int idx = 1;
+            stmt.setLong(idx++, bookingId);
+            stmt.setBigDecimal(idx++, amount);
+            stmt.setString(idx++, txnRef);
             if (hasCardMeta) {
-                stmt.setString(4, brand);
-                stmt.setString(5, last4);
+                stmt.setString(idx++, brand);
+                stmt.setString(idx++, last4);
+            }
+            if (hasIdempotencyKey) {
+                stmt.setString(idx, idemKey);
             }
             stmt.executeUpdate();
         }
@@ -347,6 +421,36 @@ public class BookingDaoImpl implements BookingDao {
         String ref = bookingRef.trim().toUpperCase(Locale.ROOT);
         try (PreparedStatement stmt = conn.prepareStatement(FIND_BY_REF_QUERY)) {
             stmt.setString(1, ref);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRecord(rs));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<BookingRecord> findByIdempotencyKey(String idempotencyKey) {
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            return Optional.empty();
+        }
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
+            return findByIdempotencyKey(conn, idempotencyKey.trim());
+        } catch (SQLException e) {
+            logger.error("Failed to query booking by idempotency key: {}", e.getMessage(), e);
+            return Optional.empty();
+        }
+    }
+
+    private Optional<BookingRecord> findByIdempotencyKey(Connection conn, String idempotencyKey) throws SQLException {
+        if (!hasColumn(conn, "payments", "idempotency_key")) {
+            return Optional.empty();
+        }
+        String sql = BOOKING_SELECT_FROM
+                + " JOIN payments p ON p.booking_id = b.booking_id WHERE p.idempotency_key = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, idempotencyKey);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(mapRecord(rs));
