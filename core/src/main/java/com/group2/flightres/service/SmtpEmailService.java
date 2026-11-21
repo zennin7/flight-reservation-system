@@ -164,6 +164,7 @@ public class SmtpEmailService implements EmailService, AutoCloseable {
         }
 
         message.setContent(alternative);
+        message.saveChanges();
         return message;
     }
 
