@@ -9,12 +9,14 @@ import com.group2.flightres.config.SeatHoldPolicy;
 import com.group2.flightres.exception.AuthenticationException;
 import com.group2.flightres.exception.DuplicateEmailException;
 import com.group2.flightres.exception.PriceChangedException;
+import com.group2.flightres.exception.RefundFailedException;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.exception.ValidationException;
 import com.group2.flightres.model.*;
 import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BoardingPassVerificationService;
 import com.group2.flightres.service.BookingService;
+import com.group2.flightres.service.CancellationPolicy;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.service.LoginThrottle;
 import com.group2.flightres.service.PaymentResult;
@@ -606,8 +608,14 @@ public class WebController {
 
         Map<String, Object> model = baseModel(ctx);
         BookingRecord record = recordOpt.get();
+        boolean owner = isBookingOwner(ctx, record);
+        boolean isCancelled = isCancelledStatus(record.getStatus());
+        boolean canCancel = owner && !isCancelled
+                && bookingService.getCancellationPolicy().evaluate(record).allowed();
         model.put("record", record);
-        model.put("isBookingOwner", isBookingOwner(ctx, record));
+        model.put("isBookingOwner", owner);
+        model.put("isCancelled", isCancelled);
+        model.put("canCancel", canCancel);
         ctx.render("confirmation.html", model);
     }
 
@@ -673,6 +681,10 @@ public class WebController {
             return;
         }
         BookingRecord record = recordOpt.get();
+        if (isCancelledStatus(record.getStatus())) {
+            ctx.status(410).result("This booking has been cancelled; the boarding pass PDF is no longer available.");
+            return;
+        }
         String verifyUrl = verificationService.buildVerificationUrl(resolveBaseUrl(ctx), record);
         String safeRef = record.getBookingReference().replaceAll("[^A-Za-z0-9_-]", "");
         Path tmpFile = null;
@@ -743,14 +755,198 @@ public class WebController {
                 && owned.contains(record.getBookingReference().trim().toUpperCase(Locale.ROOT));
     }
 
+    public void handleMyBookingsGet(Context ctx) {
+        User user = ctx.sessionAttribute("user");
+        if (user == null) {
+            ctx.redirect("/login?next=/my-bookings");
+            return;
+        }
+
+        Map<String, Object> model = baseModel(ctx);
+        String flashSuccess = ctx.sessionAttribute("flash_success");
+        if (flashSuccess != null) {
+            ctx.req().getSession().removeAttribute("flash_success");
+            model.put("bookingsFlashSuccess", flashSuccess);
+        }
+
+        List<MyBookingCard> upcoming = new ArrayList<>();
+        List<MyBookingCard> past = new ArrayList<>();
+        List<MyBookingCard> cancelled = new ArrayList<>();
+        String bookingsError = null;
+        int totalCount = 0;
+
+        try {
+            List<BookingSummary> summaries = bookingService.listBookingsForUser(user.getUserId());
+            CancellationPolicy policy = bookingService.getCancellationPolicy();
+            for (BookingSummary s : summaries) {
+                totalCount++;
+                String totalFmt = formatRand(s.getTotalPaid());
+                boolean isCancelled = isCancelledStatus(s.getStatus()) || isCancelledStatus(s.getStoredStatus());
+                if (isCancelled) {
+                    cancelled.add(new MyBookingCard(s, totalFmt, false, false));
+                } else if ("UPCOMING".equalsIgnoreCase(s.getStatus())) {
+                    boolean allowed = policy.evaluate(s.getDepartureInstant(), s.getStoredStatus(), s.getTotalPaid()).allowed();
+                    upcoming.add(new MyBookingCard(s, totalFmt, allowed, true));
+                } else {
+                    past.add(new MyBookingCard(s, totalFmt, false, true));
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Failed to list bookings for user {}: {}", user.getUserId(), e.getMessage());
+            bookingsError = "We could not load your bookings right now. Please try again in a moment.";
+        }
+
+        model.put("upcomingBookings", upcoming);
+        model.put("pastBookings", past);
+        model.put("cancelledBookings", cancelled);
+        model.put("totalCount", totalCount);
+        if (bookingsError != null) {
+            model.put("bookingsError", bookingsError);
+        }
+        ctx.render("my-bookings.html", model);
+    }
+
+    public void handleCancelGet(Context ctx) {
+        String rawRef = ctx.pathParam("reference");
+        String safeRef = sanitizeRef(rawRef);
+        User user = ctx.sessionAttribute("user");
+        if (user == null) {
+            ctx.redirect("/login?next=" + (safeRef.isEmpty() ? "/my-bookings" : "/bookings/" + safeRef + "/cancel"));
+            return;
+        }
+        try {
+            BookingRecord record = bookingService.getBookingForUser(user.getUserId(), rawRef);
+            renderCancelModel(ctx, record, null, null);
+        } catch (NoSuchElementException | IllegalArgumentException e) {
+            ctx.status(404);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("error", "No booking found for reference code: " + rawRef);
+            ctx.render("error.html", model);
+        } catch (SecurityException e) {
+            ctx.status(403);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("error", "You do not have permission to view or cancel this booking.");
+            ctx.render("error.html", model);
+        }
+    }
+
+    public void handleCancelPost(Context ctx) {
+        String rawRef = ctx.pathParam("reference");
+        User user = ctx.sessionAttribute("user");
+        if (user == null) {
+            ctx.redirect("/login?next=/my-bookings");
+            return;
+        }
+        try {
+            CancelResult result = bookingService.cancelBookingForUser(user.getUserId(), rawRef, paymentService);
+            if (result.alreadyCancelled()) {
+                BookingRecord record = bookingService.getBookingForUser(user.getUserId(), rawRef);
+                renderCancelModel(ctx, record, null, "This booking is already cancelled. No further refund or changes were made.");
+                return;
+            }
+            String refundMsg = result.refundReference() != null && !result.refundReference().isBlank()
+                    ? " Refund " + formatRand(result.refundAmount()) + " (" + result.refundReference() + ") processed."
+                    : " Refund " + formatRand(result.refundAmount()) + " processed.";
+            ctx.sessionAttribute("flash_success",
+                    "Booking " + result.bookingReference() + " cancelled." + refundMsg);
+            ctx.redirect("/my-bookings");
+        } catch (NoSuchElementException | IllegalArgumentException e) {
+            ctx.status(404);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("error", "No booking found for reference code: " + rawRef);
+            ctx.render("error.html", model);
+        } catch (SecurityException e) {
+            ctx.status(403);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("error", "You do not have permission to cancel this booking.");
+            ctx.render("error.html", model);
+        } catch (RefundFailedException e) {
+            logger.error("Refund failed during cancellation for ref={} user={}: {}", rawRef, user.getUserId(), e.getMessage());
+            BookingRecord record = bookingService.getBookingForUser(user.getUserId(), rawRef);
+            ctx.status(502);
+            renderCancelModel(ctx, record,
+                    "The refund could not be completed right now, so your booking and seat remain active. Please try again shortly.",
+                    null);
+        } catch (IllegalStateException e) {
+            BookingRecord record = bookingService.getBookingForUser(user.getUserId(), rawRef);
+            ctx.status(409);
+            renderCancelModel(ctx, record, e.getMessage(), null);
+        } catch (Exception e) {
+            logger.error("Cancellation/refund failed for ref={} user={}: {}", rawRef, user.getUserId(), e.getMessage());
+            BookingRecord record = bookingService.getBookingForUser(user.getUserId(), rawRef);
+            ctx.status(502);
+            renderCancelModel(ctx, record,
+                    "The refund could not be completed right now, so your booking and seat remain active. Please try again shortly.",
+                    null);
+        }
+    }
+
+    private void renderCancelModel(Context ctx, BookingRecord record, String cancelError, String cancelNotice) {
+        Map<String, Object> model = baseModel(ctx);
+        CancellationPolicy.Decision decision = bookingService.getCancellationPolicy().evaluate(record);
+        model.put("record", record);
+        model.put("canConfirm", decision.allowed());
+        model.put("alreadyCancelled", decision.alreadyCancelled());
+        model.put("cancelBlocked", !decision.allowed() && !decision.alreadyCancelled());
+        model.put("policyReason", decision.reason());
+        model.put("refundFormatted", formatRand(decision.allowed() ? decision.refundAmount() : record.getTotalAmount()));
+        if (cancelError != null) model.put("cancelError", cancelError);
+        if (cancelNotice != null) model.put("cancelNotice", cancelNotice);
+        ctx.render("cancel.html", model);
+    }
+
+    public static final class MyBookingCard {
+        private final BookingSummary summary;
+        private final String totalFormatted;
+        private final boolean cancellable;
+        private final boolean showPdf;
+
+        public MyBookingCard(BookingSummary summary, String totalFormatted, boolean cancellable, boolean showPdf) {
+            this.summary = summary;
+            this.totalFormatted = totalFormatted;
+            this.cancellable = cancellable;
+            this.showPdf = showPdf;
+        }
+
+        public BookingSummary getSummary() { return summary; }
+        public String getTotalFormatted() { return totalFormatted; }
+        public boolean isCancellable() { return cancellable; }
+        public boolean isShowPdf() { return showPdf; }
+    }
+
+    private static boolean isCancelledStatus(String status) {
+        if (status == null) return false;
+        String norm = status.trim().toUpperCase(Locale.ROOT);
+        return "CANCELLED".equals(norm) || "REFUNDED".equals(norm);
+    }
+
+    private static String sanitizeRef(String raw) {
+        return raw == null ? "" : raw.trim().toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9_-]", "");
+    }
+
+    private static String sanitizeLocalNext(String rawNext) {
+        if (rawNext == null) return null;
+        String trimmed = rawNext.trim();
+        if (trimmed.isEmpty() || !trimmed.startsWith("/") || trimmed.startsWith("//")
+                || trimmed.contains("\\") || trimmed.indexOf('\r') >= 0 || trimmed.indexOf('\n') >= 0) {
+            return null;
+        }
+        return trimmed;
+    }
+
     public void handleLoginGet(Context ctx) {
         Map<String, Object> model = baseModel(ctx);
+        String nextUrl = sanitizeLocalNext(ctx.queryParam("next"));
+        if (nextUrl != null) {
+            model.put("nextUrl", nextUrl);
+        }
         ctx.render("login.html", model);
     }
 
     public void handleLoginPost(Context ctx) {
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
+        String nextUrl = sanitizeLocalNext(ctx.formParam("next"));
         String clientIp = ctx.ip();
 
         logger.info("Web login attempt for user '{}'", AuthService.maskIdentifier(username));
@@ -763,6 +959,7 @@ public class WebController {
             Map<String, Object> model = baseModel(ctx);
             model.put("loginError", "Too many failed login attempts. Please wait " + waitText + " before trying again.");
             model.put("username", username);
+            if (nextUrl != null) model.put("nextUrl", nextUrl);
             ctx.render("login.html", model);
             return;
         }
@@ -777,7 +974,7 @@ public class WebController {
             }
             ctx.sessionAttribute("user", user);
             logger.info("Web login successful for user '{}' (Role: {})", user.getUsername(), user.getRole());
-            ctx.redirect("/");
+            ctx.redirect(nextUrl != null ? nextUrl : "/");
         } catch (AuthenticationException e) {
             loginThrottle.recordFailure(username, clientIp);
             Optional<Duration> triggeredLockout = loginThrottle.remainingLockout(username, clientIp);
@@ -791,6 +988,7 @@ public class WebController {
                 model.put("loginError", e.getMessage());
             }
             model.put("username", username);
+            if (nextUrl != null) model.put("nextUrl", nextUrl);
             ctx.render("login.html", model);
         }
     }

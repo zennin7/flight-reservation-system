@@ -187,13 +187,16 @@ public class WebApplication {
         app.get("/checkout", controller::handleCheckoutGet);
         app.post("/pay", controller::handlePayPost);
 
-        // Booking Confirmation, QR & Public Verify
+        // Booking Confirmation, QR, Public Verify, My Bookings & Cancel
         app.get("/confirmation", controller::handleConfirmationLookup);
         app.get("/confirmation/{reference}", controller::handleConfirmation);
         app.get("/confirmation/{reference}/barcode.png", controller::handleConfirmationBarcode);
         app.get("/confirmation/{reference}/qr.png", controller::handleConfirmationQr);
         app.get("/confirmation/{reference}/boarding-pass.pdf", controller::handleConfirmationPdf);
         app.get("/verify/{pnr}", controller::handleVerifyGet);
+        app.get("/my-bookings", controller::handleMyBookingsGet);
+        app.get("/bookings/{reference}/cancel", controller::handleCancelGet);
+        app.post("/bookings/{reference}/cancel", controller::handleCancelPost);
 
         // Authentication & Registration
         app.get("/login", controller::handleLoginGet);

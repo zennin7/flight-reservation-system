@@ -2,13 +2,17 @@ package com.group2.flightres.dao.impl;
 
 import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.dao.BookingDao;
+import com.group2.flightres.exception.RefundFailedException;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.BookingSummary;
+import com.group2.flightres.model.CancelResult;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
+import com.group2.flightres.service.CancellationPolicy;
 import com.group2.flightres.service.PaymentResult;
+import com.group2.flightres.service.PaymentService;
 import com.group2.flightres.util.FlightTimes;
 import com.group2.flightres.util.PasswordUtil;
 import org.slf4j.Logger;
@@ -34,6 +38,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -591,6 +596,177 @@ public class BookingDaoImpl implements BookingDao {
         ordered.addAll(past);
         ordered.addAll(cancelled);
         return ordered;
+    }
+
+    @Override
+    public CancelResult cancelBookingForUser(long userId,
+                                             String bookingReference,
+                                             CancellationPolicy policy,
+                                             PaymentService paymentService) {
+        if (bookingReference == null || bookingReference.isBlank()) {
+            throw new IllegalArgumentException("Booking reference must not be null or blank");
+        }
+        if (policy == null) {
+            throw new IllegalArgumentException("CancellationPolicy must not be null");
+        }
+        if (paymentService == null) {
+            throw new IllegalArgumentException("PaymentService must not be null");
+        }
+
+        Connection conn = null;
+        try {
+            conn = DatabaseConfig.getDataSource().getConnection();
+            conn.setAutoCommit(false);
+
+            CancelResult result = cancelBookingInTransaction(conn, userId, bookingReference, policy, paymentService);
+            conn.commit();
+            return result;
+        } catch (RuntimeException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { logger.error("Cancel rollback failed", ex); }
+            }
+            throw e;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { logger.error("Cancel rollback failed", ex); }
+            }
+            throw new RuntimeException("Cancellation transaction failed: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+            }
+        }
+    }
+
+    public CancelResult cancelBookingInTransaction(Connection conn,
+                                                   long userId,
+                                                   String bookingReference,
+                                                   CancellationPolicy policy,
+                                                   PaymentService paymentService) throws SQLException {
+        String ref = bookingReference.trim().toUpperCase(Locale.ROOT);
+        boolean hasRefundRef = hasColumn(conn, "payments", "refund_ref");
+        boolean hasRefundedAt = hasColumn(conn, "payments", "refunded_at");
+        boolean hasHeldBy = hasColumn(conn, "flight_seats", "held_by");
+        boolean hasSeatActive = hasColumn(conn, "booking_seats", "is_active");
+
+        String lockSql = hasRefundRef
+                ? """
+                  SELECT b.booking_id, b.booking_ref, b.user_id, b.status AS booking_status, b.total_amount,
+                         f.departure_time, p.transaction_ref, p.refund_ref
+                  FROM bookings b
+                  JOIN flights f ON f.flight_id = b.flight_id
+                  LEFT JOIN payments p ON p.booking_id = b.booking_id
+                  WHERE b.booking_ref = ?
+                  ORDER BY p.payment_id DESC NULLS LAST
+                  FOR UPDATE OF b
+                  """
+                : """
+                  SELECT b.booking_id, b.booking_ref, b.user_id, b.status AS booking_status, b.total_amount,
+                         f.departure_time, p.transaction_ref, NULL::varchar AS refund_ref
+                  FROM bookings b
+                  JOIN flights f ON f.flight_id = b.flight_id
+                  LEFT JOIN payments p ON p.booking_id = b.booking_id
+                  WHERE b.booking_ref = ?
+                  ORDER BY p.payment_id DESC NULLS LAST
+                  FOR UPDATE OF b
+                  """;
+
+        long bookingId;
+        long ownerUserId;
+        String bookingStatus;
+        BigDecimal totalAmount;
+        Instant departureInstant;
+        String txnRef;
+        String existingRefundRef;
+
+        try (PreparedStatement stmt = conn.prepareStatement(lockSql)) {
+            stmt.setString(1, ref);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    throw new NoSuchElementException("Booking not found: " + ref);
+                }
+                bookingId = rs.getLong("booking_id");
+                ownerUserId = rs.getLong("user_id");
+                bookingStatus = rs.getString("booking_status");
+                totalAmount = rs.getBigDecimal("total_amount");
+                Timestamp depTs = rs.getTimestamp("departure_time");
+                departureInstant = depTs != null ? depTs.toInstant() : null;
+                txnRef = rs.getString("transaction_ref");
+                existingRefundRef = rs.getString("refund_ref");
+            }
+        }
+
+        if (ownerUserId != userId) {
+            logger.warn("Security violation: user {} attempted to cancel booking {} owned by user {}",
+                    userId, ref, ownerUserId);
+            throw new SecurityException("User " + userId + " is not authorized to cancel booking " + ref);
+        }
+
+        String normStatus = bookingStatus == null ? "" : bookingStatus.trim().toUpperCase(Locale.ROOT);
+        if ("CANCELLED".equals(normStatus) || "REFUNDED".equals(normStatus)) {
+            return new CancelResult(
+                    false, true, ref, BigDecimal.ZERO, existingRefundRef,
+                    "Booking " + ref + " is already cancelled.");
+        }
+
+        CancellationPolicy.Decision decision = policy.evaluate(departureInstant, bookingStatus, totalAmount);
+        if (!decision.allowed()) {
+            throw new IllegalStateException(decision.reason());
+        }
+
+        try (PreparedStatement updBooking = conn.prepareStatement(
+                "UPDATE bookings SET status = 'CANCELLED'::booking_status WHERE booking_id = ?")) {
+            updBooking.setLong(1, bookingId);
+            updBooking.executeUpdate();
+        }
+
+        String releaseSeatsSql = hasHeldBy
+                ? "UPDATE flight_seats SET status = 'AVAILABLE'::seat_status, held_until = NULL, held_by = NULL WHERE flight_seat_id IN (SELECT flight_seat_id FROM booking_seats WHERE booking_id = ?)"
+                : "UPDATE flight_seats SET status = 'AVAILABLE'::seat_status, held_until = NULL WHERE flight_seat_id IN (SELECT flight_seat_id FROM booking_seats WHERE booking_id = ?)";
+        try (PreparedStatement relSeats = conn.prepareStatement(releaseSeatsSql)) {
+            relSeats.setLong(1, bookingId);
+            relSeats.executeUpdate();
+        }
+
+        if (hasSeatActive) {
+            try (PreparedStatement deact = conn.prepareStatement(
+                    "UPDATE booking_seats SET is_active = FALSE WHERE booking_id = ?")) {
+                deact.setLong(1, bookingId);
+                deact.executeUpdate();
+            }
+        }
+
+        String refundRef = null;
+        if (txnRef != null && !txnRef.isBlank()) {
+            // Invoke refund BEFORE commit so any gateway exception rolls back booking & seat updates atomically
+            try {
+                refundRef = paymentService.refundWithReference(txnRef);
+            } catch (RuntimeException ex) {
+                throw new RefundFailedException("Payment gateway refund failed for transaction " + txnRef, ex);
+            }
+
+            String updPaySql;
+            if (hasRefundRef && hasRefundedAt) {
+                updPaySql = "UPDATE payments SET status = 'REFUNDED'::payment_status, refund_ref = ?, refunded_at = NOW() WHERE booking_id = ?";
+            } else if (hasRefundRef) {
+                updPaySql = "UPDATE payments SET status = 'REFUNDED'::payment_status, refund_ref = ? WHERE booking_id = ?";
+            } else {
+                updPaySql = "UPDATE payments SET status = 'REFUNDED'::payment_status WHERE booking_id = ?";
+            }
+            try (PreparedStatement updPay = conn.prepareStatement(updPaySql)) {
+                int idx = 1;
+                if (hasRefundRef) {
+                    updPay.setString(idx++, refundRef);
+                }
+                updPay.setLong(idx, bookingId);
+                updPay.executeUpdate();
+            }
+        }
+
+        logger.info("Cancelled booking {} (ID: {}) with refundRef={} for user {}", ref, bookingId, refundRef, userId);
+        return new CancelResult(
+                true, false, ref, decision.refundAmount(), refundRef,
+                "Booking " + ref + " cancelled with a full refund.");
     }
 
     private long resolveUserId(Connection conn, BookingContext context) throws SQLException {

@@ -1053,6 +1053,164 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     color: var(--glass-danger);
 }
 
+.bp-head-title {
+    font-size: 24px;
+}
+
+.bp-check.is-cancelled {
+    background: var(--glass-seat-taken);
+    border-color: var(--glass-danger);
+    color: var(--glass-danger);
+}
+
+/* My Bookings & Cancel Pages */
+.bookings-wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.bookings-head {
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.bookings-stats {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.bookings-stat-pill {
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--glass-tile);
+    border: 1px solid var(--glass-line);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--glass-text-muted);
+}
+
+.bookings-stat-pill strong {
+    color: var(--glass-text);
+    font-size: 15px;
+}
+
+.bookings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bookings-section-heading {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--glass-text);
+}
+
+.bookings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.booking-card {
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.booking-card.is-cancelled {
+    opacity: 0.88;
+}
+
+.booking-card-main {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.booking-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.booking-pnr {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--glass-text-muted);
+}
+
+.booking-status-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    background: var(--glass-tile-hi);
+    border: 1px solid var(--glass-panel-edge);
+    color: var(--glass-text-muted);
+}
+
+.booking-status-badge.is-upcoming {
+    border-color: var(--glass-ok);
+    color: var(--glass-ok);
+}
+
+.booking-status-badge.is-cancelled {
+    border-color: var(--glass-danger);
+    color: var(--glass-danger);
+    background: var(--glass-seat-taken);
+}
+
+.booking-route {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.booking-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--glass-text-muted);
+}
+
+.booking-meta strong {
+    color: var(--glass-text);
+}
+
+.booking-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.bookings-empty-card {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
 .bp-footer-links {
     display: flex;
     justify-content: center;
