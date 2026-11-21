@@ -6,6 +6,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.oned.Code128Writer;
 import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.exception.AuthenticationException;
+import com.group2.flightres.exception.DuplicateEmailException;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.exception.ValidationException;
 import com.group2.flightres.model.*;
@@ -14,6 +15,8 @@ import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.service.LoginThrottle;
 import com.group2.flightres.service.PaymentResult;
+import com.group2.flightres.service.RegistrationService;
+import com.group2.flightres.service.RegistrationThrottle;
 import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.util.BoardingPassPdfGenerator;
 import io.javalin.http.Context;
@@ -42,20 +45,33 @@ public class WebController {
     private final BookingService bookingService;
     private final AuthService authService;
     private final LoginThrottle loginThrottle;
+    private final RegistrationService registrationService;
+    private final RegistrationThrottle registrationThrottle;
 
     public WebController(FlightService flightService, SeatMapService seatMapService,
                          BookingService bookingService, AuthService authService) {
-        this(flightService, seatMapService, bookingService, authService, new LoginThrottle());
+        this(flightService, seatMapService, bookingService, authService, new LoginThrottle(),
+                new RegistrationService(), new RegistrationThrottle());
     }
 
     public WebController(FlightService flightService, SeatMapService seatMapService,
                          BookingService bookingService, AuthService authService,
                          LoginThrottle loginThrottle) {
+        this(flightService, seatMapService, bookingService, authService, loginThrottle,
+                new RegistrationService(), new RegistrationThrottle());
+    }
+
+    public WebController(FlightService flightService, SeatMapService seatMapService,
+                         BookingService bookingService, AuthService authService,
+                         LoginThrottle loginThrottle, RegistrationService registrationService,
+                         RegistrationThrottle registrationThrottle) {
         this.flightService = flightService;
         this.seatMapService = seatMapService;
         this.bookingService = bookingService;
         this.authService = authService;
         this.loginThrottle = loginThrottle != null ? loginThrottle : new LoginThrottle();
+        this.registrationService = registrationService != null ? registrationService : new RegistrationService();
+        this.registrationThrottle = registrationThrottle != null ? registrationThrottle : new RegistrationThrottle();
     }
 
     public Map<String, Object> baseModel(Context ctx) {
@@ -72,6 +88,11 @@ public class WebController {
 
     public void handleHome(Context ctx) {
         Map<String, Object> model = baseModel(ctx);
+        String flashSuccess = ctx.sessionAttribute("flash_success");
+        if (flashSuccess != null) {
+            ctx.req().getSession().removeAttribute("flash_success");
+            model.put("flashSuccess", flashSuccess);
+        }
         LocalDate tomorrow = LocalDate.now().plusDays(1);
         LocalDate returnDate = tomorrow.plusDays(2);
         model.put("tomorrowDate", tomorrow.toString());
@@ -401,6 +422,112 @@ public class WebController {
     public void handleLogout(Context ctx) {
         ctx.req().getSession().invalidate();
         ctx.redirect("/");
+    }
+
+    public void handleRegisterGet(Context ctx) {
+        Map<String, Object> model = baseModel(ctx);
+        ctx.render("register.html", model);
+    }
+
+    public void handleRegisterPost(Context ctx) {
+        String fullName = ctx.formParam("fullName");
+        String email = ctx.formParam("email");
+        String password = ctx.formParam("password");
+        String confirmPassword = ctx.formParam("confirmPassword");
+        String consent = ctx.formParam("consent");
+        boolean consentChecked = "on".equalsIgnoreCase(consent) || "true".equalsIgnoreCase(consent);
+        String honeypot = ctx.formParam("website");
+        String clientIp = ctx.ip();
+
+        Optional<Duration> activeLockout = registrationThrottle.remainingLockout(clientIp);
+        if (activeLockout.isPresent()) {
+            String waitText = LoginThrottle.formatWait(activeLockout.get());
+            logger.info("Registration throttled: email={} wait={}",
+                    RegistrationService.maskEmail(email), waitText);
+            ctx.status(429);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("registerError",
+                    "Too many registration attempts. Please wait " + waitText + " before trying again.");
+            model.put("fullName", fullName);
+            model.put("email", email);
+            model.put("consentChecked", consentChecked);
+            ctx.render("register.html", model);
+            return;
+        }
+
+        if (honeypot != null && !honeypot.isBlank()) {
+            logger.warn("Registration honeypot triggered for email={}", RegistrationService.maskEmail(email));
+            Map<String, Object> model = baseModel(ctx);
+            model.put("registerNotice", "Thank you. Your submission has been received.");
+            ctx.render("register.html", model);
+            return;
+        }
+
+        registrationThrottle.recordAttempt(clientIp);
+
+        try {
+            com.group2.flightres.util.ValidationUtil.validateFullName(fullName);
+            com.group2.flightres.util.ValidationUtil.validateEmail(email);
+            String validPassword = com.group2.flightres.util.ValidationUtil.validatePassword(password);
+            if (confirmPassword == null || !confirmPassword.equals(validPassword)) {
+                throw new ValidationException("confirmPassword", "Passwords do not match.");
+            }
+            if (!consentChecked) {
+                throw new ValidationException("consent",
+                        "Please confirm the university project privacy notice to continue.");
+            }
+
+            User user = registrationService.register(fullName, email, password, resolveBaseUrl(ctx));
+            String csrfToken = ctx.sessionAttribute("csrf_token");
+            ctx.req().changeSessionId();
+            if (csrfToken != null) {
+                ctx.sessionAttribute("csrf_token", csrfToken);
+            }
+            ctx.sessionAttribute("user", user);
+            String firstName = extractFirstName(user.getFullName());
+            ctx.sessionAttribute("flash_success", "Welcome to Sky Royal, " + firstName + "!");
+            logger.info("Web registration successful: userId={} email={}",
+                    user.getUserId(), RegistrationService.maskEmail(user.getEmail()));
+            ctx.redirect("/");
+        } catch (DuplicateEmailException e) {
+            ctx.status(409);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("registerError", e.getMessage());
+            model.put("errorField", "email");
+            model.put("fullName", fullName);
+            model.put("email", email);
+            model.put("consentChecked", consentChecked);
+            ctx.render("register.html", model);
+        } catch (ValidationException e) {
+            ctx.status(400);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("registerError", e.getMessage());
+            model.put("errorField", e.getField());
+            model.put("fullName", fullName);
+            model.put("email", email);
+            model.put("consentChecked", consentChecked);
+            ctx.render("register.html", model);
+        }
+    }
+
+    private static String resolveBaseUrl(Context ctx) {
+        String scheme = ctx.scheme();
+        String host = ctx.host();
+        if (scheme == null || host == null || host.isBlank()
+                || host.contains("\r") || host.contains("\n") || host.chars().anyMatch(Character::isWhitespace)) {
+            return "http://localhost:8080";
+        }
+        String normScheme = ("https".equalsIgnoreCase(scheme)) ? "https" : "http";
+        return normScheme + "://" + host.replaceAll("/+$", "");
+    }
+
+    private static String extractFirstName(String fullName) {
+        if (fullName == null || fullName.isBlank()) {
+            return "Traveller";
+        }
+        String trimmed = fullName.trim();
+        int space = trimmed.indexOf(' ');
+        return space > 0 ? trimmed.substring(0, space) : trimmed;
     }
 
     public void handleAbout(Context ctx) {

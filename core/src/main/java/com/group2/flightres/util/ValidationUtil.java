@@ -4,6 +4,7 @@ import com.group2.flightres.exception.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.regex.Pattern;
 
@@ -60,11 +61,64 @@ public final class ValidationUtil {
             throw new ValidationException("email", "Email address is required.");
         }
         String trimmed = email.trim();
+        if (trimmed.length() > 120) {
+            logger.warn("Validation failed: Email address exceeds 120 characters");
+            throw new ValidationException("email", "Email address must be at most 120 characters.");
+        }
         if (!EMAIL_PATTERN.matcher(trimmed).matches()) {
-            logger.warn("Validation failed: Invalid email format '{}'", trimmed);
+            logger.warn("Validation failed: Invalid email format");
             throw new ValidationException("email", "Please enter a valid email address (e.g. user@example.com).");
         }
         return trimmed;
+    }
+
+    /**
+     * Validates a customer account full name (first and last name, 3-120 chars) by reusing validatePassengerName.
+     */
+    public static String validateFullName(String fullName) {
+        if (fullName == null || fullName.trim().isEmpty()) {
+            logger.warn("Validation failed: Full name is empty");
+            throw new ValidationException("fullName", "Full name is required.");
+        }
+        String normalized = fullName.trim().replaceAll("\\s+", " ");
+        try {
+            return validatePassengerName(normalized);
+        } catch (ValidationException e) {
+            throw new ValidationException("fullName", e.getMessage());
+        }
+    }
+
+    /**
+     * Validates a registration password: min 10 chars, max 72 UTF-8 bytes,
+     * and at least one uppercase letter, lowercase letter, and digit.
+     * Never logs the password value.
+     */
+    public static String validatePassword(String password) {
+        if (password == null || password.isEmpty()) {
+            logger.warn("Validation failed: Password is empty");
+            throw new ValidationException("password", "Password is required.");
+        }
+        if (password.isBlank()) {
+            logger.warn("Validation failed: Password is whitespace only");
+            throw new ValidationException("password", "Password cannot be only whitespace.");
+        }
+        if (password.length() < 10) {
+            logger.warn("Validation failed: Password shorter than 10 characters");
+            throw new ValidationException("password", "Password must be at least 10 characters.");
+        }
+        if (password.getBytes(StandardCharsets.UTF_8).length > 72) {
+            logger.warn("Validation failed: Password exceeds 72 bytes");
+            throw new ValidationException("password", "Password must be at most 72 bytes.");
+        }
+        boolean hasUpper = password.chars().anyMatch(ch -> ch >= 'A' && ch <= 'Z');
+        boolean hasLower = password.chars().anyMatch(ch -> ch >= 'a' && ch <= 'z');
+        boolean hasDigit = password.chars().anyMatch(ch -> ch >= '0' && ch <= '9');
+        if (!hasUpper || !hasLower || !hasDigit) {
+            logger.warn("Validation failed: Password missing uppercase, lowercase, or digit");
+            throw new ValidationException("password",
+                    "Password must include uppercase, lowercase, and at least one number.");
+        }
+        return password;
     }
 
     /**

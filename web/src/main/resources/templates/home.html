@@ -38,11 +38,15 @@
         <span th:if="${user != null}" class="user-pill" th:text="${user.username}">Traveller</span>
         <a th:if="${user != null}" href="/logout" class="btn-pill btn-translucent">Log out</a>
         <a th:if="${user == null}" href="/login" class="btn-pill btn-translucent">Log in</a>
-        <a th:if="${user == null}" href="/login#signup" class="btn-pill btn-white">Sign up</a>
+        <a th:if="${user == null}" href="/register" class="btn-pill btn-white">Sign up</a>
       </div>
     </header>
 
     <main>
+      <div th:if="${flashSuccess != null}" class="status-banner is-success" role="status" aria-live="polite">
+        <span th:text="${flashSuccess}">Welcome aboard! Your Sky Royal account is ready.</span>
+      </div>
+
       <!-- (b) Hero + Glass Search Card -->
       <section class="hero-section" aria-label="Flight search">
         <div>

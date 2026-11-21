@@ -4,6 +4,8 @@ import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.service.LoginThrottle;
+import com.group2.flightres.service.RegistrationService;
+import com.group2.flightres.service.RegistrationThrottle;
 import com.group2.flightres.service.SeatMapService;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
@@ -41,8 +43,17 @@ public class WebApplication {
     public WebApplication(FlightService flightService, SeatMapService seatMapService,
                           BookingService bookingService, AuthService authService,
                           LoginThrottle loginThrottle) {
+        this(flightService, seatMapService, bookingService, authService, loginThrottle,
+                new RegistrationService(), new RegistrationThrottle());
+    }
+
+    public WebApplication(FlightService flightService, SeatMapService seatMapService,
+                          BookingService bookingService, AuthService authService,
+                          LoginThrottle loginThrottle, RegistrationService registrationService,
+                          RegistrationThrottle registrationThrottle) {
         this.authService = authService;
-        this.controller = new WebController(flightService, seatMapService, bookingService, authService, loginThrottle);
+        this.controller = new WebController(flightService, seatMapService, bookingService, authService,
+                loginThrottle, registrationService, registrationThrottle);
 
         // Configure Thymeleaf
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
@@ -150,9 +161,11 @@ public class WebApplication {
         app.get("/confirmation/{reference}/barcode.png", controller::handleConfirmationBarcode);
         app.get("/confirmation/{reference}/boarding-pass.pdf", controller::handleConfirmationPdf);
 
-        // Authentication
+        // Authentication & Registration
         app.get("/login", controller::handleLoginGet);
         app.post("/login", controller::handleLoginPost);
+        app.get("/register", controller::handleRegisterGet);
+        app.post("/register", controller::handleRegisterPost);
         app.get("/logout", controller::handleLogout);
 
         // Informational Pages
