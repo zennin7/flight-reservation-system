@@ -511,6 +511,10 @@ public class WebController {
     }
 
     private static String resolveBaseUrl(Context ctx) {
+        String configured = com.group2.flightres.config.EmailConfig.fromEnvironmentAndAppConfig().getPublicBaseUrl();
+        if (configured != null && !configured.isBlank()) {
+            return com.group2.flightres.service.WelcomeEmailRenderer.normalizeBaseUrl(configured, "");
+        }
         String scheme = ctx.scheme();
         String host = ctx.host();
         if (scheme == null || host == null || host.isBlank()

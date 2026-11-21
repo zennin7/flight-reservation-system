@@ -31,7 +31,7 @@ public class RegistrationService {
     private final EmailService emailService;
 
     public RegistrationService() {
-        this(new UserDaoImpl(), (user, baseUrl) -> {});
+        this(new UserDaoImpl(), EmailServiceFactory.createDefault());
     }
 
     public RegistrationService(UserDao userDao) {

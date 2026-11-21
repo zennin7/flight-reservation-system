@@ -1,7 +1,9 @@
 package com.group2.flightres.web;
 
+import com.group2.flightres.dao.impl.UserDaoImpl;
 import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BookingService;
+import com.group2.flightres.service.EmailServiceFactory;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.service.LoginThrottle;
 import com.group2.flightres.service.RegistrationService;
@@ -44,7 +46,8 @@ public class WebApplication {
                           BookingService bookingService, AuthService authService,
                           LoginThrottle loginThrottle) {
         this(flightService, seatMapService, bookingService, authService, loginThrottle,
-                new RegistrationService(), new RegistrationThrottle());
+                new RegistrationService(new UserDaoImpl(), EmailServiceFactory.createDefault()),
+                new RegistrationThrottle());
     }
 
     public WebApplication(FlightService flightService, SeatMapService seatMapService,

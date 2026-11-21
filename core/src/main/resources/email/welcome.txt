@@ -1,0 +1,19 @@
+SKY ROYAL
+=========
+
+Welcome aboard, [(${firstName})].
+
+Thank you for creating a Sky Royal account for [(${fullName})]. Your account is ready and you are signed in.
+
+Your sign-in username: [(${username})]
+
+What you can do with Sky Royal:
+- Pick your exact seat on a live seat map
+- Fares you can see the reason for
+- A boarding pass with a QR code you can verify
+
+Search flights: [(${flightsUrl})]
+
+--
+Sky Royal is a university project - no real flights, payments or bookings.
+You received this email because an account was created with this email address on Sky Royal.
