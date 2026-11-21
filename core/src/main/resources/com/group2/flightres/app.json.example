@@ -4,5 +4,10 @@
   "dbName": "flight_reservation",
   "dbUsername": "postgres",
   "dbPassword": "CHANGE_ME",
-  "poolSize": 10
+  "poolSize": 10,
+  "smtpHost": "smtp.gmail.com",
+  "smtpPort": 587,
+  "smtpFromAddress": "",
+  "smtpFromName": "Sky Royal",
+  "publicBaseUrl": ""
 }
