@@ -166,6 +166,7 @@ try {
         Write-Host "[SKIP] core/sql/migration_airports_timezone.sql (airports.timezone already present)."
     }
     Invoke-SqlFile "core/sql/migration_payments_card_meta.sql"
+    Invoke-SqlFile "core/sql/migration_users_email_ci.sql"
 
     # 8. Auth seed (idempotent upsert)
     Invoke-SqlFile "core/sql/seed_auth_data.sql"
