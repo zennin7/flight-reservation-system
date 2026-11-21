@@ -11,7 +11,7 @@ import com.group2.flightres.model.User;
 import com.group2.flightres.model.UserRole;
 import com.group2.flightres.service.AdminBookingsService;
 import com.group2.flightres.service.AdminDashboardService;
-import com.group2.flightres.util.FontLoader;
+import com.group2.flightres.util.JavaFxTestSupport;
 import com.group2.flightres.util.ThemeManager;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -51,17 +51,10 @@ class AdminBookingsLayoutTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyroyal.testing", "true");
         try (Connection conn = DatabaseConfig.getConnection()) {
             // Warm database connection pool
         } catch (Exception ignored) {}
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {}
-        Platform.setImplicitExit(false);
-        try {
-            FontLoader.loadFonts();
-        } catch (Throwable ignored) {}
+        JavaFxTestSupport.ensureStartedWithFonts();
     }
 
     private static User adminUser() {

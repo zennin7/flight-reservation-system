@@ -1,6 +1,7 @@
 package com.group2.flightres.component;
 
 import com.group2.flightres.util.GlassSeatMapBridge;
+import com.group2.flightres.util.JavaFxTestSupport;
 import javafx.application.Platform;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -19,12 +20,7 @@ class SeatMapZoomTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyroyal.testing", "true");
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {
-            // Already started
-        }
+        JavaFxTestSupport.ensureStarted();
     }
 
     @Test

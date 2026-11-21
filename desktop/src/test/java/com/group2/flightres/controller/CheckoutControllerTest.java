@@ -9,7 +9,7 @@ import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.SimulatedPaymentGateway;
-import javafx.application.Platform;
+import com.group2.flightres.util.JavaFxTestSupport;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,12 +31,7 @@ class CheckoutControllerTest {
 
     @BeforeAll
     static void initJavaFX() {
-        System.setProperty("skyroyal.testing", "true");
-        try {
-            Platform.startup(() -> {});
-        } catch (IllegalStateException ignored) {
-            // Already initialized
-        }
+        JavaFxTestSupport.ensureStarted();
     }
 
     private BookingContext createTestContext() {
@@ -101,18 +96,24 @@ class CheckoutControllerTest {
 
         BookingContext ctx = createTestContext();
         controller.init(ctx, () -> nextCalled.set(true), () -> backCalled.set(true));
-        fillFormFields(controller);
+        try {
+            fillFormFields(controller);
 
-        controller.handleConfirm();
+            controller.handleConfirm();
 
-        assertFalse(nextCalled.get(), "Should not navigate forward on seat conflict");
-        assertTrue(backCalled.get(), "Should navigate back on seat conflict");
-        assertTrue(controller.getCardNumberField().getText().isEmpty(), "Card number should be cleared");
-        assertTrue(controller.getExpiryField().getText().isEmpty(), "Expiry should be cleared");
-        assertTrue(controller.getCvvField().getText().isEmpty(), "CVV should be cleared");
+            assertFalse(nextCalled.get(), "Should not navigate forward on seat conflict");
+            assertTrue(backCalled.get(), "Should navigate back on seat conflict");
+            assertTrue(controller.getCardNumberField().getText().isEmpty(), "Card number should be cleared");
+            assertTrue(controller.getExpiryField().getText().isEmpty(), "Expiry should be cleared");
+            assertTrue(controller.getCvvField().getText().isEmpty(), "CVV should be cleared");
 
-        // Verify refund was called in gateway
-        assertNotNullRefund(gateway, ctx);
+            // Verify refund was called in gateway
+            assertNotNullRefund(gateway, ctx);
+        } finally {
+            if (controller.getGlassBridge() != null) {
+                controller.getGlassBridge().stopTimer();
+            }
+        }
     }
 
     @Test
@@ -137,16 +138,22 @@ class CheckoutControllerTest {
 
         BookingContext ctx = createTestContext();
         controller.init(ctx, () -> nextCalled.set(true), () -> backCalled.set(true));
-        fillFormFields(controller);
+        try {
+            fillFormFields(controller);
 
-        controller.handleConfirm();
+            controller.handleConfirm();
 
-        assertFalse(nextCalled.get(), "Should not navigate forward on DB failure");
-        assertFalse(backCalled.get(), "Should stay on screen on DB failure");
-        assertTrue(controller.getCardNumberField().getText().isEmpty(), "Card number should be cleared");
+            assertFalse(nextCalled.get(), "Should not navigate forward on DB failure");
+            assertFalse(backCalled.get(), "Should stay on screen on DB failure");
+            assertTrue(controller.getCardNumberField().getText().isEmpty(), "Card number should be cleared");
 
-        // Verify refund was called in gateway
-        assertNotNullRefund(gateway, ctx);
+            // Verify refund was called in gateway
+            assertNotNullRefund(gateway, ctx);
+        } finally {
+            if (controller.getGlassBridge() != null) {
+                controller.getGlassBridge().stopTimer();
+            }
+        }
     }
 
     private void assertNotNullRefund(SimulatedPaymentGateway gateway, BookingContext ctx) {
@@ -170,8 +177,13 @@ class CheckoutControllerTest {
         BookingContext ctx = createTestContext();
         ctx.setDestinationCity("Durban");
         controller.init(ctx, () -> {}, () -> {});
-
-        assertEquals("Durban", controller.getTripOriginDestLabel().getText());
+        try {
+            assertEquals("Durban", controller.getTripOriginDestLabel().getText());
+        } finally {
+            if (controller.getGlassBridge() != null) {
+                controller.getGlassBridge().stopTimer();
+            }
+        }
     }
 
     @Test
@@ -189,7 +201,12 @@ class CheckoutControllerTest {
         ctx.setDestination("DUR");
         ctx.setDestinationCity(null);
         controller.init(ctx, () -> {}, () -> {});
-
-        assertEquals("DUR", controller.getTripOriginDestLabel().getText());
+        try {
+            assertEquals("DUR", controller.getTripOriginDestLabel().getText());
+        } finally {
+            if (controller.getGlassBridge() != null) {
+                controller.getGlassBridge().stopTimer();
+            }
+        }
     }
 }
