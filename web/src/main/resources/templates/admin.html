@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title th:text="${appName + ' – Operations Admin'}">Sky Royal – Operations Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/glass-web.css">
+  <script defer src="/js/shell.js"></script>
+</head>
+<body>
+  <div class="backdrop-aerial" aria-hidden="true"></div>
+  <div class="glass-backdrop-scrim" aria-hidden="true"></div>
+
+  <div class="page-shell is-framed-shell">
+    <div class="inner-glass-frame">
+      <div th:replace="~{fragments/shell :: topbar('admin')}"></div>
+
+      <main class="frame-main admin-wrap">
+        <section class="frame-page-head">
+          <div>
+            <span class="eyebrow">Operations &middot; Administrator Only</span>
+            <h1 class="checkout-title">Operations Dashboard</h1>
+            <p class="auth-sub" th:if="${dashboardData != null}"
+               th:text="${'Live schedule metrics across the past ' + dashboardData.range.label}">
+              Live schedule metrics
+            </p>
+          </div>
+          <a href="/flights" class="btn-pill btn-translucent">Inspect live flights</a>
+        </section>
+
+        <div th:if="${adminError != null}" class="status-banner is-error" role="alert">
+          <span th:text="${adminError}">Unable to load live admin metrics right now.</span>
+        </div>
+
+        <section th:if="${dashboardData != null}" class="admin-kpi-grid" aria-label="Key metrics">
+          <div class="glass-tile admin-kpi-card">
+            <span class="field-label">Total bookings</span>
+            <strong class="admin-kpi-val" th:text="${dashboardData.totalBookings}">0</strong>
+          </div>
+          <div class="glass-tile admin-kpi-card">
+            <span class="field-label">Revenue</span>
+            <strong class="admin-kpi-val" th:text="${revenueFormatted}">R 0.00</strong>
+          </div>
+          <div class="glass-tile admin-kpi-card">
+            <span class="field-label">Seats sold</span>
+            <strong class="admin-kpi-val" th:text="${dashboardData.seatsSold}">0</strong>
+          </div>
+          <div class="glass-tile admin-kpi-card">
+            <span class="field-label">Cancellations</span>
+            <strong class="admin-kpi-val" th:text="${dashboardData.cancellationsCount}">0</strong>
+          </div>
+        </section>
+
+        <section th:if="${dashboardData != null}" class="glass-tile admin-table-panel" aria-label="Upcoming flight load factors">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">Upcoming Departures</div>
+              <h2 class="checkout-section-title">Cabin Load Factor</h2>
+            </div>
+            <span class="search-meta-note" th:text="${#lists.size(dashboardData.upcomingFlights) + ' upcoming flight(s)'}">0 upcoming flight(s)</span>
+          </div>
+
+          <div th:if="${#lists.isEmpty(dashboardData.upcomingFlights)}" class="status-banner">
+            No upcoming scheduled flights found in the database.
+          </div>
+
+          <div th:unless="${#lists.isEmpty(dashboardData.upcomingFlights)}" class="routes-table-wrap">
+            <table class="routes-table">
+              <thead>
+                <tr>
+                  <th>Flight</th>
+                  <th>Route</th>
+                  <th>Departure</th>
+                  <th class="num">Booked / Total</th>
+                  <th class="num">Load</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="fl : ${dashboardData.upcomingFlights}">
+                  <td><strong th:text="${fl.flightNumber}">SR 204</strong></td>
+                  <td th:text="${fl.route}">JNB -&gt; CPT</td>
+                  <td th:text="${fl.formattedDepartureDate + ' · ' + fl.formattedDepartureTime}">2026-11-23 · 06:30</td>
+                  <td class="num" th:text="${fl.bookedSeats + ' / ' + fl.totalSeats}">12 / 162</td>
+                  <td class="num" th:text="${#numbers.formatDecimal(fl.loadFactorPct, 1, 1) + '%'}">7.4%</td>
+                  <td><span class="admin-status-chip" th:text="${fl.status}">Scheduled</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <div th:replace="~{fragments/shell :: footer()}"></div>
+    </div>
+  </div>
+
+  <div th:replace="~{fragments/shell :: mobileSheet('admin')}"></div>
+</body>
+</html>

@@ -4,6 +4,7 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.oned.Code128Writer;
+import com.group2.flightres.config.BoardingPolicy;
 import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.config.SeatHoldPolicy;
 import com.group2.flightres.exception.AuthenticationException;
@@ -13,6 +14,7 @@ import com.group2.flightres.exception.RefundFailedException;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.exception.ValidationException;
 import com.group2.flightres.model.*;
+import com.group2.flightres.service.AdminDashboardService;
 import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BoardingPassVerificationService;
 import com.group2.flightres.service.BookingService;
@@ -31,6 +33,8 @@ import com.group2.flightres.service.VerifyThrottle;
 import com.group2.flightres.util.BoardingPassPdfGenerator;
 import com.group2.flightres.util.DestinationPhotoResolver;
 import com.group2.flightres.util.FlightTimes;
+import com.group2.flightres.util.MoneyFormatter;
+import com.group2.flightres.util.NameInitials;
 import com.group2.flightres.util.QrCodeGenerator;
 import com.group2.flightres.util.ValidationUtil;
 import io.javalin.http.Context;
@@ -70,6 +74,7 @@ public class WebController {
     private final PaymentThrottle paymentThrottle;
     private final BoardingPassVerificationService verificationService;
     private final VerifyThrottle verifyThrottle;
+    private final AdminDashboardService adminDashboardService;
 
     public WebController(FlightService flightService, SeatMapService seatMapService,
                          BookingService bookingService, AuthService authService) {
@@ -111,6 +116,18 @@ public class WebController {
                          RegistrationThrottle registrationThrottle,
                          PaymentService paymentService, PaymentThrottle paymentThrottle,
                          BoardingPassVerificationService verificationService, VerifyThrottle verifyThrottle) {
+        this(flightService, seatMapService, bookingService, authService, loginThrottle,
+                registrationService, registrationThrottle, paymentService, paymentThrottle,
+                verificationService, verifyThrottle, new AdminDashboardService());
+    }
+
+    public WebController(FlightService flightService, SeatMapService seatMapService,
+                         BookingService bookingService, AuthService authService,
+                         LoginThrottle loginThrottle, RegistrationService registrationService,
+                         RegistrationThrottle registrationThrottle,
+                         PaymentService paymentService, PaymentThrottle paymentThrottle,
+                         BoardingPassVerificationService verificationService, VerifyThrottle verifyThrottle,
+                         AdminDashboardService adminDashboardService) {
         this.flightService = flightService;
         this.seatMapService = seatMapService;
         this.bookingService = bookingService;
@@ -124,22 +141,35 @@ public class WebController {
                 ? verificationService
                 : new BoardingPassVerificationService(bookingService);
         this.verifyThrottle = verifyThrottle != null ? verifyThrottle : new VerifyThrottle();
+        this.adminDashboardService = adminDashboardService != null ? adminDashboardService : new AdminDashboardService();
     }
 
     public Map<String, Object> baseModel(Context ctx) {
         Map<String, Object> model = new HashMap<>();
+        User user = ctx.sessionAttribute("user");
+        boolean isAdmin = user != null && user.getRole() == UserRole.ADMIN;
+        String userDisplayName = user != null ? firstNonBlank(user.getFullName(), user.getUsername()) : null;
+        String userInitials = user != null ? NameInitials.of(userDisplayName) : null;
+
         model.put("appName", BrandConfig.APP_NAME);
         model.put("logoPrefix", BrandConfig.LOGO_PREFIX);
         model.put("logoSuffix", BrandConfig.LOGO_SUFFIX);
         model.put("supportEmail", BrandConfig.SUPPORT_EMAIL);
         model.put("supportPhone", BrandConfig.SUPPORT_PHONE);
         model.put("csrf_token", ctx.sessionAttribute("csrf_token"));
-        model.put("user", ctx.sessionAttribute("user"));
+        model.put("user", user);
+        model.put("isAdmin", isAdmin);
+        model.put("userDisplayName", userDisplayName);
+        model.put("userInitials", userInitials);
+        model.put("salesCloseMinutes", BoardingPolicy.SALES_CLOSE_MINUTES_BEFORE);
+        model.put("holdDurationText", (SeatHoldPolicy.HOLD_SECONDS / 60) + " min");
+        model.put("activeNav", "");
         return model;
     }
 
     public void handleHome(Context ctx) {
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "home");
         String flashSuccess = ctx.sessionAttribute("flash_success");
         if (flashSuccess != null) {
             ctx.req().getSession().removeAttribute("flash_success");
@@ -232,6 +262,7 @@ public class WebController {
 
     public void handleFlights(Context ctx) {
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "flights");
 
         String origin = ctx.queryParam("origin");
         String destination = ctx.queryParam("destination");
@@ -631,6 +662,7 @@ public class WebController {
         }
 
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "my-bookings");
         BookingRecord record = recordOpt.get();
         boolean owner = isBookingOwner(ctx, record);
         boolean isCancelled = isCancelledStatus(record.getStatus());
@@ -787,6 +819,7 @@ public class WebController {
         }
 
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "my-bookings");
         String flashSuccess = ctx.sessionAttribute("flash_success");
         if (flashSuccess != null) {
             ctx.req().getSession().removeAttribute("flash_success");
@@ -907,6 +940,7 @@ public class WebController {
 
     private void renderCancelModel(Context ctx, BookingRecord record, String cancelError, String cancelNotice) {
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "my-bookings");
         CancellationPolicy.Decision decision = bookingService.getCancellationPolicy().evaluate(record);
         model.put("record", record);
         model.put("canConfirm", decision.allowed());
@@ -1153,6 +1187,33 @@ public class WebController {
         ctx.render("contact.html", model);
     }
 
+    public void handleAdmin(Context ctx) {
+        User user = ctx.sessionAttribute("user");
+        if (user == null) {
+            ctx.redirect("/login?next=/admin");
+            return;
+        }
+        if (user.getRole() != UserRole.ADMIN) {
+            ctx.status(403);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("error", "Administrator access is required to view this page.");
+            ctx.render("error.html", model);
+            return;
+        }
+
+        Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "admin");
+        try {
+            AdminDashboardData data = adminDashboardService.getDashboardData(user);
+            model.put("dashboardData", data);
+            model.put("revenueFormatted", MoneyFormatter.format(data.getTotalRevenue()));
+        } catch (Exception e) {
+            logger.warn("Failed to load admin dashboard data: {}", e.getMessage());
+            model.put("adminError", "Unable to load live admin metrics right now. Please try again.");
+        }
+        ctx.render("admin.html", model);
+    }
+
     private BookingContext buildBookingContext(Context ctx, CheckoutSession cs, PriceQuote quote, PaymentResult paymentResult) {
         BookingContext bc = new BookingContext();
         bc.setFlightId(cs.getFlightId());
@@ -1186,6 +1247,7 @@ public class WebController {
     private void renderCheckoutModel(Context ctx, CheckoutSession cs, String state,
                                      String stateHeading, String payError, String errorField) {
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "flights");
         model.put("checkoutSession", cs);
         model.put("checkoutState", state);
         if (stateHeading != null) model.put("stateHeading", stateHeading);
@@ -1320,6 +1382,7 @@ public class WebController {
         }
 
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "flights");
         model.put("flight", flightOpt.get());
 
         String origin = ctx.queryParam("origin");

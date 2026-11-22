@@ -13,6 +13,7 @@ public final class BoardingPolicy {
 
     public static final int BOARDING_MINUTES_BEFORE = 30;
     public static final int BAG_DROP_CLOSES_MINUTES_BEFORE = 60;
+    public static final int SALES_CLOSE_MINUTES_BEFORE = 60;
     public static final int CHECKIN_OPENS_HOURS_BEFORE = 24;
     public static final String GATE_NOTE = "Gate shown 60 min before departure";
 

@@ -19,17 +19,25 @@ class WebTemplateTokenGuardTest {
 
     private static final List<String> GLASS_TEMPLATES = List.of(
             "home.html",
+            "flights.html",
+            "seats.html",
             "login.html",
             "register.html",
             "checkout.html",
             "confirmation.html",
             "verify.html",
             "my-bookings.html",
-            "cancel.html"
+            "cancel.html",
+            "about.html",
+            "contact.html",
+            "error.html",
+            "admin.html",
+            "fragments/shell.html"
     );
 
     private static final Pattern COLOR_LITERAL = Pattern.compile("((?<!&)#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b|(?<![A-Za-z])rgba?\\s*\\()");
-    private static final Pattern GOLD_OR_NAVY = Pattern.compile("(?i)(--glass-gold|--glass-navy|-glass-gold|-glass-navy)");
+    private static final Pattern GOLD_OR_NAVY = Pattern.compile("(?i)(--glass-gold|--glass-navy|-glass-gold|-glass-navy|--sv-gold)");
+    private static final Pattern LEGACY_STYLESHEET = Pattern.compile("href=\"/css/style\\.css\"");
 
     @Test
     @DisplayName("All glass templates and CSS outside :root use design tokens only with zero color literals or gold/navy tokens")
@@ -50,6 +58,10 @@ class WebTemplateTokenGuardTest {
                 Matcher mg = GOLD_OR_NAVY.matcher(line);
                 if (mg.find()) {
                     violations.add("Legacy gold/navy token in " + name + ":" + (i + 1) + " -> " + mg.group());
+                }
+                Matcher ms = LEGACY_STYLESHEET.matcher(line);
+                if (ms.find()) {
+                    violations.add("Legacy style.css link in " + name + ":" + (i + 1));
                 }
             }
         }

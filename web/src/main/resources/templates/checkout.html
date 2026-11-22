@@ -8,40 +8,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/glass-web.css">
+  <script defer src="/js/shell.js"></script>
 </head>
 <body>
-  <div class="glass-backdrop" aria-hidden="true"></div>
+  <div class="backdrop-aerial" aria-hidden="true"></div>
   <div class="glass-backdrop-scrim" aria-hidden="true"></div>
 
-  <div class="page-shell">
-    <header class="glass-panel floating-nav">
-      <a href="/" class="nav-brand">
-        <span class="nav-brand-badge" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
-        </span>
-        <span th:text="${appName}">Sky Royal</span>
-      </a>
+  <div class="page-shell is-framed-shell">
+    <div class="inner-glass-frame">
+      <div th:replace="~{fragments/shell :: topbar('flights')}"></div>
 
-      <nav aria-label="Primary navigation">
-        <ul class="nav-links">
-          <li><a href="/flights" class="nav-link">Flights</a></li>
-          <li><a href="/#destinations" class="nav-link">Destinations</a></li>
-          <li><a href="/confirmation" class="nav-link">Manage booking</a></li>
-          <li th:if="${user != null}"><a href="/my-bookings" class="nav-link">My bookings</a></li>
-          <li><a href="/about" class="nav-link">About</a></li>
-          <li><a href="/contact" class="nav-link">Contact</a></li>
-        </ul>
-      </nav>
-
-      <div class="nav-auth">
-        <span th:if="${user != null}" class="user-pill" th:text="${user.username}">Traveller</span>
-        <a th:if="${user != null}" href="/logout" class="btn-pill btn-translucent">Log out</a>
-        <a th:if="${user == null}" href="/login" class="btn-pill btn-translucent">Log in</a>
-        <a href="/flights" class="btn-pill btn-white">Browse flights</a>
-      </div>
-    </header>
-
-    <main>
+      <main class="frame-main">
       <div class="checkout-wrap">
         <div class="glass-panel checkout-head">
           <div>
@@ -197,13 +174,12 @@
           </section>
         </div>
       </div>
-    </main>
+      </main>
 
-    <footer class="glass-panel site-footer">
-      <div>&copy; 2026 <span th:text="${appName}">Sky Royal</span>. All rights reserved.</div>
-      <div>Sky Royal is a university project. No real bookings are made.</div>
-    </footer>
+      <div th:replace="~{fragments/shell :: footer()}"></div>
+    </div>
   </div>
+  <div th:replace="~{fragments/shell :: mobileSheet('flights')}"></div>
 
   <script>
     (function () {

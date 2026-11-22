@@ -1,5 +1,7 @@
 package com.group2.flightres.service;
 
+import com.group2.flightres.config.BoardingPolicy;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -10,7 +12,9 @@ import java.time.Instant;
  */
 public final class FlightSalesPolicy {
 
-    public static final Duration SALES_CLOSE_BEFORE_DEPARTURE = Duration.ofMinutes(60);
+    public static final Duration SALES_CLOSE_BEFORE_DEPARTURE =
+            Duration.ofMinutes(BoardingPolicy.SALES_CLOSE_MINUTES_BEFORE);
+    public static final int LOW_SEATS_THRESHOLD = 10;
 
     private FlightSalesPolicy() {}
 
