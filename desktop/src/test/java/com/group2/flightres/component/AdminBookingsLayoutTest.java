@@ -235,7 +235,7 @@ class AdminBookingsLayoutTest {
                 for (int i = 1; i <= 25; i++) {
                     page1Rows.add(new AdminBookingRow(
                             i, "PNR" + String.format("%03d", i), "Amahle Mokoena", "amahle@example.com", "Amahle Mokoena",
-                            1L, "ALT 204", "JNB", "Johannesburg", "CPT", "Cape Town",
+                            1L, "SR 204", "JNB", "Johannesburg", "CPT", "Cape Town",
                             Instant.now().plusSeconds(7200), sast, Instant.now().plusSeconds(14400), sast,
                             "9E", SeatClass.ECONOMY, new BigDecimal("1522.00"), "CONFIRMED"
                     ));
@@ -299,15 +299,15 @@ class AdminBookingsLayoutTest {
         Instant base = Instant.now().plusSeconds(7200);
         List<AdminBookingRow> rows = List.of(
                 new AdminBookingRow(1L, "PNR101", "Amahle Mokoena", "amahle@example.com", "Amahle Mokoena",
-                        1L, "ALT 204", "JNB", "Johannesburg", "CPT", "Cape Town",
+                        1L, "SR 204", "JNB", "Johannesburg", "CPT", "Cape Town",
                         base, sast, base.plusSeconds(7800), sast,
                         "9E", SeatClass.ECONOMY, new BigDecimal("1522.00"), "CONFIRMED"),
                 new AdminBookingRow(2L, "PNR102", "Thabo Khumalo", "thabo@example.com", "Thabo Khumalo",
-                        2L, "ALT 310", "JNB", "Johannesburg", "CPT", "Cape Town",
+                        2L, "SR 310", "JNB", "Johannesburg", "CPT", "Cape Town",
                         base.plusSeconds(3600), sast, base.plusSeconds(11400), sast,
                         "1A", SeatClass.FIRST, new BigDecimal("3500.00"), "CONFIRMED"),
                 new AdminBookingRow(3L, "PNR103", "Lerato Ndlovu", "lerato@example.com", "Lerato Ndlovu",
-                        3L, "ALT 602", "JNB", "Johannesburg", "DUR", "Durban",
+                        3L, "SR 602", "JNB", "Johannesburg", "DUR", "Durban",
                         base.plusSeconds(7200), sast, base.plusSeconds(12300), sast,
                         "7B", SeatClass.ECONOMY, new BigDecimal("1140.00"), "CANCELLED")
         );
@@ -334,7 +334,7 @@ class AdminBookingsLayoutTest {
 
             @Override
             public List<FlightFilterOption> listFlightOptions() {
-                return List.of(new FlightFilterOption(1L, "ALT 204 · JNB -> CPT"));
+                return List.of(new FlightFilterOption(1L, "SR 204 · JNB -> CPT"));
             }
         };
         return new AdminBookingsService(dao);

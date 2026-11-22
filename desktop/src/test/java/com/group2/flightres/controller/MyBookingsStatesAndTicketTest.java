@@ -71,7 +71,7 @@ class MyBookingsStatesAndTicketTest {
                 501L,
                 ref,
                 userId,
-                "ALT 204",
+                "SR 204",
                 "JNB",
                 "Johannesburg",
                 dep,
@@ -96,7 +96,7 @@ class MyBookingsStatesAndTicketTest {
         rec.setBookingReference(ref);
         rec.setUserId(ownerUserId);
         rec.setFlightId(101L);
-        rec.setFlightNumber("ALT 204");
+        rec.setFlightNumber("SR 204");
         rec.setOrigin("Johannesburg (JNB)");
         rec.setOriginCity("Johannesburg");
         rec.setDestination("Cape Town (CPT)");
@@ -374,13 +374,13 @@ class MyBookingsStatesAndTicketTest {
         BookingSummary up1 = createSampleSummary(12L, "UP0001");
         BookingSummary up2 = createSampleSummary(12L, "UP0002");
         BookingSummary past1 = new BookingSummary(
-                502L, "PA0001", 12L, "ALT 205",
+                502L, "PA0001", 12L, "SR 205",
                 "CPT", "Cape Town", Instant.parse("2026-11-01T06:00:00Z"), ZoneId.of("Africa/Johannesburg"),
                 "JNB", "Johannesburg", Instant.parse("2026-11-01T08:00:00Z"), ZoneId.of("Africa/Johannesburg"),
                 "COMPLETED", "CONFIRMED", List.of("8B"), new BigDecimal("1400.00"),
                 "Demo Traveller", "demo.traveller@example.com", "Airbus A320");
         BookingSummary can1 = new BookingSummary(
-                503L, "CA0001", 12L, "ALT 602",
+                503L, "CA0001", 12L, "SR 602",
                 "JNB", "Johannesburg", Instant.parse("2026-11-25T06:00:00Z"), ZoneId.of("Africa/Johannesburg"),
                 "DUR", "Durban", Instant.parse("2026-11-25T07:25:00Z"), ZoneId.of("Africa/Johannesburg"),
                 "CANCELLED", "CANCELLED", List.of("9C"), new BigDecimal("1100.00"),
@@ -442,19 +442,19 @@ class MyBookingsStatesAndTicketTest {
         Clock futureClock = Clock.fixed(Instant.parse("2027-01-01T00:00:00Z"), ZoneOffset.UTC);
         ZoneId sast = ZoneId.of("Africa/Johannesburg");
         List<BookingSummary> pastRows = List.of(
-                new BookingSummary(1L, "PST101", 12L, "ALT 204", "JNB", "Johannesburg",
+                new BookingSummary(1L, "PST101", 12L, "SR 204", "JNB", "Johannesburg",
                         Instant.parse("2026-11-10T04:30:00Z"), sast, "CPT", "Cape Town",
                         Instant.parse("2026-11-10T06:40:00Z"), sast, "COMPLETED", "CONFIRMED",
                         List.of("6A"), new BigDecimal("1522.00"), "Demo Traveller", "demo.traveller@example.com", "Boeing 737-800"),
-                new BookingSummary(2L, "PST102", 12L, "ALT 310", "JNB", "Johannesburg",
+                new BookingSummary(2L, "PST102", 12L, "SR 310", "JNB", "Johannesburg",
                         Instant.parse("2026-11-11T07:15:00Z"), sast, "CPT", "Cape Town",
                         Instant.parse("2026-11-11T09:25:00Z"), sast, "COMPLETED", "CONFIRMED",
                         List.of("7B"), new BigDecimal("1450.00"), "Demo Traveller", "demo.traveller@example.com", "Boeing 737-800"),
-                new BookingSummary(3L, "PST103", 12L, "ALT 602", "JNB", "Johannesburg",
+                new BookingSummary(3L, "PST103", 12L, "SR 602", "JNB", "Johannesburg",
                         Instant.parse("2026-11-12T05:00:00Z"), sast, "DUR", "Durban",
                         Instant.parse("2026-11-12T06:25:00Z"), sast, "COMPLETED", "CONFIRMED",
                         List.of("8C"), new BigDecimal("950.00"), "Demo Traveller", "demo.traveller@example.com", "Boeing 737-800"),
-                new BookingSummary(4L, "PST104", 12L, "ALT 702", "CPT", "Cape Town",
+                new BookingSummary(4L, "PST104", 12L, "SR 702", "CPT", "Cape Town",
                         Instant.parse("2026-11-13T06:30:00Z"), sast, "DUR", "Durban",
                         Instant.parse("2026-11-13T08:30:00Z"), sast, "COMPLETED", "CONFIRMED",
                         List.of("2A"), new BigDecimal("2100.00"), "Demo Traveller", "demo.traveller@example.com", "Boeing 737-800")

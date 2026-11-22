@@ -97,20 +97,20 @@ class PostgresIntegrationTest {
             assertEquals(expectedFlightCount, flights.size(),
                     "Should return all scheduled flights for JNB -> CPT on " + tomorrowSast);
 
-            FlightSearchResult alt204 = flights.stream()
-                    .filter(f -> "ALT 204".equals(f.getFlightNumber()))
+            FlightSearchResult sr204 = flights.stream()
+                    .filter(f -> f.getFlightNumber() != null && f.getFlightNumber().endsWith(" 204"))
                     .findFirst()
-                    .orElseThrow(() -> new AssertionError("Flight ALT 204 not found on " + tomorrowSast));
+                    .orElseThrow(() -> new AssertionError("Flight SR 204 not found on " + tomorrowSast));
 
-            assertEquals("06:30", alt204.getDepartureTime());
-            assertEquals("08:40", alt204.getArrivalTime());
-            assertEquals("2h 10m", alt204.getDuration());
-            assertEquals("JNB", alt204.getOriginCode());
-            assertEquals("O. R. Tambo International Airport", alt204.getOriginAirportName());
-            assertEquals("Johannesburg", alt204.getOriginCity());
-            assertEquals("CPT", alt204.getDestCode());
-            assertEquals("Cape Town International Airport", alt204.getDestAirportName());
-            assertEquals("Cape Town", alt204.getDestCity());
+            assertEquals("06:30", sr204.getDepartureTime());
+            assertEquals("08:40", sr204.getArrivalTime());
+            assertEquals("2h 10m", sr204.getDuration());
+            assertEquals("JNB", sr204.getOriginCode());
+            assertEquals("O. R. Tambo International Airport", sr204.getOriginAirportName());
+            assertEquals("Johannesburg", sr204.getOriginCity());
+            assertEquals("CPT", sr204.getDestCode());
+            assertEquals("Cape Town International Airport", sr204.getDestAirportName());
+            assertEquals("Cape Town", sr204.getDestCity());
 
             int independentAvailableCount = 0;
             String expectedModel = null;
@@ -119,7 +119,7 @@ class PostgresIntegrationTest {
                          "SELECT at.model, "
                          + "(SELECT COUNT(*) FROM flight_seats fs WHERE fs.flight_id = f.flight_id AND (fs.status = 'AVAILABLE' OR (fs.status = 'HELD' AND fs.held_until < NOW()))) "
                          + "FROM flights f JOIN aircraft_types at ON at.aircraft_type_id = f.aircraft_type_id WHERE f.flight_id = ?")) {
-                stmt.setLong(1, alt204.getFlightId());
+                stmt.setLong(1, sr204.getFlightId());
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         expectedModel = rs.getString(1);
@@ -128,8 +128,8 @@ class PostgresIntegrationTest {
                 }
             }
             assertNotNull(expectedModel);
-            assertEquals(expectedModel, alt204.getAircraftModel());
-            assertEquals(independentAvailableCount, alt204.getAvailableSeats());
+            assertEquals(expectedModel, sr204.getAircraftModel());
+            assertEquals(independentAvailableCount, sr204.getAvailableSeats());
         } finally {
             java.util.TimeZone.setDefault(originalTz);
         }
@@ -436,26 +436,26 @@ class PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("Cabin availability per flight: tomorrow's ALT 204 matches DB available and aircraft template capacity")
-    void testCabinAvailabilityAlt204() throws SQLException {
-        assertAlt204CabinAvailability(false);
+    @DisplayName("Cabin availability per flight: tomorrow's SR 204 matches DB available and aircraft template capacity")
+    void testCabinAvailabilitySr204() throws SQLException {
+        assertSr204CabinAvailability(false);
     }
 
     @Test
     @Tag("integration-full")
-    @DisplayName("Full-cabin seeded DB: tomorrow's ALT 204 has full A320 capacity (economy 150, first 12)")
-    void testFullCabinCapacityAlt204() throws SQLException {
-        assertAlt204CabinAvailability(true);
+    @DisplayName("Full-cabin seeded DB: tomorrow's SR 204 has full A320 capacity (economy 150, first 12)")
+    void testFullCabinCapacitySr204() throws SQLException {
+        assertSr204CabinAvailability(true);
     }
 
-    private void assertAlt204CabinAvailability(boolean requireFullCabin) throws SQLException {
+    private void assertSr204CabinAvailability(boolean requireFullCabin) throws SQLException {
         FlightDaoImpl flightDao = new FlightDaoImpl();
         LocalDate tomorrow = LocalDate.now(ZoneId.of("Africa/Johannesburg")).plusDays(1);
         List<FlightSearchResult> flights = flightDao.searchFlights("JNB", "CPT", tomorrow);
-        FlightSearchResult alt204 = flights.stream()
-                .filter(f -> "ALT 204".equals(f.getFlightNumber()))
+        FlightSearchResult sr204 = flights.stream()
+                .filter(f -> f.getFlightNumber() != null && f.getFlightNumber().endsWith(" 204"))
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("Flight ALT 204 not found on " + tomorrow));
+                .orElseThrow(() -> new AssertionError("Flight ending in 204 (SR 204) not found on " + tomorrow));
 
         int dbAvailable = 0;
         int dbEconomy = 0;
@@ -477,7 +477,7 @@ class PostgresIntegrationTest {
                        (SELECT COUNT(*) FROM seat_templates st WHERE st.aircraft_type_id = f.aircraft_type_id AND st.seat_class = 'FIRST') AS tpl_fst
                      FROM flights f WHERE f.flight_id = ?
                      """)) {
-            stmt.setLong(1, alt204.getFlightId());
+            stmt.setLong(1, sr204.getFlightId());
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     dbAvailable = rs.getInt("avail");
@@ -491,10 +491,10 @@ class PostgresIntegrationTest {
             }
         }
 
-        assertEquals(dbAvailable, alt204.getAvailableSeats());
-        assertEquals(dbEconomy, alt204.getAvailableEconomy());
-        assertEquals(dbFirst, alt204.getAvailableFirst());
-        assertEquals(alt204.getAvailableSeats(), alt204.getAvailableEconomy() + alt204.getAvailableFirst());
+        assertEquals(dbAvailable, sr204.getAvailableSeats());
+        assertEquals(dbEconomy, sr204.getAvailableEconomy());
+        assertEquals(dbFirst, sr204.getAvailableFirst());
+        assertEquals(sr204.getAvailableSeats(), sr204.getAvailableEconomy() + sr204.getAvailableFirst());
         assertTrue(templateEconomy > 0 && templateFirst > 0, "Seat templates must exist for both cabins");
         assertEquals(templateEconomy, dbTotalEconomy);
         assertEquals(templateFirst, dbTotalFirst);

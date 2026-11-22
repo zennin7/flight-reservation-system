@@ -75,11 +75,11 @@ class AdminDashboardServiceTest {
         assertEquals("Departed", FlightLoadFactor.deriveStatus(now, now));
 
         AdminDashboardService service = new AdminDashboardService();
-        FlightLoadFactor low = new FlightLoadFactor(1, "ALT 100", "JNB", "CPT", now.plusSeconds(7200), SAST, 81, 100, 19, 81.0, "Scheduled");
-        FlightLoadFactor ok = new FlightLoadFactor(2, "ALT 101", "JNB", "CPT", now.plusSeconds(7200), SAST, 80, 100, 20, 80.0, "Scheduled");
+        FlightLoadFactor low = new FlightLoadFactor(1, "SR 100", "JNB", "CPT", now.plusSeconds(7200), SAST, 81, 100, 19, 81.0, "Scheduled");
+        FlightLoadFactor ok = new FlightLoadFactor(2, "SR 101", "JNB", "CPT", now.plusSeconds(7200), SAST, 80, 100, 20, 80.0, "Scheduled");
         List<FlightLoadFactor> filtered = service.filterLowFreeFlights(List.of(low, ok));
         assertEquals(1, filtered.size());
-        assertEquals("ALT 100", filtered.get(0).flightNumber());
+        assertEquals("SR 100", filtered.get(0).flightNumber());
     }
 
     @Test

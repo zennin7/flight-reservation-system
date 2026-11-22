@@ -50,7 +50,7 @@ class CheckoutHomeNavigationTest {
 
                 BookingContext ctx = new BookingContext();
                 ctx.setFlightId(1L);
-                ctx.setFlightNumber("ALT 204");
+                ctx.setFlightNumber("SR 204");
                 controller.init(ctx, () -> {});
 
                 // Construct scene with #contentArea container as in AppWindow

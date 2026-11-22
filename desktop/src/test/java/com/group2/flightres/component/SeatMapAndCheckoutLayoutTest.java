@@ -48,7 +48,7 @@ class SeatMapAndCheckoutLayoutTest {
     private static BookingContext createTestContext() {
         BookingContext ctx = new BookingContext();
         ctx.setFlightId(1L);
-        ctx.setFlightNumber("ALT 204");
+        ctx.setFlightNumber("SR 204");
         ctx.setOrigin("Johannesburg (JNB)");
         ctx.setDestination("Cape Town (CPT)");
         ctx.setDepartureInstant(Instant.parse("2026-11-11T04:30:00Z"));

@@ -62,7 +62,7 @@ class PriceAlignmentTest {
         List<FlightSearchResult> searchResults = flightService.searchFlights("Johannesburg (JNB)", "Cape Town (CPT)", tomorrow);
         assertFalse(searchResults.isEmpty(), "Must find flights for tomorrow on JNB -> CPT");
 
-        // Pick the first result (e.g. ALT 204 or ALT 205)
+        // Pick the first result (e.g. SR 204 or SR 205)
         FlightSearchResult selectedFlight = searchResults.get(0);
         BigDecimal searchPrice = selectedFlight.getBasePrice();
         assertNotNull(searchPrice, "Search result must have a computed quote base price");

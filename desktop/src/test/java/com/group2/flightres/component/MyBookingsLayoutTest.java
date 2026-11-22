@@ -64,7 +64,7 @@ class MyBookingsLayoutTest {
                     100L + i,
                     "PNR" + String.format("%03d", i),
                     12L,
-                    "ALT " + (200 + i),
+                    "SR " + (200 + i),
                     "JNB",
                     "Johannesburg",
                     dep,

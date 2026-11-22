@@ -197,8 +197,8 @@ class AdminDashboardLayoutTest {
                         7, 16.7, new BigDecimal("28175.75"), 12.5, 9, 10.0, 1, null,
                         List.of(new DailySeriesPoint(LocalDate.now(sast), "Mon", 7, new BigDecimal("28175.75"), 9, 1)),
                         new CabinLoadBreakdown(7, 2, 171, 180, 3, 1),
-                        List.of(new FlightLoadFactor(1, "ALT 101", "JNB", "CPT", dep, sast, 90, 100, 10, 90.0, "Scheduled")),
-                        List.of(new FlightLoadFactor(1, "ALT 101", "JNB", "CPT", dep, sast, 90, 100, 10, 90.0, "Scheduled")),
+                        List.of(new FlightLoadFactor(1, "SR 101", "JNB", "CPT", dep, sast, 90, 100, 10, 90.0, "Scheduled")),
+                        List.of(new FlightLoadFactor(1, "SR 101", "JNB", "CPT", dep, sast, 90, 100, 10, 90.0, "Scheduled")),
                         List.of(new TopDestinationItem("CPT", "Cape Town", 5)),
                         List.of(new RecentBookingItem("9RQHX7", "Amahle Mokoena", "JNB -> CPT", "9E", new BigDecimal("3557.75")))
                 );
