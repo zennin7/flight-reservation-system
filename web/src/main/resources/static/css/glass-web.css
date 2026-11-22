@@ -3,13 +3,27 @@
 
 :root {
     --glass-text: #ffffff;
-    --glass-text-muted: rgba(255, 255, 255, .66);
-    --glass-text-faint: rgba(255, 255, 255, .46);
-    --glass-panel: rgba(34, 40, 46, .46);
-    --glass-panel-edge: rgba(255, 255, 255, .22);
-    --glass-tile: rgba(8, 12, 16, .30);
-    --glass-tile-hi: rgba(255, 255, 255, .09);
-    --glass-line: rgba(255, 255, 255, .13);
+    --glass-text-muted: rgba(255, 255, 255, 0.74);
+    --glass-text-nav: rgba(255, 255, 255, 0.84);
+    --glass-text-faint: rgba(255, 255, 255, 0.56);
+    --glass-panel: rgba(15, 19, 24, 0.72);
+    --glass-surface: rgba(15, 19, 24, 0.72);
+    --glass-surface-strong: rgba(15, 19, 24, 0.84);
+    --glass-surface-solid: #12171d;
+    --glass-frame-bg: rgba(15, 19, 24, 0.68);
+    --glass-frame-solid: #141a21;
+    --glass-nav-pill: rgba(15, 19, 24, 0.56);
+    --glass-chip-bg: rgba(15, 19, 24, 0.54);
+    --glass-pill-muted-bg: rgba(255, 255, 255, 0.08);
+    --glass-panel-edge: rgba(255, 255, 255, 0.14);
+    --glass-border-edge: rgba(255, 255, 255, 0.14);
+    --glass-border-strong: rgba(255, 255, 255, 0.24);
+    --glass-tile: rgba(10, 14, 19, 0.52);
+    --glass-tile-hi: rgba(255, 255, 255, 0.09);
+    --glass-line: rgba(255, 255, 255, 0.14);
+    --glass-blur: 20px;
+    --glass-backdrop-aerial: url('/photos/aerial-1.jpg');
+    --glass-backdrop-cabin: url('/photos/aerial-1.jpg');
     --glass-white: #ffffff;
     --glass-cream: #f1eedf;
     --glass-ink: #15181c;
@@ -19,14 +33,17 @@
     --glass-danger: #ff7a7a;
 
     /* Derived backdrop, shadow, and fallback card gradients */
-    --glass-bg-base: #1f262c;
-    --glass-hero-scrim-top: rgba(16, 22, 27, 0.56);
-    --glass-hero-scrim-mid: rgba(20, 27, 33, 0.72);
-    --glass-hero-scrim-bot: rgba(22, 28, 34, 0.94);
+    --glass-bg-base: #0d1c24;
+    --glass-scrim-top: rgba(11, 16, 22, 0.56);
+    --glass-scrim-mid: rgba(11, 16, 22, 0.62);
+    --glass-scrim-bot: rgba(11, 16, 22, 0.80);
+    --glass-hero-scrim-top: rgba(11, 16, 22, 0.56);
+    --glass-hero-scrim-mid: rgba(11, 16, 22, 0.62);
+    --glass-hero-scrim-bot: rgba(11, 16, 22, 0.80);
     --glass-shadow-lg: 0 28px 64px rgba(0, 0, 0, 0.42);
     --glass-shadow-btn: 0 10px 24px rgba(0, 0, 0, 0.25);
-    --glass-inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.24);
-    --glass-card-scrim: linear-gradient(to top, rgba(15, 19, 24, 0.88) 0%, rgba(15, 19, 24, 0.24) 55%, rgba(15, 19, 24, 0.08) 100%);
+    --glass-inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    --glass-card-scrim: linear-gradient(to top, rgba(15, 19, 24, 0.88) 0%, rgba(15, 19, 24, 0.28) 55%, rgba(15, 19, 24, 0.12) 100%);
     --glass-grad-1: linear-gradient(135deg, #273845 0%, #3a5263 100%);
     --glass-grad-2: linear-gradient(135deg, #2a353d 0%, #445966 100%);
     --glass-grad-3: linear-gradient(135deg, #23333d 0%, #395562 100%);
@@ -81,16 +98,36 @@ a {
     outline-offset: 2px;
 }
 
-/* Full-bleed aerial backdrop */
-.glass-backdrop {
+/* Full-bleed aerial / destination / cabin backdrops */
+.glass-backdrop,
+.backdrop-aerial {
     position: fixed;
     inset: 0;
     z-index: -2;
     background-color: var(--glass-bg-base);
-    background-image: url('/photos/login-side.jpg');
+    background-image: var(--glass-backdrop-aerial);
     background-size: cover;
-    background-position: center 35%;
-    filter: brightness(0.76) saturate(1.05);
+    background-position: center center;
+}
+
+.backdrop-destination {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-color: var(--glass-bg-base);
+    background-size: cover;
+    background-position: center center;
+}
+
+.backdrop-cabin {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-color: var(--glass-bg-base);
+    background-image: var(--glass-backdrop-cabin);
+    background-size: cover;
+    background-position: center center;
+    filter: blur(8px) scale(1.04);
 }
 
 .glass-backdrop-scrim {
@@ -99,9 +136,9 @@ a {
     z-index: -1;
     background: linear-gradient(
         180deg,
-        var(--glass-hero-scrim-top) 0%,
-        var(--glass-hero-scrim-mid) 45%,
-        var(--glass-hero-scrim-bot) 100%
+        var(--glass-scrim-top) 0%,
+        var(--glass-scrim-mid) 48%,
+        var(--glass-scrim-bot) 100%
     );
 }
 
@@ -120,12 +157,12 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     min-width: 0;
 }
 
-/* Reusable Glass Panel */
+/* Reusable Glass Panel (surface, blur, 1px hairline edge tokens) */
 .glass-panel {
-    background: linear-gradient(165deg, var(--glass-tile-hi) 0%, var(--glass-panel) 100%);
-    backdrop-filter: blur(34px) saturate(1.35);
-    -webkit-backdrop-filter: blur(34px) saturate(1.35);
-    border: 1px solid var(--glass-panel-edge);
+    background: var(--glass-surface);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border-edge);
     border-radius: 28px;
     box-shadow: var(--glass-shadow-lg), var(--glass-inset-hi);
 }
@@ -1791,5 +1828,38 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     .nav-link {
         font-size: 12px;
         padding: 5px 8px;
+    }
+}
+
+/* Solid-token fallback where backdrop-filter is unsupported */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass-panel,
+    .nav-pill-bar,
+    .avatar-pill-btn,
+    .avatar-menu,
+    .mobile-sheet-panel {
+        background: var(--glass-surface-solid);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+    .inner-glass-frame {
+        background: var(--glass-frame-solid);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+    .btn-pill:hover,
+    .dest-card:hover {
+        transform: none;
     }
 }

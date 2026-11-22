@@ -59,4 +59,31 @@ public class DestinationPhotoResolverTest {
         assertTrue(DestinationPhotoResolver.resolveBytes("").isEmpty());
         assertTrue(DestinationPhotoResolver.resolveBytes("   ").isEmpty());
     }
+
+    @Test
+    @DisplayName("All 13 database airports resolve non-empty photo bytes and fallback covers PLZ/GRJ/unknown")
+    void testAllDbAirportsAndAerialFallback() {
+        assertEquals(13, DestinationPhotoResolver.knownAirportCodes().size());
+        assertEquals(java.util.Set.of("PLZ", "GRJ"), DestinationPhotoResolver.airportsWithoutDedicatedPhoto());
+
+        for (String code : DestinationPhotoResolver.knownAirportCodes()) {
+            Optional<URL> urlOpt = DestinationPhotoResolver.resolveUrl(code);
+            assertTrue(urlOpt.isPresent(), "Expected photo URL for known airport " + code);
+            Optional<byte[]> bytesOpt = DestinationPhotoResolver.resolveBytes(code);
+            assertTrue(bytesOpt.isPresent() && bytesOpt.get().length > 5000,
+                    "Expected valid photo bytes for known airport " + code);
+            String webPath = DestinationPhotoResolver.resolveWebPath(code);
+            assertTrue(webPath.startsWith("/photos/") && webPath.endsWith(".jpg"),
+                    "Invalid web path for " + code + ": " + webPath);
+        }
+
+        assertFalse(DestinationPhotoResolver.hasDedicatedPhoto("PLZ"));
+        assertFalse(DestinationPhotoResolver.hasDedicatedPhoto("GRJ"));
+        assertTrue(DestinationPhotoResolver.resolveUrl("PLZ").orElseThrow().getPath().contains("aerial-fallback.jpg"));
+        assertEquals(DestinationPhotoResolver.WEB_AERIAL_FALLBACK, DestinationPhotoResolver.resolveWebPath("GRJ"));
+
+        assertTrue(DestinationPhotoResolver.resolveUrlOrFallback("UNKNOWN").isPresent());
+        assertTrue(DestinationPhotoResolver.resolveBytesOrFallback("UNKNOWN").orElseThrow().length > 5000);
+        assertEquals(DestinationPhotoResolver.WEB_AERIAL_FALLBACK, DestinationPhotoResolver.resolveWebPath("UNKNOWN"));
+    }
 }

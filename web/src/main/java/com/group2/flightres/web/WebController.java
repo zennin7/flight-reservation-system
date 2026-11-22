@@ -29,6 +29,7 @@ import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.service.SimulatedPaymentGateway;
 import com.group2.flightres.service.VerifyThrottle;
 import com.group2.flightres.util.BoardingPassPdfGenerator;
+import com.group2.flightres.util.DestinationPhotoResolver;
 import com.group2.flightres.util.FlightTimes;
 import com.group2.flightres.util.QrCodeGenerator;
 import com.group2.flightres.util.ValidationUtil;
@@ -208,20 +209,7 @@ public class WebController {
     }
 
     private HomeDestinationCard toDestinationCard(RouteSummary route, int gradIdx) {
-        String photo = switch (route.getDestCode()) {
-            case "CPT" -> "/photos/dest-capetown.jpg";
-            case "DUR" -> "/photos/dest-durban.jpg";
-            case "JNB" -> "/photos/dest-johannesburg.jpg";
-            case "DXB" -> "/photos/dest-dubai.jpg";
-            case "FCO" -> "/photos/dest-rome.jpg";
-            case "ZRH" -> "/photos/dest-swiss-alps.jpg";
-            case "MXP" -> "/photos/dest-lake-como.jpg";
-            case "JTR" -> "/photos/dest-santorini.jpg";
-            case "NCE" -> "/photos/dest-monaco.jpg";
-            case "PSA" -> "/photos/dest-cinque-terre.jpg";
-            case "GVA" -> "/photos/dest-valais.jpg";
-            default -> null;
-        };
+        String photo = DestinationPhotoResolver.resolveWebPath(route.getDestCode());
         String gradientClass = "dest-grad-" + (((gradIdx - 1) % 6) + 1);
         return new HomeDestinationCard(route, photo, gradientClass);
     }
