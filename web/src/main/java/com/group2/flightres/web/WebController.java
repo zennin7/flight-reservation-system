@@ -17,6 +17,7 @@ import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BoardingPassVerificationService;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.CancellationPolicy;
+import com.group2.flightres.service.FlightSalesPolicy;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.service.LoginThrottle;
 import com.group2.flightres.service.PaymentResult;
@@ -28,6 +29,7 @@ import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.service.SimulatedPaymentGateway;
 import com.group2.flightres.service.VerifyThrottle;
 import com.group2.flightres.util.BoardingPassPdfGenerator;
+import com.group2.flightres.util.FlightTimes;
 import com.group2.flightres.util.QrCodeGenerator;
 import com.group2.flightres.util.ValidationUtil;
 import io.javalin.http.Context;
@@ -44,6 +46,7 @@ import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -248,7 +251,10 @@ public class WebController {
 
         if (origin == null || origin.isBlank()) origin = "Johannesburg (JNB)";
         if (destination == null || destination.isBlank()) destination = "Cape Town (CPT)";
-        if (dateStr == null || dateStr.isBlank()) dateStr = "2026-11-02";
+        if (dateStr == null || dateStr.isBlank()) {
+            LocalDate today = LocalDate.now(bookingService.getClock());
+            dateStr = flightService.nextAvailableDate(origin, destination, today).orElse(today).toString();
+        }
 
         model.put("origin", origin);
         model.put("destination", destination);
@@ -301,6 +307,15 @@ public class WebController {
         }
 
         FlightSearchResult flight = flightOpt.get();
+        if (flight.getDeparture() != null
+                && !FlightSalesPolicy.isOpen(flight.getDeparture(), bookingService.getClock())) {
+            ctx.status(409);
+            renderSeatsWithError(ctx, flightId,
+                    "Sales for this flight have closed (bookings close "
+                            + FlightSalesPolicy.SALES_CLOSE_BEFORE_DEPARTURE.toMinutes()
+                            + " minutes before departure).");
+            return;
+        }
         List<FlightSeat> seats = seatMapService.loadSeatMap(flightId);
         FlightSeat targetSeat = seats.stream()
                 .filter(s -> s.getFlightSeatId() == flightSeatId)
@@ -332,7 +347,8 @@ public class WebController {
                 flight.getOriginCity() != null ? flight.getOriginCity() + " (" + flight.getOriginCode() + ")" : "Johannesburg (JNB)");
         String destination = firstNonBlank(ctx.formParam("destination"),
                 flight.getDestCity() != null ? flight.getDestCity() + " (" + flight.getDestCode() + ")" : "Cape Town (CPT)");
-        String departureDate = firstNonBlank(ctx.formParam("departureDate"), "2026-11-02");
+        String departureDate = firstNonBlank(resolveDepartureDate(flight),
+                LocalDate.now(bookingService.getClock()).toString());
 
         // 2. Acquire owner-bound seat hold
         String holdOwner = resolveHoldOwner(ctx);
@@ -386,6 +402,16 @@ public class WebController {
             ctx.status(403);
             renderCheckoutModel(ctx, cs, "forbidden", "This seat hold belongs to another user or session",
                     "This seat hold belongs to another user or browser session. Please select your own seat.", null);
+            return;
+        }
+
+        if (cs.getDepartureInstant() != null
+                && !FlightSalesPolicy.isOpen(cs.getDepartureInstant(), bookingService.getClock())) {
+            seatMapService.deselectSeat(cs.getSeat(), cs.getHoldOwner());
+            ctx.status(409);
+            renderCheckoutModel(ctx, cs, "expired", "Flight sales have closed",
+                    "Sales close " + FlightSalesPolicy.SALES_CLOSE_BEFORE_DEPARTURE.toMinutes()
+                            + " minutes before departure. This flight can no longer be booked.", null);
             return;
         }
 
@@ -509,6 +535,16 @@ public class WebController {
                 ctx.status(410);
                 renderCheckoutModel(ctx, cs, "expired", "Your 5-minute seat hold has expired",
                         "Your seat hold expired before payment was submitted. Please pick a seat again on the seat map.", null);
+                return;
+            }
+
+            if (cs.getDepartureInstant() != null
+                    && !FlightSalesPolicy.isOpen(cs.getDepartureInstant(), bookingService.getClock())) {
+                seatMapService.deselectSeat(cs.getSeat(), cs.getHoldOwner());
+                ctx.status(409);
+                renderCheckoutModel(ctx, cs, "expired", "Flight sales have closed",
+                        "Sales close " + FlightSalesPolicy.SALES_CLOSE_BEFORE_DEPARTURE.toMinutes()
+                                + " minutes before departure. This flight can no longer be booked.", null);
                 return;
             }
 
@@ -1308,7 +1344,10 @@ public class WebController {
 
         String departureDate = ctx.queryParam("departureDate");
         if (departureDate == null || departureDate.isBlank()) departureDate = ctx.formParam("departureDate");
-        if (departureDate == null || departureDate.isBlank()) departureDate = "2026-11-02";
+        if (departureDate == null || departureDate.isBlank()) {
+            departureDate = firstNonBlank(resolveDepartureDate(flightOpt.get()),
+                    LocalDate.now(bookingService.getClock()).toString());
+        }
 
         model.put("origin", origin);
         model.put("destination", destination);
@@ -1355,6 +1394,14 @@ public class WebController {
             rowList.sort(Comparator.comparing(FlightSeat::getSeatCol));
         }
         return seatsByRow;
+    }
+
+    private static String resolveDepartureDate(FlightSearchResult flight) {
+        if (flight == null || flight.getDeparture() == null) {
+            return null;
+        }
+        ZoneId zone = flight.getOriginZone() != null ? flight.getOriginZone() : ZoneId.of("Africa/Johannesburg");
+        return FlightTimes.formatLocalDate(flight.getDeparture(), zone);
     }
 
     private long parseFlightId(String str) {

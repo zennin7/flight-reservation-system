@@ -83,7 +83,7 @@
             <div>
               <div class="bp-meta-label">From</div>
               <div class="bp-endpoint-city" th:text="${record.origin != null ? record.origin : 'Johannesburg (JNB)'}">Johannesburg (JNB)</div>
-              <div class="bp-endpoint-time" th:text="${'Departs ' + (record.departureTime != null ? record.departureTime : '--:--')}">Departs 06:30</div>
+              <div class="bp-endpoint-time" th:text="${'Departs ' + (record.departureDate != null ? record.departureDate + ' · ' : '') + (record.departureTime != null ? record.departureTime : '--:--')}">Departs 2026-11-24 · 06:30</div>
             </div>
             <div class="bp-route-arrow" aria-hidden="true">&rarr;</div>
             <div>
