@@ -15,170 +15,137 @@
   <div class="backdrop-aerial" aria-hidden="true"></div>
   <div class="glass-backdrop-scrim" aria-hidden="true"></div>
 
-  <div class="page-shell">
-    <div th:replace="~{fragments/shell :: topbar('home')}"></div>
+  <div class="page-shell home-page-shell">
+    <section class="home-above-fold" aria-label="Home hero and flight search">
+      <div th:replace="~{fragments/shell :: topbar('home')}"></div>
 
-    <main>
       <div th:if="${flashSuccess != null}" class="status-banner is-success" role="status" aria-live="polite">
         <span th:text="${flashSuccess}">Welcome aboard! Your Sky Royal account is ready.</span>
       </div>
 
-      <!-- (b) Hero + Glass Search Card -->
-      <section class="hero-section" aria-label="Flight search">
-        <div>
-          <div class="hero-eyebrow">Johannesburg &middot; Cape Town &middot; Durban &middot; International</div>
+      <div class="home-hero-grid">
+        <div class="home-hero-copy">
+          <div class="hero-eyebrow" th:text="${heroEyebrow}">JOHANNESBURG &middot; CAPE TOWN &middot; DURBAN</div>
           <h1 class="hero-title">Fly higher.</h1>
           <p class="hero-copy">
             Pick a seat on the map, pay securely, and carry your boarding pass in your pocket.
           </p>
         </div>
 
-        <form action="/flights" method="GET" class="glass-panel search-panel">
-          <div class="search-top-row">
-            <div class="trip-chips" role="group" aria-label="Trip type">
-              <button type="button" class="chip-btn selected" id="chipRoundTrip" data-trip="round">Round trip</button>
-              <button type="button" class="chip-btn" id="chipOneWay" data-trip="oneway">One way</button>
-            </div>
-            <span class="search-meta-note">Sales close 60 minutes before departure</span>
+        <aside class="glass-panel popular-week-card" aria-label="Popular this week">
+          <div class="popular-week-head">
+            <h2 class="popular-week-title">Popular this week</h2>
+            <span class="live-fares-pill">
+              <span class="live-dot" aria-hidden="true"></span>
+              <span>Live fares</span>
+            </span>
           </div>
 
-          <div class="search-grid">
-            <label class="glass-tile field-tile">
-              <span class="field-label">From</span>
-              <select name="origin" class="field-control" aria-label="Origin airport">
+          <div th:if="${#lists.isEmpty(popularWeekRoutes)}" class="status-banner">
+            No upcoming scheduled routes available right now.
+          </div>
+
+          <div th:unless="${#lists.isEmpty(popularWeekRoutes)}" class="popular-week-list">
+            <a th:each="r : ${popularWeekRoutes}"
+               th:href="@{/flights(origin=${r.originParam},destination=${r.destParam},date=${tomorrowDate})}"
+               class="popular-route-row">
+              <div>
+                <div class="popular-route-code" th:text="${r.originCode + ' → ' + r.destCode}">JNB → CPT</div>
+                <div class="popular-route-meta"
+                     th:text="${r.destCity + ' · ' + r.durationFormatted + ' · ' + r.flightCount + ' flights'}">
+                  Cape Town · 2h 10m · daily
+                </div>
+              </div>
+              <div class="popular-route-fare">
+                <span class="popular-fare-kicker">from</span>
+                <span class="popular-fare-val" th:text="${r.cheapestFareFormatted}">R 1,180.00</span>
+              </div>
+            </a>
+          </div>
+        </aside>
+      </div>
+
+      <div class="home-jet-spacer" aria-hidden="true"></div>
+
+      <div>
+        <form action="/flights" method="GET" class="glass-panel home-search-panel" aria-label="Search flights">
+          <div class="home-search-head">
+            <span class="trip-mode-label">One-way flights</span>
+            <span class="search-meta-note" th:text="${'Sales close ' + salesCloseMinutes + ' minutes before departure'}">
+              Sales close 60 minutes before departure
+            </span>
+          </div>
+
+          <div class="search-strip-inner">
+            <label class="strip-cell">
+              <span class="strip-label">From</span>
+              <select name="origin" id="homeOriginSelect" class="strip-select" aria-label="Origin airport"
+                      data-sync-sub="homeOriginSub">
                 <option th:each="ap : ${airports}"
                         th:value="${ap.city + ' (' + ap.code + ')'}"
-                        th:text="${ap.city + ' (' + ap.code + ')'}"
-                        th:selected="${ap.code == 'JNB'}">Johannesburg (JNB)</option>
-                <option th:if="${#lists.isEmpty(airports)}" value="Johannesburg (JNB)" selected>Johannesburg (JNB)</option>
+                        th:text="${ap.city}"
+                        th:attr="data-subtitle=${ap.code + ' · ' + ap.name}"
+                        th:selected="${ap.code == 'JNB'}">Johannesburg</option>
+                <option th:if="${#lists.isEmpty(airports)}" value="Johannesburg (JNB)"
+                        data-subtitle="JNB · O. R. Tambo International" selected>Johannesburg</option>
               </select>
+              <span class="strip-sub" id="homeOriginSub">JNB &middot; O. R. Tambo International</span>
             </label>
 
-            <label class="glass-tile field-tile">
-              <span class="field-label">To</span>
-              <select name="destination" class="field-control" aria-label="Destination airport">
+            <label class="strip-cell">
+              <span class="strip-label">To</span>
+              <select name="destination" id="homeDestSelect" class="strip-select" aria-label="Destination airport"
+                      data-sync-sub="homeDestSub">
                 <option th:each="ap : ${airports}"
                         th:value="${ap.city + ' (' + ap.code + ')'}"
-                        th:text="${ap.city + ' (' + ap.code + ')'}"
-                        th:selected="${ap.code == 'CPT'}">Cape Town (CPT)</option>
-                <option th:if="${#lists.isEmpty(airports)}" value="Cape Town (CPT)" selected>Cape Town (CPT)</option>
+                        th:text="${ap.city}"
+                        th:attr="data-subtitle=${ap.code + ' · ' + ap.name}"
+                        th:selected="${ap.code == 'CPT'}">Cape Town</option>
+                <option th:if="${#lists.isEmpty(airports)}" value="Cape Town (CPT)"
+                        data-subtitle="CPT · Cape Town International" selected>Cape Town</option>
               </select>
+              <span class="strip-sub" id="homeDestSub">CPT &middot; Cape Town International</span>
             </label>
 
-            <label class="glass-tile field-tile">
-              <span class="field-label">Departure</span>
-              <input type="date" name="date" class="field-control" th:value="${tomorrowDate}" required>
+            <label class="strip-cell">
+              <span class="strip-label">Departure</span>
+              <input type="date" name="date" id="homeDateInput" class="strip-date"
+                     th:value="${tomorrowDate}" data-sync-sub="homeDateSub" required>
+              <span class="strip-sub" id="homeDateSub" th:text="${tomorrowWeekday}">Monday</span>
             </label>
 
-            <label class="glass-tile field-tile" id="returnTile">
-              <span class="field-label">Return</span>
-              <input type="date" name="returnDate" id="returnDateInput" class="field-control" th:value="${returnDate}">
-            </label>
-
-            <label class="glass-tile field-tile">
-              <span class="field-label">Travellers &amp; cabin</span>
-              <select name="cabin" class="field-control" aria-label="Cabin">
-                <option value="ECONOMY" selected>1 Traveller &middot; Economy</option>
-                <option value="FIRST">1 Traveller &middot; First</option>
+            <label class="strip-cell">
+              <span class="strip-label">Travellers &amp; cabin</span>
+              <select name="cabin" id="homeCabinSelect" class="strip-select" aria-label="Cabin"
+                      data-sync-sub="homeCabinSub">
+                <option value="ECONOMY" data-subtitle="Economy" selected>1 Traveller</option>
+                <option value="FIRST" data-subtitle="First Class">1 Traveller</option>
               </select>
+              <span class="strip-sub" id="homeCabinSub">Economy</span>
             </label>
 
-            <div class="search-submit-wrap">
-              <button type="submit" class="btn-pill btn-white">Search flights</button>
-            </div>
+            <button type="submit" class="search-square-btn" aria-label="Search flights">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z" fill="currentColor"/>
+              </svg>
+            </button>
           </div>
         </form>
 
-        <div th:if="${homeError != null}" class="status-banner is-error" th:text="${homeError}">
+        <div th:if="${homeError != null}" class="status-banner is-error" role="alert" th:text="${homeError}" style="margin-top: 12px;">
           Unable to load live schedules right now.
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- (c) Where to next? Popular routes (3 photo cards with cheapest real economy fare) -->
-      <section id="destinations" aria-labelledby="popular-heading">
-        <div class="section-head">
-          <div>
-            <div class="section-kicker">Popular routes</div>
-            <h2 class="section-title" id="popular-heading">Where to next?</h2>
-          </div>
-          <a href="/flights" class="section-link">Search all flights &rarr;</a>
-        </div>
-
-        <div th:if="${#lists.isEmpty(popularRoutes)}" class="status-banner">
-          No upcoming popular routes are currently scheduled. Use Search flights to check specific dates.
-        </div>
-
-        <div th:unless="${#lists.isEmpty(popularRoutes)}" class="cards-grid-3">
-          <a th:each="card : ${popularRoutes}"
-             th:href="@{/flights(origin=${card.route.originParam},destination=${card.route.destParam},date=${tomorrowDate})}"
-             th:class="${card.photoPath != null ? 'dest-card' : 'dest-card ' + card.gradientClass}">
-            <img th:if="${card.photoPath != null}" th:src="${card.photoPath}" th:alt="${card.route.destCity}" class="dest-card-img">
-            <div class="dest-card-scrim" aria-hidden="true"></div>
-            <div class="dest-card-body">
-              <div>
-                <div class="dest-city" th:text="${card.route.destCity}">Cape Town</div>
-                <div class="dest-meta" th:text="${'From ' + card.route.originCity + ' · ' + card.route.durationFormatted}">From Johannesburg · 2h 10m</div>
-              </div>
-              <div class="dest-fare">
-                <span class="dest-fare-label">Economy from</span>
-                <span class="dest-fare-val" th:text="${card.route.cheapestFareFormatted}">R 1,180.00</span>
-              </div>
-            </div>
-          </a>
-        </div>
-      </section>
-
-      <!-- (d) More routes this week (up to 12 real routes from DB) -->
-      <section aria-labelledby="more-routes-heading">
-        <div class="section-head">
-          <div>
-            <div class="section-kicker">Live schedule</div>
-            <h2 class="section-title" id="more-routes-heading">More routes this week</h2>
-          </div>
-        </div>
-
-        <div class="glass-panel routes-panel">
-          <div th:if="${#lists.isEmpty(moreRoutes)}" class="status-banner">
-            No scheduled routes available at the moment.
-          </div>
-          <div th:unless="${#lists.isEmpty(moreRoutes)}" class="routes-table-wrap">
-            <table class="routes-table">
-              <thead>
-                <tr>
-                  <th>Origin</th>
-                  <th>Destination</th>
-                  <th>Duration</th>
-                  <th class="num">Cheapest fare</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="r : ${moreRoutes}">
-                  <td>
-                    <span class="route-code" th:text="${r.originCode}">JNB</span>
-                    <span th:text="${' · ' + r.originCity}"> · Johannesburg</span>
-                  </td>
-                  <td>
-                    <a th:href="@{/flights(origin=${r.originParam},destination=${r.destParam},date=${tomorrowDate})}">
-                      <span class="route-code" th:text="${r.destCode}">CPT</span>
-                      <span th:text="${' · ' + r.destCity}"> · Cape Town</span>
-                    </a>
-                  </td>
-                  <td th:text="${r.durationFormatted}">2h 10m</td>
-                  <td class="num route-fare" th:text="${r.cheapestFareFormatted}">R 1,180.00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- (e) Go further — International photo cards (only DB destinations with real flights) -->
-      <section aria-labelledby="intl-heading" th:unless="${#lists.isEmpty(internationalRoutes)}">
+    <main class="home-main">
+      <section id="destinations" aria-labelledby="intl-heading" th:unless="${#lists.isEmpty(internationalRoutes)}">
         <div class="section-head">
           <div>
             <div class="section-kicker">International</div>
             <h2 class="section-title" id="intl-heading">Go further.</h2>
           </div>
+          <a href="/flights" class="section-link">Search all flights &rarr;</a>
         </div>
 
         <div class="cards-grid-intl">
@@ -201,43 +168,6 @@
         </div>
       </section>
 
-      <!-- (f) Seat teaser -->
-      <section aria-labelledby="seat-teaser-heading">
-        <div class="glass-panel seat-teaser-panel">
-          <div>
-            <div class="section-kicker">Seat selection</div>
-            <h2 class="section-title" id="seat-teaser-heading">Choose the seat, not just the flight.</h2>
-            <p class="hero-copy">
-              See live cabin availability before you pay. Tap any open seat to hold it while you check out.
-            </p>
-            <div class="seat-legend">
-              <span class="legend-item"><span class="legend-dot free"></span>Free</span>
-              <span class="legend-item"><span class="legend-dot taken"></span>Taken</span>
-              <span class="legend-item"><span class="legend-dot yours"></span>Yours</span>
-            </div>
-          </div>
-
-          <div class="glass-tile seat-grid-box" aria-label="Sample cabin seat map">
-            <span class="seat-cell">1A</span><span class="seat-cell taken">1B</span><span class="seat-cell">1C</span>
-            <span class="seat-cell">1D</span><span class="seat-cell">1E</span><span class="seat-cell taken">1F</span>
-            <span class="seat-cell taken">2A</span><span class="seat-cell">2B</span><span class="seat-cell">2C</span>
-            <span class="seat-cell">2D</span><span class="seat-cell taken">2E</span><span class="seat-cell">2F</span>
-            <span class="seat-cell">3A</span><span class="seat-cell">3B</span><span class="seat-cell taken">3C</span>
-            <span class="seat-cell yours">3D</span><span class="seat-cell">3E</span><span class="seat-cell">3F</span>
-            <span class="seat-cell">4A</span><span class="seat-cell taken">4B</span><span class="seat-cell">4C</span>
-            <span class="seat-cell">4D</span><span class="seat-cell">4E</span><span class="seat-cell">4F</span>
-          </div>
-
-          <div class="glass-tile selected-seat-tile">
-            <span class="field-label">Your seat</span>
-            <span class="selected-seat-num">3D</span>
-            <span class="dest-meta">Economy &middot; Aisle</span>
-            <span class="dest-meta" th:text="${'Hold for ' + holdDurationText}">Hold for 5 min</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- (g) Facts strip -->
       <section aria-label="Platform highlights">
         <div class="facts-grid">
           <div class="glass-tile fact-tile">
@@ -250,7 +180,7 @@
           </div>
           <div class="glass-tile fact-tile">
             <span class="fact-val">1 tap boarding pass</span>
-            <span class="fact-label">Instant PDF &amp; calendar export</span>
+            <span class="fact-label">Instant PDF &amp; QR verification</span>
           </div>
           <div class="glass-tile fact-tile">
             <span class="fact-val">2 cabins</span>
@@ -260,32 +190,9 @@
       </section>
     </main>
 
-    <!-- (h) Footer with team credit -->
     <div th:replace="~{fragments/shell :: footer()}"></div>
   </div>
+
   <div th:replace="~{fragments/shell :: mobileSheet('home')}"></div>
-
-  <script>
-    (function () {
-      var roundBtn = document.getElementById('chipRoundTrip');
-      var oneWayBtn = document.getElementById('chipOneWay');
-      var returnTile = document.getElementById('returnTile');
-      var returnInput = document.getElementById('returnDateInput');
-      if (!roundBtn || !oneWayBtn || !returnTile || !returnInput) return;
-
-      roundBtn.addEventListener('click', function () {
-        roundBtn.classList.add('selected');
-        oneWayBtn.classList.remove('selected');
-        returnTile.classList.remove('is-disabled');
-        returnInput.disabled = false;
-      });
-      oneWayBtn.addEventListener('click', function () {
-        oneWayBtn.classList.add('selected');
-        roundBtn.classList.remove('selected');
-        returnTile.classList.add('is-disabled');
-        returnInput.disabled = true;
-      });
-    })();
-  </script>
 </body>
 </html>

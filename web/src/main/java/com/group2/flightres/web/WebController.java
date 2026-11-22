@@ -175,10 +175,9 @@ public class WebController {
             ctx.req().getSession().removeAttribute("flash_success");
             model.put("flashSuccess", flashSuccess);
         }
-        LocalDate tomorrow = LocalDate.now().plusDays(1);
-        LocalDate returnDate = tomorrow.plusDays(2);
+        LocalDate tomorrow = LocalDate.now(bookingService.getClock()).plusDays(1);
         model.put("tomorrowDate", tomorrow.toString());
-        model.put("returnDate", returnDate.toString());
+        model.put("tomorrowWeekday", tomorrow.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH));
         model.put("holdDurationText", (com.group2.flightres.config.SeatHoldPolicy.HOLD_SECONDS / 60) + " min");
 
         List<Airport> airports = Collections.emptyList();
@@ -190,6 +189,31 @@ public class WebController {
         } catch (Exception e) {
             logger.warn("Failed to load live home routes: {}", e.getMessage());
             homeError = "Unable to load live schedules right now. Please try searching directly.";
+        }
+
+        String heroEyebrow = buildHeroEyebrow(airports);
+
+        List<RouteSummary> popularWeekRoutes = new ArrayList<>();
+        Set<String> seenPopularRoutes = new HashSet<>();
+        List<String[]> preferredPairs = List.of(
+                new String[]{"JNB", "CPT"},
+                new String[]{"JNB", "DUR"},
+                new String[]{"CPT", "JNB"}
+        );
+        for (String[] pair : preferredPairs) {
+            for (RouteSummary r : allRoutes) {
+                if (pair[0].equals(r.getOriginCode()) && pair[1].equals(r.getDestCode())
+                        && seenPopularRoutes.add(r.getOriginCode() + "->" + r.getDestCode())) {
+                    popularWeekRoutes.add(r);
+                    break;
+                }
+            }
+        }
+        for (RouteSummary r : allRoutes) {
+            if (!r.isInternational() && popularWeekRoutes.size() < 3
+                    && seenPopularRoutes.add(r.getOriginCode() + "->" + r.getDestCode())) {
+                popularWeekRoutes.add(r);
+            }
         }
 
         List<HomeDestinationCard> popularRoutes = new ArrayList<>();
@@ -230,12 +254,43 @@ public class WebController {
             return idx >= 0 ? idx : intlOrder.size();
         }));
 
+        model.put("heroEyebrow", heroEyebrow);
         model.put("airports", airports);
+        model.put("popularWeekRoutes", popularWeekRoutes);
         model.put("popularRoutes", popularRoutes);
         model.put("moreRoutes", moreRoutes);
         model.put("internationalRoutes", internationalRoutes);
         model.put("homeError", homeError);
         ctx.render("home.html", model);
+    }
+
+    private static String buildHeroEyebrow(List<Airport> airports) {
+        if (airports == null || airports.isEmpty()) {
+            return "JOHANNESBURG \u00B7 CAPE TOWN \u00B7 DURBAN";
+        }
+        Map<String, Airport> byCode = new LinkedHashMap<>();
+        for (Airport a : airports) {
+            if (a.code() != null) {
+                byCode.putIfAbsent(a.code().toUpperCase(Locale.ROOT), a);
+            }
+        }
+        List<String> cities = new ArrayList<>();
+        for (String hub : List.of("JNB", "CPT", "DUR")) {
+            Airport a = byCode.get(hub);
+            if (a != null && a.city() != null && !a.city().isBlank()) {
+                cities.add(a.city().trim().toUpperCase(Locale.ROOT));
+            }
+        }
+        for (Airport a : airports) {
+            if (cities.size() >= 3) break;
+            if (a.city() != null && !a.city().isBlank()) {
+                String c = a.city().trim().toUpperCase(Locale.ROOT);
+                if (!cities.contains(c)) {
+                    cities.add(c);
+                }
+            }
+        }
+        return cities.isEmpty() ? "JOHANNESBURG \u00B7 CAPE TOWN \u00B7 DURBAN" : String.join(" \u00B7 ", cities);
     }
 
     private HomeDestinationCard toDestinationCard(RouteSummary route, int gradIdx) {

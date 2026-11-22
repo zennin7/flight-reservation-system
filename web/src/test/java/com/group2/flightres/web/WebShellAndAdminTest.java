@@ -10,10 +10,12 @@ import com.group2.flightres.model.AdminDashboardData;
 import com.group2.flightres.model.AdminDashboardData.CabinLoadBreakdown;
 import com.group2.flightres.model.AdminDashboardData.FlightLoadFactor;
 import com.group2.flightres.model.AdminDashboardData.Range;
+import com.group2.flightres.model.Airport;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.FlightSearchResult;
 import com.group2.flightres.model.FlightSeat;
+import com.group2.flightres.model.RouteSummary;
 import com.group2.flightres.model.User;
 import com.group2.flightres.model.UserRole;
 import com.group2.flightres.service.AdminDashboardService;
@@ -285,5 +287,65 @@ class WebShellAndAdminTest {
         assertTrue(html.contains("R 12,450.00"));
         assertTrue(html.contains("SR 204"));
         assertTrue(html.contains("class=\"inner-glass-frame\""));
+    }
+
+    @Test
+    @DisplayName("Home page renders dynamic airports eyebrow, Popular this week fares, and no dead Round-trip/Instant-EFT controls")
+    void homeRendersDynamicEyebrowPopularCardAndNoDeadControls() throws Exception {
+        Clock clock = Clock.fixed(Instant.parse("2026-11-22T10:00:00Z"), ZoneOffset.UTC);
+        String pwdHash = PasswordUtil.hash("Passw0rd!");
+        StubUserDao userDao = new StubUserDao(pwdHash);
+        AirportDao airportDao = () -> List.of(
+                new Airport("JNB", "O. R. Tambo International", "Johannesburg", "South Africa", ZoneId.of("Africa/Johannesburg")),
+                new Airport("CPT", "Cape Town International", "Cape Town", "South Africa", ZoneId.of("Africa/Johannesburg")),
+                new Airport("DUR", "King Shaka International", "Durban", "South Africa", ZoneId.of("Africa/Johannesburg"))
+        );
+        FlightDao flightDao = new FlightDao() {
+            @Override
+            public List<FlightSearchResult> searchFlights(String origin, String destination, LocalDate departureDate) {
+                return List.of();
+            }
+
+            @Override
+            public Optional<FlightSearchResult> findById(long flightId) {
+                return Optional.empty();
+            }
+
+            @Override
+            public List<RouteSummary> findRouteSummaries(Instant minDepartureInstant) {
+                return List.of(
+                        new RouteSummary("JNB", "Johannesburg", "South Africa", "CPT", "Cape Town", "South Africa", 130, new BigDecimal("1180.00"), 56),
+                        new RouteSummary("JNB", "Johannesburg", "South Africa", "DUR", "Durban", "South Africa", 85, new BigDecimal("950.00"), 42),
+                        new RouteSummary("CPT", "Cape Town", "South Africa", "JNB", "Johannesburg", "South Africa", 120, new BigDecimal("1180.00"), 56)
+                );
+            }
+        };
+        SeatDao seatDao = new EmptySeatDao();
+        BookingDao bookingDao = new EmptyBookingDao();
+        FlightService flightService = new FlightService(flightDao, airportDao, new PricingService(seatDao, clock), clock);
+        webApp = new WebApplication(
+                flightService,
+                new SeatMapService(seatDao, flightDao, clock),
+                new BookingService(bookingDao, flightDao, clock),
+                new AuthService(userDao)
+        );
+        webApp.start(0);
+        String url = "http://localhost:" + webApp.getApp().port();
+
+        HttpResponse<String> home = get(newClient(), url, "/");
+        assertEquals(200, home.statusCode());
+        String html = home.body();
+        assertTrue(html.contains("JOHANNESBURG · CAPE TOWN · DURBAN"));
+        assertTrue(html.contains("Fly higher."));
+        assertTrue(html.contains("Popular this week"));
+        assertTrue(html.contains("Live fares"));
+        assertTrue(html.contains("JNB → CPT"));
+        assertTrue(html.contains("R 1,180.00"));
+        assertTrue(html.contains("R 950.00"));
+        assertTrue(html.contains("Sales close 60 minutes before departure"));
+        assertFalse(html.contains("Round trip"));
+        assertFalse(html.contains("name=\"returnDate\""));
+        assertFalse(html.contains("Instant EFT"));
+        assertFalse(html.contains("Alti" + "tude"));
     }
 }
