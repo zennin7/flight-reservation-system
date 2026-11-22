@@ -3,12 +3,12 @@ SKY ROYAL
 
 Welcome aboard, [(${firstName})].
 
-Hi [(${fullName})], your Sky Royal profile is active and you are signed in. Everything is set for calm, clear flight booking from search to gate.
+Hi [(${fullName})], your Sky Royal profile is active. Everything is set for calm, clear flight booking from search to gate.
 
 What you can do with Sky Royal:
 - Pick your exact seat on a live seat map
-- Fares you can see the reason for
-- A boarding pass with a QR code you can verify
+- Fares you can see the reason for: see the base fare plus any demand and timing adjustment before you pay.
+- A boarding pass with a QR code you can verify: view it online or download the PDF boarding pass.
 
 Your username: [(${username})]
 (You can sign in with either your username or email address.)

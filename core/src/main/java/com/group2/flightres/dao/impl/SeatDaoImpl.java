@@ -21,14 +21,25 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SeatDaoImpl implements SeatDao {
 
     private static final Logger logger = LoggerFactory.getLogger(SeatDaoImpl.class);
+    private static final Map<String, Boolean> HELD_BY_COLUMN_CACHE = new ConcurrentHashMap<>();
 
     private static final String SEAT_MAP_QUERY = """
         SELECT spv.flight_seat_id, spv.flight_id, spv.seat_row, spv.seat_col, spv.seat_class,
                spv.display_row, spv.display_col, spv.status, spv.calculated_price, fs.held_until
+        FROM seat_pricing_view spv
+        JOIN flight_seats fs ON fs.flight_seat_id = spv.flight_seat_id
+        WHERE spv.flight_id = ?
+        ORDER BY spv.display_row, spv.display_col
+        """;
+
+    private static final String SEAT_MAP_WITH_OWNER_QUERY = """
+        SELECT spv.flight_seat_id, spv.flight_id, spv.seat_row, spv.seat_col, spv.seat_class,
+               spv.display_row, spv.display_col, spv.status, spv.calculated_price, fs.held_until, fs.held_by
         FROM seat_pricing_view spv
         JOIN flight_seats fs ON fs.flight_seat_id = spv.flight_seat_id
         WHERE spv.flight_id = ?
@@ -44,9 +55,28 @@ public class SeatDaoImpl implements SeatDao {
         RETURNING held_until
         """;
 
+    private static final String HOLD_SEAT_WITH_OWNER_QUERY = """
+        UPDATE flight_seats
+        SET status = 'HELD', held_until = NOW() + make_interval(secs => ?), held_by = ?
+        WHERE flight_seat_id = ? AND (status = 'AVAILABLE' OR (status = 'HELD' AND held_by = ?))
+        RETURNING held_until
+        """;
+
     private static final String RELEASE_SEAT_QUERY = """
         UPDATE flight_seats
         SET status = 'AVAILABLE', held_until = NULL
+        WHERE flight_seat_id = ? AND status = 'HELD'
+        """;
+
+    private static final String RELEASE_SEAT_WITH_OWNER_QUERY = """
+        UPDATE flight_seats
+        SET status = 'AVAILABLE', held_until = NULL, held_by = NULL
+        WHERE flight_seat_id = ? AND status = 'HELD' AND (held_by IS NULL OR held_by = ?)
+        """;
+
+    private static final String RELEASE_SEAT_CLEAR_OWNER_QUERY = """
+        UPDATE flight_seats
+        SET status = 'AVAILABLE', held_until = NULL, held_by = NULL
         WHERE flight_seat_id = ? AND status = 'HELD'
         """;
 
@@ -56,9 +86,21 @@ public class SeatDaoImpl implements SeatDao {
         WHERE flight_seat_id = ? AND (status = 'HELD' OR status = 'AVAILABLE')
         """;
 
+    private static final String BOOK_SEAT_CLEAR_OWNER_QUERY = """
+        UPDATE flight_seats
+        SET status = 'BOOKED', held_until = NULL, held_by = NULL
+        WHERE flight_seat_id = ? AND (status = 'HELD' OR status = 'AVAILABLE')
+        """;
+
     private static final String RELEASE_EXPIRED_HOLDS_QUERY = """
         UPDATE flight_seats
         SET status = 'AVAILABLE', held_until = NULL
+        WHERE status = 'HELD' AND held_until < NOW()
+        """;
+
+    private static final String RELEASE_EXPIRED_HOLDS_CLEAR_OWNER_QUERY = """
+        UPDATE flight_seats
+        SET status = 'AVAILABLE', held_until = NULL, held_by = NULL
         WHERE status = 'HELD' AND held_until < NOW()
         """;
 
@@ -70,20 +112,50 @@ public class SeatDaoImpl implements SeatDao {
         WHERE spv.flight_seat_id = ?
         """;
 
+    private static final String FIND_SEAT_BY_ID_WITH_OWNER_QUERY = """
+        SELECT spv.flight_seat_id, spv.flight_id, spv.seat_row, spv.seat_col, spv.seat_class,
+               spv.display_row, spv.display_col, spv.status, spv.calculated_price, fs.held_until, fs.held_by
+        FROM seat_pricing_view spv
+        JOIN flight_seats fs ON fs.flight_seat_id = spv.flight_seat_id
+        WHERE spv.flight_seat_id = ?
+        """;
+
     private static final String SEAT_CLASS_PRICING_QUERY = """
         SELECT seat_class, price_multiplier
         FROM seat_class_pricing
         """;
 
+    private static boolean hasHeldByColumn(Connection conn) {
+        try {
+            var meta = conn.getMetaData();
+            String url = meta.getURL();
+            String cacheKey = url != null ? url : "";
+            if (Boolean.TRUE.equals(HELD_BY_COLUMN_CACHE.get(cacheKey))) {
+                return true;
+            }
+            try (ResultSet rs = meta.getColumns(null, null, "flight_seats", "held_by")) {
+                if (rs.next()) {
+                    HELD_BY_COLUMN_CACHE.put(cacheKey, Boolean.TRUE);
+                    return true;
+                }
+            }
+        } catch (SQLException ignored) {
+        }
+        return false;
+    }
+
     @Override
     public int releaseExpiredHolds() {
-        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(RELEASE_EXPIRED_HOLDS_QUERY)) {
-            int updated = stmt.executeUpdate();
-            if (updated > 0) {
-                logger.info("Released {} expired seat holds back to AVAILABLE", updated);
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
+            boolean hasOwner = hasHeldByColumn(conn);
+            String sql = hasOwner ? RELEASE_EXPIRED_HOLDS_CLEAR_OWNER_QUERY : RELEASE_EXPIRED_HOLDS_QUERY;
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                int updated = stmt.executeUpdate();
+                if (updated > 0) {
+                    logger.info("Released {} expired seat holds back to AVAILABLE", updated);
+                }
+                return updated;
             }
-            return updated;
         } catch (SQLException e) {
             logger.warn("Could not release expired holds: {}", e.getMessage());
             return 0;
@@ -95,14 +167,15 @@ public class SeatDaoImpl implements SeatDao {
         releaseExpiredHolds();
 
         List<FlightSeat> seats = new ArrayList<>();
-        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(SEAT_MAP_QUERY)) {
-
-            stmt.setLong(1, flightId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    seats.add(mapSeat(rs));
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
+            boolean hasOwner = hasHeldByColumn(conn);
+            String sql = hasOwner ? SEAT_MAP_WITH_OWNER_QUERY : SEAT_MAP_QUERY;
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setLong(1, flightId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        seats.add(mapSeat(rs, hasOwner));
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -115,18 +188,40 @@ public class SeatDaoImpl implements SeatDao {
 
     @Override
     public Optional<Instant> holdSeat(long flightSeatId, int holdSeconds) {
+        return holdSeat(flightSeatId, holdSeconds, null);
+    }
+
+    @Override
+    public Optional<Instant> holdSeat(long flightSeatId, int holdSeconds, String holdOwner) {
         releaseExpiredHolds();
 
-        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(HOLD_SEAT_QUERY)) {
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
+            boolean hasOwner = hasHeldByColumn(conn);
+            String cleanOwner = (holdOwner != null && !holdOwner.isBlank()) ? holdOwner.trim() : null;
+            if (hasOwner && cleanOwner != null) {
+                try (PreparedStatement stmt = conn.prepareStatement(HOLD_SEAT_WITH_OWNER_QUERY)) {
+                    stmt.setInt(1, holdSeconds);
+                    stmt.setString(2, cleanOwner);
+                    stmt.setLong(3, flightSeatId);
+                    stmt.setString(4, cleanOwner);
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            Timestamp ts = rs.getTimestamp("held_until");
+                            return Optional.ofNullable(ts != null ? ts.toInstant() : null);
+                        }
+                    }
+                }
+                return Optional.empty();
+            }
 
-            stmt.setInt(1, holdSeconds);
-            stmt.setLong(2, flightSeatId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    Timestamp ts = rs.getTimestamp("held_until");
-                    return Optional.ofNullable(ts != null ? ts.toInstant() : null);
+            try (PreparedStatement stmt = conn.prepareStatement(HOLD_SEAT_QUERY)) {
+                stmt.setInt(1, holdSeconds);
+                stmt.setLong(2, flightSeatId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        Timestamp ts = rs.getTimestamp("held_until");
+                        return Optional.ofNullable(ts != null ? ts.toInstant() : null);
+                    }
                 }
             }
             return Optional.empty();
@@ -138,11 +233,26 @@ public class SeatDaoImpl implements SeatDao {
 
     @Override
     public boolean releaseSeat(long flightSeatId) {
-        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(RELEASE_SEAT_QUERY)) {
+        return releaseSeat(flightSeatId, null);
+    }
 
-            stmt.setLong(1, flightSeatId);
-            return stmt.executeUpdate() == 1;
+    @Override
+    public boolean releaseSeat(long flightSeatId, String holdOwner) {
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
+            boolean hasOwner = hasHeldByColumn(conn);
+            String cleanOwner = (holdOwner != null && !holdOwner.isBlank()) ? holdOwner.trim() : null;
+            if (hasOwner && cleanOwner != null) {
+                try (PreparedStatement stmt = conn.prepareStatement(RELEASE_SEAT_WITH_OWNER_QUERY)) {
+                    stmt.setLong(1, flightSeatId);
+                    stmt.setString(2, cleanOwner);
+                    return stmt.executeUpdate() == 1;
+                }
+            }
+            String sql = hasOwner ? RELEASE_SEAT_CLEAR_OWNER_QUERY : RELEASE_SEAT_QUERY;
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setLong(1, flightSeatId);
+                return stmt.executeUpdate() == 1;
+            }
         } catch (SQLException e) {
             logger.error("Failed to release seat {}: {}", flightSeatId, e.getMessage(), e);
             throw new RuntimeException("Failed to release seat " + flightSeatId, e);
@@ -151,11 +261,13 @@ public class SeatDaoImpl implements SeatDao {
 
     @Override
     public boolean bookSeat(long flightSeatId) {
-        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(BOOK_SEAT_QUERY)) {
-
-            stmt.setLong(1, flightSeatId);
-            return stmt.executeUpdate() == 1;
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
+            boolean hasOwner = hasHeldByColumn(conn);
+            String sql = hasOwner ? BOOK_SEAT_CLEAR_OWNER_QUERY : BOOK_SEAT_QUERY;
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setLong(1, flightSeatId);
+                return stmt.executeUpdate() == 1;
+            }
         } catch (SQLException e) {
             logger.error("Failed to book seat {}: {}", flightSeatId, e.getMessage(), e);
             throw new RuntimeException("Failed to book seat " + flightSeatId, e);
@@ -164,13 +276,15 @@ public class SeatDaoImpl implements SeatDao {
 
     @Override
     public Optional<FlightSeat> findSeatById(long flightSeatId) {
-        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(FIND_SEAT_BY_ID_QUERY)) {
-
-            stmt.setLong(1, flightSeatId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapSeat(rs));
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection()) {
+            boolean hasOwner = hasHeldByColumn(conn);
+            String sql = hasOwner ? FIND_SEAT_BY_ID_WITH_OWNER_QUERY : FIND_SEAT_BY_ID_QUERY;
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setLong(1, flightSeatId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return Optional.of(mapSeat(rs, hasOwner));
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -197,7 +311,7 @@ public class SeatDaoImpl implements SeatDao {
         return map;
     }
 
-    private FlightSeat mapSeat(ResultSet rs) throws SQLException {
+    private FlightSeat mapSeat(ResultSet rs, boolean includeHeldBy) throws SQLException {
         FlightSeat seat = new FlightSeat();
         seat.setFlightSeatId(rs.getLong("flight_seat_id"));
         seat.setFlightId(rs.getLong("flight_id"));
@@ -212,6 +326,9 @@ public class SeatDaoImpl implements SeatDao {
         Timestamp heldUntilTs = rs.getTimestamp("held_until");
         if (heldUntilTs != null) {
             seat.setHeldUntil(heldUntilTs.toInstant());
+        }
+        if (includeHeldBy) {
+            seat.setHeldBy(rs.getString("held_by"));
         }
         return seat;
     }

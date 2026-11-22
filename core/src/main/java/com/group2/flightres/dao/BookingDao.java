@@ -3,6 +3,9 @@ package com.group2.flightres.dao;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.BookingSummary;
+import com.group2.flightres.model.CancelResult;
+import com.group2.flightres.service.CancellationPolicy;
+import com.group2.flightres.service.PaymentService;
 
 import java.time.Clock;
 import java.util.List;
@@ -39,6 +42,13 @@ public interface BookingDao {
     }
 
     /**
+     * Looks up a booking by its payment idempotency key.
+     */
+    default Optional<BookingRecord> findByIdempotencyKey(String idempotencyKey) {
+        return Optional.empty();
+    }
+
+    /**
      * Retrieves all bookings for a user.
      */
     List<BookingRecord> findByUserId(long userId);
@@ -50,5 +60,15 @@ public interface BookingDao {
      */
     default List<BookingSummary> listSummariesForUser(long userId, Clock clock) {
         return List.of();
+    }
+
+    /**
+     * Cancels a booking owned by userId in one atomic transaction, releasing seats and refunding via paymentService.
+     */
+    default CancelResult cancelBookingForUser(long userId,
+                                              String bookingReference,
+                                              CancellationPolicy policy,
+                                              PaymentService paymentService) {
+        throw new UnsupportedOperationException("Cancellation not supported by this BookingDao");
     }
 }

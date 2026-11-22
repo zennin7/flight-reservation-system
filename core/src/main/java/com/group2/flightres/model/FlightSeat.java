@@ -16,6 +16,7 @@ public class FlightSeat {
     private SeatStatus status;
     private BigDecimal calculatedPrice;
     private Instant heldUntil;
+    private String heldBy;
 
     public String getSeatLabel() {
         return seatRow + String.valueOf(seatCol);
@@ -50,6 +51,9 @@ public class FlightSeat {
 
     public Instant getHeldUntil() { return heldUntil; }
     public void setHeldUntil(Instant heldUntil) { this.heldUntil = heldUntil; }
+
+    public String getHeldBy() { return heldBy; }
+    public void setHeldBy(String heldBy) { this.heldBy = heldBy; }
 
     @Override
     public boolean equals(Object o) {

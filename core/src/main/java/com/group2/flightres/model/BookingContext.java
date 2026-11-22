@@ -47,6 +47,8 @@ public class BookingContext {
     private String cardBrand;
     private String cardLast4;
     private PaymentResult paymentResult;
+    private String idempotencyKey;
+    private String holdOwner;
 
     private User currentUser;
 
@@ -174,6 +176,12 @@ public class BookingContext {
             this.cardLast4 = paymentResult.getCardLast4();
         }
     }
+
+    public String getIdempotencyKey() { return idempotencyKey; }
+    public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
+
+    public String getHoldOwner() { return holdOwner; }
+    public void setHoldOwner(String holdOwner) { this.holdOwner = holdOwner; }
 
     /**
      * Recalculates total price from priceQuotes summing over all selected seats.

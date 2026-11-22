@@ -167,6 +167,7 @@ try {
     }
     Invoke-SqlFile "core/sql/migration_payments_card_meta.sql"
     Invoke-SqlFile "core/sql/migration_users_email_ci.sql"
+    Invoke-SqlFile "core/sql/migration_p2_holds_payments_refund.sql"
 
     # 8. Auth seed (idempotent upsert)
     Invoke-SqlFile "core/sql/seed_auth_data.sql"

@@ -26,11 +26,19 @@ public interface SeatDao {
         return Optional.of(Instant.now().plusSeconds(holdSeconds));
     }
 
+    default Optional<Instant> holdSeat(long flightSeatId, int holdSeconds, String holdOwner) {
+        return holdSeat(flightSeatId, holdSeconds);
+    }
+
     default boolean holdSeat(long flightSeatId) {
         return holdSeat(flightSeatId, SeatHoldPolicy.HOLD_SECONDS).isPresent();
     }
 
     boolean releaseSeat(long flightSeatId);
+
+    default boolean releaseSeat(long flightSeatId, String holdOwner) {
+        return releaseSeat(flightSeatId);
+    }
 
     boolean bookSeat(long flightSeatId);
 

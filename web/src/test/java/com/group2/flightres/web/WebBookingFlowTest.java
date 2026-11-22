@@ -96,22 +96,37 @@ class WebBookingFlowTest {
         }
 
         @Override
-        public boolean holdSeat(long flightSeatId) {
+        public Optional<java.time.Instant> holdSeat(long flightSeatId, int holdSeconds, String holdOwner) {
             FlightSeat s = seats.get(flightSeatId);
-            if (s != null && s.getStatus() == SeatStatus.AVAILABLE) {
+            if (s != null && (s.getStatus() == SeatStatus.AVAILABLE
+                    || (s.getStatus() == SeatStatus.HELD && (holdOwner == null || holdOwner.equals(s.getHeldBy()))))) {
+                java.time.Instant exp = java.time.Instant.now().plusSeconds(holdSeconds);
                 s.setStatus(SeatStatus.HELD);
-                s.setHeldUntil(java.time.Instant.now().plusSeconds(300));
-                return true;
+                s.setHeldUntil(exp);
+                s.setHeldBy(holdOwner);
+                return Optional.of(exp);
             }
-            return false;
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<java.time.Instant> holdSeat(long flightSeatId, int holdSeconds) {
+            return holdSeat(flightSeatId, holdSeconds, null);
         }
 
         @Override
         public boolean releaseSeat(long flightSeatId) {
+            return releaseSeat(flightSeatId, null);
+        }
+
+        @Override
+        public boolean releaseSeat(long flightSeatId, String holdOwner) {
             FlightSeat s = seats.get(flightSeatId);
-            if (s != null && s.getStatus() == SeatStatus.HELD) {
+            if (s != null && s.getStatus() == SeatStatus.HELD
+                    && (holdOwner == null || s.getHeldBy() == null || holdOwner.equals(s.getHeldBy()))) {
                 s.setStatus(SeatStatus.AVAILABLE);
                 s.setHeldUntil(null);
+                s.setHeldBy(null);
                 return true;
             }
             return false;
@@ -280,9 +295,31 @@ class WebBookingFlowTest {
                 .build();
 
         HttpResponse<String> bookResp = client.send(postBookReq, HttpResponse.BodyHandlers.ofString());
-        assertEquals(302, bookResp.statusCode(), "Successful booking must redirect to confirmation");
+        assertEquals(302, bookResp.statusCode(), "Valid passenger + seat hold must redirect to checkout");
+        assertEquals("/checkout", bookResp.headers().firstValue("Location").orElse(""));
 
-        String redirectLocation = bookResp.headers().firstValue("Location").orElse("");
+        // 2b. GET /checkout renders fare breakdown and simulated payment form
+        HttpResponse<String> checkoutResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/checkout")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, checkoutResp.statusCode());
+        assertTrue(checkoutResp.headers().firstValue("Cache-Control").orElse("").contains("no-store"));
+        assertTrue(checkoutResp.body().contains("4242 4242 4242 4242"));
+
+        // 2c. POST /pay charges approved test card and creates booking in one transaction
+        String payBody = "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
+                + "&cardNumber=" + URLEncoder.encode("4242 4242 4242 4242", StandardCharsets.UTF_8)
+                + "&cardholderName=" + URLEncoder.encode("David Miller", StandardCharsets.UTF_8)
+                + "&expiry=" + URLEncoder.encode("12/28", StandardCharsets.UTF_8)
+                + "&cvv=123";
+        HttpResponse<String> payResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/pay"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(payBody)).build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(302, payResp.statusCode(), "Successful payment must redirect to confirmation");
+
+        String redirectLocation = payResp.headers().firstValue("Location").orElse("");
         assertTrue(redirectLocation.contains("/confirmation/"), "Must redirect to confirmation voucher");
 
         String ref = redirectLocation.substring(redirectLocation.lastIndexOf('/') + 1);
@@ -421,6 +458,20 @@ class WebBookingFlowTest {
                 HttpResponse.BodyHandlers.ofString());
 
         assertEquals(302, bookResp.statusCode());
+        assertEquals("/checkout", bookResp.headers().firstValue("Location").orElse(""));
+
+        String payBody = "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
+                + "&cardNumber=" + URLEncoder.encode("4242 4242 4242 4242", StandardCharsets.UTF_8)
+                + "&cardholderName=" + URLEncoder.encode("Nomsa Dlamini", StandardCharsets.UTF_8)
+                + "&expiry=" + URLEncoder.encode("12/28", StandardCharsets.UTF_8)
+                + "&cvv=123";
+        HttpResponse<String> payResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/pay"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(payBody)).build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(302, payResp.statusCode());
+
         BookingRecord saved = mockBookingDao.findByReference("WTEST1").orElseThrow();
         assertEquals("AB123456", saved.getPassportNumber());
     }

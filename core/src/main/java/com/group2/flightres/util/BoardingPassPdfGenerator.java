@@ -119,6 +119,14 @@ public final class BoardingPassPdfGenerator {
      * Generates a boarding pass PDF conforming to the glass design board voucher card.
      */
     public static void generate(TicketData data, File targetFile) throws DocumentException, IOException {
+        generate(data, null, targetFile);
+    }
+
+    /**
+     * Generates a boarding pass PDF with an embedded scannable verification QR code in the tear-off stub.
+     */
+    public static void generate(TicketData data, String verificationUrl, File targetFile)
+            throws DocumentException, IOException {
         if (data == null) {
             throw new IllegalStateException("TicketData cannot be null for boarding pass generation.");
         }
@@ -138,7 +146,7 @@ public final class BoardingPassPdfGenerator {
         card.addCell(buildBodyCell(data));
 
         // 3. Right Tear-Off Stub
-        card.addCell(buildStubCell(data));
+        card.addCell(buildStubCell(data, verificationUrl));
 
         // Page size EXACTLY the card size (no white area)
         card.calculateHeights(true);
@@ -353,7 +361,7 @@ public final class BoardingPassPdfGenerator {
         return cell;
     }
 
-    private static PdfPCell buildStubCell(TicketData data) {
+    private static PdfPCell buildStubCell(TicketData data, String verificationUrl) {
         PdfPCell cell = new PdfPCell();
         cell.setBackgroundColor(COLOR_STUB_BG);
         cell.setBorder(Rectangle.BOX);
@@ -361,6 +369,9 @@ public final class BoardingPassPdfGenerator {
         cell.setBorderWidth(1.2f);
         cell.setPadding(14f);
         cell.setCellEvent(new PerforationDividerEvent());
+
+        boolean hasQr = verificationUrl != null && !verificationUrl.isBlank();
+        float gap = hasQr ? 7f : 12f;
 
         PdfPTable stub = new PdfPTable(1);
         stub.setWidthPercentage(100f);
@@ -371,8 +382,8 @@ public final class BoardingPassPdfGenerator {
         seatCell.setPadding(0);
         Paragraph seatLabel = new Paragraph("SEAT", fontInterBold(9f, COLOR_GOLD));
         seatCell.addElement(seatLabel);
-        Paragraph seatVal = new Paragraph(data.seatLabel(), fontInterBold(38f, COLOR_GOLD));
-        seatVal.setLeading(36f);
+        Paragraph seatVal = new Paragraph(data.seatLabel(), fontInterBold(hasQr ? 30f : 38f, COLOR_GOLD));
+        seatVal.setLeading(hasQr ? 29f : 36f);
         seatVal.setSpacingBefore(2f);
         seatCell.addElement(seatVal);
         stub.addCell(seatCell);
@@ -380,7 +391,7 @@ public final class BoardingPassPdfGenerator {
         // Spacer
         PdfPCell s1 = new PdfPCell();
         s1.setBorder(Rectangle.NO_BORDER);
-        s1.setFixedHeight(12f);
+        s1.setFixedHeight(gap);
         stub.addCell(s1);
 
         // 2. GATE ("GATE" overline, BoardingPolicy.GATE_NOTE)
@@ -389,7 +400,7 @@ public final class BoardingPassPdfGenerator {
         gateCell.setPadding(0);
         Paragraph gateLabel = new Paragraph("GATE", fontInterBold(8.5f, COLOR_MUTED));
         gateCell.addElement(gateLabel);
-        Paragraph gateVal = new Paragraph(BoardingPolicy.GATE_NOTE, fontInterSemiBold(10f, Color.WHITE));
+        Paragraph gateVal = new Paragraph(BoardingPolicy.GATE_NOTE, fontInterSemiBold(9.5f, Color.WHITE));
         gateVal.setSpacingBefore(2f);
         gateCell.addElement(gateVal);
         stub.addCell(gateCell);
@@ -397,16 +408,16 @@ public final class BoardingPassPdfGenerator {
         // Spacer
         PdfPCell s2 = new PdfPCell();
         s2.setBorder(Rectangle.NO_BORDER);
-        s2.setFixedHeight(14f);
+        s2.setFixedHeight(gap);
         stub.addCell(s2);
 
-        // 3. REFERENCE ("REFERENCE" overline, booking reference at bottom)
+        // 3. REFERENCE ("REFERENCE" overline, booking reference)
         PdfPCell refCell = new PdfPCell();
         refCell.setBorder(Rectangle.NO_BORDER);
         refCell.setPadding(0);
         Paragraph refLabel = new Paragraph("REFERENCE", fontInterBold(8.5f, COLOR_MUTED));
         refCell.addElement(refLabel);
-        Paragraph refVal = new Paragraph(data.bookingReference(), fontInterBold(16f, Color.WHITE));
+        Paragraph refVal = new Paragraph(data.bookingReference(), fontInterBold(hasQr ? 14f : 16f, Color.WHITE));
         refVal.setSpacingBefore(2f);
         refCell.addElement(refVal);
         stub.addCell(refCell);
@@ -414,7 +425,7 @@ public final class BoardingPassPdfGenerator {
         if (data.totalPrice() != null) {
             PdfPCell s3 = new PdfPCell();
             s3.setBorder(Rectangle.NO_BORDER);
-            s3.setFixedHeight(12f);
+            s3.setFixedHeight(gap);
             stub.addCell(s3);
 
             PdfPCell fareCell = new PdfPCell();
@@ -422,10 +433,56 @@ public final class BoardingPassPdfGenerator {
             fareCell.setPadding(0);
             Paragraph fareLabel = new Paragraph("TOTAL FARE", fontInterBold(8.5f, COLOR_MUTED));
             fareCell.addElement(fareLabel);
-            Paragraph fareVal = new Paragraph(String.format(java.util.Locale.US, "R %,d", data.totalPrice().longValue()), fontInterBold(14f, COLOR_GOLD_LIGHT));
+            Paragraph fareVal = new Paragraph(String.format(java.util.Locale.US, "R %,d", data.totalPrice().longValue()), fontInterBold(hasQr ? 12.5f : 14f, COLOR_GOLD_LIGHT));
             fareVal.setSpacingBefore(2f);
             fareCell.addElement(fareVal);
             stub.addCell(fareCell);
+        }
+
+        if (hasQr) {
+            PdfPCell s4 = new PdfPCell();
+            s4.setBorder(Rectangle.NO_BORDER);
+            s4.setFixedHeight(8f);
+            stub.addCell(s4);
+
+            byte[] qrPng;
+            try {
+                qrPng = QrCodeGenerator.generateQrPng(verificationUrl, QrCodeGenerator.MIN_SIZE_PX);
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to generate QR code for boarding pass PDF", e);
+            }
+            com.lowagie.text.Image qrImg;
+            try {
+                qrImg = com.lowagie.text.Image.getInstance(qrPng);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to create PDF QR image", e);
+            }
+            qrImg.scaleAbsolute(82f, 82f);
+            qrImg.setAlignment(Element.ALIGN_CENTER);
+
+            PdfPTable qrWrap = new PdfPTable(1);
+            qrWrap.setTotalWidth(90f);
+            qrWrap.setLockedWidth(true);
+            PdfPCell qrBox = new PdfPCell();
+            qrBox.setBackgroundColor(Color.WHITE);
+            qrBox.setBorder(Rectangle.BOX);
+            qrBox.setBorderColor(COLOR_BORDER);
+            qrBox.setBorderWidth(1f);
+            qrBox.setPadding(4f);
+            qrBox.setHorizontalAlignment(Element.ALIGN_CENTER);
+            qrBox.addElement(qrImg);
+            qrWrap.addCell(qrBox);
+
+            PdfPCell qrContainer = new PdfPCell();
+            qrContainer.setBorder(Rectangle.NO_BORDER);
+            qrContainer.setPadding(0);
+            qrContainer.setHorizontalAlignment(Element.ALIGN_CENTER);
+            qrContainer.addElement(qrWrap);
+            Paragraph qrCap = new Paragraph("SCAN TO VERIFY", fontInterBold(7f, COLOR_MUTED));
+            qrCap.setAlignment(Element.ALIGN_CENTER);
+            qrCap.setSpacingBefore(3f);
+            qrContainer.addElement(qrCap);
+            stub.addCell(qrContainer);
         }
 
         cell.addElement(stub);

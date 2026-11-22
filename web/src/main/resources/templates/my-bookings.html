@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title th:text="${appName + ' – My Bookings'}">Sky Royal – My Bookings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/glass-web.css">
+</head>
+<body>
+  <div class="glass-backdrop" aria-hidden="true"></div>
+  <div class="glass-backdrop-scrim" aria-hidden="true"></div>
+
+  <div class="page-shell">
+    <header class="glass-panel floating-nav">
+      <a href="/" class="nav-brand">
+        <span class="nav-brand-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+        </span>
+        <span th:text="${appName}">Sky Royal</span>
+      </a>
+
+      <nav aria-label="Primary navigation">
+        <ul class="nav-links">
+          <li><a href="/flights" class="nav-link">Flights</a></li>
+          <li><a href="/#destinations" class="nav-link">Destinations</a></li>
+          <li><a href="/confirmation" class="nav-link">Manage booking</a></li>
+          <li th:if="${user != null}"><a href="/my-bookings" class="nav-link active">My bookings</a></li>
+          <li><a href="/about" class="nav-link">About</a></li>
+          <li><a href="/contact" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-auth">
+        <span th:if="${user != null}" class="user-pill" th:text="${user.username}">Traveller</span>
+        <a th:if="${user != null}" href="/logout" class="btn-pill btn-translucent">Log out</a>
+        <a href="/flights" class="btn-pill btn-white">Browse flights</a>
+      </div>
+    </header>
+
+    <main class="bookings-wrap">
+      <section class="glass-panel bookings-head">
+        <div>
+          <span class="eyebrow">Traveller Portal</span>
+          <h1 class="checkout-title">My Bookings</h1>
+          <p class="auth-sub" th:text="${'Signed in as ' + (user.fullName != null ? user.fullName : user.username) + ' · ' + totalCount + ' total booking(s)'}">
+            Your flight reservations
+          </p>
+        </div>
+        <div class="bookings-stats">
+          <div class="bookings-stat-pill">
+            <span>Upcoming</span>
+            <strong th:text="${#lists.size(upcomingBookings)}">0</strong>
+          </div>
+          <div class="bookings-stat-pill">
+            <span>Past</span>
+            <strong th:text="${#lists.size(pastBookings)}">0</strong>
+          </div>
+          <div class="bookings-stat-pill">
+            <span>Cancelled</span>
+            <strong th:text="${#lists.size(cancelledBookings)}">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <div th:if="${bookingsFlashSuccess != null}" class="status-banner is-success" role="status">
+        <span th:text="${bookingsFlashSuccess}">Booking cancelled.</span>
+      </div>
+
+      <div th:if="${bookingsError != null}" class="glass-panel bookings-empty-card" role="alert">
+        <div class="checkout-state-badge">Error</div>
+        <h2 class="checkout-section-title">Could not load bookings</h2>
+        <p class="auth-sub" th:text="${bookingsError}">We could not load your bookings right now.</p>
+        <div class="checkout-state-actions">
+          <a href="/my-bookings" class="btn-pill btn-white">Retry</a>
+          <a href="/flights" class="btn-pill btn-translucent">Search Flights</a>
+        </div>
+      </div>
+
+      <div th:if="${bookingsError == null and totalCount == 0}" class="glass-panel bookings-empty-card">
+        <span class="eyebrow">Ready to Fly</span>
+        <h2 class="checkout-section-title">You do not have any bookings yet</h2>
+        <p class="auth-sub">Search live flights across South Africa and regional hubs, pick your seat on the map, and keep every boarding pass here.</p>
+        <div class="checkout-state-actions">
+          <a href="/flights" class="btn-pill btn-white">Browse Flights &rarr;</a>
+        </div>
+      </div>
+
+      <section th:if="${bookingsError == null and !#lists.isEmpty(upcomingBookings)}" class="bookings-section" aria-label="Upcoming bookings">
+        <h2 class="bookings-section-heading">Upcoming Flights</h2>
+        <div class="bookings-list">
+          <article class="glass-panel booking-card" th:each="item : ${upcomingBookings}">
+            <div class="booking-card-main">
+              <div class="booking-card-top">
+                <span class="bp-flight-pill" th:text="${item.summary.flightNumber}">GRP 204</span>
+                <span class="booking-pnr" th:text="${'PNR · ' + item.summary.bookingReference}">PNR · K7QX2M</span>
+                <span class="booking-status-badge is-upcoming" th:text="${item.summary.status}">UPCOMING</span>
+              </div>
+              <div class="booking-route" th:text="${item.summary.route}">JNB → CPT</div>
+              <div class="booking-meta">
+                <span th:text="${item.summary.formattedDepartureDate + ' · ' + item.summary.formattedDepartureTime}">14 Nov 2026 · 06:30</span>
+                <span>&middot;</span>
+                <span th:text="${'Seat ' + item.summary.seatLabelsString}">Seat 6A</span>
+                <span>&middot;</span>
+                <strong th:text="${item.totalFormatted}">R 1,522.00</strong>
+              </div>
+            </div>
+            <div class="booking-card-actions">
+              <a th:href="@{/confirmation/{ref}(ref=${item.summary.bookingReference})}" class="btn-pill btn-white">View pass</a>
+              <a th:if="${item.showPdf}" th:href="@{/confirmation/{ref}/boarding-pass.pdf(ref=${item.summary.bookingReference})}"
+                 class="btn-pill btn-translucent" target="_blank" rel="noopener">PDF</a>
+              <a th:if="${item.cancellable}" th:href="@{/bookings/{ref}/cancel(ref=${item.summary.bookingReference})}"
+                 class="btn-pill btn-translucent">Cancel</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section th:if="${bookingsError == null and !#lists.isEmpty(pastBookings)}" class="bookings-section" aria-label="Past bookings">
+        <h2 class="bookings-section-heading">Past Flights</h2>
+        <div class="bookings-list">
+          <article class="glass-panel booking-card" th:each="item : ${pastBookings}">
+            <div class="booking-card-main">
+              <div class="booking-card-top">
+                <span class="bp-flight-pill" th:text="${item.summary.flightNumber}">GRP 204</span>
+                <span class="booking-pnr" th:text="${'PNR · ' + item.summary.bookingReference}">PNR · K7QX2M</span>
+                <span class="booking-status-badge" th:text="${item.summary.status}">COMPLETED</span>
+              </div>
+              <div class="booking-route" th:text="${item.summary.route}">JNB → CPT</div>
+              <div class="booking-meta">
+                <span th:text="${item.summary.formattedDepartureDate + ' · ' + item.summary.formattedDepartureTime}">01 Nov 2026 · 06:30</span>
+                <span>&middot;</span>
+                <span th:text="${'Seat ' + item.summary.seatLabelsString}">Seat 6A</span>
+                <span>&middot;</span>
+                <strong th:text="${item.totalFormatted}">R 1,522.00</strong>
+              </div>
+            </div>
+            <div class="booking-card-actions">
+              <a th:href="@{/confirmation/{ref}(ref=${item.summary.bookingReference})}" class="btn-pill btn-translucent">View pass</a>
+              <a th:if="${item.showPdf}" th:href="@{/confirmation/{ref}/boarding-pass.pdf(ref=${item.summary.bookingReference})}"
+                 class="btn-pill btn-translucent" target="_blank" rel="noopener">PDF</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section th:if="${bookingsError == null and !#lists.isEmpty(cancelledBookings)}" class="bookings-section" aria-label="Cancelled bookings">
+        <h2 class="bookings-section-heading">Cancelled &amp; Refunded</h2>
+        <div class="bookings-list">
+          <article class="glass-panel booking-card is-cancelled" th:each="item : ${cancelledBookings}">
+            <div class="booking-card-main">
+              <div class="booking-card-top">
+                <span class="bp-flight-pill" th:text="${item.summary.flightNumber}">GRP 204</span>
+                <span class="booking-pnr" th:text="${'PNR · ' + item.summary.bookingReference}">PNR · K7QX2M</span>
+                <span class="booking-status-badge is-cancelled" th:text="${item.summary.status}">CANCELLED</span>
+              </div>
+              <div class="booking-route" th:text="${item.summary.route}">JNB → CPT</div>
+              <div class="booking-meta">
+                <span th:text="${item.summary.formattedDepartureDate + ' · ' + item.summary.formattedDepartureTime}">14 Nov 2026 · 06:30</span>
+                <span>&middot;</span>
+                <span th:text="${'Seat ' + item.summary.seatLabelsString}">Seat 6A</span>
+                <span>&middot;</span>
+                <strong th:text="${item.totalFormatted}">R 1,522.00</strong>
+              </div>
+            </div>
+            <div class="booking-card-actions">
+              <a th:href="@{/confirmation/{ref}(ref=${item.summary.bookingReference})}" class="btn-pill btn-translucent">View pass</a>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="glass-panel site-footer">
+      <div>&copy; 2026 <span th:text="${appName}">Sky Royal</span>. All rights reserved.</div>
+      <div>Sky Royal is a university project. No real bookings are made.</div>
+    </footer>
+  </div>
+</body>
+</html>

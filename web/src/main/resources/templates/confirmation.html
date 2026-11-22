@@ -27,6 +27,7 @@
           <li><a href="/flights" class="nav-link">Flights</a></li>
           <li><a href="/#destinations" class="nav-link">Destinations</a></li>
           <li><a href="/confirmation" class="nav-link">Manage booking</a></li>
+          <li th:if="${user != null}"><a href="/my-bookings" class="nav-link">My bookings</a></li>
           <li><a href="/about" class="nav-link">About</a></li>
           <li><a href="/contact" class="nav-link">Contact</a></li>
         </ul>
@@ -41,17 +42,30 @@
 
     <main class="bp-wrap">
       <section class="glass-panel bp-header-card no-print">
-        <div class="bp-status-row">
+        <div class="bp-status-row" th:if="${!isCancelled}">
           <div class="bp-check" aria-hidden="true">&#10003;</div>
           <div>
-            <h1 class="section-title" style="font-size: 24px;">Booking Confirmed!</h1>
+            <h1 class="section-title bp-head-title">Booking Confirmed!</h1>
             <p class="section-sub">Your boarding pass and e-ticket are ready below.</p>
           </div>
         </div>
+        <div class="bp-status-row" th:if="${isCancelled}" role="alert">
+          <div class="bp-check is-cancelled" aria-hidden="true">&times;</div>
+          <div>
+            <span class="verify-status-pill is-cancelled">CANCELLED</span>
+            <h1 class="section-title bp-head-title">Booking Cancelled</h1>
+            <p class="section-sub">This reservation has been cancelled and refunded. This boarding pass is not valid for travel.</p>
+          </div>
+        </div>
         <div class="bp-actions">
-          <button type="button" class="btn-pill btn-white" onclick="window.print()">Print / Save as PDF</button>
-          <a th:href="@{/confirmation/{ref}/boarding-pass.pdf(ref=${record.bookingReference})}"
+          <button th:if="${!isCancelled}" type="button" class="btn-pill btn-white" onclick="window.print()">Print / Save as PDF</button>
+          <a th:if="${!isCancelled}"
+             th:href="@{/confirmation/{ref}/boarding-pass.pdf(ref=${record.bookingReference})}"
              class="btn-pill btn-translucent" target="_blank" rel="noopener">Download PDF</a>
+          <a th:if="${canCancel}"
+             th:href="@{/bookings/{ref}/cancel(ref=${record.bookingReference})}"
+             class="btn-pill btn-translucent">Cancel booking</a>
+          <a th:if="${user != null}" href="/my-bookings" class="btn-pill btn-translucent">My bookings</a>
         </div>
       </section>
 
@@ -105,6 +119,16 @@
             <div class="bp-pnr-val" th:text="${record.bookingReference}">WTEST1</div>
             <div class="bp-meta-label" style="margin-top: 12px;">Status</div>
             <div class="bp-meta-val" th:text="${record.status != null ? record.status : 'CONFIRMED'}">CONFIRMED</div>
+          </div>
+
+          <div th:if="${isBookingOwner}" class="bp-qr-box">
+            <img class="bp-qr-img"
+                 th:src="@{/confirmation/{ref}/qr.png(ref=${record.bookingReference})}"
+                 th:alt="${'QR verification code for booking ' + record.bookingReference}">
+            <span class="bp-barcode-caption">SCAN TO VERIFY</span>
+          </div>
+          <div th:unless="${isBookingOwner}" class="bp-qr-locked">
+            Sign in as booking owner to display QR pass
           </div>
 
           <div class="bp-barcode-box">

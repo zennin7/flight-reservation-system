@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -61,6 +62,13 @@ public class SeatMapService {
      * Throws SeatUnavailableException if the seat was already taken or held by someone else.
      */
     public void selectSeat(FlightSeat seat) {
+        selectSeat(seat, null);
+    }
+
+    /**
+     * Attempts an optimistic hold on the specified seat tied to a hold owner.
+     */
+    public void selectSeat(FlightSeat seat, String holdOwner) {
         if (seat == null) {
             throw new IllegalArgumentException("Cannot select null seat.");
         }
@@ -77,7 +85,7 @@ public class SeatMapService {
             }
         }
 
-        Optional<Instant> heldUntilOpt = seatDao.holdSeat(seat.getFlightSeatId(), SeatHoldPolicy.HOLD_SECONDS);
+        Optional<Instant> heldUntilOpt = seatDao.holdSeat(seat.getFlightSeatId(), SeatHoldPolicy.HOLD_SECONDS, holdOwner);
         if (heldUntilOpt.isEmpty()) {
             logger.warn("Seat hold failed: Seat {} (ID: {}) was just taken by another user",
                     seat.getSeatLabel(), seat.getFlightSeatId());
@@ -86,6 +94,7 @@ public class SeatMapService {
         }
         seat.setStatus(SeatStatus.HELD);
         seat.setHeldUntil(heldUntilOpt.get());
+        seat.setHeldBy(holdOwner);
         logger.info("Seat {} (ID: {}) held successfully until {}", seat.getSeatLabel(), seat.getFlightSeatId(), seat.getHeldUntil());
     }
 
@@ -93,11 +102,44 @@ public class SeatMapService {
      * Releases a held seat back to AVAILABLE status.
      */
     public void deselectSeat(FlightSeat seat) {
+        deselectSeat(seat, null);
+    }
+
+    /**
+     * Releases a held seat back to AVAILABLE status for the owning holder.
+     */
+    public void deselectSeat(FlightSeat seat, String holdOwner) {
         if (seat == null) return;
-        boolean released = seatDao.releaseSeat(seat.getFlightSeatId());
-        seat.setStatus(SeatStatus.AVAILABLE);
-        seat.setHeldUntil(null);
+        boolean released = seatDao.releaseSeat(seat.getFlightSeatId(), holdOwner);
+        if (released || holdOwner == null) {
+            seat.setStatus(SeatStatus.AVAILABLE);
+            seat.setHeldUntil(null);
+            seat.setHeldBy(null);
+        }
         logger.info("Released hold for seat {} (ID: {}): {}", seat.getSeatLabel(), seat.getFlightSeatId(), released);
+    }
+
+    public Optional<FlightSeat> findSeatById(long flightSeatId) {
+        return seatDao.findSeatById(flightSeatId);
+    }
+
+    public boolean isHoldOwnedBy(long flightSeatId, String holdOwner) {
+        Optional<FlightSeat> seatOpt = seatDao.findSeatById(flightSeatId);
+        if (seatOpt.isEmpty()) {
+            return false;
+        }
+        FlightSeat seat = seatOpt.get();
+        if (seat.getStatus() != SeatStatus.HELD) {
+            return false;
+        }
+        if (seat.getHeldUntil() != null && !seat.getHeldUntil().isAfter(clock.instant())) {
+            return false;
+        }
+        return seat.getHeldBy() == null || Objects.equals(seat.getHeldBy(), holdOwner);
+    }
+
+    public Clock getClock() {
+        return clock;
     }
 
     /**

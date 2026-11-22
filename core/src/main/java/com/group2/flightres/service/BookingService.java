@@ -9,6 +9,7 @@ import com.group2.flightres.exception.PriceChangedException;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
 import com.group2.flightres.model.BookingSummary;
+import com.group2.flightres.model.CancelResult;
 import com.group2.flightres.model.FlightSearchResult;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.PriceQuote;
@@ -36,6 +37,7 @@ public class BookingService {
     private final FlightDao flightDao;
     private final PricingService pricingService;
     private final Clock clock;
+    private final CancellationPolicy cancellationPolicy;
 
     public BookingService() {
         this(new BookingDaoImpl(), new FlightDaoImpl(), Clock.systemUTC());
@@ -58,6 +60,7 @@ public class BookingService {
         this.flightDao = flightDao != null ? flightDao : new FlightDaoImpl();
         this.clock = clock != null ? clock : Clock.systemUTC();
         this.pricingService = pricingService != null ? pricingService : new PricingService(new SeatDaoImpl(), this.clock);
+        this.cancellationPolicy = new CancellationPolicy(this.clock);
     }
 
     /**
@@ -141,6 +144,17 @@ public class BookingService {
         return bookingDao.findByReference(bookingRef.trim().toUpperCase());
     }
 
+    public Optional<BookingRecord> findByIdempotencyKey(String idempotencyKey) {
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            return Optional.empty();
+        }
+        return bookingDao.findByIdempotencyKey(idempotencyKey.trim());
+    }
+
+    public Clock getClock() {
+        return clock;
+    }
+
     /**
      * Retrieves all bookings for a user.
      */
@@ -199,5 +213,20 @@ public class BookingService {
 
     public PricingService getPricingService() {
         return pricingService;
+    }
+
+    public CancellationPolicy getCancellationPolicy() {
+        return cancellationPolicy;
+    }
+
+    public CancelResult cancelBookingForUser(long userId, String bookingReference, PaymentService paymentService) {
+        if (bookingReference == null || bookingReference.isBlank()) {
+            throw new IllegalArgumentException("Booking reference must not be null or blank");
+        }
+        if (paymentService == null) {
+            throw new IllegalArgumentException("PaymentService must not be null");
+        }
+        String cleanRef = bookingReference.trim().toUpperCase(Locale.ROOT);
+        return bookingDao.cancelBookingForUser(userId, cleanRef, cancellationPolicy, paymentService);
     }
 }

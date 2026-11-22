@@ -75,3 +75,14 @@ Username or email both work on the login page (`/login`) and desktop app:
 | `Host must be a hostname or IP ... not a URL` | Enter `127.0.0.1` or `localhost` (without `http://` or `/`). |
 | `Port 8080 already in use` | Set `$env:PORT = "8081"` (PowerShell) or `set PORT=8081` (CMD) before running `.\scripts\run-web.cmd`. |
 | `java` / `mvn` / `psql` not found after `winget install` | Open a fresh terminal window; `setup.cmd` also refreshes `PATH` from the Windows Machine & User registry. |
+
+---
+
+## Demo on a phone
+
+Every boarding pass embeds an HMAC-signed QR verification URL (`{publicBaseUrl}/verify/{PNR}?sig=...`). To scan a boarding pass QR code from a phone on the same Wi-Fi instead of `localhost`:
+
+1. Run `.\scripts\run-web.cmd` and copy the `LAN URL: http://<LAN-IP>:8080` printed on startup.
+2. Configure `publicBaseUrl = http://<LAN-IP>:8080` in `core/src/main/resources/com/group2/flightres/app.json` (or export `$env:SKY_ROYAL_PUBLIC_BASE_URL = "http://<LAN-IP>:8080"` before running `.\scripts\run-web.cmd`).
+3. Ensure Windows Firewall allows TCP port `8080` on the local network, then scan the QR code on `/confirmation/{PNR}` or the downloaded PDF from your phone camera.
+
