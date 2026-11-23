@@ -146,30 +146,26 @@
                     <span class="brand-badge-pill" id="cardBrandBadge">CARD</span>
                   </div>
 
-                  <div class="checkout-card-preview" aria-hidden="true">
-                    <div class="card-preview-top">
-                      <span class="card-preview-chip"></span>
-                      <span class="card-preview-brand" id="cardPreviewBrand">CARD</span>
-                    </div>
-                    <div class="card-preview-digits" id="cardPreviewDigits">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull;</div>
-                    <div class="card-preview-bottom">
-                      <div>
-                        <span class="card-preview-meta-lbl">Cardholder</span>
-                        <strong class="card-preview-meta-val" id="cardPreviewHolder">CARDHOLDER</strong>
+                  <div class="checkout-payment-grid">
+                    <div class="checkout-card-preview" aria-hidden="true">
+                      <div class="card-preview-top">
+                        <span class="card-preview-chip"></span>
+                        <span class="card-preview-brand" id="cardPreviewBrand">CARD</span>
                       </div>
-                      <div class="card-preview-exp-col">
-                        <span class="card-preview-meta-lbl">Expires</span>
-                        <strong class="card-preview-meta-val" id="cardPreviewExpiry">MM/YY</strong>
+                      <div class="card-preview-digits" id="cardPreviewDigits">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull;</div>
+                      <div class="card-preview-bottom">
+                        <div>
+                          <span class="card-preview-meta-lbl">Cardholder</span>
+                          <strong class="card-preview-meta-val" id="cardPreviewHolder">CARDHOLDER</strong>
+                        </div>
+                        <div class="card-preview-exp-col">
+                          <span class="card-preview-meta-lbl">Expires</span>
+                          <strong class="card-preview-meta-val" id="cardPreviewExpiry">MM/YY</strong>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div class="auth-notice checkout-sim-note" role="note">
-                    Simulated payment. Test card 4242 4242 4242 4242 approves; 4000 0000 0000 0002 declines. No real money moves.
-                  </div>
-
-                  <div class="checkout-card-fields">
-                    <div class="checkout-card-top-split">
+                    <div class="checkout-card-fields">
                       <div class="field-group">
                         <label for="cardNumber" class="field-label">Card number</label>
                         <input type="text" id="cardNumber" name="cardNumber" class="field-control"
@@ -183,23 +179,27 @@
                                autocomplete="cc-name" maxlength="100"
                                placeholder="Name as shown on card" required>
                       </div>
-                    </div>
 
-                    <div class="checkout-card-split">
-                      <div class="field-group">
-                        <label for="cardExpiry" class="field-label">Expiry (MM/YY)</label>
-                        <input type="text" id="cardExpiry" name="expiry" class="field-control"
-                               inputmode="numeric" autocomplete="cc-exp" maxlength="7"
-                               placeholder="MM/YY" required>
-                      </div>
+                      <div class="checkout-card-split">
+                        <div class="field-group">
+                          <label for="cardExpiry" class="field-label">Expiry (MM/YY)</label>
+                          <input type="text" id="cardExpiry" name="expiry" class="field-control"
+                                 inputmode="numeric" autocomplete="cc-exp" maxlength="7"
+                                 placeholder="MM/YY" required>
+                        </div>
 
-                      <div class="field-group">
-                        <label for="cardCvv" class="field-label">CVV</label>
-                        <input type="password" id="cardCvv" name="cvv" class="field-control"
-                               inputmode="numeric" autocomplete="cc-csc" maxlength="4"
-                               placeholder="&bull;&bull;&bull;" required>
+                        <div class="field-group">
+                          <label for="cardCvv" class="field-label">CVV</label>
+                          <input type="password" id="cardCvv" name="cvv" class="field-control"
+                                 inputmode="numeric" autocomplete="cc-csc" maxlength="4"
+                                 placeholder="&bull;&bull;&bull;" required>
+                        </div>
                       </div>
                     </div>
+                  </div>
+
+                  <div class="auth-notice checkout-sim-note" role="note">
+                    Simulated payment. Test card 4242 4242 4242 4242 approves; 4000 0000 0000 0002 declines. No real money moves.
                   </div>
                 </div>
               </section>
