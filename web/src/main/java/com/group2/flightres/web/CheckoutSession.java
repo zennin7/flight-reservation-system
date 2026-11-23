@@ -3,6 +3,7 @@ package com.group2.flightres.web;
 import com.group2.flightres.model.FlightSearchResult;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.PriceQuote;
+import com.group2.flightres.model.SeatClass;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -22,6 +23,10 @@ public class CheckoutSession implements Serializable {
     private final String flightNumber;
     private final String origin;
     private final String destination;
+    private final String originCode;
+    private final String destinationCode;
+    private final String originCity;
+    private final String destinationCity;
     private final String departureDate;
     private final String departureTime;
     private final String arrivalTime;
@@ -29,10 +34,10 @@ public class CheckoutSession implements Serializable {
     private final Instant arrivalInstant;
 
     private final FlightSeat seat;
-    private final String passengerName;
-    private final String passengerEmail;
-    private final String passportNumber;
-    private final LocalDate dateOfBirth;
+    private String passengerName;
+    private String passengerEmail;
+    private String passportNumber;
+    private LocalDate dateOfBirth;
 
     private PriceQuote quote;
     private final String idempotencyKey;
@@ -59,15 +64,19 @@ public class CheckoutSession implements Serializable {
         this.flightNumber = flight.getFlightNumber();
         this.origin = origin;
         this.destination = destination;
+        this.originCode = resolveCode(flight.getOriginCode(), origin, "JNB");
+        this.destinationCode = resolveCode(flight.getDestCode(), destination, "CPT");
+        this.originCity = resolveCity(flight.getOriginCity(), origin);
+        this.destinationCity = resolveCity(flight.getDestCity(), destination);
         this.departureDate = departureDate;
         this.departureTime = flight.getDepartureTime();
         this.arrivalTime = flight.getArrivalTime();
         this.departureInstant = flight.getDeparture();
         this.arrivalInstant = flight.getArrival();
         this.seat = Objects.requireNonNull(seat, "seat must not be null");
-        this.passengerName = passengerName;
-        this.passengerEmail = passengerEmail;
-        this.passportNumber = passportNumber;
+        this.passengerName = passengerName != null ? passengerName : "";
+        this.passengerEmail = passengerEmail != null ? passengerEmail : "";
+        this.passportNumber = passportNumber != null ? passportNumber : "";
         this.dateOfBirth = dateOfBirth;
         this.quote = Objects.requireNonNull(quote, "quote must not be null");
         this.idempotencyKey = Objects.requireNonNull(idempotencyKey, "idempotencyKey must not be null");
@@ -79,6 +88,10 @@ public class CheckoutSession implements Serializable {
     public String getFlightNumber() { return flightNumber; }
     public String getOrigin() { return origin; }
     public String getDestination() { return destination; }
+    public String getOriginCode() { return originCode; }
+    public String getDestinationCode() { return destinationCode; }
+    public String getOriginCity() { return originCity; }
+    public String getDestinationCity() { return destinationCity; }
     public String getDepartureDate() { return departureDate; }
     public String getDepartureTime() { return departureTime; }
     public String getArrivalTime() { return arrivalTime; }
@@ -88,11 +101,19 @@ public class CheckoutSession implements Serializable {
     public FlightSeat getSeat() { return seat; }
     public long getFlightSeatId() { return seat.getFlightSeatId(); }
     public String getSeatLabel() { return seat.getSeatLabel(); }
+    public String getCabinDisplay() {
+        return seat.getSeatClass() == SeatClass.FIRST ? "First Class" : "Economy";
+    }
 
     public String getPassengerName() { return passengerName; }
+    public void setPassengerName(String passengerName) { this.passengerName = passengerName != null ? passengerName : ""; }
     public String getPassengerEmail() { return passengerEmail; }
+    public void setPassengerEmail(String passengerEmail) { this.passengerEmail = passengerEmail != null ? passengerEmail : ""; }
     public String getPassportNumber() { return passportNumber; }
+    public void setPassportNumber(String passportNumber) { this.passportNumber = passportNumber != null ? passportNumber : ""; }
     public LocalDate getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+    public String getDateOfBirthFormatted() { return dateOfBirth != null ? dateOfBirth.toString() : ""; }
 
     public PriceQuote getQuote() { return quote; }
     public void setQuote(PriceQuote quote) { this.quote = Objects.requireNonNull(quote); }
@@ -108,4 +129,32 @@ public class CheckoutSession implements Serializable {
 
     public String getCompletedBookingRef() { return completedBookingRef; }
     public void setCompletedBookingRef(String completedBookingRef) { this.completedBookingRef = completedBookingRef; }
+
+    private static String resolveCode(String code, String label, String fallback) {
+        if (code != null && !code.isBlank()) {
+            return code.trim();
+        }
+        if (label != null) {
+            int open = label.lastIndexOf('(');
+            int close = label.lastIndexOf(')');
+            if (open >= 0 && close > open + 1) {
+                return label.substring(open + 1, close).trim();
+            }
+        }
+        return fallback;
+    }
+
+    private static String resolveCity(String city, String label) {
+        if (city != null && !city.isBlank()) {
+            return city.trim();
+        }
+        if (label != null) {
+            int open = label.lastIndexOf('(');
+            if (open > 0) {
+                return label.substring(0, open).trim();
+            }
+            return label.trim();
+        }
+        return "";
+    }
 }

@@ -195,6 +195,8 @@ public class WebApplication {
 
         // Seat Selection & Checkout
         app.get("/flights/{id}/seats", controller::handleSeats);
+        app.post("/flights/{id}/seats/hold", controller::handleSeatHoldPost);
+        app.post("/flights/{id}/seats/release", controller::handleSeatReleasePost);
 
         // Book / Checkout & Pay
         app.post("/book", controller::handleBook);
@@ -209,6 +211,7 @@ public class WebApplication {
         app.get("/confirmation/{reference}/boarding-pass.pdf", controller::handleConfirmationPdf);
         app.get("/verify/{pnr}", controller::handleVerifyGet);
         app.get("/my-bookings", controller::handleMyBookingsGet);
+        app.get("/bookings/{reference}/calendar.ics", controller::handleBookingCalendarIcs);
         app.get("/bookings/{reference}/cancel", controller::handleCancelGet);
         app.post("/bookings/{reference}/cancel", controller::handleCancelPost);
 
@@ -239,9 +242,15 @@ public class WebApplication {
         app.exception(Exception.class, (e, ctx) -> {
             logger.error("Unhandled exception processing request to " + ctx.path(), e);
             ctx.status(500);
-            Map<String, Object> model = controller.baseModel(ctx);
-            model.put("error", "An unexpected error occurred while processing your request. Please return to Home.");
-            ctx.render("error.html", model);
+            try {
+                Map<String, Object> model = controller.baseModel(ctx);
+                model.put("error", "An unexpected error occurred while processing your request. Please return to Home.");
+                ctx.render("error.html", model);
+            } catch (Exception renderEx) {
+                logger.error("Fallback error view failed for " + ctx.path(), renderEx);
+                ctx.contentType("text/plain; charset=utf-8");
+                ctx.result("An unexpected error occurred. Please return to Home.");
+            }
         });
     }
 

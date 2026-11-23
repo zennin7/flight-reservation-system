@@ -132,17 +132,23 @@
     });
   }
 
-  // Optional subtitle sync for Home / Flights search strips
+  // Optional subtitle & friendly date sync for Home / Flights search strips
+  var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
   var syncControls = document.querySelectorAll('[data-sync-sub]');
   Array.prototype.forEach.call(syncControls, function (ctrl) {
     var targetId = ctrl.getAttribute('data-sync-sub');
     var target = document.getElementById(targetId);
-    if (!target) return;
+    var dispId = ctrl.getAttribute('data-display-target');
+    var dispTarget = dispId ? document.getElementById(dispId) : null;
+    if (!target && !dispTarget) return;
 
     function updateSub() {
       if (ctrl.tagName === 'SELECT') {
         var opt = ctrl.options[ctrl.selectedIndex];
-        if (opt && opt.getAttribute('data-subtitle')) {
+        if (target && opt && opt.getAttribute('data-subtitle')) {
           target.textContent = opt.getAttribute('data-subtitle');
         }
       } else if (ctrl.type === 'date' && ctrl.value) {
@@ -150,7 +156,12 @@
         if (parts.length === 3) {
           var dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
           if (!isNaN(dt.getTime())) {
-            target.textContent = dt.toLocaleDateString('en-US', { weekday: 'long' });
+            if (target) {
+              target.textContent = DAYS[dt.getDay()];
+            }
+            if (dispTarget) {
+              dispTarget.textContent = SHORT_DAYS[dt.getDay()] + ' ' + dt.getDate() + ' ' + SHORT_MONTHS[dt.getMonth()];
+            }
           }
         }
       }

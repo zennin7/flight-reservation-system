@@ -346,18 +346,48 @@ class WebMyBookingsCancelTest {
         // Login with /my-bookings lands on /my-bookings
         assertEquals("/my-bookings", loginViaNext(alice, env.baseUrl(), "/my-bookings", "alice"));
 
-        // 2. Populated view shows both OK48HR (with Cancel) and SOON12 (no Cancel)
+        // 2. Populated view shows both OK48HR (with Cancel) and SOON12 (no Cancel) plus board-5 live preview hooks
         HttpResponse<String> myResp = alice.send(
                 HttpRequest.newBuilder().uri(URI.create(env.baseUrl() + "/my-bookings")).GET().build(),
                 HttpResponse.BodyHandlers.ofString());
         assertEquals(200, myResp.statusCode());
         assertTrue(myResp.body().contains("Upcoming Flights"));
         assertTrue(myResp.body().contains("Past Flights"));
+        assertTrue(myResp.body().contains("BOARDING PASS"));
+        assertTrue(myResp.body().contains("Need another trip?"));
         assertTrue(myResp.body().contains("OK48HR"));
+        assertTrue(myResp.body().contains("/bookings/OK48HR/calendar.ics"));
         assertTrue(myResp.body().contains("PAST01"));
         assertTrue(myResp.body().contains("/bookings/OK48HR/cancel"));
         assertTrue(myResp.body().contains("SOON12"));
         assertFalse(myResp.body().contains("/bookings/SOON12/cancel"), "<24h booking must not offer Cancel CTA");
+
+        // 2b. Owner-only iCalendar (.ics) endpoint enforcement
+        HttpResponse<String> anonIcs = newClient().send(
+                HttpRequest.newBuilder().uri(URI.create(env.baseUrl() + "/bookings/OK48HR/calendar.ics")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(302, anonIcs.statusCode());
+        assertTrue(anonIcs.headers().firstValue("Location").orElse("").contains("/login"));
+
+        HttpResponse<String> missingIcs = alice.send(
+                HttpRequest.newBuilder().uri(URI.create(env.baseUrl() + "/bookings/NOPE99/calendar.ics")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(404, missingIcs.statusCode());
+
+        HttpResponse<String> otherIcs = alice.send(
+                HttpRequest.newBuilder().uri(URI.create(env.baseUrl() + "/bookings/USER2A/calendar.ics")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(403, otherIcs.statusCode());
+
+        HttpResponse<String> okIcs = alice.send(
+                HttpRequest.newBuilder().uri(URI.create(env.baseUrl() + "/bookings/OK48HR/calendar.ics")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, okIcs.statusCode());
+        assertTrue(okIcs.headers().firstValue("Content-Type").orElse("").contains("text/calendar"));
+        assertTrue(okIcs.headers().firstValue("Content-Disposition").orElse("").contains("sky-royal-OK48HR.ics"));
+        assertTrue(okIcs.body().contains("BEGIN:VCALENDAR"));
+        assertTrue(okIcs.body().contains("OK48HR"));
+        assertTrue(okIcs.body().contains("END:VCALENDAR"));
 
         // 3. Another user's booking returns 403 via service ownership
         HttpResponse<String> otherGet = alice.send(
@@ -406,11 +436,16 @@ class WebMyBookingsCancelTest {
         assertEquals(SeatStatus.AVAILABLE, env.store().seat48h.getStatus());
         assertEquals(1, env.refundCalls().get());
 
-        // PDF returns 410
+        // PDF & Calendar return 410 after cancel
         HttpResponse<byte[]> cancelledPdf = alice.send(
                 HttpRequest.newBuilder().uri(URI.create(env.baseUrl() + "/confirmation/OK48HR/boarding-pass.pdf")).GET().build(),
                 HttpResponse.BodyHandlers.ofByteArray());
         assertEquals(410, cancelledPdf.statusCode());
+
+        HttpResponse<String> cancelledIcs = alice.send(
+                HttpRequest.newBuilder().uri(URI.create(env.baseUrl() + "/bookings/OK48HR/calendar.ics")).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(410, cancelledIcs.statusCode());
 
         // Confirmation page shows CANCELLED banner and hides PDF
         HttpResponse<String> cancelledConf = alice.send(

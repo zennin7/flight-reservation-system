@@ -14,4 +14,16 @@ public final class MoneyFormatter {
         BigDecimal safe = amount != null ? amount : BigDecimal.ZERO;
         return String.format(Locale.US, "R %,.2f", safe);
     }
+
+    public static String formatSigned(BigDecimal amount) {
+        BigDecimal safe = amount != null ? amount : BigDecimal.ZERO;
+        if (safe.compareTo(BigDecimal.ZERO) < 0) {
+            return "-" + format(safe.abs());
+        }
+        return "+" + format(safe);
+    }
+
+    public static String formatPercent(double pct) {
+        return String.format(Locale.US, "%.1f%%", pct);
+    }
 }

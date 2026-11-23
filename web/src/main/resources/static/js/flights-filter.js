@@ -76,8 +76,10 @@
   var resetAllEmptyBtn = document.getElementById('filterEmptyResetBtn');
 
   function formatRandWhole(val) {
-    var n = Math.round(Number(val) || 0);
-    return 'R ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    var n = Number(val) || 0;
+    var parts = n.toFixed(2).split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return 'R ' + parts[0] + '.' + parts[1];
   }
 
   function updateSliderLabel() {

@@ -8,17 +8,15 @@ import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.service.CancellationPolicy;
 import com.group2.flightres.service.FlightSalesPolicy;
 import com.group2.flightres.util.FlightTimes;
+import com.group2.flightres.util.MoneyFormatter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -322,13 +320,6 @@ public final class FlightSearchFilter {
     }
 
     public static String formatPriceCompact(BigDecimal amount) {
-        if (amount == null) {
-            return "R 0";
-        }
-        DecimalFormatSymbols syms = DecimalFormatSymbols.getInstance(Locale.US);
-        BigDecimal stripped = amount.stripTrailingZeros();
-        String pattern = stripped.scale() <= 0 ? "#,##0" : "#,##0.00";
-        DecimalFormat df = new DecimalFormat(pattern, syms);
-        return "R " + df.format(amount);
+        return MoneyFormatter.format(amount);
     }
 }
