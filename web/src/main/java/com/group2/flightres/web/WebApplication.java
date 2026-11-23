@@ -35,9 +35,13 @@ public class WebApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(WebApplication.class);
 
+    public static final int DEFAULT_WEB_PORT = 8080;
+
     private final Javalin app;
     private final WebController controller;
     private final AuthService authService;
+    private volatile int actualPort;
+    private volatile String boundBaseUrl = "http://localhost:" + DEFAULT_WEB_PORT;
 
     public WebApplication() {
         this(new FlightService(), new SeatMapService(), new BookingService(), new AuthService());
@@ -134,10 +138,45 @@ public class WebApplication {
         return app;
     }
 
+    WebController getController() {
+        return controller;
+    }
+
     public void start(int port) {
         app.start(port);
-        logger.info("Sky Royal Web Application started at http://localhost:{}", port);
+        this.actualPort = app.port();
+        this.boundBaseUrl = "http://localhost:" + this.actualPort;
+        this.controller.setBoundBaseUrl(this.boundBaseUrl);
+        logger.info("Sky Royal Web Application started at {}", this.boundBaseUrl);
         logAuthSeedStatus();
+    }
+
+    public int getActualPort() {
+        return actualPort;
+    }
+
+    public String getBoundBaseUrl() {
+        return boundBaseUrl;
+    }
+
+    public static int resolvePreferredPort(Map<String, String> env) {
+        Integer port = parseValidPort(env != null ? env.get("SKY_ROYAL_WEB_PORT") : null);
+        if (port != null) return port;
+        port = parseValidPort(env != null ? env.get("PORT") : null);
+        if (port != null) return port;
+        return DEFAULT_WEB_PORT;
+    }
+
+    private static Integer parseValidPort(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            int p = Integer.parseInt(raw.trim());
+            if (p > 0 && p <= 65535) {
+                return p;
+            }
+        } catch (NumberFormatException ignored) {
+        }
+        return null;
     }
 
     private void logAuthSeedStatus() {
@@ -246,13 +285,7 @@ public class WebApplication {
     }
 
     public static void main(String[] args) {
-        int port = 7070;
-        String portEnv = System.getenv("PORT");
-        if (portEnv != null && !portEnv.isBlank()) {
-            try {
-                port = Integer.parseInt(portEnv);
-            } catch (NumberFormatException ignored) {}
-        }
+        int port = resolvePreferredPort(System.getenv());
         WebApplication app = new WebApplication();
         app.start(port);
     }

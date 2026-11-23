@@ -5,9 +5,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AppConfig {
+
+    public static final String DEFAULT_DB_HOST = "localhost";
+    public static final int DEFAULT_DB_PORT = 5432;
+    public static final String DEFAULT_DB_NAME = "flight_reservation";
+    public static final String DEFAULT_DB_USERNAME = "postgres";
+    public static final int DEFAULT_POOL_SIZE = 10;
 
     private static AppConfig instance;
 
@@ -23,7 +30,7 @@ public class AppConfig {
     private String smtpFromName;
     private String publicBaseUrl;
 
-    private AppConfig() {}
+    public AppConfig() {}
 
     public static synchronized AppConfig getInstance() {
         if (instance == null) {
@@ -42,10 +49,104 @@ public class AppConfig {
             throw new IllegalStateException("app.json not found on classpath");
         }
         try (InputStream stream = is) {
-            return mapper.readValue(stream, AppConfig.class);
+            AppConfig fileConfig = mapper.readValue(stream, AppConfig.class);
+            return resolve(fileConfig, System.getenv());
         } catch (IOException e) {
             throw new RuntimeException("Failed to load app.json", e);
         }
+    }
+
+    /**
+     * Resolves portable configuration using precedence:
+     * SKY_ROYAL_DB_* env vars > LAUNCH_DB_* env vars > app.json / app.json.example > standard defaults.
+     */
+    public static AppConfig resolve(AppConfig fileConfig, Map<String, String> env) {
+        AppConfig resolved = new AppConfig();
+        String cfgHost = fileConfig != null ? fileConfig.getDbHost() : null;
+        int cfgPort = fileConfig != null ? fileConfig.getDbPort() : 0;
+        String cfgName = fileConfig != null ? fileConfig.getDbName() : null;
+        String cfgUser = fileConfig != null ? fileConfig.getDbUsername() : null;
+        String cfgPass = fileConfig != null ? fileConfig.getDbPassword() : null;
+        int cfgPool = fileConfig != null ? fileConfig.getPoolSize() : 0;
+
+        resolved.setDbHost(firstNonBlank(
+                envGet(env, "SKY_ROYAL_DB_HOST"),
+                envGet(env, "LAUNCH_DB_HOST"),
+                cfgHost,
+                DEFAULT_DB_HOST));
+        resolved.setDbPort(resolvePort(
+                envGet(env, "SKY_ROYAL_DB_PORT"),
+                envGet(env, "LAUNCH_DB_PORT"),
+                cfgPort,
+                DEFAULT_DB_PORT));
+        resolved.setDbName(firstNonBlank(
+                envGet(env, "SKY_ROYAL_DB_NAME"),
+                envGet(env, "LAUNCH_DB_NAME"),
+                cfgName,
+                DEFAULT_DB_NAME));
+        resolved.setDbUsername(firstNonBlank(
+                envGet(env, "SKY_ROYAL_DB_USER"),
+                envGet(env, "LAUNCH_DB_USER"),
+                cfgUser,
+                DEFAULT_DB_USERNAME));
+        resolved.setDbPassword(firstNonEmpty(
+                envGet(env, "SKY_ROYAL_DB_PASSWORD"),
+                envGet(env, "LAUNCH_DB_PASSWORD"),
+                cfgPass,
+                ""));
+        resolved.setPoolSize(cfgPool > 0 ? cfgPool : DEFAULT_POOL_SIZE);
+
+        if (fileConfig != null) {
+            resolved.setSmtpHost(fileConfig.getSmtpHost());
+            resolved.setSmtpPort(fileConfig.getSmtpPort());
+            resolved.setSmtpFromAddress(fileConfig.getSmtpFromAddress());
+            resolved.setSmtpFromName(fileConfig.getSmtpFromName());
+            resolved.setPublicBaseUrl(fileConfig.getPublicBaseUrl());
+        }
+        return resolved;
+    }
+
+    private static String envGet(Map<String, String> env, String key) {
+        return env == null ? null : env.get(key);
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank()) {
+                return v.trim();
+            }
+        }
+        return "";
+    }
+
+    private static String firstNonEmpty(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isEmpty()) {
+                return v;
+            }
+        }
+        return "";
+    }
+
+    private static int resolvePort(String primaryEnv, String legacyEnv, int cfgPort, int fallback) {
+        Integer parsed = parseValidPort(primaryEnv);
+        if (parsed != null) return parsed;
+        parsed = parseValidPort(legacyEnv);
+        if (parsed != null) return parsed;
+        if (cfgPort > 0 && cfgPort <= 65535) return cfgPort;
+        return fallback;
+    }
+
+    private static Integer parseValidPort(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            int port = Integer.parseInt(raw.trim());
+            if (port > 0 && port <= 65535) {
+                return port;
+            }
+        } catch (NumberFormatException ignored) {
+        }
+        return null;
     }
 
     public String getDbHost() { return dbHost; }
@@ -80,4 +181,20 @@ public class AppConfig {
 
     public String getPublicBaseUrl() { return publicBaseUrl; }
     public void setPublicBaseUrl(String publicBaseUrl) { this.publicBaseUrl = publicBaseUrl; }
+
+    @Override
+    public String toString() {
+        String maskedPwd = (dbPassword != null && !dbPassword.isEmpty()) ? "***" : "<unset>";
+        return "AppConfig{"
+                + "dbHost='" + dbHost + '\''
+                + ", dbPort=" + dbPort
+                + ", dbName='" + dbName + '\''
+                + ", dbUsername='" + dbUsername + '\''
+                + ", dbPassword='" + maskedPwd + '\''
+                + ", poolSize=" + poolSize
+                + ", smtpHost='" + smtpHost + '\''
+                + ", smtpPort=" + smtpPort
+                + ", publicBaseUrl='" + publicBaseUrl + '\''
+                + '}';
+    }
 }
