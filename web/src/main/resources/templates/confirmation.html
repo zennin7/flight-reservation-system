@@ -86,7 +86,7 @@
             </div>
             <div>
               <div class="bp-meta-label">Total Paid</div>
-              <div class="bp-meta-val" th:text="${record.totalAmount != null ? 'R ' + #numbers.formatDecimal(record.totalAmount, 1, 'COMMA', 2, 'POINT') : 'R 0.00'}">R 1,522.00</div>
+              <div class="bp-meta-val" th:text="${totalPaidFormatted}">R 1,522.00</div>
             </div>
           </div>
         </div>

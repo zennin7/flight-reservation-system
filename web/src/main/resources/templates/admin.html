@@ -85,7 +85,7 @@
                   <td th:text="${fl.route}">JNB -&gt; CPT</td>
                   <td th:text="${fl.formattedDepartureDate + ' · ' + fl.formattedDepartureTime}">2026-11-23 · 06:30</td>
                   <td class="num" th:text="${fl.bookedSeats + ' / ' + fl.totalSeats}">12 / 162</td>
-                  <td class="num" th:text="${#numbers.formatDecimal(fl.loadFactorPct, 1, 1) + '%'}">7.4%</td>
+                  <td class="num" th:text="${fl.formattedLoadFactor}">7.4%</td>
                   <td><span class="admin-status-chip" th:text="${fl.status}">Scheduled</span></td>
                 </tr>
               </tbody>

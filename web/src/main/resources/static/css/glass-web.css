@@ -6,24 +6,24 @@
     --glass-text-muted: rgba(255, 255, 255, 0.74);
     --glass-text-nav: rgba(255, 255, 255, 0.84);
     --glass-text-faint: rgba(255, 255, 255, 0.56);
-    --glass-panel: rgba(15, 19, 24, 0.72);
-    --glass-surface: rgba(15, 19, 24, 0.72);
-    --glass-surface-strong: rgba(15, 19, 24, 0.84);
+    --glass-panel: rgba(15, 19, 24, 0.48);
+    --glass-surface: rgba(15, 19, 24, 0.48);
+    --glass-surface-strong: rgba(15, 19, 24, 0.64);
     --glass-surface-solid: #12171d;
-    --glass-frame-bg: rgba(15, 19, 24, 0.68);
+    --glass-frame-bg: rgba(15, 19, 24, 0.44);
     --glass-frame-solid: #141a21;
-    --glass-nav-pill: rgba(15, 19, 24, 0.56);
-    --glass-chip-bg: rgba(15, 19, 24, 0.54);
-    --glass-pill-muted-bg: rgba(255, 255, 255, 0.08);
-    --glass-panel-edge: rgba(255, 255, 255, 0.14);
-    --glass-border-edge: rgba(255, 255, 255, 0.14);
-    --glass-border-strong: rgba(255, 255, 255, 0.24);
-    --glass-tile: rgba(10, 14, 19, 0.52);
-    --glass-tile-hi: rgba(255, 255, 255, 0.09);
-    --glass-line: rgba(255, 255, 255, 0.14);
+    --glass-nav-pill: rgba(15, 19, 24, 0.44);
+    --glass-chip-bg: rgba(15, 19, 24, 0.44);
+    --glass-pill-muted-bg: rgba(255, 255, 255, 0.10);
+    --glass-panel-edge: rgba(255, 255, 255, 0.18);
+    --glass-border-edge: rgba(255, 255, 255, 0.18);
+    --glass-border-strong: rgba(255, 255, 255, 0.28);
+    --glass-tile: rgba(12, 16, 22, 0.48);
+    --glass-tile-hi: rgba(255, 255, 255, 0.10);
+    --glass-line: rgba(255, 255, 255, 0.16);
     --glass-blur: 20px;
     --glass-backdrop-aerial: url('/photos/aerial-1.jpg');
-    --glass-backdrop-cabin: url('/photos/aerial-1.jpg');
+    --glass-backdrop-cabin: url('/photos/cabin-economy-1.jpg');
     --glass-white: #ffffff;
     --glass-cream: #f1eedf;
     --glass-ink: #15181c;
@@ -34,12 +34,13 @@
 
     /* Derived backdrop, shadow, and fallback card gradients */
     --glass-bg-base: #0d1c24;
-    --glass-scrim-top: rgba(11, 16, 22, 0.56);
-    --glass-scrim-mid: rgba(11, 16, 22, 0.62);
-    --glass-scrim-bot: rgba(11, 16, 22, 0.80);
-    --glass-hero-scrim-top: rgba(11, 16, 22, 0.56);
-    --glass-hero-scrim-mid: rgba(11, 16, 22, 0.62);
-    --glass-hero-scrim-bot: rgba(11, 16, 22, 0.80);
+    --glass-scrim-top: rgba(11, 16, 22, 0.24);
+    --glass-scrim-mid: rgba(11, 16, 22, 0.30);
+    --glass-scrim-bot: rgba(11, 16, 22, 0.48);
+    --glass-hero-left-scrim: linear-gradient(90deg, rgba(11, 16, 22, 0.62) 0%, rgba(11, 16, 22, 0.34) 44%, rgba(11, 16, 22, 0.0) 76%);
+    --glass-hero-scrim-top: rgba(11, 16, 22, 0.24);
+    --glass-hero-scrim-mid: rgba(11, 16, 22, 0.30);
+    --glass-hero-scrim-bot: rgba(11, 16, 22, 0.48);
     --glass-shadow-lg: 0 28px 64px rgba(0, 0, 0, 0.42);
     --glass-shadow-btn: 0 10px 24px rgba(0, 0, 0, 0.25);
     --glass-inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.18);
@@ -140,6 +141,17 @@ a {
         var(--glass-scrim-mid) 48%,
         var(--glass-scrim-bot) 100%
     );
+}
+
+.glass-backdrop-scrim.is-hero-scrim {
+    background:
+        var(--glass-hero-left-scrim),
+        linear-gradient(
+            180deg,
+            var(--glass-scrim-top) 0%,
+            var(--glass-scrim-mid) 48%,
+            var(--glass-scrim-bot) 100%
+        );
 }
 
 .page-shell {
@@ -2760,6 +2772,63 @@ body.has-sheet-open {
     outline: none;
     min-width: 0;
     color-scheme: dark;
+}
+
+.strip-date-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 24px;
+    border-radius: 6px;
+}
+
+.strip-date-wrap:focus-within {
+    outline: 2px solid var(--glass-accent);
+    outline-offset: 2px;
+}
+
+.strip-date-display {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--glass-text);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.strip-date-native {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.01;
+    cursor: pointer;
+}
+
+.strip-date-native::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.search-btn-label {
+    display: none;
+}
+
+@media (max-width: 480px) {
+    .search-square-btn {
+        gap: 8px;
+        padding: 0 18px;
+    }
+    .search-btn-label {
+        display: inline;
+        font-size: 14px;
+        font-weight: 600;
+    }
 }
 
 .strip-select option {

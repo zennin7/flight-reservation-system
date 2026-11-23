@@ -46,12 +46,11 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -177,6 +176,7 @@ public class WebController {
         }
         LocalDate tomorrow = LocalDate.now(bookingService.getClock()).plusDays(1);
         model.put("tomorrowDate", tomorrow.toString());
+        model.put("tomorrowDateDisplay", formatFriendlyDate(tomorrow));
         model.put("tomorrowWeekday", tomorrow.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH));
         model.put("holdDurationText", (com.group2.flightres.config.SeatHoldPolicy.HOLD_SECONDS / 60) + " min");
 
@@ -405,6 +405,7 @@ public class WebController {
         model.put("originCity", originCity);
         model.put("destCity", destCity);
         model.put("date", date.toString());
+        model.put("dateDisplay", formatFriendlyDate(date));
         model.put("dateWeekday", date.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH));
         model.put("selectedCabin", selectedCabin);
         model.put("flights", rawFlights);
@@ -855,6 +856,7 @@ public class WebController {
         boolean canCancel = owner && !isCancelled
                 && bookingService.getCancellationPolicy().evaluate(record).allowed();
         model.put("record", record);
+        model.put("totalPaidFormatted", MoneyFormatter.format(record.getTotalAmount()));
         model.put("isBookingOwner", owner);
         model.put("isCancelled", isCancelled);
         model.put("canCancel", canCancel);
@@ -1023,7 +1025,7 @@ public class WebController {
             CancellationPolicy policy = bookingService.getCancellationPolicy();
             for (BookingSummary s : summaries) {
                 totalCount++;
-                String totalFmt = formatRand(s.getTotalPaid());
+                String totalFmt = MoneyFormatter.format(s.getTotalPaid());
                 boolean isCancelled = isCancelledStatus(s.getStatus()) || isCancelledStatus(s.getStoredStatus());
                 if (isCancelled) {
                     cancelled.add(new MyBookingCard(s, totalFmt, false, false));
@@ -1088,8 +1090,8 @@ public class WebController {
                 return;
             }
             String refundMsg = result.refundReference() != null && !result.refundReference().isBlank()
-                    ? " Refund " + formatRand(result.refundAmount()) + " (" + result.refundReference() + ") processed."
-                    : " Refund " + formatRand(result.refundAmount()) + " processed.";
+                    ? " Refund " + MoneyFormatter.format(result.refundAmount()) + " (" + result.refundReference() + ") processed."
+                    : " Refund " + MoneyFormatter.format(result.refundAmount()) + " processed.";
             ctx.sessionAttribute("flash_success",
                     "Booking " + result.bookingReference() + " cancelled." + refundMsg);
             ctx.redirect("/my-bookings");
@@ -1133,7 +1135,7 @@ public class WebController {
         model.put("alreadyCancelled", decision.alreadyCancelled());
         model.put("cancelBlocked", !decision.allowed() && !decision.alreadyCancelled());
         model.put("policyReason", decision.reason());
-        model.put("refundFormatted", formatRand(decision.allowed() ? decision.refundAmount() : record.getTotalAmount()));
+        model.put("refundFormatted", MoneyFormatter.format(decision.allowed() ? decision.refundAmount() : record.getTotalAmount()));
         if (cancelError != null) model.put("cancelError", cancelError);
         if (cancelNotice != null) model.put("cancelNotice", cancelNotice);
         ctx.render("cancel.html", model);
@@ -1442,18 +1444,18 @@ public class WebController {
 
         PriceQuote q = cs.getQuote();
         BigDecimal classUpgrade = q.classFare().subtract(q.baseFare());
-        model.put("baseFareFormatted", formatRand(q.baseFare()));
+        model.put("baseFareFormatted", MoneyFormatter.format(q.baseFare()));
         model.put("hasClassPremium", classUpgrade.compareTo(BigDecimal.ZERO) > 0);
-        model.put("classUpgradeFormatted", formatSignedRand(classUpgrade));
-        model.put("demandAdjFormatted", formatSignedRand(q.demandAdjustment()));
-        model.put("timingAdjFormatted", formatSignedRand(q.timingAdjustment()));
-        model.put("totalFormatted", formatRand(q.total()));
-        model.put("vatFormatted", formatRand(q.vatIncluded()));
+        model.put("classUpgradeFormatted", MoneyFormatter.formatSigned(classUpgrade));
+        model.put("demandAdjFormatted", MoneyFormatter.formatSigned(q.demandAdjustment()));
+        model.put("timingAdjFormatted", MoneyFormatter.formatSigned(q.timingAdjustment()));
+        model.put("totalFormatted", MoneyFormatter.format(q.total()));
+        model.put("vatFormatted", MoneyFormatter.format(q.vatIncluded()));
 
         Instant now = seatMapService.getClock().instant();
         long remSecs = Math.max(0L, Duration.between(now, cs.getHoldExpiresAt()).toSeconds());
         model.put("remainingHoldSeconds", remSecs);
-        model.put("remainingHoldFormatted", String.format("%02d:%02d", remSecs / 60, remSecs % 60));
+        model.put("remainingHoldFormatted", String.format(Locale.US, "%02d:%02d", remSecs / 60, remSecs % 60));
         model.put("holdExpiresEpochMs", cs.getHoldExpiresAt().toEpochMilli());
         ctx.render("checkout.html", model);
     }
@@ -1509,19 +1511,11 @@ public class WebController {
         return (candidate != null && !candidate.isBlank()) ? candidate.trim() : fallback;
     }
 
-    private static String formatRand(BigDecimal amount) {
-        BigDecimal val = amount != null ? amount : BigDecimal.ZERO;
-        DecimalFormatSymbols syms = DecimalFormatSymbols.getInstance(Locale.US);
-        DecimalFormat df = new DecimalFormat("#,##0.00", syms);
-        return "R " + df.format(val);
-    }
+    private static final DateTimeFormatter FRIENDLY_DATE_FMT =
+            DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH);
 
-    private static String formatSignedRand(BigDecimal amount) {
-        BigDecimal val = amount != null ? amount : BigDecimal.ZERO;
-        if (val.compareTo(BigDecimal.ZERO) < 0) {
-            return "-" + formatRand(val.abs());
-        }
-        return "+" + formatRand(val);
+    private static String formatFriendlyDate(LocalDate d) {
+        return d != null ? FRIENDLY_DATE_FMT.format(d) : "";
     }
 
     private static String normalizePassport(String rawPassport) {

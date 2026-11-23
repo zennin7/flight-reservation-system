@@ -55,8 +55,11 @@
 
             <label class="strip-cell">
               <span class="strip-label">Departure</span>
-              <input type="date" name="date" id="searchDateInput" class="strip-date"
-                     th:value="${date}" data-sync-sub="searchDateSub" required>
+              <span class="strip-date-wrap">
+                <span class="strip-date-display" id="searchDateDisplay" th:text="${dateDisplay}">Tue 24 Nov</span>
+                <input type="date" name="date" id="searchDateInput" class="strip-date strip-date-native"
+                       th:value="${date}" data-sync-sub="searchDateSub" data-display-target="searchDateDisplay" required>
+              </span>
               <span class="strip-sub" id="searchDateSub" th:text="${dateWeekday}">Monday</span>
             </label>
 
@@ -70,10 +73,11 @@
               <span class="strip-sub" id="searchCabinSub" th:text="${selectedCabin == 'FIRST' ? 'First Class' : 'Economy'}">Economy</span>
             </label>
 
-            <button type="submit" class="search-square-btn" aria-label="Update search">
+            <button type="submit" class="search-square-btn" aria-label="Search flights">
               <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
                 <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z" fill="currentColor"/>
               </svg>
+              <span class="search-btn-label">Search flights</span>
             </button>
           </div>
         </form>
@@ -146,18 +150,18 @@
                 <label class="cabin-check-row">
                   <span class="cabin-check-left">
                     <input type="checkbox" name="cabinFilter" value="ECONOMY" class="filter-cabin-check"
-                           th:checked="${cabinFilter.contains('ECONOMY')}">
+                           th:checked="${cabinFilter.contains('ECONOMY') or (!hasServerFilters and selectedCabin != 'FIRST')}">
                     <span>Economy</span>
                   </span>
-                  <span class="cabin-check-price" th:text="${filterResult.minEconomyPriceFormatted}">R 1,284</span>
+                  <span class="cabin-check-price" th:text="${filterResult.minEconomyPriceFormatted}">R 1,284.00</span>
                 </label>
                 <label class="cabin-check-row">
                   <span class="cabin-check-left">
                     <input type="checkbox" name="cabinFilter" value="FIRST" class="filter-cabin-check"
-                           th:checked="${cabinFilter.contains('FIRST')}">
+                           th:checked="${cabinFilter.contains('FIRST') or (!hasServerFilters and selectedCabin == 'FIRST')}">
                     <span>First</span>
                   </span>
-                  <span class="cabin-check-price" th:text="${filterResult.minFirstPriceFormatted}">R 4,494</span>
+                  <span class="cabin-check-price" th:text="${filterResult.minFirstPriceFormatted}">R 4,494.00</span>
                 </label>
               </fieldset>
 
