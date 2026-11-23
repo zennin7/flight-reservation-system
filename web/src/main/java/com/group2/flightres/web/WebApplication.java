@@ -211,6 +211,7 @@ public class WebApplication {
         app.get("/confirmation/{reference}/boarding-pass.pdf", controller::handleConfirmationPdf);
         app.get("/verify/{pnr}", controller::handleVerifyGet);
         app.get("/my-bookings", controller::handleMyBookingsGet);
+        app.get("/bookings/{reference}/calendar.ics", controller::handleBookingCalendarIcs);
         app.get("/bookings/{reference}/cancel", controller::handleCancelGet);
         app.post("/bookings/{reference}/cancel", controller::handleCancelPost);
 

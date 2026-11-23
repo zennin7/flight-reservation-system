@@ -1160,27 +1160,27 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     color: var(--glass-danger);
 }
 
-/* My Bookings & Cancel Pages */
+/* My Bookings & Cancel Pages (P3b board-5 redesign) */
 .bookings-wrap {
-    max-width: 980px;
+    max-width: 1120px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 18px;
 }
 
 .bookings-head {
-    padding: 24px 28px;
+    padding: 20px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 18px;
+    gap: 16px;
     flex-wrap: wrap;
 }
 
 .bookings-stats {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
 }
 
@@ -1194,70 +1194,152 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     gap: 8px;
     font-size: 13px;
     color: var(--glass-text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
 }
 
 .bookings-stat-pill strong {
     color: var(--glass-text);
-    font-size: 15px;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+.myb-filter-chip:hover {
+    border-color: var(--glass-border-strong);
+    color: var(--glass-text);
+}
+
+.myb-filter-chip.is-active {
+    background: var(--glass-cream);
+    border-color: var(--glass-cream);
+    color: var(--glass-ink);
+}
+
+.myb-filter-chip.is-active strong {
+    color: var(--glass-ink);
+}
+
+.myb-board-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.04fr) minmax(320px, 0.96fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.myb-list-panel {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.myb-scroll-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 460px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .bookings-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .bookings-section-heading {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: -0.01em;
-    color: var(--glass-text);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--glass-text-muted);
 }
 
 .bookings-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
-.booking-card {
-    padding: 20px 24px;
+.myb-row-btn {
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: var(--glass-tile);
+    border: 1px solid var(--glass-line);
+    color: var(--glass-text);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.myb-row-btn:hover {
+    border-color: var(--glass-border-strong);
+    background: var(--glass-tile-hi);
+}
+
+.myb-row-btn.is-cancelled-row {
+    opacity: 0.84;
+}
+
+.myb-row-btn.is-selected {
+    background: var(--glass-cream);
+    border-color: var(--glass-cream);
+    color: var(--glass-ink);
+    opacity: 1;
+}
+
+.myb-row-top,
+.myb-row-mid,
+.myb-row-bot {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 18px;
-    flex-wrap: wrap;
-}
-
-.booking-card.is-cancelled {
-    opacity: 0.88;
-}
-
-.booking-card-main {
-    display: flex;
-    flex-direction: column;
     gap: 8px;
-    min-width: 0;
-}
-
-.booking-card-top {
-    display: flex;
-    align-items: center;
-    gap: 10px;
     flex-wrap: wrap;
 }
 
-.booking-pnr {
-    font-size: 12px;
+.myb-row-route {
+    font-size: 17px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: -0.015em;
+}
+
+.myb-row-mid {
+    justify-content: flex-start;
+    font-size: 12px;
     color: var(--glass-text-muted);
 }
 
+.myb-row-bot {
+    font-size: 12px;
+    color: var(--glass-text-muted);
+}
+
+.myb-row-bot strong {
+    color: var(--glass-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.myb-row-btn.is-selected .myb-row-mid,
+.myb-row-btn.is-selected .myb-row-bot {
+    color: var(--glass-ink-muted);
+}
+
+.myb-row-btn.is-selected .myb-row-bot strong {
+    color: var(--glass-ink);
+}
+
 .booking-status-badge {
-    padding: 4px 10px;
+    padding: 3px 9px;
     border-radius: 999px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.08em;
     background: var(--glass-tile-hi);
@@ -1276,29 +1358,245 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     background: var(--glass-seat-taken);
 }
 
-.booking-route {
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+.myb-row-btn.is-selected .booking-status-badge {
+    background: var(--glass-ink-chip);
+    border-color: var(--glass-ink-line);
+    color: var(--glass-ink);
 }
 
-.booking-meta {
+.myb-search-cta-bar {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: var(--glass-tile);
+    border: 1px solid var(--glass-line);
     font-size: 13px;
     color: var(--glass-text-muted);
 }
 
-.booking-meta strong {
-    color: var(--glass-text);
+.myb-preview-panel {
+    position: sticky;
+    top: 16px;
 }
 
-.booking-card-actions {
+.myb-pass-card {
+    background: var(--glass-white);
+    color: var(--glass-ink);
+    border-radius: 22px;
+    padding: 22px 24px;
+    box-shadow: var(--glass-shadow-lg);
     display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.myb-pass-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
     flex-wrap: wrap;
-    gap: 8px;
+}
+
+.myb-pass-brand-row,
+.myb-pass-ref-row {
+    display: flex;
     align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.myb-pass-wordmark {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--glass-ink);
+}
+
+.myb-pass-type-tag {
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--glass-ink-chip);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--glass-ink);
+}
+
+.myb-pass-pnr {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--glass-ink-muted);
+}
+
+.myb-pass-status {
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--glass-ink-chip);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--glass-ink);
+}
+
+.myb-pass-status.is-cancelled {
+    background: var(--glass-seat-taken);
+    color: var(--glass-danger);
+}
+
+.myb-pass-route-band {
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: var(--glass-cream);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.myb-pass-codes {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--glass-ink);
+    flex-wrap: wrap;
+}
+
+.myb-pass-arrow {
+    color: var(--glass-ink-muted);
+    font-weight: 500;
+}
+
+.myb-pass-flight-pill {
+    margin-left: auto;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--glass-white);
+    border: 1px solid var(--glass-ink-line);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.myb-pass-cities {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--glass-ink);
+}
+
+.myb-pass-timing {
+    font-size: 12px;
+    color: var(--glass-ink-muted);
+}
+
+.myb-pass-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.myb-pass-meta-lbl {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--glass-ink-muted);
+}
+
+.myb-pass-meta-val {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--glass-ink);
+    margin-top: 2px;
+}
+
+.myb-pass-tear-line {
+    border-top: 2px dashed var(--glass-ink-line);
+}
+
+.myb-pass-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.myb-pass-qr-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.myb-pass-qr-img {
+    display: block;
+    width: 108px;
+    height: 108px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-ink-line);
+    padding: 4px;
+    background: var(--glass-white);
+}
+
+.myb-pass-qr-caption {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--glass-ink-muted);
+}
+
+.myb-pass-cancelled-note {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--glass-ink-muted);
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--glass-ink-chip);
+}
+
+.myb-preview-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1 1 180px;
+}
+
+.myb-btn-ink {
+    background: var(--glass-ink);
+    color: var(--glass-white);
+    border: 1px solid var(--glass-ink);
+    justify-content: center;
+}
+
+.myb-btn-outline {
+    background: transparent;
+    color: var(--glass-ink);
+    border: 1px solid var(--glass-ink-line);
+    justify-content: center;
+}
+
+.myb-btn-outline:hover {
+    background: var(--glass-ink-chip);
+}
+
+.myb-pass-cancel-link {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--glass-ink-muted);
+    text-decoration: underline;
+    padding: 4px 0;
+}
+
+.myb-pass-cancel-link:hover {
+    color: var(--glass-ink);
 }
 
 .bookings-empty-card {
@@ -1313,6 +1611,18 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
     justify-content: center;
     gap: 12px;
     flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+    .myb-board-grid {
+        grid-template-columns: 1fr;
+    }
+    .myb-preview-panel {
+        position: static;
+    }
+    .myb-scroll-area {
+        max-height: 360px;
+    }
 }
 
 /* Auth / Login Glass Card */

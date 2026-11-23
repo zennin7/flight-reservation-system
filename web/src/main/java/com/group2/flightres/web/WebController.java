@@ -33,6 +33,7 @@ import com.group2.flightres.service.VerifyThrottle;
 import com.group2.flightres.util.BoardingPassPdfGenerator;
 import com.group2.flightres.util.DestinationPhotoResolver;
 import com.group2.flightres.util.FlightTimes;
+import com.group2.flightres.util.IcsCalendarGenerator;
 import com.group2.flightres.util.MoneyFormatter;
 import com.group2.flightres.util.NameInitials;
 import com.group2.flightres.util.QrCodeGenerator;
@@ -1257,10 +1258,87 @@ public class WebController {
         model.put("pastBookings", past);
         model.put("cancelledBookings", cancelled);
         model.put("totalCount", totalCount);
+        MyBookingCard selectedBooking = !upcoming.isEmpty() ? upcoming.get(0)
+                : (!past.isEmpty() ? past.get(0) : (!cancelled.isEmpty() ? cancelled.get(0) : null));
+        model.put("selectedBooking", selectedBooking);
         if (bookingsError != null) {
             model.put("bookingsError", bookingsError);
         }
         ctx.render("my-bookings.html", model);
+    }
+
+    public void handleBookingCalendarIcs(Context ctx) {
+        String reference = ctx.pathParam("reference");
+        Optional<BookingRecord> recordOpt = bookingService.getBookingByReference(reference);
+        if (recordOpt.isEmpty()) {
+            ctx.status(404).result("Booking reference not found.");
+            return;
+        }
+
+        BookingRecord record = recordOpt.get();
+        if (!isBookingOwner(ctx, record)) {
+            if (ctx.sessionAttribute("user") == null) {
+                String safeRef = sanitizeRef(record.getBookingReference());
+                ctx.redirect("/login?next=" + (safeRef.isEmpty() ? "/my-bookings" : "/bookings/" + safeRef + "/calendar.ics"));
+                return;
+            }
+            ctx.status(403).result("Forbidden.");
+            return;
+        }
+
+        if (isCancelledStatus(record.getStatus())) {
+            ctx.status(410).result("This booking has been cancelled; the calendar invite is no longer available.");
+            return;
+        }
+
+        BookingContext bc = new BookingContext();
+        bc.setBookingReference(record.getBookingReference());
+        bc.setFlightNumber(record.getFlightNumber());
+        bc.setOrigin(firstNonBlank(record.getOrigin(), record.getOriginCity()));
+        bc.setDestination(firstNonBlank(record.getDestination(), record.getDestinationCity()));
+        bc.setPassengerName(record.getPassengerName());
+
+        ZoneId fallbackZone = ZoneId.of("Africa/Johannesburg");
+        String depDate = record.getDepartureDate();
+        if ((depDate == null || depDate.isBlank()) && record.getDepartureInstant() != null) {
+            depDate = LocalDate.ofInstant(record.getDepartureInstant(), fallbackZone).toString();
+        }
+        if (depDate == null || depDate.isBlank()) {
+            depDate = LocalDate.now(bookingService.getClock()).toString();
+        }
+        String depTime = firstNonBlank(record.getDepartureTime(),
+                record.getDepartureInstant() != null ? FlightTimes.formatLocalTime(record.getDepartureInstant(), fallbackZone) : "06:30");
+        String arrTime = firstNonBlank(record.getArrivalTime(),
+                record.getArrivalInstant() != null ? FlightTimes.formatLocalTime(record.getArrivalInstant(), fallbackZone) : null);
+
+        bc.setDepartureDate(depDate);
+        bc.setDepartureTime(depTime);
+        bc.setArrivalTime(arrTime);
+
+        final String seatLbl = firstNonBlank(record.getSeatLabel(), "—");
+        FlightSeat fs = new FlightSeat() {
+            @Override
+            public String getSeatLabel() {
+                return seatLbl;
+            }
+        };
+        if (record.getSeatClass() != null) {
+            fs.setSeatClass(record.getSeatClass());
+        }
+        bc.setSelectedSeats(List.of(fs));
+
+        try {
+            String ics = IcsCalendarGenerator.generateIcsContent(bc);
+            String safeRef = sanitizeRef(record.getBookingReference());
+            applyNoStoreHeaders(ctx);
+            ctx.contentType("text/calendar; charset=utf-8");
+            ctx.header("Content-Disposition",
+                    "attachment; filename=\"sky-royal-" + (safeRef.isEmpty() ? "flight" : safeRef) + ".ics\"");
+            ctx.result(ics);
+        } catch (Exception e) {
+            logger.error("Failed to generate calendar ICS for {}: {}", record.getBookingReference(), e.getMessage());
+            ctx.status(500).result("Could not generate calendar invite.");
+        }
     }
 
     public void handleCancelGet(Context ctx) {
@@ -1370,6 +1448,11 @@ public class WebController {
         public String getTotalFormatted() { return totalFormatted; }
         public boolean isCancellable() { return cancellable; }
         public boolean isShowPdf() { return showPdf; }
+        public String getQrUrl() { return "/confirmation/" + summary.getBookingReference() + "/qr.png"; }
+        public String getPdfUrl() { return "/confirmation/" + summary.getBookingReference() + "/boarding-pass.pdf"; }
+        public String getIcsUrl() { return "/bookings/" + summary.getBookingReference() + "/calendar.ics"; }
+        public String getConfirmUrl() { return "/confirmation/" + summary.getBookingReference(); }
+        public String getCancelUrl() { return cancellable ? "/bookings/" + summary.getBookingReference() + "/cancel" : ""; }
     }
 
     private static boolean isCancelledStatus(String status) {
