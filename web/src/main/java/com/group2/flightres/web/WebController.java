@@ -75,6 +75,7 @@ public class WebController {
     private final BoardingPassVerificationService verificationService;
     private final VerifyThrottle verifyThrottle;
     private final AdminDashboardService adminDashboardService;
+    private volatile String boundBaseUrl;
 
     public WebController(FlightService flightService, SeatMapService seatMapService,
                          BookingService bookingService, AuthService authService) {
@@ -1676,19 +1677,32 @@ public class WebController {
         }
     }
 
-    private static String resolveBaseUrl(Context ctx) {
+    public void setBoundBaseUrl(String boundBaseUrl) {
+        this.boundBaseUrl = boundBaseUrl;
+    }
+
+    public String getBoundBaseUrl() {
+        return boundBaseUrl;
+    }
+
+    String resolveBaseUrl(Context ctx) {
         String configured = com.group2.flightres.config.EmailConfig.fromEnvironmentAndAppConfig().getPublicBaseUrl();
         if (configured != null && !configured.isBlank()) {
             return com.group2.flightres.service.WelcomeEmailRenderer.normalizeBaseUrl(configured, "");
         }
-        String scheme = ctx.scheme();
-        String host = ctx.host();
-        if (scheme == null || host == null || host.isBlank()
-                || host.contains("\r") || host.contains("\n") || host.chars().anyMatch(Character::isWhitespace)) {
-            return "http://localhost:8080";
+        if (ctx != null) {
+            String scheme = ctx.scheme();
+            String host = ctx.host();
+            if (scheme != null && host != null && !host.isBlank()
+                    && !host.contains("\r") && !host.contains("\n") && host.chars().noneMatch(Character::isWhitespace)) {
+                String normScheme = ("https".equalsIgnoreCase(scheme)) ? "https" : "http";
+                return normScheme + "://" + host.replaceAll("/+$", "");
+            }
         }
-        String normScheme = ("https".equalsIgnoreCase(scheme)) ? "https" : "http";
-        return normScheme + "://" + host.replaceAll("/+$", "");
+        String fallback = (boundBaseUrl != null && !boundBaseUrl.isBlank())
+                ? boundBaseUrl
+                : "http://localhost:8080";
+        return com.group2.flightres.service.WelcomeEmailRenderer.normalizeBaseUrl(fallback, fallback);
     }
 
     private static String extractFirstName(String fullName) {

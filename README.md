@@ -32,7 +32,7 @@
 | **Desktop UI** | JavaFX | 21.0.3 | Native cross-platform desktop UI with CSS design tokens |
 | **Web Server** | Javalin | 6.1.3 | Lightweight, embedded HTTP/REST server |
 | **Template Engine**| Thymeleaf | 3.1.2.RELEASE | Server-rendered HTML5 templates with OGNL expressions |
-| **Database** | PostgreSQL | 18 (Port 5433) | Relational database with ACID transactions and constraints |
+| **Database** | PostgreSQL | 17 / 18 (Port 5432 or 5433) | Relational database with ACID transactions and constraints |
 | **Connection Pool**| HikariCP | 5.1.0 | High-performance JDBC connection pooling |
 | **Password Hashing**| jBCrypt | 0.4.3 | Secure salted password hashing for authentication |
 | **PDF Generation** | OpenPDF | 1.3.39 | Dynamic boarding pass PDF compilation and export |
@@ -82,7 +82,7 @@ flight-reservation-system (Root Parent POM)
                                     │
                                     ▼
                       ┌───────────────────────────┐
-                      │  PostgreSQL 18 (Port 5433)│
+                      │ PostgreSQL (5432 / 5433) │
                       │  (Database & Views)       │
                       └───────────────────────────┘
 ```
@@ -119,72 +119,59 @@ flight-reservation-system (Root Parent POM)
 
 ---
 
-## 🗄️ Database Setup (PostgreSQL)
+## 🚀 Quick Start (5 Steps on Windows)
 
-The system connects to **PostgreSQL** running on port **`5433`** with the database named **`flight_reservation`**.
+1. **Install Java 17+** (JDK, including `javac`): download Temurin JDK 17 LTS from [adoptium.net](https://adoptium.net) or run `winget install EclipseAdoptium.Temurin.17.JDK`, then reopen your terminal.
+2. **Install PostgreSQL** from [postgresql.org/download/windows](https://www.postgresql.org/download/windows/) (or run `winget install PostgreSQL.PostgreSQL.18`) and **remember the `postgres` password** you choose during setup. *(Both port `5432` and `5433` are detected automatically.)*
+3. **Clone the repository** (you do **not** need to install Maven separately — the repository includes the Maven Wrapper `mvnw.cmd`):
+   ```cmd
+   git clone <repository-url>
+   cd flight-reservation-system
+   ```
+4. **Run setup once** (or double-click `scripts\run-setup.cmd`). It checks Java, Maven Wrapper, and PostgreSQL, probes `5432` / `5433`, creates and seeds the database safely, builds the modules, and prints `Setup OK`:
+   ```cmd
+   .\scripts\run-setup.cmd
+   ```
+5. **Start the website or desktop app**:
+   ```cmd
+   .\scripts\run-web.cmd
+   ```
+   Open the exact `http://localhost:...` URL printed in the terminal (defaults to `8080` and automatically picks the next free port if `8080` is busy). Or run the JavaFX desktop app in a terminal:
+   ```cmd
+   .\scripts\run-desktop.cmd
+   ```
 
-### 1. Initialize the Database
-Open PostgreSQL via `psql` or pgAdmin:
-```sql
-CREATE DATABASE flight_reservation;
-```
+> **Important Notices (Academic Simulation):**
+> - **Payment is simulated:** Entering card details simulates approval or decline locally. No real card network is contacted and no real money moves.
+> - **Welcome email is not verified / does not send externally by default:** Unless SMTP credentials are configured via environment variables (`SKY_ROYAL_SMTP_USER` and `SKY_ROYAL_SMTP_PASSWORD`), welcome emails are written locally to the `outbox\` folder so registration never crashes or blocks.
 
-### 2. Run Database Migrations
-Execute the SQL migration scripts in order from the repository root:
-```bash
-# 1. Base schema: tables, enums, triggers, and dynamic pricing view
-psql -h localhost -p 5433 -U postgres -d flight_reservation -f core/sql/schema.sql
+### Demo Logins & Test Cards
 
-# 2. Authentication seed data: default users and role-based accounts
-psql -h localhost -p 5433 -U postgres -d flight_reservation -f core/sql/seed_auth_data.sql
+Use either **username** or **email** on `/login` and in the desktop app:
 
-# 3. Flights and seat seed data: domestic routes, aircraft layouts, and seats
-psql -h localhost -p 5433 -U postgres -d flight_reservation -f core/sql/seed_flights_data.sql
-```
+| Role | Username | Email | Password |
+|---|---|---|---|
+| **Admin** | `testadmin` | `testadmin@example.com` | `Passw0rd!` |
+| **Customer** | `customer` | `customer@example.com` | `Passw0rd!` |
 
-### 3. Configure Database Connection (`app.json`)
-Copy the configuration template:
-```bash
-cp core/src/main/resources/com/group2/flightres/app.json.example core/src/main/resources/com/group2/flightres/app.json
-```
+- **Simulated Approved Card:** `4242 4242 4242 4242` (any future expiry date + 3-digit CVV)
+- **Simulated Declined Card:** `4000 0000 0000 0002`
 
-Verify that `app.json` contains your local PostgreSQL credentials:
-```json
-{
-  "dbHost": "localhost",
-  "dbPort": 5433,
-  "dbName": "flight_reservation",
-  "dbUsername": "postgres",
-  "dbPassword": "YourPasswordHere",
-  "poolSize": 10
-}
-```
+> Configuration can also be overridden with environment variables (`SKY_ROYAL_DB_HOST`, `SKY_ROYAL_DB_PORT`, `SKY_ROYAL_DB_NAME`, `SKY_ROYAL_DB_USER`, `SKY_ROYAL_DB_PASSWORD`, `SKY_ROYAL_WEB_PORT`, and legacy `LAUNCH_DB_*` / `PORT`). Refresh rolling 14-day flight dates any time with `.\scripts\reseed.cmd`, or run the full verification suite with `.\mvnw.cmd clean verify`.
 
 ---
 
-## 🚀 Running the Applications
+## 🛠️ Troubleshooting
 
-### 1. Build and Test the Complete Platform
-Compile all modules and run all automated tests (unit tests, optimistic hold race tests, and web flow integration tests):
-```bash
-mvn clean verify
-```
-
-### 2. Run the JavaFX Desktop Application
-```bash
-mvn -pl desktop javafx:run
-```
-
-- **Default Admin Account:** `admin` / `admin123`
-- **Default Customer Account:** `david` / `password123`
-
-### 3. Run the Web Application
-```bash
-mvn -pl web exec:java
-```
-
-Once started, open your browser at:
-👉 **`http://localhost:7070`**
+| Problem | Cause & Fix |
+|---|---|
+| **Port busy** | No manual change needed: `run-web.cmd` automatically probes starting at `8080`, moves to the next free port (e.g. `8081`), prints `Sky Royal Website is running at: http://localhost:<port>`, and updates QR verification links to match. You can also set `$env:SKY_ROYAL_WEB_PORT = "8085"` beforehand. |
+| **Postgres not found / wrong password** | Ensure `PostgreSQL` is installed (`psql.exe` available) and its Windows service (`postgresql-x64-*`) is running in **Services**. If authentication fails, re-run `.\scripts\run-setup.cmd` and enter the exact `postgres` password set when PostgreSQL was installed (scripts probe configured port, `5432`, then `5433`). |
+| **Java too old** | Java 17 or newer (full JDK) is required. Run `java -version`; if it reports `< 17` or a JRE without `javac`, install Temurin JDK 17+ from [adoptium.net](https://adoptium.net) (`winget install EclipseAdoptium.Temurin.17.JDK`) and open a new terminal. |
+| **Maven problems** | Use the bundled wrapper (`.\mvnw.cmd`) and helper scripts instead of a global `mvn`. Ensure you run from the repository root and have internet access on the very first build so Maven can cache dependencies into `%USERPROFILE%\.m2`. |
+| **Firewall prompt** | Windows Defender Firewall may prompt when `java.exe` binds the web port. Click **Allow access** (Private networks) so your browser (or another device on local Wi-Fi using the printed LAN IP) can connect cleanly. |
+| **Intermittent test fork crash** (`Error occurred in starting fork` in `:desktop`) | JavaFX headless fork tests need roughly 1 GB+ of free physical RAM on Windows. Close browsers/other heavy apps to free RAM, then rerun `.\mvnw.cmd clean verify` once. |
+| **Blank page** | Check the terminal and wait until `Sky Royal Website is running at: http://localhost:<port>` appears, make sure you visit the **exact port printed** (in case `8080` fell back to `8081`), hard-refresh (`Ctrl+F5`), and verify `.\scripts\run-setup.cmd` ended with `Setup OK`. |
 
 ---
 

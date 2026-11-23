@@ -24,6 +24,10 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.util.Map;
 import java.util.UUID;
 
@@ -35,9 +39,14 @@ public class WebApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(WebApplication.class);
 
+    public static final int DEFAULT_WEB_PORT = 8080;
+    public static final int DEFAULT_PORT_PROBE_LIMIT = 20;
+
     private final Javalin app;
     private final WebController controller;
     private final AuthService authService;
+    private volatile int actualPort;
+    private volatile String boundBaseUrl = "http://localhost:" + DEFAULT_WEB_PORT;
 
     public WebApplication() {
         this(new FlightService(), new SeatMapService(), new BookingService(), new AuthService());
@@ -134,10 +143,98 @@ public class WebApplication {
         return app;
     }
 
+    WebController getController() {
+        return controller;
+    }
+
     public void start(int port) {
         app.start(port);
-        logger.info("Sky Royal Web Application started at http://localhost:{}", port);
+        this.actualPort = app.port();
+        this.boundBaseUrl = "http://localhost:" + this.actualPort;
+        this.controller.setBoundBaseUrl(this.boundBaseUrl);
+        logger.info("Sky Royal Web Application started at {}", this.boundBaseUrl);
         logAuthSeedStatus();
+    }
+
+    public int getActualPort() {
+        return actualPort;
+    }
+
+    public String getBoundBaseUrl() {
+        return boundBaseUrl;
+    }
+
+    public static int resolvePreferredPort(Map<String, String> env) {
+        Integer port = parseValidPort(env != null ? env.get("SKY_ROYAL_WEB_PORT") : null);
+        if (port != null) return port;
+        port = parseValidPort(env != null ? env.get("PORT") : null);
+        if (port != null) return port;
+        return DEFAULT_WEB_PORT;
+    }
+
+    /**
+     * Checks whether a TCP port is free on both 127.0.0.1 and wildcard 0.0.0.0.
+     */
+    public static boolean isPortAvailable(int port) {
+        if (port < 1 || port > 65535) {
+            return false;
+        }
+        String[] bindAddrs = {"127.0.0.1", "0.0.0.0"};
+        for (String addr : bindAddrs) {
+            try (ServerSocket socket = new ServerSocket()) {
+                socket.setReuseAddress(false);
+                socket.bind(new InetSocketAddress(InetAddress.getByName(addr), port), 1);
+            } catch (IOException e) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Finds the first available port starting at preferredPort within maxAttempts.
+     */
+    public static int findAvailablePort(int preferredPort, int maxAttempts) {
+        int start = (preferredPort >= 1 && preferredPort <= 65535) ? preferredPort : DEFAULT_WEB_PORT;
+        int attempts = Math.max(1, maxAttempts);
+        for (int i = 0; i < attempts; i++) {
+            int candidate = start + i;
+            if (candidate > 65535) {
+                break;
+            }
+            if (isPortAvailable(candidate)) {
+                return candidate;
+            }
+        }
+        throw new IllegalStateException("No free web server port found starting at " + start
+                + " (tried " + attempts + " port(s)). Set SKY_ROYAL_WEB_PORT to a free port.");
+    }
+
+    public int startWithFallback(int preferredPort) {
+        return startWithFallback(preferredPort, DEFAULT_PORT_PROBE_LIMIT);
+    }
+
+    public int startWithFallback(int preferredPort, int maxAttempts) {
+        int chosen = findAvailablePort(preferredPort, maxAttempts);
+        start(chosen);
+        if (chosen != preferredPort) {
+            logger.warn("Preferred port {} is busy; started on free port {} instead", preferredPort, chosen);
+            System.out.println("[PORT] Port " + preferredPort + " is busy; using free port " + chosen + " instead.");
+        }
+        System.out.println("Sky Royal Website is running at: " + this.boundBaseUrl);
+        return this.actualPort;
+    }
+
+    private static Integer parseValidPort(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            int p = Integer.parseInt(raw.trim());
+            if (p > 0 && p <= 65535) {
+                return p;
+            }
+        } catch (NumberFormatException ignored) {
+        }
+        return null;
     }
 
     private void logAuthSeedStatus() {
@@ -255,14 +352,8 @@ public class WebApplication {
     }
 
     public static void main(String[] args) {
-        int port = 7070;
-        String portEnv = System.getenv("PORT");
-        if (portEnv != null && !portEnv.isBlank()) {
-            try {
-                port = Integer.parseInt(portEnv);
-            } catch (NumberFormatException ignored) {}
-        }
+        int preferredPort = resolvePreferredPort(System.getenv());
         WebApplication app = new WebApplication();
-        app.start(port);
+        app.startWithFallback(preferredPort);
     }
 }
