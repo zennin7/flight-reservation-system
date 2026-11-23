@@ -51,12 +51,26 @@
     --glass-grad-4: linear-gradient(135deg, #2f3840 0%, #4d5d6b 100%);
     --glass-grad-5: linear-gradient(135deg, #253642 0%, #3d5b6d 100%);
     --glass-grad-6: linear-gradient(135deg, #28333b 0%, #425360 100%);
-    --glass-seat-taken: rgba(10, 12, 16, 0.88);
-    --glass-seat-taken-edge: rgba(255, 255, 255, 0.10);
-    --glass-seat-free: rgba(129, 140, 248, 0.36);
-    --glass-seat-free-edge: rgba(165, 180, 252, 0.78);
-    --glass-seat-free-glow: 0 0 12px rgba(129, 140, 248, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.32);
-    --glass-seat-yours-glow: 0 0 18px rgba(255, 255, 255, 0.58);
+    --glass-seat-taken: rgba(10, 12, 16, 0.78);
+    --glass-seat-taken-edge: rgba(255, 255, 255, 0.14);
+    --glass-seat-taken-pattern: repeating-linear-gradient(135deg, rgba(10, 12, 16, 0.84) 0 5px, rgba(255, 255, 255, 0.08) 5px 7px);
+    --glass-seat-free: rgba(255, 255, 255, 0.20);
+    --glass-seat-free-edge: rgba(255, 255, 255, 0.36);
+    --glass-seat-free-hover: rgba(255, 255, 255, 0.32);
+    --glass-seat-free-glow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    --glass-seat-first: rgba(255, 255, 255, 0.28);
+    --glass-seat-first-edge: rgba(255, 255, 255, 0.62);
+    --glass-seat-held-other: rgba(77, 163, 255, 0.28);
+    --glass-seat-held-other-edge: rgba(147, 197, 253, 0.85);
+    --glass-seat-yours-glow: 0 0 18px rgba(255, 255, 255, 0.56);
+    --glass-ink-muted: rgba(21, 24, 28, 0.66);
+    --glass-ink-line: rgba(21, 24, 28, 0.14);
+    --glass-ink-chip: rgba(21, 24, 28, 0.08);
+    --glass-svg-fuselage: rgba(255, 255, 255, 0.22);
+    --glass-svg-wing: rgba(255, 255, 255, 0.14);
+    --glass-svg-window: rgba(15, 19, 24, 0.60);
+    --glass-svg-highlight: rgba(241, 238, 223, 0.28);
+    --glass-svg-highlight-stroke: rgba(241, 238, 223, 0.82);
     --glass-input-bg: rgba(9, 13, 18, 0.72);
     --glass-input-bg-focus: rgba(12, 18, 25, 0.86);
     --glass-input-border: rgba(255, 255, 255, 0.56);
@@ -3580,6 +3594,876 @@ body.has-sheet-open {
     }
     .details-tablist {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ============================================================
+   P3b Step 2: Seat Map Layout (seatmap-ref + Board 3 tokens)
+   ============================================================ */
+.seatmap-page-main {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.seatmap-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: var(--glass-tile);
+    border: 1px solid var(--glass-line);
+    flex-wrap: wrap;
+}
+
+.sm-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--glass-text-muted);
+    white-space: nowrap;
+}
+
+.sm-step-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--glass-pill-muted-bg);
+    border: 1px solid var(--glass-border-edge);
+    color: var(--glass-text-muted);
+}
+
+.sm-step.is-completed {
+    color: var(--glass-text-nav);
+}
+
+.sm-step.is-completed .sm-step-dot {
+    background: var(--glass-cream);
+    border-color: var(--glass-cream);
+    color: var(--glass-ink);
+}
+
+.sm-step.is-active {
+    color: var(--glass-text);
+    font-weight: 600;
+}
+
+.sm-step.is-active .sm-step-dot {
+    background: var(--glass-white);
+    border-color: var(--glass-white);
+    color: var(--glass-ink);
+}
+
+.sm-step-line {
+    width: 34px;
+    height: 1px;
+    background: var(--glass-line);
+}
+
+.sm-step-line.is-completed {
+    background: var(--glass-cream);
+}
+
+.seatmap-workspace-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(288px, 0.85fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.seatmap-main-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.seatmap-aircraft-card {
+    padding: 18px 20px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.seatmap-head-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.seatmap-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--glass-text);
+    margin: 2px 0;
+}
+
+.seatmap-head-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.seatmap-section-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--glass-chip-bg);
+    border: 1px solid var(--glass-border-edge);
+    flex-wrap: wrap;
+}
+
+.sm-sec-tab {
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--glass-text-nav);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 140ms ease, color 140ms ease;
+}
+
+.sm-sec-tab:hover {
+    color: var(--glass-text);
+}
+
+.sm-sec-tab.is-active {
+    background: var(--glass-cream);
+    color: var(--glass-ink);
+}
+
+.seatmap-zoom-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--glass-chip-bg);
+    border: 1px solid var(--glass-border-edge);
+}
+
+.sm-zoom-btn {
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--glass-text-muted);
+    cursor: pointer;
+}
+
+.sm-zoom-btn.is-active {
+    background: var(--glass-white);
+    color: var(--glass-ink);
+}
+
+.seatmap-silhouette-wrap {
+    width: 100%;
+    overflow: hidden;
+}
+
+.seatmap-aircraft-svg {
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.aircraft-shadow {
+    fill: var(--glass-seat-taken);
+    opacity: 0.45;
+}
+
+.aircraft-wing-rear,
+.aircraft-wing-front {
+    fill: var(--glass-svg-wing);
+}
+
+.aircraft-tail,
+.aircraft-engine {
+    fill: var(--glass-svg-fuselage);
+}
+
+.aircraft-fuselage {
+    fill: var(--glass-svg-fuselage);
+    stroke: var(--glass-border-edge);
+    stroke-width: 1.5;
+}
+
+.aircraft-cockpit {
+    fill: var(--glass-svg-window);
+}
+
+.aircraft-windows rect {
+    fill: var(--glass-svg-window);
+}
+
+.aircraft-section-highlight {
+    fill: var(--glass-svg-highlight);
+    stroke: var(--glass-svg-highlight-stroke);
+    stroke-width: 1.5;
+    transition: x 220ms ease, width 220ms ease;
+}
+
+.seatmap-lower-split {
+    display: grid;
+    grid-template-columns: 224px minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+}
+
+.cabin-view-card {
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.cabin-view-photo-wrap {
+    position: relative;
+    min-height: 175px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.cabin-view-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.cabin-view-scrim {
+    position: absolute;
+    inset: 0;
+    background: var(--glass-card-scrim);
+    pointer-events: none;
+}
+
+.cabin-expand-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border-strong);
+    background: var(--glass-surface-strong);
+    color: var(--glass-text);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cabin-expand-btn:hover {
+    background: var(--glass-white);
+    color: var(--glass-ink);
+}
+
+.cabin-view-caption {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cabin-view-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--glass-text);
+}
+
+.cabin-view-desc {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--glass-text-muted);
+}
+
+.seatmap-grid-card {
+    padding: 18px 20px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.seatmap-grid-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.seatmap-grid-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--glass-text);
+}
+
+.seatmap-legend {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--glass-text-muted);
+}
+
+.sm-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.legend-swatch.is-available {
+    background: var(--glass-seat-free);
+    border: 1px solid var(--glass-seat-free-edge);
+}
+
+.legend-swatch.is-first {
+    background: var(--glass-seat-first);
+    border: 1.5px solid var(--glass-seat-first-edge);
+}
+
+.legend-swatch.is-taken {
+    background: var(--glass-seat-taken-pattern);
+    border: 1px solid var(--glass-seat-taken-edge);
+    color: var(--glass-text-faint);
+}
+
+.legend-swatch.is-held-other {
+    background: var(--glass-seat-held-other);
+    border: 1px dashed var(--glass-seat-held-other-edge);
+}
+
+.legend-swatch.is-yours {
+    background: var(--glass-white);
+    border: 1px solid var(--glass-white);
+}
+
+.seat-grid-scroll {
+    overflow-x: auto;
+    padding: 4px 2px 8px;
+}
+
+.seat-grid-zoom-stage {
+    width: max-content;
+    min-width: 100%;
+    transition: font-size 160ms ease;
+}
+
+.seat-grid-scroll[data-zoom="125"] .seat-cell {
+    height: 44px;
+    min-width: 44px;
+    font-size: 13px;
+}
+
+.seat-grid-scroll[data-zoom="150"] .seat-cell {
+    height: 50px;
+    min-width: 50px;
+    font-size: 14px;
+}
+
+.seat-section-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.seat-grid-header-row,
+.seat-band-row {
+    display: grid;
+    gap: 6px;
+    align-items: center;
+}
+
+.seat-band-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.seat-col-num,
+.seat-letter-lbl {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--glass-text-muted);
+    text-align: center;
+    user-select: none;
+}
+
+.seat-slot-empty {
+    display: block;
+    height: 36px;
+}
+
+.seatmap-aisle-bar {
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 2px 0;
+    border-top: 1px dashed var(--glass-line);
+    border-bottom: 1px dashed var(--glass-line);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--glass-text-faint);
+}
+
+.seat-cell {
+    position: relative;
+    height: 36px;
+    min-width: 36px;
+    padding: 0 4px;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    cursor: pointer;
+    transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.seat-cell.is-available {
+    background: var(--glass-seat-free);
+    border: 1px solid var(--glass-seat-free-edge);
+    color: var(--glass-text);
+    box-shadow: var(--glass-seat-free-glow);
+}
+
+.seat-cell.is-available:hover {
+    background: var(--glass-seat-free-hover);
+    transform: translateY(-1px);
+}
+
+.seat-cell.is-first {
+    background: var(--glass-seat-first);
+    border: 1.5px solid var(--glass-seat-first-edge);
+    border-top-width: 3px;
+}
+
+.seat-cell.is-taken {
+    background: var(--glass-seat-taken-pattern);
+    border: 1px solid var(--glass-seat-taken-edge);
+    color: var(--glass-text-faint);
+    cursor: not-allowed;
+}
+
+.seat-cell.is-held-other {
+    background: var(--glass-seat-held-other);
+    border: 1.5px dashed var(--glass-seat-held-other-edge);
+    color: var(--glass-text-nav);
+    cursor: not-allowed;
+}
+
+.seat-cell.is-yours {
+    background: var(--glass-white);
+    border: 1px solid var(--glass-white);
+    color: var(--glass-ink);
+    box-shadow: var(--glass-seat-yours-glow);
+    font-weight: 700;
+}
+
+.seat-taken-icon {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.seat-held-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--glass-seat-held-other-edge);
+    flex-shrink: 0;
+}
+
+.seatmap-kbd-hint {
+    font-size: 11px;
+    color: var(--glass-text-muted);
+}
+
+.seatmap-sidebar-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.selection-card-cream {
+    background: var(--glass-cream);
+    color: var(--glass-ink);
+    border-radius: 22px;
+    padding: 20px;
+    box-shadow: var(--glass-shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.selection-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.selection-kicker {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--glass-ink-muted);
+}
+
+.selection-cabin-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--glass-ink-chip);
+    color: var(--glass-ink);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.selection-hero-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.selection-seat-big {
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--glass-ink);
+}
+
+.selection-row-sub {
+    font-size: 12px;
+    color: var(--glass-ink-muted);
+    margin-top: 2px;
+}
+
+.selection-price-block {
+    text-align: right;
+}
+
+.selection-price-kicker {
+    display: block;
+    font-size: 11px;
+    color: var(--glass-ink-muted);
+}
+
+.selection-price-big {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--glass-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.selection-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.sel-tag-chip {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--glass-ink-chip);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--glass-ink);
+}
+
+.selection-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 0;
+    border-top: 1px solid var(--glass-ink-line);
+    border-bottom: 1px solid var(--glass-ink-line);
+    font-size: 12px;
+}
+
+.sel-fare-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--glass-ink-muted);
+}
+
+.sel-fare-row span:last-child {
+    color: var(--glass-ink);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.selection-hold-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: var(--glass-ink-chip);
+}
+
+.selection-hold-box.is-idle {
+    opacity: 0.75;
+}
+
+.selection-hold-box.is-expired {
+    border: 1px solid var(--glass-danger);
+}
+
+.hold-ring-svg {
+    width: 42px;
+    height: 42px;
+    transform: rotate(-90deg);
+    flex-shrink: 0;
+}
+
+.hold-ring-track {
+    fill: none;
+    stroke: var(--glass-ink-line);
+    stroke-width: 3.5;
+}
+
+.hold-ring-progress {
+    fill: none;
+    stroke: var(--glass-ink);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.35s linear;
+}
+
+.hold-ring-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.hold-ring-clock {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--glass-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.hold-ring-sub {
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--glass-ink-muted);
+}
+
+.sel-expired-alert {
+    padding: 9px 11px;
+    border-radius: 12px;
+    background: var(--glass-ink);
+    color: var(--glass-warn);
+    font-size: 12px;
+}
+
+.selection-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.btn-ink {
+    background: var(--glass-ink);
+    color: var(--glass-white);
+}
+
+.btn-ink:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-cream-outline {
+    background: transparent;
+    color: var(--glass-ink);
+    border: 1px solid var(--glass-ink-line);
+}
+
+.btn-cream-outline:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.sel-back-link {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--glass-ink-muted);
+    padding-top: 2px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.seatmap-flight-card {
+    padding: 18px 20px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sm-flight-route-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+}
+
+.sm-flight-code {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--glass-text);
+}
+
+.sm-flight-time {
+    font-size: 12px;
+    color: var(--glass-text-muted);
+}
+
+.sm-flight-end {
+    text-align: right;
+}
+
+.sm-flight-track {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--glass-accent);
+}
+
+.sm-flight-dash {
+    flex: 1;
+    border-top: 1px dashed var(--glass-border-strong);
+}
+
+.sm-flight-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-top: 10px;
+    border-top: 1px solid var(--glass-line);
+}
+
+.sm-meta-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--glass-text-muted);
+}
+
+.sm-meta-line strong {
+    color: var(--glass-text);
+}
+
+.sm-free-seats {
+    color: var(--glass-ok);
+}
+
+.cabin-lightbox-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 140;
+    background: var(--glass-scrim-bot);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.cabin-lightbox-panel {
+    width: min(860px, 100%);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.cabin-lightbox-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.cabin-lightbox-img {
+    width: 100%;
+    max-height: 70vh;
+    object-fit: cover;
+    border-radius: 16px;
+    display: block;
+}
+
+@media (max-width: 1020px) {
+    .seatmap-workspace-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .seatmap-lower-split {
+        grid-template-columns: 1fr;
+    }
+    .cabin-view-photo-wrap {
+        min-height: 140px;
+        max-height: 180px;
     }
 }
 

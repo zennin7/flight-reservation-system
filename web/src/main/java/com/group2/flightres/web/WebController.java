@@ -162,6 +162,7 @@ public class WebController {
         model.put("userInitials", userInitials);
         model.put("salesCloseMinutes", BoardingPolicy.SALES_CLOSE_MINUTES_BEFORE);
         model.put("holdDurationText", (SeatHoldPolicy.HOLD_SECONDS / 60) + " min");
+        model.put("holdDurationSeconds", SeatHoldPolicy.HOLD_SECONDS);
         model.put("activeNav", "");
         applyFixedAerialBackdrop(model);
         return model;
@@ -529,6 +530,157 @@ public class WebController {
             ctx.req().getSession().removeAttribute("seat_flash_error");
         }
         renderSeatsPage(ctx, flightId, flashError);
+    }
+
+    public void handleSeatHoldPost(Context ctx) {
+        applyNoStoreHeaders(ctx);
+        boolean wantsJson = expectsJson(ctx);
+        long flightId = parseFlightId(ctx.pathParam("id"));
+        long flightSeatId = parseFlightId(ctx.formParam("flightSeatId"));
+        if (flightId <= 0) {
+            respondSeatError(ctx, wantsJson, 404, "Flight not found.", "/flights");
+            return;
+        }
+
+        Optional<FlightSearchResult> flightOpt = flightService.getFlightById(flightId);
+        if (flightOpt.isEmpty()) {
+            respondSeatError(ctx, wantsJson, 404, "Flight not found.", "/flights");
+            return;
+        }
+        FlightSearchResult flight = flightOpt.get();
+        if (flight.getDeparture() != null
+                && !FlightSalesPolicy.isOpen(flight.getDeparture(), bookingService.getClock())) {
+            respondSeatError(ctx, wantsJson, 409,
+                    "Sales for this flight have closed (" + FlightSalesPolicy.SALES_CLOSE_BEFORE_DEPARTURE.toMinutes()
+                            + " minutes before departure).",
+                    "/flights/" + flightId + "/seats");
+            return;
+        }
+
+        List<FlightSeat> currentSeats = seatMapService.loadSeatMap(flightId);
+        FlightSeat targetSeat = currentSeats.stream()
+                .filter(s -> s.getFlightSeatId() == flightSeatId)
+                .findFirst()
+                .orElse(null);
+        if (targetSeat == null) {
+            respondSeatError(ctx, wantsJson, 404, "Selected seat does not exist.", "/flights/" + flightId + "/seats");
+            return;
+        }
+
+        String holdOwner = resolveHoldOwner(ctx);
+        List<FlightSeat> previousOwned = currentSeats.stream()
+                .filter(s -> s.getFlightSeatId() != flightSeatId
+                        && s.getStatus() == SeatStatus.HELD
+                        && Objects.equals(s.getHeldBy(), holdOwner))
+                .toList();
+
+        try {
+            seatMapService.selectSeat(targetSeat, holdOwner);
+            for (FlightSeat prev : previousOwned) {
+                seatMapService.deselectSeat(prev, holdOwner);
+            }
+            CheckoutSession existingCs = ctx.sessionAttribute("checkout_session");
+            if (existingCs != null && existingCs.getFlightSeatId() != targetSeat.getFlightSeatId()) {
+                ctx.req().getSession().removeAttribute("checkout_session");
+            }
+        } catch (SeatUnavailableException | IllegalStateException e) {
+            respondSeatError(ctx, wantsJson, 409, e.getMessage(), "/flights/" + flightId + "/seats");
+            return;
+        }
+
+        Instant now = seatMapService.getClock().instant();
+        Instant heldUntil = targetSeat.getHeldUntil() != null
+                ? targetSeat.getHeldUntil()
+                : now.plusSeconds(SeatHoldPolicy.HOLD_SECONDS);
+        long remSecs = Math.max(0L, Duration.between(now, heldUntil).toSeconds());
+
+        PriceQuote quote = computeSeatQuoteSafe(flight, targetSeat.getSeatClass());
+        List<FlightSeat> refreshed = seatMapService.loadSeatMap(flightId);
+        SeatMapLayoutBuilder.SeatMapView view = SeatMapLayoutBuilder.build(refreshed, holdOwner, now);
+        String posTag = SeatMapLayoutBuilder.derivePositionTag(targetSeat, refreshed);
+
+        if (!wantsJson) {
+            ctx.redirect("/flights/" + flightId + "/seats");
+            return;
+        }
+
+        BigDecimal classUpgrade = quote.classFare().subtract(quote.baseFare());
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("seatId", targetSeat.getFlightSeatId());
+        payload.put("seatLabel", targetSeat.getSeatLabel());
+        payload.put("seatRow", targetSeat.getSeatRow());
+        payload.put("seatCol", String.valueOf(targetSeat.getSeatCol()));
+        payload.put("seatClass", targetSeat.getSeatClass().name());
+        payload.put("cabinLabel", targetSeat.getSeatClass() == SeatClass.FIRST ? "First Class" : "Economy");
+        payload.put("positionTag", posTag);
+        payload.put("holdExpiresEpochMs", heldUntil.toEpochMilli());
+        payload.put("remainingSeconds", remSecs);
+        payload.put("totalHoldSeconds", (long) SeatHoldPolicy.HOLD_SECONDS);
+        payload.put("baseFareFormatted", MoneyFormatter.format(quote.baseFare()));
+        payload.put("hasClassPremium", classUpgrade.compareTo(BigDecimal.ZERO) > 0);
+        payload.put("classUpgradeFormatted", MoneyFormatter.formatSigned(classUpgrade));
+        payload.put("demandAdjFormatted", MoneyFormatter.formatSigned(quote.demandAdjustment()));
+        payload.put("timingAdjFormatted", MoneyFormatter.formatSigned(quote.timingAdjustment()));
+        payload.put("vatFormatted", MoneyFormatter.format(quote.vatIncluded()));
+        payload.put("totalFormatted", MoneyFormatter.format(quote.total()));
+        payload.put("freeSeats", view.getFreeSeats());
+        payload.put("totalSeats", view.getTotalSeats());
+        payload.put("cabinPhotoUrl", WebBackdropResolver.cabinBackdrop(targetSeat.getSeatClass()));
+        ctx.status(200).contentType("application/json; charset=utf-8").result(toJsonObject(payload));
+    }
+
+    public void handleSeatReleasePost(Context ctx) {
+        applyNoStoreHeaders(ctx);
+        boolean wantsJson = expectsJson(ctx);
+        long flightId = parseFlightId(ctx.pathParam("id"));
+        long flightSeatId = parseFlightId(ctx.formParam("flightSeatId"));
+        if (flightId <= 0 || flightSeatId <= 0) {
+            respondSeatError(ctx, wantsJson, 404, "Seat hold not found.", "/flights");
+            return;
+        }
+
+        Optional<FlightSeat> seatOpt = seatMapService.findSeatById(flightSeatId);
+        if (seatOpt.isEmpty() || seatOpt.get().getFlightId() != flightId) {
+            respondSeatError(ctx, wantsJson, 404, "Seat not found on this flight.", "/flights/" + flightId + "/seats");
+            return;
+        }
+
+        FlightSeat seat = seatOpt.get();
+        String holdOwner = resolveHoldOwner(ctx);
+        if (seat.getStatus() == SeatStatus.BOOKED) {
+            respondSeatError(ctx, wantsJson, 409, "This seat has already been booked.", "/flights/" + flightId + "/seats");
+            return;
+        }
+        if (seat.getStatus() == SeatStatus.HELD && seat.getHeldBy() != null
+                && !Objects.equals(seat.getHeldBy(), holdOwner)) {
+            respondSeatError(ctx, wantsJson, 403,
+                    "You do not have permission to release another traveller's seat hold.",
+                    "/flights/" + flightId + "/seats");
+            return;
+        }
+
+        if (seat.getStatus() == SeatStatus.HELD) {
+            seatMapService.deselectSeat(seat, holdOwner);
+        }
+        CheckoutSession cs = ctx.sessionAttribute("checkout_session");
+        if (cs != null && cs.getFlightSeatId() == flightSeatId) {
+            ctx.req().getSession().removeAttribute("checkout_session");
+        }
+
+        if (!wantsJson) {
+            ctx.redirect("/flights/" + flightId + "/seats");
+            return;
+        }
+
+        List<FlightSeat> refreshed = seatMapService.loadSeatMap(flightId);
+        SeatMapLayoutBuilder.SeatMapView view = SeatMapLayoutBuilder.build(
+                refreshed, holdOwner, seatMapService.getClock().instant());
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("released", true);
+        payload.put("seatId", flightSeatId);
+        payload.put("freeSeats", view.getFreeSeats());
+        payload.put("totalSeats", view.getTotalSeats());
+        ctx.status(200).contentType("application/json; charset=utf-8").result(toJsonObject(payload));
     }
 
     public void handleBook(Context ctx) {
@@ -1601,71 +1753,153 @@ public class WebController {
             return;
         }
 
+        FlightSearchResult flight = flightOpt.get();
+        String holdOwner = resolveHoldOwner(ctx);
+        Instant now = seatMapService.getClock().instant();
+        List<FlightSeat> seats = seatMapService.loadSeatMap(flightId);
+        SeatMapLayoutBuilder.SeatMapView seatMapView = SeatMapLayoutBuilder.build(seats, holdOwner, now);
+
+        FlightSeat heldSeat = seatMapView.getHeldSeat();
+        SeatClass initialCabin = heldSeat != null && heldSeat.getSeatClass() != null
+                ? heldSeat.getSeatClass()
+                : (SeatClass.FIRST.name().equalsIgnoreCase(ctx.queryParam("cabin")) ? SeatClass.FIRST : SeatClass.ECONOMY);
+
         Map<String, Object> model = baseModel(ctx);
-        applyCabinBackdrop(model, SeatClass.ECONOMY);
+        applyCabinBackdrop(model, initialCabin);
         model.put("activeNav", "flights");
-        model.put("flight", flightOpt.get());
+        model.put("flight", flight);
 
-        String origin = ctx.queryParam("origin");
-        if (origin == null || origin.isBlank()) origin = ctx.formParam("origin");
-        if (origin == null || origin.isBlank()) origin = "Johannesburg (JNB)";
+        String defaultOrigin = (flight.getOriginCity() != null ? flight.getOriginCity() : flight.getOriginCode())
+                + " (" + flight.getOriginCode() + ")";
+        String defaultDest = (flight.getDestCity() != null ? flight.getDestCity() : flight.getDestCode())
+                + " (" + flight.getDestCode() + ")";
 
-        String destination = ctx.queryParam("destination");
-        if (destination == null || destination.isBlank()) destination = ctx.formParam("destination");
-        if (destination == null || destination.isBlank()) destination = "Cape Town (CPT)";
+        String origin = firstNonBlank(ctx.queryParam("origin"),
+                firstNonBlank(ctx.formParam("origin"), defaultOrigin));
+        String destination = firstNonBlank(ctx.queryParam("destination"),
+                firstNonBlank(ctx.formParam("destination"), defaultDest));
+        String departureDate = firstNonBlank(ctx.queryParam("departureDate"),
+                firstNonBlank(ctx.formParam("departureDate"),
+                        firstNonBlank(resolveDepartureDate(flight), LocalDate.now(bookingService.getClock()).toString())));
 
-        String departureDate = ctx.queryParam("departureDate");
-        if (departureDate == null || departureDate.isBlank()) departureDate = ctx.formParam("departureDate");
-        if (departureDate == null || departureDate.isBlank()) {
-            departureDate = firstNonBlank(resolveDepartureDate(flightOpt.get()),
-                    LocalDate.now(bookingService.getClock()).toString());
+        LocalDate parsedDep = null;
+        try {
+            parsedDep = LocalDate.parse(departureDate.trim());
+        } catch (Exception ignored) {
         }
+
+        boolean salesOpen = flight.getDeparture() == null
+                || FlightSalesPolicy.isOpen(flight.getDeparture(), bookingService.getClock());
 
         model.put("origin", origin);
         model.put("destination", destination);
         model.put("departureDate", departureDate);
+        model.put("departureDateFriendly", parsedDep != null ? formatFriendlyDate(parsedDep) : departureDate);
+        model.put("salesClosed", !salesOpen);
+        model.put("seatMapView", seatMapView);
+        model.put("holdDurationSeconds", SeatHoldPolicy.HOLD_SECONDS);
 
-        List<FlightSeat> seats = seatMapService.loadSeatMap(flightId);
-        Map<Integer, List<FlightSeat>> seatsByRow = groupSeatsByRow(seats);
+        PriceQuote previewQuote = heldSeat != null
+                ? computeSeatQuoteSafe(flight, heldSeat.getSeatClass())
+                : computeSeatQuoteSafe(flight, initialCabin);
+        BigDecimal classUpgrade = previewQuote.classFare().subtract(previewQuote.baseFare());
+        model.put("selectedQuoteTotalFormatted", MoneyFormatter.format(previewQuote.total()));
+        model.put("selectedBaseFareFormatted", MoneyFormatter.format(previewQuote.baseFare()));
+        model.put("selectedHasClassPremium", classUpgrade.compareTo(BigDecimal.ZERO) > 0);
+        model.put("selectedClassUpgradeFormatted", MoneyFormatter.formatSigned(classUpgrade));
+        model.put("selectedDemandAdjFormatted", MoneyFormatter.formatSigned(previewQuote.demandAdjustment()));
+        model.put("selectedTimingAdjFormatted", MoneyFormatter.formatSigned(previewQuote.timingAdjustment()));
+        model.put("selectedVatFormatted", MoneyFormatter.format(previewQuote.vatIncluded()));
 
-        model.put("seatsByRow", seatsByRow);
-        model.put("firstClassRows", List.of(1, 2));
-        model.put("economyRows", List.of(6, 7, 8, 9, 10, 11));
+        if (heldSeat != null) {
+            Instant heldUntil = heldSeat.getHeldUntil() != null
+                    ? heldSeat.getHeldUntil()
+                    : now.plusSeconds(SeatHoldPolicy.HOLD_SECONDS);
+            long remSecs = Math.max(0L, Duration.between(now, heldUntil).toSeconds());
+            model.put("heldSeat", heldSeat);
+            model.put("heldSeatPositionTag", seatMapView.getHeldSeatPositionTag());
+            model.put("heldExpiresEpochMs", heldUntil.toEpochMilli());
+            model.put("heldRemainingFormatted", String.format(Locale.US, "%02d:%02d", remSecs / 60, remSecs % 60));
+        }
+
         if (error != null) {
             model.put("bookingError", error);
         }
         if (errorField != null) {
             model.put("errorField", errorField);
         }
-        String typedName = ctx.formParam("passengerName");
-        if (typedName != null) {
-            model.put("passengerName", typedName);
-        }
-        String typedEmail = ctx.formParam("passengerEmail");
-        if (typedEmail != null) {
-            model.put("passengerEmail", typedEmail);
-        }
-        String typedPassport = ctx.formParam("passportNumber");
-        if (typedPassport != null) {
-            model.put("passportNumber", typedPassport);
-        }
-        String typedDob = ctx.formParam("dateOfBirth");
-        if (typedDob != null) {
-            model.put("dateOfBirth", typedDob);
-        }
-
         ctx.render("seats.html", model);
     }
 
-    private Map<Integer, List<FlightSeat>> groupSeatsByRow(List<FlightSeat> seats) {
-        Map<Integer, List<FlightSeat>> seatsByRow = new TreeMap<>();
-        for (FlightSeat seat : seats) {
-            seatsByRow.computeIfAbsent(seat.getSeatRow(), k -> new ArrayList<>()).add(seat);
+    private PriceQuote computeSeatQuoteSafe(FlightSearchResult flight, SeatClass seatClass) {
+        try {
+            return bookingService.getPricingService()
+                    .quote(flight.getFlightId(), seatClass, bookingService.getClock());
+        } catch (Exception e) {
+            BigDecimal base = flight.getBasePrice() != null ? flight.getBasePrice() : BigDecimal.ZERO;
+            BigDecimal mult = seatClass == SeatClass.FIRST ? new BigDecimal("3.50") : BigDecimal.ONE;
+            return PriceQuote.calculate(base, mult, BigDecimal.ONE, BigDecimal.ONE);
         }
-        for (List<FlightSeat> rowList : seatsByRow.values()) {
-            rowList.sort(Comparator.comparing(FlightSeat::getSeatCol));
+    }
+
+    private static boolean expectsJson(Context ctx) {
+        String accept = ctx.header("Accept");
+        return accept != null && accept.toLowerCase(Locale.ROOT).contains("application/json");
+    }
+
+    private void respondSeatError(Context ctx, boolean wantsJson, int status, String message, String redirectTo) {
+        ctx.status(status);
+        if (wantsJson) {
+            ctx.contentType("application/json; charset=utf-8")
+                    .result(toJsonObject(Map.of("error", firstNonBlank(message, "Seat request failed."))));
+            return;
         }
-        return seatsByRow;
+        ctx.sessionAttribute("seat_flash_error", firstNonBlank(message, "Seat request failed."));
+        ctx.redirect(redirectTo);
+    }
+
+    private static String toJsonObject(Map<String, Object> fields) {
+        StringBuilder sb = new StringBuilder("{");
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : fields.entrySet()) {
+            if (!first) sb.append(',');
+            first = false;
+            sb.append('"').append(escapeJson(entry.getKey())).append("\":");
+            Object v = entry.getValue();
+            if (v == null) {
+                sb.append("null");
+            } else if (v instanceof Boolean || v instanceof Number) {
+                sb.append(v);
+            } else {
+                sb.append('"').append(escapeJson(String.valueOf(v))).append('"');
+            }
+        }
+        sb.append('}');
+        return sb.toString();
+    }
+
+    private static String escapeJson(String s) {
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '"' -> sb.append("\\\"");
+                case '\\' -> sb.append("\\\\");
+                case '\b' -> sb.append("\\b");
+                case '\f' -> sb.append("\\f");
+                case '\n' -> sb.append("\\n");
+                case '\r' -> sb.append("\\r");
+                case '\t' -> sb.append("\\t");
+                default -> {
+                    if (c < 0x20) {
+                        sb.append(String.format(Locale.US, "\\u%04x", (int) c));
+                    } else {
+                        sb.append(c);
+                    }
+                }
+            }
+        }
+        return sb.toString();
     }
 
     private static String resolveDepartureDate(FlightSearchResult flight) {

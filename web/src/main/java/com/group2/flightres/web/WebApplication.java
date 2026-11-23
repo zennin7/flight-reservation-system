@@ -195,6 +195,8 @@ public class WebApplication {
 
         // Seat Selection & Checkout
         app.get("/flights/{id}/seats", controller::handleSeats);
+        app.post("/flights/{id}/seats/hold", controller::handleSeatHoldPost);
+        app.post("/flights/{id}/seats/release", controller::handleSeatReleasePost);
 
         // Book / Checkout & Pay
         app.post("/book", controller::handleBook);

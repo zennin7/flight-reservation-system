@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title th:text="${appName + ' – Seat Selection &amp; Checkout'}">Sky Royal – Seat Selection &amp; Checkout</title>
+  <title th:text="${appName + ' – Choose Your Seat (' + flight.flightNumber + ')'}">Sky Royal – Choose Your Seat</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/glass-web.css">
   <script defer src="/js/backdrop.js"></script>
   <script defer src="/js/shell.js"></script>
+  <script defer src="/js/seatmap.js"></script>
 </head>
 <body>
   <div th:replace="~{fragments/shell :: backdrop()}"></div>
@@ -18,168 +19,421 @@
     <div class="inner-glass-frame">
       <div th:replace="~{fragments/shell :: topbar('flights')}"></div>
 
-      <main class="frame-main">
-        <nav class="stepper-glass" aria-label="Booking Progress">
-          <span class="step-chip is-completed">1. Search</span>
-          <span aria-hidden="true">&rarr;</span>
-          <span class="step-chip is-active">2. Select Seat</span>
-          <span aria-hidden="true">&rarr;</span>
-          <span class="step-chip">3. Checkout</span>
-          <span aria-hidden="true">&rarr;</span>
-          <span class="step-chip">4. Confirmation</span>
+      <main class="frame-main seatmap-page-main"
+            id="seatMapRoot"
+            th:attr="data-flight-id=${flight.flightId},data-csrf=${csrf_token},data-hold-secs=${holdDurationSeconds},data-econ-photo=${cabinEconomyPhoto},data-first-photo=${cabinFirstPhoto},data-held-expires-ms=${heldExpiresEpochMs != null ? heldExpiresEpochMs : ''}">
+
+        <!-- 4-Step Progress Tracker -->
+        <nav class="seatmap-stepper" aria-label="Booking progress">
+          <a th:href="@{/flights(origin=${origin},destination=${destination},date=${departureDate})}" class="sm-step is-completed">
+            <span class="sm-step-dot" aria-hidden="true">&#10003;</span>
+            <span>Search</span>
+          </a>
+          <span class="sm-step-line is-completed" aria-hidden="true"></span>
+          <span class="sm-step is-active" aria-current="step">
+            <span class="sm-step-dot">2</span>
+            <span>Select seat</span>
+          </span>
+          <span class="sm-step-line" aria-hidden="true"></span>
+          <span class="sm-step">
+            <span class="sm-step-dot">3</span>
+            <span>Checkout</span>
+          </span>
+          <span class="sm-step-line" aria-hidden="true"></span>
+          <span class="sm-step">
+            <span class="sm-step-dot">4</span>
+            <span>Confirmed</span>
+          </span>
         </nav>
 
-        <section class="glass-tile seats-flight-summary">
-          <div>
-            <span class="eyebrow">Selected Flight</span>
-            <h1 class="checkout-section-title" th:text="${flight.flightNumber + ' &middot; ' + origin + ' &rarr; ' + destination}">
-              SR 204 &middot; Johannesburg (JNB) &rarr; Cape Town (CPT)
-            </h1>
-          </div>
-          <div>
-            <div class="checkout-section-title" th:text="${departureDate + ' &middot; ' + flight.departureTime + ' - ' + flight.arrivalTime}">
-              2026-11-24 &middot; 06:30 - 08:40
-            </div>
-            <div class="field-hint" th:text="${'Duration: ' + flight.duration + ' · ' + (flight.aircraftModel != null ? flight.aircraftModel : 'Airbus A320')}">
-              Duration: 2h 10m &middot; Airbus A320
-            </div>
-          </div>
-        </section>
-
-        <div th:if="${bookingError != null}" class="auth-error" role="alert">
-          <strong>Notice:</strong> <span th:text="${bookingError}">Seat hold issue</span>
+        <div id="seatMapErrorBanner" class="status-banner is-error" role="alert"
+             th:hidden="${bookingError == null and !salesClosed}">
+          <span id="seatMapErrorText"
+                th:text="${bookingError != null ? bookingError : (salesClosed ? 'Sales for this flight have closed (bookings close ' + salesCloseMinutes + ' minutes before departure).' : '')}">
+            Notice
+          </span>
         </div>
 
-        <form id="bookingForm" action="/book" method="POST" class="seats-layout-grid">
-          <input type="hidden" name="csrf_token" th:value="${csrf_token}">
-          <input type="hidden" name="flightId" th:value="${flight.flightId}">
-          <input type="hidden" name="flightNumber" th:value="${flight.flightNumber}">
-          <input type="hidden" name="origin" th:value="${origin}">
-          <input type="hidden" name="destination" th:value="${destination}">
-          <input type="hidden" name="departureDate" th:value="${departureDate}">
+        <div class="seatmap-workspace-grid">
+          <!-- Left + Center Aircraft & Grid Column -->
+          <div class="seatmap-main-col">
 
-          <div class="glass-tile cabin-container">
-            <div class="cockpit-nose">Cockpit</div>
+            <!-- Top Aircraft Silhouette + Dynamic Section Tabs -->
+            <section class="glass-tile seatmap-aircraft-card" aria-label="Aircraft sections">
+              <div class="seatmap-head-row">
+                <div>
+                  <span class="eyebrow">Step 2 of 4 &middot; Choose your seat</span>
+                  <h1 class="seatmap-title">Choose your seat</h1>
+                  <p class="auth-sub"
+                     th:text="${flight.originCode + ' to ' + flight.destCode + ' · ' + departureDateFriendly + ' · ' + (flight.aircraftModel != null ? flight.aircraftModel : 'Airbus A320')}">
+                    JNB to CPT &middot; Tue 24 Nov &middot; Airbus A320
+                  </p>
+                </div>
 
-            <div class="cabin-section-title">First Class &middot; 2 x 2</div>
-            <div th:each="r : ${firstClassRows}" class="seat-row">
-              <span class="seat-row-number" th:text="${r}">1</span>
-              <th:block th:if="${seatsByRow.containsKey(r)}">
-                <th:block th:each="s : ${seatsByRow.get(r)}" th:if="${s.seatCol == 'A' or s.seatCol == 'B'}">
-                  <label th:class="${'seat-radio-label ' + (s.status.name() == 'AVAILABLE' ? 'available' : 'taken')}">
-                    <input type="radio" name="flightSeatId" th:value="${s.flightSeatId}"
-                           th:disabled="${s.status.name() != 'AVAILABLE'}" required>
-                    <span class="seat-badge" th:text="${s.seatLabel}">1A</span>
-                  </label>
-                </th:block>
-                <div class="seat-aisle"></div>
-                <th:block th:each="s : ${seatsByRow.get(r)}" th:if="${s.seatCol == 'C' or s.seatCol == 'D'}">
-                  <label th:class="${'seat-radio-label ' + (s.status.name() == 'AVAILABLE' ? 'available' : 'taken')}">
-                    <input type="radio" name="flightSeatId" th:value="${s.flightSeatId}"
-                           th:disabled="${s.status.name() != 'AVAILABLE'}" required>
-                    <span class="seat-badge" th:text="${s.seatLabel}">1C</span>
-                  </label>
-                </th:block>
-              </th:block>
-            </div>
+                <div class="seatmap-head-controls">
+                  <div class="seatmap-section-tabs" role="tablist" aria-label="Aircraft cabin sections">
+                    <button th:each="sec : ${seatMapView.sections}"
+                            type="button"
+                            role="tab"
+                            class="sm-sec-tab"
+                            th:classappend="${sec.index == seatMapView.activeSectionIndex} ? ' is-active' : ''"
+                            th:id="${'sec-tab-' + sec.index}"
+                            th:attr="aria-selected=${sec.index == seatMapView.activeSectionIndex ? 'true' : 'false'},aria-controls=${'sec-panel-' + sec.index},data-sec-idx=${sec.index},data-svg-x=${sec.svgX},data-svg-w=${sec.svgWidth},data-sec-title=${sec.title},data-cabin-photo=${sec.primaryCabinPhoto},data-cabin-name=${sec.primaryCabin.name()}"
+                            th:text="${sec.tabLabel}">Section 1</button>
+                  </div>
 
-            <div class="cabin-section-title">Economy Cabin &middot; 3 x 3</div>
-            <div th:each="r : ${economyRows}" class="seat-row">
-              <span class="seat-row-number" th:text="${r}">6</span>
-              <th:block th:if="${seatsByRow.containsKey(r)}">
-                <th:block th:each="s : ${seatsByRow.get(r)}" th:if="${s.seatCol == 'A' or s.seatCol == 'B' or s.seatCol == 'C'}">
-                  <label th:class="${'seat-radio-label ' + (s.status.name() == 'AVAILABLE' ? 'available' : 'taken')}">
-                    <input type="radio" name="flightSeatId" th:value="${s.flightSeatId}"
-                           th:disabled="${s.status.name() != 'AVAILABLE'}" required>
-                    <span class="seat-badge" th:text="${s.seatLabel}">6A</span>
-                  </label>
-                </th:block>
-                <div class="seat-aisle"></div>
-                <th:block th:each="s : ${seatsByRow.get(r)}" th:if="${s.seatCol == 'D' or s.seatCol == 'E' or s.seatCol == 'F'}">
-                  <label th:class="${'seat-radio-label ' + (s.status.name() == 'AVAILABLE' ? 'available' : 'taken')}">
-                    <input type="radio" name="flightSeatId" th:value="${s.flightSeatId}"
-                           th:disabled="${s.status.name() != 'AVAILABLE'}" required>
-                    <span class="seat-badge" th:text="${s.seatLabel}">6D</span>
-                  </label>
-                </th:block>
-              </th:block>
-            </div>
-
-            <div class="seat-legend">
-              <div class="legend-item">
-                <div class="legend-box available"></div>
-                <span>Available (Click to Pick)</span>
+                  <div class="seatmap-zoom-group" role="group" aria-label="Seat map zoom">
+                    <button type="button" class="sm-zoom-btn is-active" data-zoom="100" aria-pressed="true">100%</button>
+                    <button type="button" class="sm-zoom-btn" data-zoom="125" aria-pressed="false">125%</button>
+                    <button type="button" class="sm-zoom-btn" data-zoom="150" aria-pressed="false">150%</button>
+                  </div>
+                </div>
               </div>
-              <div class="legend-item">
-                <div class="legend-box selected"></div>
-                <span>Selected</span>
+
+              <!-- Inline Token-Styled Aircraft Fuselage Silhouette -->
+              <div class="seatmap-silhouette-wrap" aria-hidden="true">
+                <svg class="seatmap-aircraft-svg" viewBox="0 0 800 130" focusable="false">
+                  <ellipse class="aircraft-shadow" cx="400" cy="116" rx="330" ry="8"/>
+                  <path class="aircraft-wing-rear" d="M 330 48 L 415 16 L 452 16 L 392 48 Z"/>
+                  <path class="aircraft-tail" d="M 650 56 L 732 10 L 758 10 L 724 62 Z"/>
+                  <path class="aircraft-fuselage"
+                        d="M 28 72 C 28 50, 56 40, 108 40 L 664 40 C 710 40, 748 56, 768 68 C 748 80, 710 88, 664 88 L 108 88 C 56 88, 28 84, 28 72 Z"/>
+                  <path class="aircraft-cockpit" d="M 46 62 L 72 52 L 72 64 L 46 66 Z"/>
+                  <path class="aircraft-wing-front" d="M 305 78 L 420 120 L 466 120 L 380 78 Z"/>
+                  <ellipse class="aircraft-engine" cx="316" cy="96" rx="34" ry="11"/>
+                  <g class="aircraft-windows">
+                    <rect x="86" y="55" width="7" height="10" rx="2"/>
+                    <rect x="102" y="55" width="7" height="10" rx="2"/>
+                    <rect x="118" y="55" width="7" height="10" rx="2"/>
+                    <rect x="134" y="55" width="7" height="10" rx="2"/>
+                    <rect x="150" y="55" width="7" height="10" rx="2"/>
+                    <rect x="166" y="55" width="7" height="10" rx="2"/>
+                    <rect x="182" y="55" width="7" height="10" rx="2"/>
+                    <rect x="198" y="55" width="7" height="10" rx="2"/>
+                    <rect x="214" y="55" width="7" height="10" rx="2"/>
+                    <rect x="230" y="55" width="7" height="10" rx="2"/>
+                    <rect x="246" y="55" width="7" height="10" rx="2"/>
+                    <rect x="262" y="55" width="7" height="10" rx="2"/>
+                    <rect x="278" y="55" width="7" height="10" rx="2"/>
+                    <rect x="294" y="55" width="7" height="10" rx="2"/>
+                    <rect x="310" y="55" width="7" height="10" rx="2"/>
+                    <rect x="326" y="55" width="7" height="10" rx="2"/>
+                    <rect x="342" y="55" width="7" height="10" rx="2"/>
+                    <rect x="358" y="55" width="7" height="10" rx="2"/>
+                    <rect x="374" y="55" width="7" height="10" rx="2"/>
+                    <rect x="390" y="55" width="7" height="10" rx="2"/>
+                    <rect x="406" y="55" width="7" height="10" rx="2"/>
+                    <rect x="422" y="55" width="7" height="10" rx="2"/>
+                    <rect x="438" y="55" width="7" height="10" rx="2"/>
+                    <rect x="454" y="55" width="7" height="10" rx="2"/>
+                    <rect x="470" y="55" width="7" height="10" rx="2"/>
+                    <rect x="486" y="55" width="7" height="10" rx="2"/>
+                    <rect x="502" y="55" width="7" height="10" rx="2"/>
+                    <rect x="518" y="55" width="7" height="10" rx="2"/>
+                    <rect x="534" y="55" width="7" height="10" rx="2"/>
+                    <rect x="550" y="55" width="7" height="10" rx="2"/>
+                  </g>
+                  <rect id="svgSectionBand"
+                        class="aircraft-section-highlight"
+                        th:attr="x=${seatMapView.activeSection != null ? seatMapView.activeSection.svgX : 72},width=${seatMapView.activeSection != null ? seatMapView.activeSection.svgWidth : 160}"
+                        y="43" height="40" rx="14"/>
+                </svg>
               </div>
-              <div class="legend-item">
-                <div class="legend-box taken"></div>
-                <span>Taken</span>
-              </div>
+            </section>
+
+            <!-- Lower Split: Cabin View + Interactive Seat Grid -->
+            <div class="seatmap-lower-split">
+
+              <!-- Bottom-Left Cabin View Tile -->
+              <aside class="glass-tile cabin-view-card" aria-label="Cabin view">
+                <div class="cabin-view-photo-wrap">
+                  <img id="cabinViewThumb"
+                       th:src="${backdropUrl}"
+                       alt="Aircraft cabin interior view"
+                       class="cabin-view-photo">
+                  <div class="cabin-view-scrim" aria-hidden="true"></div>
+                  <button type="button"
+                          id="openCabinLightboxBtn"
+                          class="cabin-expand-btn"
+                          aria-label="Expand cabin view photo"
+                          aria-haspopup="dialog">&#x2197;</button>
+                </div>
+                <div class="cabin-view-caption">
+                  <div class="section-kicker" id="cabinViewBadge"
+                       th:text="${heldSeat != null and heldSeat.seatClass.name() == 'FIRST' ? 'First Class Cabin' : 'Economy Cabin'}">Economy Cabin</div>
+                  <h2 class="cabin-view-title">Cabin view</h2>
+                  <p class="cabin-view-desc">
+                    Preview the cabin interior for your selected class. Updates automatically when you pick First Class or Economy.
+                  </p>
+                </div>
+              </aside>
+
+              <!-- Bottom-Center Seat Grid Card -->
+              <section class="glass-tile seatmap-grid-card" aria-label="Interactive seat map">
+                <div class="seatmap-grid-head">
+                  <h2 class="seatmap-grid-title" id="activeSectionHeading"
+                      th:text="${seatMapView.activeSection != null ? seatMapView.activeSection.title : 'Seat map'}">
+                    Section 1 &middot; First Class &amp; Economy &middot; rows 1 to 9
+                  </h2>
+
+                  <ul class="seatmap-legend" aria-label="Seat status legend">
+                    <li class="sm-legend-item">
+                      <span class="legend-swatch is-available" aria-hidden="true"></span>
+                      <span>Available</span>
+                    </li>
+                    <li class="sm-legend-item">
+                      <span class="legend-swatch is-first" aria-hidden="true"></span>
+                      <span>First</span>
+                    </li>
+                    <li class="sm-legend-item">
+                      <span class="legend-swatch is-taken" aria-hidden="true">&#215;</span>
+                      <span>Taken</span>
+                    </li>
+                    <li class="sm-legend-item">
+                      <span class="legend-swatch is-held-other" aria-hidden="true"></span>
+                      <span>Held by another</span>
+                    </li>
+                    <li class="sm-legend-item">
+                      <span class="legend-swatch is-yours" aria-hidden="true"></span>
+                      <span>Yours</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div th:if="${#lists.isEmpty(seatMapView.sections)}" class="status-banner">
+                  Seat map is currently unavailable for this flight.
+                </div>
+
+                <div class="seat-grid-scroll" id="seatGridScroll" data-zoom="100"
+                     th:unless="${#lists.isEmpty(seatMapView.sections)}">
+                  <div class="seat-grid-zoom-stage" id="seatGridZoomStage">
+                    <div th:each="sec : ${seatMapView.sections}"
+                         role="tabpanel"
+                         class="seat-section-panel"
+                         th:id="${'sec-panel-' + sec.index}"
+                         th:attr="aria-labelledby=${'sec-tab-' + sec.index},data-sec-idx=${sec.index}"
+                         th:hidden="${sec.index != seatMapView.activeSectionIndex}">
+
+                      <!-- Column Numbers Across Top -->
+                      <div class="seat-grid-header-row" th:style="${'grid-template-columns: ' + sec.gridColsTemplate}">
+                        <span aria-hidden="true"></span>
+                        <span class="seat-col-num" th:each="rn : ${sec.rowNumbers}" th:text="${rn}">1</span>
+                      </div>
+
+                      <!-- Top Wing Seat Bands (A, B, C) -->
+                      <div class="seat-band-group">
+                        <div class="seat-band-row"
+                             th:each="rowBand : ${sec.topBands}"
+                             th:style="${'grid-template-columns: ' + sec.gridColsTemplate}">
+                          <span class="seat-letter-lbl" th:text="${rowBand.letter}" aria-hidden="true">A</span>
+                          <th:block th:each="cell, cellStat : ${rowBand.cells}">
+                            <span th:if="${cell.empty}" class="seat-slot-empty" aria-hidden="true"></span>
+                            <button th:unless="${cell.empty}"
+                                    type="button"
+                                    th:class="${cell.cssClass}"
+                                    th:disabled="${salesClosed}"
+                                    th:attr="data-seat-id=${cell.seat.flightSeatId},data-seat-label=${cell.seat.seatLabel},data-seat-state=${cell.state.name()},data-selectable=${cell.selectable ? 'true' : 'false'},data-row-num=${cell.seat.seatRow},data-row-idx=${cellStat.index},data-col-idx=${rowBand.letterIndex},data-cabin=${cell.cabinLabel},data-seat-class=${cell.seat.seatClass.name()},data-pos=${cell.positionTag},data-cabin-photo=${cell.seat.seatClass.name() == 'FIRST' ? cabinFirstPhoto : cabinEconomyPhoto},aria-label=${cell.ariaLabel},aria-pressed=${cell.state.name() == 'YOURS' ? 'true' : 'false'},aria-disabled=${!cell.selectable ? 'true' : 'false'}"
+                                    th:tabindex="${(cell.state.name() == 'YOURS' or (heldSeat == null and cellStat.index == 0 and rowBand.letterIndex == 0)) ? '0' : '-1'}">
+                              <span th:if="${cell.state.name() == 'TAKEN'}" class="seat-taken-icon" aria-hidden="true">&#215;</span>
+                              <span th:if="${cell.state.name() == 'HELD_OTHER'}" class="seat-held-dot" aria-hidden="true"></span>
+                              <span class="seat-code-txt" th:text="${cell.seat.seatLabel}">9E</span>
+                            </button>
+                          </th:block>
+                        </div>
+                      </div>
+
+                      <!-- Aircraft Center Aisle -->
+                      <div class="seatmap-aisle-bar" aria-hidden="true">
+                        <span>Aisle</span>
+                      </div>
+
+                      <!-- Bottom Wing Seat Bands (D, E, F) -->
+                      <div class="seat-band-group">
+                        <div class="seat-band-row"
+                             th:each="rowBand : ${sec.bottomBands}"
+                             th:style="${'grid-template-columns: ' + sec.gridColsTemplate}">
+                          <span class="seat-letter-lbl" th:text="${rowBand.letter}" aria-hidden="true">D</span>
+                          <th:block th:each="cell, cellStat : ${rowBand.cells}">
+                            <span th:if="${cell.empty}" class="seat-slot-empty" aria-hidden="true"></span>
+                            <button th:unless="${cell.empty}"
+                                    type="button"
+                                    th:class="${cell.cssClass}"
+                                    th:disabled="${salesClosed}"
+                                    th:attr="data-seat-id=${cell.seat.flightSeatId},data-seat-label=${cell.seat.seatLabel},data-seat-state=${cell.state.name()},data-selectable=${cell.selectable ? 'true' : 'false'},data-row-num=${cell.seat.seatRow},data-row-idx=${cellStat.index},data-col-idx=${rowBand.letterIndex},data-cabin=${cell.cabinLabel},data-seat-class=${cell.seat.seatClass.name()},data-pos=${cell.positionTag},data-cabin-photo=${cell.seat.seatClass.name() == 'FIRST' ? cabinFirstPhoto : cabinEconomyPhoto},aria-label=${cell.ariaLabel},aria-pressed=${cell.state.name() == 'YOURS' ? 'true' : 'false'},aria-disabled=${!cell.selectable ? 'true' : 'false'}"
+                                    tabindex="-1">
+                              <span th:if="${cell.state.name() == 'TAKEN'}" class="seat-taken-icon" aria-hidden="true">&#215;</span>
+                              <span th:if="${cell.state.name() == 'HELD_OTHER'}" class="seat-held-dot" aria-hidden="true"></span>
+                              <span class="seat-code-txt" th:text="${cell.seat.seatLabel}">9D</span>
+                            </button>
+                          </th:block>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <p class="seatmap-kbd-hint">
+                  Keyboard: use arrow keys to move across seats, Enter or Space to hold, Escape to return to section tabs.
+                </p>
+              </section>
             </div>
           </div>
 
-          <section class="glass-tile seats-form-card auth-form" aria-label="Passenger details">
-            <h2 class="checkout-section-title">Passenger &amp; Checkout</h2>
-            <p class="auth-sub">Choose your seat on the map, enter passenger details below, and continue to payment.</p>
+          <!-- Right Sidebar: Warm Cream Selection Card + Flight Panel -->
+          <aside class="seatmap-sidebar-col" aria-label="Your seat selection and flight summary">
 
-            <div class="field-group">
-              <label for="pName" class="field-label">Passenger Full Name *</label>
-              <input type="text" id="pName" name="passengerName" class="form-input field-control"
-                     th:classappend="${errorField == 'passengerName'} ? ' is-invalid' : ''"
-                     placeholder="Enter passenger full name" required
-                     th:value="${passengerName != null ? passengerName : (user != null and user.fullName != null ? user.fullName : '')}">
-            </div>
-
-            <div class="field-group">
-              <label for="pEmail" class="field-label">Email Address *</label>
-              <input type="email" id="pEmail" name="passengerEmail" class="form-input field-control"
-                     th:classappend="${errorField == 'passengerEmail'} ? ' is-invalid' : ''"
-                     placeholder="name@example.com" required
-                     th:value="${passengerEmail != null ? passengerEmail : (user != null and user.email != null ? user.email : '')}">
-            </div>
-
-            <div class="field-group">
-              <label for="pPassport" class="field-label">Passport or National ID *</label>
-              <input type="text" id="pPassport" name="passportNumber" class="form-input field-control"
-                     th:classappend="${errorField == 'passportNumber'} ? ' is-invalid' : ''"
-                     placeholder="e.g. A12345678" required
-                     th:value="${passportNumber != null ? passportNumber : ''}">
-            </div>
-
-            <div class="field-group">
-              <label for="pDob" class="field-label">Date of Birth *</label>
-              <input type="date" id="pDob" name="dateOfBirth" class="form-input field-control"
-                     th:classappend="${errorField == 'dateOfBirth'} ? ' is-invalid' : ''"
-                     required
-                     th:value="${dateOfBirth != null ? dateOfBirth : ''}">
-            </div>
-
-            <div class="price-summary-box">
-              <div class="price-row">
-                <span>Economy Fare Quote</span>
-                <span th:text="${flight.priceFormatted}">R 1,200</span>
+            <!-- Warm Cream Selection Card -->
+            <section class="selection-card-cream" id="selectionPanel"
+                     th:attr="data-has-selection=${heldSeat != null ? 'true' : 'false'}">
+              <div class="selection-card-top">
+                <span class="selection-kicker">YOUR SELECTION</span>
+                <span class="selection-cabin-badge" id="selCabinBadge"
+                      th:text="${heldSeat != null ? (heldSeat.seatClass.name() == 'FIRST' ? 'First Class' : 'Economy') : 'No seat held'}">Economy</span>
               </div>
-              <div class="price-row total">
-                <span>Seat Hold</span>
-                <span th:text="${holdDurationText}">5 min</span>
+
+              <div class="selection-hero-row">
+                <div>
+                  <div class="selection-seat-big" id="selSeatLabel"
+                       th:text="${heldSeat != null ? heldSeat.seatLabel : '--'}">9A</div>
+                  <div class="selection-row-sub" id="selRowSub"
+                       th:text="${heldSeat != null ? ('Row ' + heldSeat.seatRow) : 'Pick an available seat'}">Row 9</div>
+                </div>
+                <div class="selection-price-block">
+                  <span class="selection-price-kicker">Seat fare (incl. VAT)</span>
+                  <div class="selection-price-big" id="selTotalPrice" th:text="${selectedQuoteTotalFormatted}">R 1,180.00</div>
+                </div>
               </div>
-            </div>
 
-            <button type="submit" class="btn-pill btn-white auth-submit">
-              Continue to Payment &rarr;
-            </button>
+              <!-- Derived-only tags (Cabin + Layout position) -->
+              <div class="selection-tags" id="selTagsWrap">
+                <span class="sel-tag-chip" id="selTagCabin"
+                      th:text="${heldSeat != null ? (heldSeat.seatClass.name() == 'FIRST' ? 'First Class' : 'Economy') : 'Economy'}">Economy</span>
+                <span class="sel-tag-chip" id="selTagPos"
+                      th:text="${heldSeat != null and !#strings.isEmpty(heldSeatPositionTag) ? heldSeatPositionTag : 'Window / Aisle'}">Window</span>
+              </div>
 
-            <div class="field-hint" style="text-align: center;">
-              5-minute seat hold &middot; Simulated payment on next step &middot; No real money moves
-            </div>
-          </section>
-        </form>
+              <!-- Itemized PricingService Breakdown -->
+              <div class="selection-breakdown">
+                <div class="sel-fare-row">
+                  <span>Base fare</span>
+                  <span id="selBaseFare" th:text="${selectedBaseFareFormatted}">R 1,180.00</span>
+                </div>
+                <div class="sel-fare-row" id="selUpgradeRow" th:hidden="${!selectedHasClassPremium}">
+                  <span>First Class upgrade</span>
+                  <span id="selUpgradeFare" th:text="${selectedClassUpgradeFormatted}">+R 0.00</span>
+                </div>
+                <div class="sel-fare-row">
+                  <span>Demand &amp; timing adjustments</span>
+                  <span id="selAdjustmentsSummary" th:text="${selectedDemandAdjFormatted + ' / ' + selectedTimingAdjFormatted}">+R 0.00 / +R 0.00</span>
+                </div>
+                <div class="sel-fare-row">
+                  <span>Includes VAT (15%)</span>
+                  <span id="selVatFare" th:text="${selectedVatFormatted}">R 153.91</span>
+                </div>
+              </div>
+
+              <!-- Hold Timer Ring -->
+              <div class="selection-hold-box" id="holdTimerBox"
+                   th:classappend="${heldSeat == null ? ' is-idle' : ''}">
+                <svg class="hold-ring-svg" viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="hold-ring-track" cx="22" cy="22" r="18"/>
+                  <circle class="hold-ring-progress" id="holdRingCircle" cx="22" cy="22" r="18"
+                          stroke-dasharray="113.1" stroke-dashoffset="0"/>
+                </svg>
+                <div class="hold-ring-copy">
+                  <strong class="hold-ring-clock" id="holdCountdown"
+                          th:text="${heldRemainingFormatted != null ? heldRemainingFormatted : '05:00'}">05:00</strong>
+                  <span class="hold-ring-sub" id="holdTimerCopy"
+                        th:text="${heldSeat != null ? 'Held for you. Nobody else can take it.' : 'Select a seat to start your 5-minute hold.'}">
+                    Held for you. Nobody else can take it.
+                  </span>
+                </div>
+              </div>
+
+              <div id="holdExpiredState" class="sel-expired-alert" role="alert" hidden>
+                <strong>Seat hold expired.</strong> Please choose an available seat on the map to hold it again.
+              </div>
+
+              <!-- Checkout Submit Form + Release Action -->
+              <form id="seatContinueForm" action="/book" method="POST" class="selection-actions">
+                <input type="hidden" name="csrf_token" th:value="${csrf_token}">
+                <input type="hidden" name="flightId" th:value="${flight.flightId}">
+                <input type="hidden" name="origin" th:value="${origin}">
+                <input type="hidden" name="destination" th:value="${destination}">
+                <input type="hidden" name="departureDate" th:value="${departureDate}">
+                <input type="hidden" name="flightSeatId" id="selectedSeatIdInput"
+                       th:value="${heldSeat != null ? heldSeat.flightSeatId : ''}">
+
+                <button type="submit" id="continueCheckoutBtn" class="btn-pill btn-ink btn-block"
+                        th:disabled="${heldSeat == null or salesClosed}">
+                  Continue to checkout &rarr;
+                </button>
+
+                <button type="button" id="releaseSeatBtn" class="btn-pill btn-cream-outline btn-block"
+                        th:disabled="${heldSeat == null}">
+                  Release seat and choose another
+                </button>
+
+                <a th:href="@{/flights(origin=${origin},destination=${destination},date=${departureDate})}"
+                   class="sel-back-link">Back to flights</a>
+              </form>
+            </section>
+
+            <!-- Flight Summary Panel -->
+            <section class="glass-tile seatmap-flight-card" aria-label="Flight summary">
+              <div class="section-kicker">FLIGHT</div>
+              <div class="sm-flight-route-row">
+                <div>
+                  <div class="sm-flight-code" th:text="${flight.originCode}">JNB</div>
+                  <div class="sm-flight-time" th:text="${flight.departureTime}">06:30</div>
+                </div>
+                <div class="sm-flight-track" aria-hidden="true">
+                  <span class="sm-flight-dash"></span>
+                  <svg viewBox="0 0 24 24" width="15" height="15">
+                    <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(90 12 12)"/>
+                  </svg>
+                </div>
+                <div class="sm-flight-end">
+                  <div class="sm-flight-code" th:text="${flight.destCode}">CPT</div>
+                  <div class="sm-flight-time" th:text="${flight.arrivalTime}">08:40</div>
+                </div>
+              </div>
+
+              <div class="sm-flight-meta">
+                <div class="sm-meta-line">
+                  <span>Flight</span>
+                  <strong th:text="${flight.flightNumber}">SR 305</strong>
+                </div>
+                <div class="sm-meta-line">
+                  <span>Duration</span>
+                  <strong th:text="${flight.duration}">2h 10m</strong>
+                </div>
+                <div class="sm-meta-line">
+                  <span>Free seats</span>
+                  <strong class="sm-free-seats" id="flightFreeSeatsCount"
+                          th:text="${seatMapView.freeSeats + ' of ' + seatMapView.totalSeats}">149 of 162</strong>
+                </div>
+              </div>
+            </section>
+          </aside>
+        </div>
       </main>
 
       <div th:replace="~{fragments/shell :: footer()}"></div>
+    </div>
+  </div>
+
+  <!-- Accessible Cabin View Lightbox -->
+  <div id="cabinLightbox" class="cabin-lightbox-backdrop" role="dialog" aria-modal="true" aria-labelledby="cabinLightboxTitle" hidden>
+    <div class="glass-panel cabin-lightbox-panel">
+      <div class="cabin-lightbox-head">
+        <div>
+          <div class="section-kicker" id="cabinLightboxKicker">Cabin view</div>
+          <h2 class="checkout-section-title" id="cabinLightboxTitle">Economy Cabin</h2>
+        </div>
+        <button type="button" id="closeCabinLightboxBtn" class="mobile-sheet-close" aria-label="Close cabin view">&times;</button>
+      </div>
+      <img id="cabinLightboxImg" src="/photos/cabin-economy-1.jpg" alt="Enlarged cabin interior view" class="cabin-lightbox-img">
     </div>
   </div>
 
