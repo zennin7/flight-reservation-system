@@ -714,22 +714,6 @@ public class WebController {
             return;
         }
 
-        // 1. Validate passenger input BEFORE placing any seat hold
-        String passengerName = ctx.formParam("passengerName");
-        String passengerEmail = ctx.formParam("passengerEmail");
-        String passportNumber = normalizePassport(ctx.formParam("passportNumber"));
-        LocalDate dob;
-        try {
-            ValidationUtil.validatePassengerName(passengerName);
-            ValidationUtil.validateEmail(passengerEmail);
-            ValidationUtil.validatePassportNumber(passportNumber);
-            dob = parseAndValidateDob(ctx.formParam("dateOfBirth"));
-        } catch (ValidationException e) {
-            logger.warn("Booking passenger validation failed: {}", e.getMessage());
-            renderSeatsWithError(ctx, flightId, e.getMessage(), resolveErrorField(e.getMessage()));
-            return;
-        }
-
         String origin = firstNonBlank(ctx.formParam("origin"),
                 flight.getOriginCity() != null ? flight.getOriginCity() + " (" + flight.getOriginCode() + ")" : "Johannesburg (JNB)");
         String destination = firstNonBlank(ctx.formParam("destination"),
@@ -737,19 +721,36 @@ public class WebController {
         String departureDate = firstNonBlank(resolveDepartureDate(flight),
                 LocalDate.now(bookingService.getClock()).toString());
 
-        // 2. Acquire owner-bound seat hold
+        // Acquire or retain owner-bound seat hold (passenger details collected cleanly at /checkout -> /pay)
         String holdOwner = resolveHoldOwner(ctx);
-        try {
-            seatMapService.selectSeat(targetSeat, holdOwner);
-        } catch (SeatUnavailableException e) {
-            renderSeatsWithError(ctx, flightId, e.getMessage());
-            return;
-        } catch (Exception e) {
-            renderSeatsWithError(ctx, flightId, "Seat selection error: " + e.getMessage());
-            return;
+        Instant now = seatMapService.getClock().instant();
+        List<FlightSeat> previousOwned = seats.stream()
+                .filter(s -> s.getFlightSeatId() != flightSeatId
+                        && s.getStatus() == SeatStatus.HELD
+                        && Objects.equals(s.getHeldBy(), holdOwner))
+                .toList();
+
+        boolean alreadyHeldBySameOwner = targetSeat.getStatus() == SeatStatus.HELD
+                && Objects.equals(targetSeat.getHeldBy(), holdOwner)
+                && targetSeat.getHeldUntil() != null
+                && targetSeat.getHeldUntil().isAfter(now);
+
+        if (!alreadyHeldBySameOwner) {
+            try {
+                seatMapService.selectSeat(targetSeat, holdOwner);
+            } catch (SeatUnavailableException e) {
+                renderSeatsWithError(ctx, flightId, e.getMessage());
+                return;
+            } catch (Exception e) {
+                renderSeatsWithError(ctx, flightId, "Seat selection error: " + e.getMessage());
+                return;
+            }
+        }
+        for (FlightSeat prev : previousOwned) {
+            seatMapService.deselectSeat(prev, holdOwner);
         }
 
-        // 3. Recompute authoritative fare server-side (ignore any client price input)
+        // Recompute authoritative fare server-side (ignore any client price input)
         try {
             PriceQuote quote = bookingService.getPricingService()
                     .quote(flightId, targetSeat.getSeatClass(), bookingService.getClock());
@@ -757,9 +758,13 @@ public class WebController {
                     ? targetSeat.getHeldUntil()
                     : seatMapService.getClock().instant().plusSeconds(SeatHoldPolicy.HOLD_SECONDS);
 
+            User currentUser = ctx.sessionAttribute("user");
+            String prefillName = currentUser != null ? firstNonBlank(currentUser.getFullName(), "") : "";
+            String prefillEmail = currentUser != null ? firstNonBlank(currentUser.getEmail(), "") : "";
+
             CheckoutSession checkoutSession = new CheckoutSession(
                     flight, origin, destination, departureDate, targetSeat,
-                    passengerName.trim(), passengerEmail.trim(), passportNumber, dob,
+                    prefillName, prefillEmail, "", null,
                     quote, UUID.randomUUID().toString(), holdOwner, holdExpiresAt);
 
             ctx.sessionAttribute("checkout_session", checkoutSession);
@@ -934,6 +939,30 @@ public class WebController {
                                 + " minutes before departure. This flight can no longer be booked.", null);
                 return;
             }
+
+            // Validate passenger inputs BEFORE charging the payment gateway
+            String rawPassengerName = ctx.formParam("passengerName");
+            String rawPassengerEmail = ctx.formParam("passengerEmail");
+            String rawPassportNumber = ctx.formParam("passportNumber");
+            String rawDob = ctx.formParam("dateOfBirth");
+            String normalizedPassport = normalizePassport(rawPassportNumber);
+            LocalDate dob;
+            try {
+                ValidationUtil.validatePassengerName(rawPassengerName);
+                ValidationUtil.validateEmail(rawPassengerEmail);
+                ValidationUtil.validatePassportNumber(normalizedPassport);
+                dob = parseAndValidateDob(rawDob);
+            } catch (ValidationException e) {
+                logger.warn("Checkout passenger validation failed: {}", e.getMessage());
+                ctx.status(400);
+                renderCheckoutModel(ctx, cs, "active", null, e.getMessage(), resolveErrorField(e.getMessage()),
+                        rawPassengerName, rawPassengerEmail, rawPassportNumber, rawDob);
+                return;
+            }
+            cs.setPassengerName(rawPassengerName.trim());
+            cs.setPassengerEmail(rawPassengerEmail.trim());
+            cs.setPassportNumber(normalizedPassport);
+            cs.setDateOfBirth(dob);
 
             // Recompute server-side fare (completely ignoring any price/total submitted by client)
             PriceQuote authoritativeQuote;
@@ -1625,6 +1654,12 @@ public class WebController {
 
     private void renderCheckoutModel(Context ctx, CheckoutSession cs, String state,
                                      String stateHeading, String payError, String errorField) {
+        renderCheckoutModel(ctx, cs, state, stateHeading, payError, errorField, null, null, null, null);
+    }
+
+    private void renderCheckoutModel(Context ctx, CheckoutSession cs, String state,
+                                     String stateHeading, String payError, String errorField,
+                                     String draftName, String draftEmail, String draftPassport, String draftDob) {
         Map<String, Object> model = baseModel(ctx);
         applyFixedAerialBackdrop(model);
         model.put("activeNav", "flights");
@@ -1633,6 +1668,11 @@ public class WebController {
         if (stateHeading != null) model.put("stateHeading", stateHeading);
         if (payError != null) model.put("payError", payError);
         if (errorField != null) model.put("errorField", errorField);
+
+        model.put("passengerNameVal", draftName != null ? draftName : cs.getPassengerName());
+        model.put("passengerEmailVal", draftEmail != null ? draftEmail : cs.getPassengerEmail());
+        model.put("passportNumberVal", draftPassport != null ? draftPassport : cs.getPassportNumber());
+        model.put("dateOfBirthVal", draftDob != null ? draftDob : cs.getDateOfBirthFormatted());
 
         PriceQuote q = cs.getQuote();
         BigDecimal classUpgrade = q.classFare().subtract(q.baseFare());

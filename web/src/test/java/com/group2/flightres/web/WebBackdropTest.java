@@ -263,7 +263,7 @@ class WebBackdropTest {
         Matcher sm = CSRF_PATTERN.matcher(seatsPage);
         assertTrue(sm.find());
         String bookPost = "csrf_token=" + URLEncoder.encode(sm.group(1), StandardCharsets.UTF_8)
-                + "&flightId=1&flightSeatId=101&passengerName=Thandi+Nkosi&passengerEmail=t%40example.com&passportNumber=A1234567&dateOfBirth=1998-03-14";
+                + "&flightId=1&flightSeatId=101";
         http.send(HttpRequest.newBuilder(URI.create(baseUrl + "/book"))
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .POST(HttpRequest.BodyPublishers.ofString(bookPost)).build(),

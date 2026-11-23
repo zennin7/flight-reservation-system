@@ -248,6 +248,7 @@ class WebBookingFlowTest {
     @Test
     @DisplayName("End-to-end booking flow: View seat map -> Submit booking -> View confirmation e-ticket voucher")
     void testCompleteBookingFlow() throws IOException, InterruptedException {
+        mockSeatDao.releaseSeat(101L);
         CookieManager cookieManager = new CookieManager();
         cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 
@@ -266,7 +267,7 @@ class WebBookingFlowTest {
         assertEquals(200, seatsResp.statusCode());
         String seatsHtml = seatsResp.body();
         assertTrue(seatsHtml.contains("GRP 204"), "Page must display flight number");
-        assertTrue(seatsHtml.contains("Passenger &amp; Checkout"), "Page must contain checkout form");
+        assertTrue(seatsHtml.contains("Continue to checkout"), "Page must contain hold-to-checkout submit");
 
         // Extract CSRF token from HTML form: <input type="hidden" name="csrf_token" value="...">
         Pattern csrfPattern = Pattern.compile("name=\"csrf_token\"\\s+value=\"([^\"]+)\"");
@@ -275,18 +276,14 @@ class WebBookingFlowTest {
         String csrfToken = csrfMatcher.group(1);
         assertNotNull(csrfToken);
 
-        // 2. POST /book to reserve seat
+        // 2. POST /book to acquire seat hold (passenger details now entered cleanly on /checkout -> /pay)
         String postBody = "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
                 + "&flightId=1"
                 + "&flightNumber=" + URLEncoder.encode("GRP 204", StandardCharsets.UTF_8)
                 + "&origin=" + URLEncoder.encode("Johannesburg (JNB)", StandardCharsets.UTF_8)
                 + "&destination=" + URLEncoder.encode("Cape Town (CPT)", StandardCharsets.UTF_8)
                 + "&departureDate=2026-11-02"
-                + "&flightSeatId=101"
-                + "&passengerName=" + URLEncoder.encode("David Miller", StandardCharsets.UTF_8)
-                + "&passengerEmail=" + URLEncoder.encode("david@example.com", StandardCharsets.UTF_8)
-                + "&passportNumber=A12345678"
-                + "&dateOfBirth=1995-05-15";
+                + "&flightSeatId=101";
 
         HttpRequest postBookReq = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/book"))
@@ -295,19 +292,25 @@ class WebBookingFlowTest {
                 .build();
 
         HttpResponse<String> bookResp = client.send(postBookReq, HttpResponse.BodyHandlers.ofString());
-        assertEquals(302, bookResp.statusCode(), "Valid passenger + seat hold must redirect to checkout");
+        assertEquals(302, bookResp.statusCode(), "Valid seat hold must redirect to checkout");
         assertEquals("/checkout", bookResp.headers().firstValue("Location").orElse(""));
 
-        // 2b. GET /checkout renders fare breakdown and simulated payment form
+        // 2b. GET /checkout renders passenger inputs, live card preview, and simulated payment form
         HttpResponse<String> checkoutResp = client.send(
                 HttpRequest.newBuilder().uri(URI.create(baseUrl + "/checkout")).GET().build(),
                 HttpResponse.BodyHandlers.ofString());
         assertEquals(200, checkoutResp.statusCode());
         assertTrue(checkoutResp.headers().firstValue("Cache-Control").orElse("").contains("no-store"));
         assertTrue(checkoutResp.body().contains("4242 4242 4242 4242"));
+        assertTrue(checkoutResp.body().contains("name=\"passengerName\""));
+        assertTrue(checkoutResp.body().contains("Confirm and pay"));
 
-        // 2c. POST /pay charges approved test card and creates booking in one transaction
+        // 2c. POST /pay validates passenger inputs, charges approved test card, and creates booking in one transaction
         String payBody = "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
+                + "&passengerName=" + URLEncoder.encode("David Miller", StandardCharsets.UTF_8)
+                + "&passengerEmail=" + URLEncoder.encode("david@example.com", StandardCharsets.UTF_8)
+                + "&passportNumber=A12345678"
+                + "&dateOfBirth=1995-05-15"
                 + "&cardNumber=" + URLEncoder.encode("4242 4242 4242 4242", StandardCharsets.UTF_8)
                 + "&cardholderName=" + URLEncoder.encode("David Miller", StandardCharsets.UTF_8)
                 + "&expiry=" + URLEncoder.encode("12/28", StandardCharsets.UTF_8)
@@ -393,8 +396,9 @@ class WebBookingFlowTest {
     }
 
     @Test
-    @DisplayName("Invalid passenger name re-renders seats form preserving inputs without raw error")
+    @DisplayName("Invalid passenger name re-renders checkout form preserving inputs without raw error")
     void testValidationErrorPreservesInputsAndHighlightsField() throws IOException, InterruptedException {
+        mockSeatDao.releaseSeat(101L);
         CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
         HttpClient client = HttpClient.newBuilder().cookieHandler(cookieManager).build();
 
@@ -405,20 +409,34 @@ class WebBookingFlowTest {
         assertTrue(m.find());
         String csrfToken = m.group(1);
 
+        // Hold seat via POST /book first
+        HttpResponse<String> holdResp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/book"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(
+                                "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
+                                        + "&flightId=1&flightSeatId=101"))
+                        .build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(302, holdResp.statusCode());
+        assertEquals("/checkout", holdResp.headers().firstValue("Location").orElse(""));
+
         String badBody = "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
-                + "&flightId=1&flightSeatId=101"
                 + "&passengerName=" + URLEncoder.encode("1234!!!", StandardCharsets.UTF_8)
                 + "&passengerEmail=" + URLEncoder.encode("keepme@example.com", StandardCharsets.UTF_8)
                 + "&passportNumber=" + URLEncoder.encode("AB 12-3456", StandardCharsets.UTF_8)
-                + "&dateOfBirth=1995-05-15";
+                + "&dateOfBirth=1995-05-15"
+                + "&cardNumber=" + URLEncoder.encode("4242 4242 4242 4242", StandardCharsets.UTF_8)
+                + "&cardholderName=Test&expiry=" + URLEncoder.encode("12/28", StandardCharsets.UTF_8)
+                + "&cvv=123";
 
         HttpResponse<String> resp = client.send(
-                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/book"))
+                HttpRequest.newBuilder().uri(URI.create(baseUrl + "/pay"))
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString(badBody)).build(),
                 HttpResponse.BodyHandlers.ofString());
 
-        assertEquals(200, resp.statusCode());
+        assertEquals(400, resp.statusCode(), "Invalid passenger input on /pay must return 400");
         String html = resp.body();
         assertTrue(html.contains("keepme@example.com"), "Email input must be preserved on error");
         assertTrue(html.contains("AB 12-3456"), "Passport input must be preserved on error");
@@ -445,11 +463,7 @@ class WebBookingFlowTest {
         String csrfToken = m.group(1);
 
         String postBody = "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
-                + "&flightId=1&flightSeatId=101"
-                + "&passengerName=" + URLEncoder.encode("Nomsa Dlamini", StandardCharsets.UTF_8)
-                + "&passengerEmail=" + URLEncoder.encode("nomsa@example.com", StandardCharsets.UTF_8)
-                + "&passportNumber=" + URLEncoder.encode("ab 12-3456", StandardCharsets.UTF_8)
-                + "&dateOfBirth=1995-05-15";
+                + "&flightId=1&flightSeatId=101";
 
         HttpResponse<String> bookResp = client.send(
                 HttpRequest.newBuilder().uri(URI.create(baseUrl + "/book"))
@@ -461,6 +475,10 @@ class WebBookingFlowTest {
         assertEquals("/checkout", bookResp.headers().firstValue("Location").orElse(""));
 
         String payBody = "csrf_token=" + URLEncoder.encode(csrfToken, StandardCharsets.UTF_8)
+                + "&passengerName=" + URLEncoder.encode("Nomsa Dlamini", StandardCharsets.UTF_8)
+                + "&passengerEmail=" + URLEncoder.encode("nomsa@example.com", StandardCharsets.UTF_8)
+                + "&passportNumber=" + URLEncoder.encode("ab 12-3456", StandardCharsets.UTF_8)
+                + "&dateOfBirth=1995-05-15"
                 + "&cardNumber=" + URLEncoder.encode("4242 4242 4242 4242", StandardCharsets.UTF_8)
                 + "&cardholderName=" + URLEncoder.encode("Nomsa Dlamini", StandardCharsets.UTF_8)
                 + "&expiry=" + URLEncoder.encode("12/28", StandardCharsets.UTF_8)
