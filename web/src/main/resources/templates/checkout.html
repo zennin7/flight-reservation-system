@@ -3,248 +3,290 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title th:text="${appName + ' – Checkout &amp; Payment'}">Sky Royal – Checkout &amp; Payment</title>
+  <title th:text="${appName + ' – Checkout'}">Sky Royal – Checkout</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/glass-web.css">
+  <script defer src="/js/backdrop.js"></script>
   <script defer src="/js/shell.js"></script>
+  <script defer src="/js/checkout.js"></script>
 </head>
 <body>
-  <div class="backdrop-aerial" aria-hidden="true"></div>
-  <div class="glass-backdrop-scrim" aria-hidden="true"></div>
+  <div th:replace="~{fragments/shell :: backdrop()}"></div>
 
   <div class="page-shell is-framed-shell">
     <div class="inner-glass-frame">
       <div th:replace="~{fragments/shell :: topbar('flights')}"></div>
 
-      <main class="frame-main">
-      <div class="checkout-wrap">
-        <div class="glass-panel checkout-head">
-          <div>
-            <span class="eyebrow">Step 3 of 3 &middot; Secure Checkout</span>
-            <h1 class="checkout-title" th:text="${checkoutState == 'active' ? 'Complete your booking payment' : 'Seat hold update'}">Complete your booking payment</h1>
-            <p class="auth-sub" th:if="${checkoutSession != null}"
-               th:text="${checkoutSession.flightNumber + ' &middot; ' + checkoutSession.origin + ' to ' + checkoutSession.destination + ' &middot; Seat ' + checkoutSession.seatLabel}">
-              GRP 204 &middot; Seat 6A
+      <main class="frame-main checkout-frame-main">
+        <div class="checkout-wrap">
+
+          <!-- Non-active states (hold expired, taken by another user, session mismatch) -->
+          <section th:if="${checkoutState != 'active'}" class="glass-panel checkout-state-card" role="alert">
+            <div class="checkout-state-badge"
+                 th:text="${checkoutState == 'forbidden' ? 'Access Denied' : (checkoutState == 'taken' ? 'Seat Taken' : 'Hold Expired')}">
+              Hold Expired
+            </div>
+            <h1 class="checkout-title"
+                th:text="${stateHeading != null ? stateHeading : 'Your seat hold is no longer active'}">
+              Your seat hold has expired
+            </h1>
+            <p class="auth-sub"
+               th:text="${payError != null ? payError : 'Please return to the seat map to choose an available seat and start a new 5-minute hold.'}">
+              Please return to the seat map to choose an available seat.
             </p>
-          </div>
-          <div class="hold-timer-pill" th:if="${checkoutState == 'active'}" id="holdTimerBox"
-               th:attr="data-expires-ms=${holdExpiresEpochMs}">
-            <span class="hold-timer-label">Seat Hold</span>
-            <span class="hold-timer-clock" id="holdCountdown" th:text="${remainingHoldFormatted}">05:00</span>
-          </div>
-        </div>
-
-        <section th:if="${checkoutState != 'active'}" class="glass-panel checkout-state-card" role="alert">
-          <div class="checkout-state-badge" th:text="${checkoutState == 'forbidden' ? 'Access Denied' : (checkoutState == 'taken' ? 'Seat Taken' : 'Hold Expired')}">
-            Hold Expired
-          </div>
-          <h2 class="checkout-section-title" th:text="${stateHeading != null ? stateHeading : 'Your seat hold is no longer active'}">
-            Your seat hold has expired
-          </h2>
-          <p class="auth-sub" th:text="${payError != null ? payError : 'Please return to the seat map to choose an available seat and start a new 5-minute hold.'}">
-            Please return to the seat map to choose an available seat.
-          </p>
-          <div class="checkout-state-actions">
-            <a th:if="${checkoutSession != null}"
-               th:href="${'/flights/' + checkoutSession.flightId + '/seats'}"
-               class="btn-pill btn-white">Back to Seat Map &rarr;</a>
-            <a href="/flights" class="btn-pill btn-translucent">Search Flights</a>
-          </div>
-        </section>
-
-        <div th:if="${checkoutState == 'active'}" class="checkout-grid"
-             th:classappend="${payError != null} ? ' checkout-has-error' : ''">
-          <aside class="glass-panel checkout-summary">
-            <div>
-              <span class="eyebrow">Fare Summary</span>
-              <h2 class="checkout-section-title" th:text="${checkoutSession.flightNumber}">GRP 204</h2>
-              <p class="auth-sub">
-                <span th:text="${checkoutSession.origin}">Johannesburg (JNB)</span>
-                &rarr;
-                <span th:text="${checkoutSession.destination}">Cape Town (CPT)</span>
-              </p>
+            <div class="checkout-state-actions">
+              <a th:if="${checkoutSession != null}"
+                 th:href="${'/flights/' + checkoutSession.flightId + '/seats'}"
+                 class="btn-pill btn-white">Back to seat map &rarr;</a>
+              <a href="/flights" class="btn-pill btn-translucent">Search flights</a>
             </div>
-
-            <div class="checkout-meta-list">
-              <div class="checkout-meta-row">
-                <span>Departure</span>
-                <strong th:text="${checkoutSession.departureDate + ' · ' + checkoutSession.departureTime}">2026-11-02 · 06:30</strong>
-              </div>
-              <div class="checkout-meta-row">
-                <span>Passenger</span>
-                <strong th:text="${checkoutSession.passengerName}">Traveller</strong>
-              </div>
-              <div class="checkout-meta-row">
-                <span>Assigned Seat</span>
-                <strong th:text="${checkoutSession.seatLabel + ' (' + checkoutSession.seat.seatClass + ')'}">6A (ECONOMY)</strong>
-              </div>
-            </div>
-
-            <div class="checkout-breakdown">
-              <div class="checkout-price-row">
-                <span>Base Fare</span>
-                <span th:text="${baseFareFormatted}">R 1,200.00</span>
-              </div>
-              <div class="checkout-price-row" th:if="${hasClassPremium}">
-                <span>First Class Cabin Upgrade</span>
-                <span th:text="${classUpgradeFormatted}">+R 0.00</span>
-              </div>
-              <div class="checkout-price-row">
-                <span>Demand Adjustment</span>
-                <span th:text="${demandAdjFormatted}">+R 0.00</span>
-              </div>
-              <div class="checkout-price-row">
-                <span>Timing Adjustment</span>
-                <span th:text="${timingAdjFormatted}">+R 0.00</span>
-              </div>
-              <div class="checkout-price-total">
-                <span>Total Payable</span>
-                <strong th:text="${totalFormatted}">R 1,200.00</strong>
-              </div>
-              <div class="checkout-vat-note" th:text="${'Includes 15% VAT (' + vatFormatted + ')'}">
-                Includes 15% VAT (R 156.52)
-              </div>
-            </div>
-          </aside>
-
-          <section class="glass-panel checkout-form-card" aria-label="Payment details">
-            <div class="checkout-form-head">
-              <div>
-                <span class="eyebrow">Simulated Card Gateway</span>
-                <h2 class="checkout-section-title">Card details</h2>
-              </div>
-              <span class="brand-badge-pill" id="cardBrandBadge">CARD</span>
-            </div>
-
-            <div class="auth-notice checkout-sim-note" role="note">
-              Simulated payment. Test card 4242 4242 4242 4242 approves; 4000 0000 0000 0002 declines. No real money moves.
-            </div>
-
-            <div th:if="${payError != null}" class="auth-error" role="alert">
-              <span th:text="${payError}">Payment could not be processed.</span>
-            </div>
-
-            <div id="holdExpiredInlineAlert" class="auth-error" role="alert" hidden>
-              Your 5-minute seat hold has expired. <a th:href="${'/flights/' + checkoutSession.flightId + '/seats'}">Return to seat map</a> to hold a seat again.
-            </div>
-
-            <form action="/pay" method="POST" class="auth-form checkout-form" id="checkoutPayForm" autocomplete="on">
-              <input type="hidden" name="csrf_token" th:value="${csrf_token}">
-
-              <div class="field-group">
-                <label for="cardNumber" class="field-label">Card number</label>
-                <input type="text" id="cardNumber" name="cardNumber" class="field-control"
-                       inputmode="numeric" autocomplete="cc-number" maxlength="23"
-                       placeholder="•••• •••• •••• ••••" required>
-              </div>
-
-              <div class="field-group">
-                <label for="cardholderName" class="field-label">Name on card</label>
-                <input type="text" id="cardholderName" name="cardholderName" class="field-control"
-                       autocomplete="cc-name" maxlength="100"
-                       placeholder="Name as shown on card" required>
-              </div>
-
-              <div class="checkout-card-split">
-                <div class="field-group">
-                  <label for="cardExpiry" class="field-label">Expiry (MM/YY)</label>
-                  <input type="text" id="cardExpiry" name="expiry" class="field-control"
-                         inputmode="numeric" autocomplete="cc-exp" maxlength="7"
-                         placeholder="MM / YY" required>
-                </div>
-
-                <div class="field-group">
-                  <label for="cardCvv" class="field-label">CVV</label>
-                  <input type="password" id="cardCvv" name="cvv" class="field-control"
-                         inputmode="numeric" autocomplete="cc-csc" maxlength="4"
-                         placeholder="3 or 4 digits" required>
-                </div>
-              </div>
-
-              <button type="submit" class="btn-pill btn-white auth-submit" id="paySubmitBtn">
-                Pay <span th:text="${totalFormatted}">R 1,200.00</span> &rarr;
-              </button>
-
-              <div class="auth-switch">
-                Changed your mind? <a th:href="${'/flights/' + checkoutSession.flightId + '/seats'}">Pick a different seat</a>
-              </div>
-            </form>
           </section>
+
+          <!-- Active Single-Page Checkout Workspace (board-4) -->
+          <form th:if="${checkoutState == 'active' and checkoutSession != null}"
+                action="/pay" method="POST" id="checkoutPayForm" autocomplete="on"
+                class="checkout-board-form"
+                th:classappend="${payError != null} ? ' checkout-has-error' : ''">
+            <input type="hidden" name="csrf_token" th:value="${csrf_token}">
+
+            <div class="checkout-board-grid">
+              <!-- Left Column: Breadcrumb, Hold Pill, Passenger Details, Card Payment -->
+              <section class="glass-panel checkout-main-panel" aria-label="Passenger and payment details">
+                <header class="checkout-panel-top">
+                  <nav class="seatmap-step-bar checkout-breadcrumb" aria-label="Booking steps">
+                    <span class="step-item is-done">Flight</span>
+                    <span class="step-sep" aria-hidden="true">&middot;</span>
+                    <a class="step-item is-done"
+                       th:href="${'/flights/' + checkoutSession.flightId + '/seats'}">Seat</a>
+                    <span class="step-sep" aria-hidden="true">&middot;</span>
+                    <span class="step-item is-active" aria-current="step">Checkout</span>
+                    <span class="step-sep" aria-hidden="true">&middot;</span>
+                    <span class="step-item">Boarding pass</span>
+                  </nav>
+
+                  <div class="hold-timer-pill" id="holdTimerBox"
+                       th:attr="data-expires-ms=${holdExpiresEpochMs}">
+                    <svg class="checkout-hold-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9"/>
+                      <polyline points="12 7 12 12 15.5 14"/>
+                    </svg>
+                    <span class="hold-timer-label">Seat hold</span>
+                    <span class="hold-timer-clock" id="holdCountdown" th:text="${remainingHoldFormatted}">05:00</span>
+                  </div>
+                </header>
+
+                <div class="checkout-heading-row">
+                  <h1 class="checkout-title">Passenger &amp; payment details</h1>
+                  <p class="checkout-sublead"
+                     th:text="${checkoutSession.flightNumber + ' · Seat ' + checkoutSession.seatLabel + ' (' + checkoutSession.cabinDisplay + ')'}">
+                    SR 204 · Seat 6A (Economy)
+                  </p>
+                </div>
+
+                <div th:if="${payError != null}" class="auth-error" role="alert">
+                  <span th:text="${payError}">Please check your details and try again.</span>
+                </div>
+
+                <div id="holdExpiredInlineAlert" class="auth-error" role="alert" hidden>
+                  Your 5-minute seat hold has expired.
+                  <a th:href="${'/flights/' + checkoutSession.flightId + '/seats'}">Return to seat map</a> to hold a seat again.
+                </div>
+
+                <!-- 1. Passenger Details -->
+                <div class="checkout-subblock">
+                  <div class="checkout-subblock-head">
+                    <h2 class="checkout-section-title">1. Passenger details</h2>
+                    <span class="checkout-subblock-hint">Shown on your boarding pass</span>
+                  </div>
+
+                  <div class="checkout-passenger-grid">
+                    <div class="field-group">
+                      <label for="passengerName" class="field-label">Full name</label>
+                      <input type="text" id="passengerName" name="passengerName" class="field-control"
+                             th:classappend="${errorField == 'passengerName'} ? ' is-invalid' : ''"
+                             th:value="${passengerNameVal}"
+                             autocomplete="name" maxlength="100"
+                             placeholder="e.g. Naledi Sithole" required>
+                    </div>
+
+                    <div class="field-group">
+                      <label for="passengerEmail" class="field-label">Email address</label>
+                      <input type="email" id="passengerEmail" name="passengerEmail" class="field-control"
+                             th:classappend="${errorField == 'passengerEmail'} ? ' is-invalid' : ''"
+                             th:value="${passengerEmailVal}"
+                             autocomplete="email" maxlength="120"
+                             placeholder="e.g. naledi@example.com" required>
+                    </div>
+
+                    <div class="field-group">
+                      <label for="passportNumber" class="field-label">Passport number</label>
+                      <input type="text" id="passportNumber" name="passportNumber" class="field-control"
+                             th:classappend="${errorField == 'passportNumber'} ? ' is-invalid' : ''"
+                             th:value="${passportNumberVal}"
+                             minlength="6" maxlength="20"
+                             placeholder="e.g. A1234567" required>
+                    </div>
+
+                    <div class="field-group">
+                      <label for="dateOfBirth" class="field-label">Date of birth</label>
+                      <input type="date" id="dateOfBirth" name="dateOfBirth" class="field-control"
+                             th:classappend="${errorField == 'dateOfBirth'} ? ' is-invalid' : ''"
+                             th:value="${dateOfBirthVal}"
+                             autocomplete="bday" required>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. Payment Details (Card-only, browser-only card preview) -->
+                <div class="checkout-subblock">
+                  <div class="checkout-subblock-head">
+                    <h2 class="checkout-section-title">2. Payment details</h2>
+                    <span class="brand-badge-pill" id="cardBrandBadge">CARD</span>
+                  </div>
+
+                  <div class="checkout-payment-grid">
+                    <div class="checkout-card-preview" aria-hidden="true">
+                      <div class="card-preview-top">
+                        <span class="card-preview-chip"></span>
+                        <span class="card-preview-brand" id="cardPreviewBrand">CARD</span>
+                      </div>
+                      <div class="card-preview-digits" id="cardPreviewDigits">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull;</div>
+                      <div class="card-preview-bottom">
+                        <div>
+                          <span class="card-preview-meta-lbl">Cardholder</span>
+                          <strong class="card-preview-meta-val" id="cardPreviewHolder">CARDHOLDER</strong>
+                        </div>
+                        <div class="card-preview-exp-col">
+                          <span class="card-preview-meta-lbl">Expires</span>
+                          <strong class="card-preview-meta-val" id="cardPreviewExpiry">MM/YY</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="checkout-card-fields">
+                      <div class="field-group">
+                        <label for="cardNumber" class="field-label">Card number</label>
+                        <input type="text" id="cardNumber" name="cardNumber" class="field-control"
+                               inputmode="numeric" autocomplete="cc-number" maxlength="23"
+                               placeholder="&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull;" required>
+                      </div>
+
+                      <div class="field-group">
+                        <label for="cardholderName" class="field-label">Name on card</label>
+                        <input type="text" id="cardholderName" name="cardholderName" class="field-control"
+                               autocomplete="cc-name" maxlength="100"
+                               placeholder="Name as shown on card" required>
+                      </div>
+
+                      <div class="checkout-card-split">
+                        <div class="field-group">
+                          <label for="cardExpiry" class="field-label">Expiry (MM/YY)</label>
+                          <input type="text" id="cardExpiry" name="expiry" class="field-control"
+                                 inputmode="numeric" autocomplete="cc-exp" maxlength="7"
+                                 placeholder="MM/YY" required>
+                        </div>
+
+                        <div class="field-group">
+                          <label for="cardCvv" class="field-label">CVV</label>
+                          <input type="password" id="cardCvv" name="cvv" class="field-control"
+                                 inputmode="numeric" autocomplete="cc-csc" maxlength="4"
+                                 placeholder="&bull;&bull;&bull;" required>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="auth-notice checkout-sim-note" role="note">
+                    Simulated payment. Test card 4242 4242 4242 4242 approves; 4000 0000 0000 0002 declines. No real money moves.
+                  </div>
+                </div>
+              </section>
+
+              <!-- Right Column: Sticky Order Summary & Primary Submit -->
+              <aside class="glass-panel checkout-summary-panel" aria-label="Order summary">
+                <div class="checkout-summary-head">
+                  <div>
+                    <span class="eyebrow">Order Summary</span>
+                    <div class="checkout-route-codes">
+                      <span th:text="${checkoutSession.originCode}">JNB</span>
+                      <span class="checkout-route-arrow" aria-hidden="true">&rarr;</span>
+                      <span th:text="${checkoutSession.destinationCode}">CPT</span>
+                    </div>
+                  </div>
+                  <span class="brand-badge-pill" th:text="${checkoutSession.flightNumber}">SR 204</span>
+                </div>
+
+                <div class="checkout-meta-list">
+                  <div class="checkout-meta-row">
+                    <span>Route</span>
+                    <strong>
+                      <span th:text="${checkoutSession.origin}">Johannesburg (JNB)</span>
+                      &rarr;
+                      <span th:text="${checkoutSession.destination}">Cape Town (CPT)</span>
+                    </strong>
+                  </div>
+                  <div class="checkout-meta-row">
+                    <span>Departure</span>
+                    <strong th:text="${checkoutSession.departureDate + ' · ' + checkoutSession.departureTime}">2026-11-02 · 06:30</strong>
+                  </div>
+                  <div class="checkout-meta-row">
+                    <span>Seat</span>
+                    <strong th:text="${checkoutSession.seatLabel + ' · ' + checkoutSession.cabinDisplay}">6A · Economy</strong>
+                  </div>
+                  <div class="checkout-meta-row">
+                    <span>Traveller</span>
+                    <strong id="summaryTravellerName"
+                            th:text="${(passengerNameVal != null and !#strings.isEmpty(passengerNameVal)) ? passengerNameVal : 'Pending traveller details'}">
+                      Pending traveller details
+                    </strong>
+                  </div>
+                </div>
+
+                <div class="checkout-breakdown">
+                  <div class="checkout-price-row">
+                    <span>Base fare</span>
+                    <span th:text="${baseFareFormatted}">R 1,200.00</span>
+                  </div>
+                  <div class="checkout-price-row" th:if="${hasClassPremium}">
+                    <span>First Class cabin upgrade</span>
+                    <span th:text="${classUpgradeFormatted}">+R 0.00</span>
+                  </div>
+                  <div class="checkout-price-row">
+                    <span>Demand adjustment</span>
+                    <span th:text="${demandAdjFormatted}">+R 0.00</span>
+                  </div>
+                  <div class="checkout-price-row">
+                    <span>Timing adjustment</span>
+                    <span th:text="${timingAdjFormatted}">+R 0.00</span>
+                  </div>
+                  <div class="checkout-price-total">
+                    <span>Total payable</span>
+                    <strong th:text="${totalFormatted}">R 1,200.00</strong>
+                  </div>
+                  <div class="checkout-vat-note" th:text="${'Includes 15% VAT (' + vatFormatted + ')'}">
+                    Includes 15% VAT (R 156.52)
+                  </div>
+                </div>
+
+                <div class="checkout-summary-actions">
+                  <button type="submit" class="btn-pill btn-white checkout-confirm-btn" id="paySubmitBtn">
+                    Confirm and pay <span th:text="${totalFormatted}">R 1,200.00</span> &rarr;
+                  </button>
+                  <a th:href="${'/flights/' + checkoutSession.flightId + '/seats'}"
+                     class="btn-pill btn-translucent checkout-back-link">Back to seat map</a>
+                </div>
+              </aside>
+            </div>
+          </form>
+
         </div>
-      </div>
       </main>
 
       <div th:replace="~{fragments/shell :: footer()}"></div>
     </div>
   </div>
   <div th:replace="~{fragments/shell :: mobileSheet('flights')}"></div>
-
-  <script>
-    (function () {
-      var cardInput = document.getElementById('cardNumber');
-      var badge = document.getElementById('cardBrandBadge');
-      var expInput = document.getElementById('cardExpiry');
-      var cvvInput = document.getElementById('cardCvv');
-      var timerBox = document.getElementById('holdTimerBox');
-      var timerClock = document.getElementById('holdCountdown');
-      var expiredAlert = document.getElementById('holdExpiredInlineAlert');
-      var payBtn = document.getElementById('paySubmitBtn');
-
-      function detectBrand(digits) {
-        if (!digits) return 'CARD';
-        if (digits.charAt(0) === '4') return 'VISA';
-        if (/^(5[1-5]|2[2-7])/.test(digits)) return 'MASTERCARD';
-        if (/^(34|37)/.test(digits)) return 'AMEX';
-        return 'CARD';
-      }
-
-      if (cardInput && badge) {
-        cardInput.addEventListener('input', function () {
-          var digits = (cardInput.value || '').replace(/\D/g, '').slice(0, 19);
-          var grouped = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-          cardInput.value = grouped;
-          badge.textContent = detectBrand(digits);
-        });
-      }
-
-      if (expInput) {
-        expInput.addEventListener('input', function () {
-          var digits = (expInput.value || '').replace(/\D/g, '').slice(0, 4);
-          if (digits.length >= 3) {
-            expInput.value = digits.slice(0, 2) + '/' + digits.slice(2);
-          } else {
-            expInput.value = digits;
-          }
-        });
-      }
-
-      if (cvvInput) {
-        cvvInput.addEventListener('input', function () {
-          cvvInput.value = (cvvInput.value || '').replace(/\D/g, '').slice(0, 4);
-        });
-      }
-
-      if (timerBox && timerClock) {
-        var expiresMs = parseInt(timerBox.getAttribute('data-expires-ms') || '0', 10);
-        if (expiresMs > 0) {
-          function tick() {
-            var secs = Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
-            var m = Math.floor(secs / 60);
-            var s = secs % 60;
-            timerClock.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-            if (secs <= 0) {
-              timerBox.classList.add('is-expired');
-              if (expiredAlert) expiredAlert.hidden = false;
-              if (payBtn) payBtn.disabled = true;
-            }
-          }
-          tick();
-          setInterval(tick, 1000);
-        }
-      }
-    })();
-  </script>
 </body>
 </html>

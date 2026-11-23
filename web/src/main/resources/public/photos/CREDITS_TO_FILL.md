@@ -1,7 +1,11 @@
 # Photo credits (fill in for every photo, needed for the Harvard references)
 | File | Photographer | Site and link | Licence |
 | --- | --- | --- | --- |
-| aerial-1.jpg | supplied by team (source: 3abe5cc89daf681c2237342230651a6a (1).jpg) | supplied by team | to be confirmed by David |
+| aerial-1.jpg | elizabeth-camp (source: aerial\elizabeth-camp-9q7prd3EeT0-unsplash.jpg) | Unsplash (link to be confirmed by David) | to be confirmed by David |
+| aerial-2.jpg | patrick-langwallner (source: aerial\patrick-langwallner-wiFOaBrX_wc-unsplash.jpg) | Unsplash (link to be confirmed by David) | to be confirmed by David |
+| aerial-3.jpg | max-andrey (source: aerial\max-andrey-g6RzHk-2DxE-unsplash.jpg) | Unsplash (link to be confirmed by David) | to be confirmed by David |
+| cabin-economy-1.jpg | mohammad-arrahmanur (source: cabin\mohammad-arrahmanur-x_ZjAC-njW0-unsplash.jpg) | Unsplash (link to be confirmed by David) | to be confirmed by David |
+| cabin-first-1.jpg | supplied by team (source: cabin\2553ba17ef8782291dc1be9082087ecb.jpg) | to be confirmed by David | to be confirmed by David |
 | home-hero.jpg | supplied by team | supplied by team | to be confirmed by David |
 | login-side.jpg | supplied by team | supplied by team | to be confirmed by David |
 | dest-capetown.jpg | supplied by team | supplied by team | to be confirmed by David |

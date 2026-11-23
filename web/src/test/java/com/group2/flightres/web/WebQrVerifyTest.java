@@ -253,8 +253,7 @@ class WebQrVerifyTest {
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString(
                                 "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
-                                        + "&flightId=1&flightSeatId=101&passengerName=Naledi+Sithole"
-                                        + "&passengerEmail=naledi%40example.com&passportNumber=A1234567&dateOfBirth=1994-05-05")).build(),
+                                        + "&flightId=1&flightSeatId=101")).build(),
                 HttpResponse.BodyHandlers.ofString());
 
         HttpResponse<String> payResp = ownerClient.send(
@@ -262,6 +261,8 @@ class WebQrVerifyTest {
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString(
                                 "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
+                                        + "&passengerName=Naledi+Sithole"
+                                        + "&passengerEmail=naledi%40example.com&passportNumber=A1234567&dateOfBirth=1994-05-05"
                                         + "&cardNumber=4242+4242+4242+4242&cardholderName=Naledi+Sithole&expiry=12%2F29&cvv=123")).build(),
                 HttpResponse.BodyHandlers.ofString());
         assertEquals(302, payResp.statusCode());

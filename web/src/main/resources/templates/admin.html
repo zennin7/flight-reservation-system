@@ -8,11 +8,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/glass-web.css">
+  <script defer src="/js/backdrop.js"></script>
   <script defer src="/js/shell.js"></script>
 </head>
 <body>
-  <div class="backdrop-aerial" aria-hidden="true"></div>
-  <div class="glass-backdrop-scrim" aria-hidden="true"></div>
+  <div th:replace="~{fragments/shell :: backdrop()}"></div>
 
   <div class="page-shell is-framed-shell">
     <div class="inner-glass-frame">
@@ -85,7 +85,7 @@
                   <td th:text="${fl.route}">JNB -&gt; CPT</td>
                   <td th:text="${fl.formattedDepartureDate + ' · ' + fl.formattedDepartureTime}">2026-11-23 · 06:30</td>
                   <td class="num" th:text="${fl.bookedSeats + ' / ' + fl.totalSeats}">12 / 162</td>
-                  <td class="num" th:text="${#numbers.formatDecimal(fl.loadFactorPct, 1, 1) + '%'}">7.4%</td>
+                  <td class="num" th:text="${fl.formattedLoadFactor}">7.4%</td>
                   <td><span class="admin-status-chip" th:text="${fl.status}">Scheduled</span></td>
                 </tr>
               </tbody>

@@ -358,6 +358,12 @@ class WebPaymentFlowTest {
         return m.group(1);
     }
 
+    private static final String DEFAULT_PAX_PARAMS =
+            "&passengerName=" + URLEncoder.encode("Thabo Khumalo", StandardCharsets.UTF_8)
+                    + "&passengerEmail=" + URLEncoder.encode("thabo@example.com", StandardCharsets.UTF_8)
+                    + "&passportNumber=Z9876543"
+                    + "&dateOfBirth=1992-04-12";
+
     private static String holdSeatAndReachCheckout(HttpClient client, String baseUrl, String extraParams) throws Exception {
         HttpResponse<String> seats = client.send(
                 HttpRequest.newBuilder().uri(URI.create(baseUrl + "/flights/1/seats")).GET().build(),
@@ -367,10 +373,6 @@ class WebPaymentFlowTest {
 
         String body = "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
                 + "&flightId=1&flightSeatId=101"
-                + "&passengerName=" + URLEncoder.encode("Thabo Khumalo", StandardCharsets.UTF_8)
-                + "&passengerEmail=" + URLEncoder.encode("thabo@example.com", StandardCharsets.UTF_8)
-                + "&passportNumber=Z9876543"
-                + "&dateOfBirth=1992-04-12"
                 + (extraParams != null ? extraParams : "");
 
         HttpResponse<String> bookResp = client.send(
@@ -400,6 +402,52 @@ class WebPaymentFlowTest {
     }
 
     @Test
+    @DisplayName("Invalid passenger input on POST /pay returns 400 and never charges gateway")
+    void invalidPassengerOnPayReturns400AndNeverChargesGateway() throws Exception {
+        AtomicInteger gatewayCalls = new AtomicInteger(0);
+        SimulatedPaymentGateway inner = new SimulatedPaymentGateway();
+        PaymentService spy = new PaymentService() {
+            @Override
+            public PaymentResult processPayment(String cardNumber, String expiry, String cvv, BigDecimal amount) {
+                gatewayCalls.incrementAndGet();
+                return inner.processPayment(cardNumber, expiry, cvv, amount);
+            }
+
+            @Override
+            public void refund(String reference) {
+                inner.refund(reference);
+            }
+        };
+        Harness h = startApp(spy, null);
+        HttpClient client = newClient();
+        String csrf = holdSeatAndReachCheckout(client, h.baseUrl(), "");
+
+        String badPayBody = "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
+                + "&passengerName=1234"
+                + "&passengerEmail=" + URLEncoder.encode("valid.traveller@example.com", StandardCharsets.UTF_8)
+                + "&passportNumber=" + URLEncoder.encode("ZA 99-8877", StandardCharsets.UTF_8)
+                + "&dateOfBirth=1992-04-12"
+                + "&cardNumber=" + URLEncoder.encode("4242 4242 4242 4242", StandardCharsets.UTF_8)
+                + "&cardholderName=" + URLEncoder.encode("Thabo Khumalo", StandardCharsets.UTF_8)
+                + "&expiry=" + URLEncoder.encode("12/29", StandardCharsets.UTF_8)
+                + "&cvv=739";
+
+        HttpResponse<String> resp = client.send(
+                HttpRequest.newBuilder().uri(URI.create(h.baseUrl() + "/pay"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(badPayBody)).build(),
+                HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(400, resp.statusCode());
+        assertEquals(0, gatewayCalls.get(), "Gateway must not be charged when passenger validation fails");
+        assertEquals(0, h.bookingDao().byRef.size());
+        assertTrue(resp.body().contains("valid.traveller@example.com"));
+        assertTrue(resp.body().contains("ZA 99-8877"));
+        assertTrue(resp.body().contains("is-invalid"));
+        assertFalse(resp.body().contains("4242424242424242"));
+    }
+
+    @Test
     @DisplayName("Tampered price is ignored; approved payment stores brand/last4 only and sets no-store")
     void tamperedPriceIgnoredAndApprovedCardSucceedsWithoutLeakingPanOrCvv() throws Exception {
         Harness h = startApp(new SimulatedPaymentGateway(), null);
@@ -408,6 +456,7 @@ class WebPaymentFlowTest {
 
         BigDecimal serverTotal = h.pricingService().quote(1L, SeatClass.ECONOMY, h.clock()).total();
         String payBody = "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
+                + DEFAULT_PAX_PARAMS
                 + "&cardNumber=" + URLEncoder.encode("4242 4242 4242 4242", StandardCharsets.UTF_8)
                 + "&cardholderName=" + URLEncoder.encode("Thabo Khumalo", StandardCharsets.UTF_8)
                 + "&expiry=" + URLEncoder.encode("12/29", StandardCharsets.UTF_8)
@@ -438,6 +487,7 @@ class WebPaymentFlowTest {
         String csrf = holdSeatAndReachCheckout(client, h.baseUrl(), "");
 
         String declineBody = "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
+                + DEFAULT_PAX_PARAMS
                 + "&cardNumber=" + URLEncoder.encode("4000 0000 0000 0002", StandardCharsets.UTF_8)
                 + "&cardholderName=" + URLEncoder.encode("Thabo Khumalo", StandardCharsets.UTF_8)
                 + "&expiry=" + URLEncoder.encode("12/29", StandardCharsets.UTF_8)
@@ -490,6 +540,7 @@ class WebPaymentFlowTest {
         String csrf = holdSeatAndReachCheckout(client, h.baseUrl(), "");
 
         String payBody = "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
+                + DEFAULT_PAX_PARAMS
                 + "&cardNumber=4242+4242+4242+4242&cardholderName=Thabo+Khumalo&expiry=12%2F29&cvv=123";
 
         CountDownLatch ready = new CountDownLatch(2);
@@ -547,6 +598,7 @@ class WebPaymentFlowTest {
         assertTrue(checkoutResp.body().contains("expired"));
 
         String payBody = "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
+                + DEFAULT_PAX_PARAMS
                 + "&cardNumber=4242+4242+4242+4242&cardholderName=Thabo&expiry=12%2F29&cvv=123";
         HttpResponse<String> payResp = client.send(
                 HttpRequest.newBuilder().uri(URI.create(h.baseUrl() + "/pay"))
@@ -586,6 +638,7 @@ class WebPaymentFlowTest {
         // Switching user identity inside Alice's browser session rejects /pay with 403 without creating a booking
         loginUser(clientAlice, h.baseUrl(), "bob", "Passw0rd!");
         String payBody = "csrf_token=" + URLEncoder.encode(aliceCsrf, StandardCharsets.UTF_8)
+                + DEFAULT_PAX_PARAMS
                 + "&cardNumber=4242+4242+4242+4242&cardholderName=Bob&expiry=12%2F29&cvv=123";
         HttpResponse<String> hijackedPay = clientAlice.send(
                 HttpRequest.newBuilder().uri(URI.create(h.baseUrl() + "/pay"))
@@ -625,6 +678,7 @@ class WebPaymentFlowTest {
         String csrf = holdSeatAndReachCheckout(client, h.baseUrl(), "");
 
         String payBody = "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
+                + DEFAULT_PAX_PARAMS
                 + "&cardNumber=4242+4242+4242+4242&cardholderName=Thabo&expiry=12%2F29&cvv=123";
 
         // 1. Gateway exception -> 502 with clean message and no stack trace
@@ -659,6 +713,7 @@ class WebPaymentFlowTest {
         String csrf = holdSeatAndReachCheckout(client, h.baseUrl(), "");
 
         String declineBody = "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
+                + DEFAULT_PAX_PARAMS
                 + "&cardNumber=4000+0000+0000+0002&cardholderName=Test&expiry=12%2F29&cvv=123";
 
         for (int i = 1; i <= 10; i++) {

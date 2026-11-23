@@ -341,9 +341,7 @@ class WebSalesCutoffAndDateTest {
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString(
                                 "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
-                                        + "&flightId=10&flightSeatId=1001"
-                                        + "&passengerName=Naledi+Sithole&passengerEmail=naledi@example.com"
-                                        + "&passportNumber=A1234567&dateOfBirth=1994-05-15"))
+                                        + "&flightId=10&flightSeatId=1001"))
                         .build(),
                 HttpResponse.BodyHandlers.ofString());
         assertEquals(409, pastBook.statusCode());
@@ -356,9 +354,7 @@ class WebSalesCutoffAndDateTest {
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString(
                                 "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
-                                        + "&flightId=11&flightSeatId=1002"
-                                        + "&passengerName=Naledi+Sithole&passengerEmail=naledi@example.com"
-                                        + "&passportNumber=A1234567&dateOfBirth=1994-05-15"))
+                                        + "&flightId=11&flightSeatId=1002"))
                         .build(),
                 HttpResponse.BodyHandlers.ofString());
         assertEquals(409, soonBook.statusCode());
@@ -370,9 +366,7 @@ class WebSalesCutoffAndDateTest {
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString(
                                 "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
-                                        + "&flightId=12&flightSeatId=1003"
-                                        + "&passengerName=Naledi+Sithole&passengerEmail=naledi@example.com"
-                                        + "&passportNumber=A1234567&dateOfBirth=1994-05-15"))
+                                        + "&flightId=12&flightSeatId=1003"))
                         .build(),
                 HttpResponse.BodyHandlers.ofString());
         assertEquals(302, openBook.statusCode());
@@ -384,6 +378,8 @@ class WebSalesCutoffAndDateTest {
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString(
                                 "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
+                                        + "&passengerName=Naledi+Sithole&passengerEmail=naledi@example.com"
+                                        + "&passportNumber=A1234567&dateOfBirth=1994-05-15"
                                         + "&cardNumber=" + URLEncoder.encode("4242 4242 4242 4242", StandardCharsets.UTF_8)
                                         + "&cardholderName=Naledi+Sithole&expiry=12/28&cvv=123"))
                         .build(),
@@ -424,9 +420,7 @@ class WebSalesCutoffAndDateTest {
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString(
                                 "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
-                                        + "&flightId=13&flightSeatId=1001&departureDate=2026-11-02"
-                                        + "&passengerName=Naledi+Sithole&passengerEmail=naledi@example.com"
-                                        + "&passportNumber=A1234567&dateOfBirth=1994-05-15"))
+                                        + "&flightId=13&flightSeatId=1001&departureDate=2026-11-02"))
                         .build(),
                 HttpResponse.BodyHandlers.ofString());
         assertEquals(302, bookResp.statusCode());
@@ -445,6 +439,8 @@ class WebSalesCutoffAndDateTest {
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString(
                                 "csrf_token=" + URLEncoder.encode(csrf, StandardCharsets.UTF_8)
+                                        + "&passengerName=Naledi+Sithole&passengerEmail=naledi@example.com"
+                                        + "&passportNumber=A1234567&dateOfBirth=1994-05-15"
                                         + "&cardNumber=" + URLEncoder.encode("4242 4242 4242 4242", StandardCharsets.UTF_8)
                                         + "&cardholderName=Naledi+Sithole&expiry=12/28&cvv=123"))
                         .build(),

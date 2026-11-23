@@ -21,6 +21,11 @@ class WebPhotoResourcesTest {
     void everyResolvedPhotoResourceExistsAndIsWithinSizeLimit() throws IOException {
         Set<String> webPaths = new HashSet<>();
         webPaths.add(DestinationPhotoResolver.WEB_AERIAL_FALLBACK);
+        webPaths.add("/photos/aerial-1.jpg");
+        webPaths.add("/photos/aerial-2.jpg");
+        webPaths.add("/photos/aerial-3.jpg");
+        webPaths.add("/photos/cabin-economy-1.jpg");
+        webPaths.add("/photos/cabin-first-1.jpg");
         for (String code : DestinationPhotoResolver.knownAirportCodes()) {
             webPaths.add(DestinationPhotoResolver.resolveWebPath(code));
         }

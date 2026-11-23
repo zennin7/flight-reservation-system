@@ -9,11 +9,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/glass-web.css">
+  <script defer src="/js/backdrop.js"></script>
   <script defer src="/js/shell.js"></script>
 </head>
 <body>
-  <div class="backdrop-aerial" aria-hidden="true"></div>
-  <div class="glass-backdrop-scrim" aria-hidden="true"></div>
+  <div th:replace="~{fragments/shell :: backdrop()}"></div>
 
   <div class="page-shell home-page-shell">
     <section class="home-above-fold" aria-label="Home hero and flight search">
@@ -109,8 +109,11 @@
 
             <label class="strip-cell">
               <span class="strip-label">Departure</span>
-              <input type="date" name="date" id="homeDateInput" class="strip-date"
-                     th:value="${tomorrowDate}" data-sync-sub="homeDateSub" required>
+              <span class="strip-date-wrap">
+                <span class="strip-date-display" id="homeDateDisplay" th:text="${tomorrowDateDisplay}">Tue 24 Nov</span>
+                <input type="date" name="date" id="homeDateInput" class="strip-date strip-date-native"
+                       th:value="${tomorrowDate}" data-sync-sub="homeDateSub" data-display-target="homeDateDisplay" required>
+              </span>
               <span class="strip-sub" id="homeDateSub" th:text="${tomorrowWeekday}">Monday</span>
             </label>
 
@@ -128,6 +131,7 @@
               <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
                 <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z" fill="currentColor"/>
               </svg>
+              <span class="search-btn-label">Search flights</span>
             </button>
           </div>
         </form>

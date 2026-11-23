@@ -8,124 +8,147 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/glass-web.css">
+  <script defer src="/js/backdrop.js"></script>
   <script defer src="/js/shell.js"></script>
 </head>
 <body>
-  <div class="backdrop-aerial" aria-hidden="true"></div>
-  <div class="glass-backdrop-scrim" aria-hidden="true"></div>
+  <div th:replace="~{fragments/shell :: backdrop()}"></div>
 
-  <div class="page-shell is-framed-shell">
-    <div class="inner-glass-frame">
-      <div th:replace="~{fragments/shell :: topbar('my-bookings')}"></div>
+  <div class="page-shell conf-page-shell">
+    <div th:replace="~{fragments/shell :: topbar('my-bookings')}"></div>
 
-      <main class="frame-main bp-wrap">
-      <section class="glass-panel bp-header-card no-print">
-        <div class="bp-status-row" th:if="${!isCancelled}">
-          <div class="bp-check" aria-hidden="true">&#10003;</div>
-          <div>
-            <h1 class="section-title bp-head-title">Booking Confirmed!</h1>
-            <p class="section-sub">Your boarding pass and e-ticket are ready below.</p>
-          </div>
+    <main class="conf-hero-grid" aria-label="Booking confirmation and boarding pass">
+      <!-- Left Hero Copy over Full-Bleed Destination Scene (board-7) -->
+      <section class="conf-hero-copy no-print" th:if="${!isCancelled}">
+        <span class="conf-eyebrow-pill">
+          <span class="conf-check-dot" aria-hidden="true">&#10003;</span>
+          <span>Booking Confirmed!</span>
+        </span>
+        <h1 class="conf-hero-title">
+          <span th:text="${destCity}">Cape Town</span> is waiting.
+        </h1>
+        <p class="conf-hero-sub">
+          Your boarding pass is ready. Download it below or find it any time in My bookings.
+        </p>
+
+        <div class="conf-actions">
+          <a th:href="@{/confirmation/{ref}/boarding-pass.pdf(ref=${record.bookingReference})}"
+             class="btn-pill btn-white conf-cta-primary" target="_blank" rel="noopener">
+            Download boarding pass &rarr;
+          </a>
+          <a th:href="${user != null ? '/my-bookings' : '/flights'}"
+             th:text="${user != null ? 'View my bookings' : 'Book another flight'}"
+             class="btn-pill btn-translucent">View my bookings</a>
         </div>
-        <div class="bp-status-row" th:if="${isCancelled}" role="alert">
-          <div class="bp-check is-cancelled" aria-hidden="true">&times;</div>
-          <div>
-            <span class="verify-status-pill is-cancelled">CANCELLED</span>
-            <h1 class="section-title bp-head-title">Booking Cancelled</h1>
-            <p class="section-sub">This reservation has been cancelled and refunded. This boarding pass is not valid for travel.</p>
-          </div>
-        </div>
-        <div class="bp-actions">
-          <button th:if="${!isCancelled}" type="button" class="btn-pill btn-white" onclick="window.print()">Print / Save as PDF</button>
-          <a th:if="${!isCancelled}"
-             th:href="@{/confirmation/{ref}/boarding-pass.pdf(ref=${record.bookingReference})}"
-             class="btn-pill btn-translucent" target="_blank" rel="noopener">Download PDF</a>
+
+        <div class="conf-secondary-links">
           <a th:if="${canCancel}"
              th:href="@{/bookings/{ref}/cancel(ref=${record.bookingReference})}"
-             class="btn-pill btn-translucent">Cancel booking</a>
-          <a th:if="${user != null}" href="/my-bookings" class="btn-pill btn-translucent">My bookings</a>
+             class="conf-cancel-link">Cancel booking</a>
+          <a th:if="${user == null}" href="/my-bookings" class="conf-cancel-link">View my bookings</a>
+          <button type="button" class="conf-cancel-link conf-print-btn" onclick="window.print()">Print voucher</button>
         </div>
       </section>
 
-      <article class="glass-panel bp-ticket" aria-label="Boarding pass">
-        <div class="bp-main">
-          <div class="bp-airline-bar">
-            <div>
-              <span class="eyebrow">Electronic Boarding Pass</span>
-              <div style="font-size: 16px; font-weight: 700;" th:text="${appName}">Sky Royal</div>
-            </div>
-            <span class="bp-flight-pill" th:text="${record.flightNumber != null ? record.flightNumber : 'GRP 204'}">GRP 204</span>
-          </div>
+      <!-- Left Hero Copy when Cancelled -->
+      <section class="conf-hero-copy no-print" th:if="${isCancelled}" role="alert">
+        <span class="verify-status-pill is-cancelled">CANCELLED</span>
+        <h1 class="conf-hero-title">Booking Cancelled</h1>
+        <p class="conf-hero-sub">
+          This reservation has been cancelled and refunded. This boarding pass is not valid for travel.
+        </p>
+        <div class="conf-actions">
+          <a href="/my-bookings" class="btn-pill btn-white conf-cta-primary">View my bookings &rarr;</a>
+          <a href="/flights" class="btn-pill btn-translucent">Search flights</a>
+        </div>
+      </section>
 
-          <div class="bp-route-row">
-            <div>
-              <div class="bp-meta-label">From</div>
-              <div class="bp-endpoint-city" th:text="${record.origin != null ? record.origin : 'Johannesburg (JNB)'}">Johannesburg (JNB)</div>
-              <div class="bp-endpoint-time" th:text="${'Departs ' + (record.departureDate != null ? record.departureDate + ' · ' : '') + (record.departureTime != null ? record.departureTime : '--:--')}">Departs 2026-11-24 · 06:30</div>
-            </div>
-            <div class="bp-route-arrow" aria-hidden="true">&rarr;</div>
-            <div>
-              <div class="bp-meta-label">To</div>
-              <div class="bp-endpoint-city" th:text="${record.destination != null ? record.destination : 'Cape Town (CPT)'}">Cape Town (CPT)</div>
-              <div class="bp-endpoint-time" th:text="${'Arrives ' + (record.arrivalTime != null ? record.arrivalTime : '--:--')}">Arrives 08:40</div>
-            </div>
-          </div>
-
-          <div class="bp-meta-grid">
-            <div>
-              <div class="bp-meta-label">Passenger</div>
-              <div class="bp-meta-val" th:text="${record.passengerName}">Traveller</div>
-            </div>
-            <div>
-              <div class="bp-meta-label">Seat</div>
-              <div class="bp-meta-val" th:text="${record.seatLabel != null ? record.seatLabel : '6A'}">6A</div>
-            </div>
-            <div>
-              <div class="bp-meta-label">Cabin</div>
-              <div class="bp-meta-val" th:text="${record.seatClass != null ? record.seatClass.name() : 'ECONOMY'}">ECONOMY</div>
-            </div>
-            <div>
-              <div class="bp-meta-label">Total Paid</div>
-              <div class="bp-meta-val" th:text="${record.totalAmount != null ? 'R ' + #numbers.formatDecimal(record.totalAmount, 1, 'COMMA', 2, 'POINT') : 'R 0.00'}">R 1,522.00</div>
-            </div>
+      <!-- Right Crisp White Boarding Pass Card with Destination Header + REAL QR -->
+      <article class="conf-pass-card" aria-label="Boarding pass">
+        <div class="conf-pass-photo-wrap">
+          <img th:src="${destPhotoUrl}" th:alt="${destCity + ' skyline'}" class="conf-pass-photo">
+          <div class="conf-pass-photo-scrim" aria-hidden="true"></div>
+          <div class="conf-pass-photo-overlay">
+            <span class="conf-flight-badge" th:text="${record.flightNumber != null ? record.flightNumber : 'SR 204'}">SR 204</span>
+            <span class="conf-status-chip"
+                  th:classappend="${isCancelled} ? ' is-cancelled' : ''"
+                  th:text="${record.status != null ? record.status : 'CONFIRMED'}">CONFIRMED</span>
           </div>
         </div>
 
-        <aside class="bp-stub">
-          <div>
-            <div class="bp-meta-label">Booking Reference (PNR)</div>
-            <div class="bp-pnr-val" th:text="${record.bookingReference}">WTEST1</div>
-            <div class="bp-meta-label" style="margin-top: 12px;">Status</div>
-            <div class="bp-meta-val" th:text="${record.status != null ? record.status : 'CONFIRMED'}">CONFIRMED</div>
+        <div class="conf-pass-body">
+          <div class="conf-route-block">
+            <div class="conf-pass-codes">
+              <span th:text="${originCode}">JNB</span>
+              <span class="conf-pass-arrow" aria-hidden="true">&rarr;</span>
+              <span th:text="${destCode}">CPT</span>
+            </div>
+            <p class="conf-pass-cities">
+              <span th:text="${record.origin != null ? record.origin : originCity}">Johannesburg (JNB)</span>
+              <span> to </span>
+              <span th:text="${record.destination != null ? record.destination : destCity}">Cape Town (CPT)</span>
+            </p>
+            <p class="conf-pass-schedule">
+              <span>Departs </span>
+              <strong th:text="${(record.departureDate != null ? record.departureDate + ' · ' : '') + (record.departureTime != null ? record.departureTime : '--:--')}">2026-11-24 · 06:30</strong>
+              <span> &middot; Arrives </span>
+              <span th:text="${record.arrivalTime != null ? record.arrivalTime : '--:--'}">08:40</span>
+              <span th:if="${durationText != null and !#strings.isEmpty(durationText)}" th:text="${' · ' + durationText}"> · 2h 10m</span>
+            </p>
           </div>
 
-          <div th:if="${isBookingOwner}" class="bp-qr-box">
-            <img class="bp-qr-img"
-                 th:src="@{/confirmation/{ref}/qr.png(ref=${record.bookingReference})}"
-                 th:alt="${'QR verification code for booking ' + record.bookingReference}">
-            <span class="bp-barcode-caption">SCAN TO VERIFY</span>
-          </div>
-          <div th:unless="${isBookingOwner}" class="bp-qr-locked">
-            Sign in as booking owner to display QR pass
+          <div class="conf-meta-grid">
+            <div>
+              <span class="conf-meta-lbl">Passenger</span>
+              <strong class="conf-meta-val" th:text="${record.passengerName}">Traveller</strong>
+            </div>
+            <div>
+              <span class="conf-meta-lbl">Seat</span>
+              <strong class="conf-meta-val" th:text="${record.seatLabel != null ? record.seatLabel : '6A'}">6A</strong>
+            </div>
+            <div>
+              <span class="conf-meta-lbl">Cabin</span>
+              <strong class="conf-meta-val" th:text="${cabinDisplay}">Economy</strong>
+            </div>
+            <div>
+              <span class="conf-meta-lbl">Total paid</span>
+              <strong class="conf-meta-val" th:text="${totalPaidFormatted}">R 1,522.00</strong>
+            </div>
           </div>
 
-          <div class="bp-barcode-box">
-            <img class="bp-barcode-img"
-                 th:src="@{/confirmation/{ref}/barcode.png(ref=${record.bookingReference})}"
-                 th:alt="${'Barcode for booking ' + record.bookingReference}">
-            <span class="bp-barcode-caption" th:text="${record.bookingReference}">WTEST1</span>
+          <div class="conf-tear-line" aria-hidden="true"></div>
+
+          <div class="conf-verify-footer">
+            <div class="conf-pnr-col">
+              <span class="conf-meta-lbl">Booking reference</span>
+              <div class="conf-pnr-code" th:text="${record.bookingReference}">WTEST1</div>
+              <img th:if="${!isCancelled}"
+                   class="conf-barcode-img"
+                   th:src="@{/confirmation/{ref}/barcode.png(ref=${record.bookingReference})}"
+                   th:alt="${'Barcode for booking ' + record.bookingReference}">
+            </div>
+
+            <div th:if="${!isCancelled and isBookingOwner}" class="conf-qr-box">
+              <img class="conf-qr-img"
+                   th:src="@{/confirmation/{ref}/qr.png(ref=${record.bookingReference})}"
+                   th:alt="${'QR verification code for booking ' + record.bookingReference}"
+                   width="116" height="116">
+              <span class="conf-qr-caption">Scan to verify</span>
+            </div>
+
+            <div th:if="${!isCancelled and !isBookingOwner}" class="conf-qr-locked">
+              Sign in as booking owner to display QR pass
+            </div>
+
+            <div th:if="${isCancelled}" class="conf-qr-locked is-cancelled">
+              Cancelled &middot; Not valid for travel
+            </div>
           </div>
-        </aside>
+        </div>
       </article>
+    </main>
 
-      <div class="bp-footer-links no-print">
-        <a href="/flights" class="btn-pill btn-white">Book Another Flight</a>
-        <a href="/" class="btn-pill btn-translucent">Back to Home</a>
-      </div>
-      </main>
-
-      <div th:replace="~{fragments/shell :: footer()}"></div>
-    </div>
+    <div class="no-print" th:replace="~{fragments/shell :: footer()}"></div>
   </div>
   <div th:replace="~{fragments/shell :: mobileSheet('my-bookings')}"></div>
 </body>

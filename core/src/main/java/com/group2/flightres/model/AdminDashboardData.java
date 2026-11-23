@@ -4,6 +4,7 @@ package com.group2.flightres.model;
 import com.group2.flightres.config.BoardingPolicy;
 import com.group2.flightres.util.AirportNames;
 import com.group2.flightres.util.FlightTimes;
+import com.group2.flightres.util.MoneyFormatter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -96,6 +97,10 @@ public class AdminDashboardData {
 
         public String getFormattedDepartureDate() {
             return FlightTimes.formatLocalDate(departureInstant, originZone);
+        }
+
+        public String getFormattedLoadFactor() {
+            return MoneyFormatter.formatPercent(loadFactorPct);
         }
 
         public static String deriveStatus(Instant departureInstant, Instant now) {
