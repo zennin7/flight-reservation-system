@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title th:text="${appName + ' – Available Flights'}">Sky Royal – Available Flights</title>
+  <title th:text="${appName + ' – Flights from ' + originCity + ' to ' + destCity}">Sky Royal – Search Flights</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/glass-web.css">
   <script defer src="/js/shell.js"></script>
+  <script defer src="/js/flights-filter.js"></script>
 </head>
 <body>
   <div class="backdrop-aerial" aria-hidden="true"></div>
@@ -18,86 +19,393 @@
     <div class="inner-glass-frame">
       <div th:replace="~{fragments/shell :: topbar('flights')}"></div>
 
-      <main class="frame-main">
-        <form action="/flights" method="GET" class="glass-tile search-panel">
-          <div class="search-grid">
-            <label class="glass-tile field-tile">
-              <span class="field-label">From</span>
-              <select id="fOrigin" name="origin" class="field-control" required>
-                <option value="Johannesburg (JNB)" th:selected="${origin == 'Johannesburg (JNB)'}">Johannesburg (JNB)</option>
-                <option value="Cape Town (CPT)" th:selected="${origin == 'Cape Town (CPT)'}">Cape Town (CPT)</option>
-                <option value="Durban (DUR)" th:selected="${origin == 'Durban (DUR)'}">Durban (DUR)</option>
+      <main class="frame-main flights-page-main">
+        <!-- Top Search Strip -->
+        <form action="/flights" method="GET" class="glass-tile search-strip-card" aria-label="Search flights">
+          <div class="search-strip-inner">
+            <label class="strip-cell">
+              <span class="strip-label">From</span>
+              <select name="origin" id="searchOriginSelect" class="strip-select" aria-label="Origin airport"
+                      data-sync-sub="searchOriginSub">
+                <option th:each="ap : ${airports}"
+                        th:value="${ap.city + ' (' + ap.code + ')'}"
+                        th:text="${ap.city}"
+                        th:attr="data-subtitle=${ap.code + ' · ' + ap.name}"
+                        th:selected="${#strings.equalsIgnoreCase(ap.code, originCode)}">Johannesburg</option>
+                <option th:if="${#lists.isEmpty(airports)}" th:value="${origin}" th:text="${originCity}"
+                        th:attr="data-subtitle=${origin}" selected>Johannesburg</option>
               </select>
+              <span class="strip-sub" id="searchOriginSub" th:text="${origin}">JNB &middot; O. R. Tambo International</span>
             </label>
 
-            <label class="glass-tile field-tile">
-              <span class="field-label">To</span>
-              <select id="fDest" name="destination" class="field-control" required>
-                <option value="Cape Town (CPT)" th:selected="${destination == 'Cape Town (CPT)'}">Cape Town (CPT)</option>
-                <option value="Johannesburg (JNB)" th:selected="${destination == 'Johannesburg (JNB)'}">Johannesburg (JNB)</option>
-                <option value="Durban (DUR)" th:selected="${destination == 'Durban (DUR)'}">Durban (DUR)</option>
+            <label class="strip-cell">
+              <span class="strip-label">To</span>
+              <select name="destination" id="searchDestSelect" class="strip-select" aria-label="Destination airport"
+                      data-sync-sub="searchDestSub">
+                <option th:each="ap : ${airports}"
+                        th:value="${ap.city + ' (' + ap.code + ')'}"
+                        th:text="${ap.city}"
+                        th:attr="data-subtitle=${ap.code + ' · ' + ap.name}"
+                        th:selected="${#strings.equalsIgnoreCase(ap.code, destCode)}">Cape Town</option>
+                <option th:if="${#lists.isEmpty(airports)}" th:value="${destination}" th:text="${destCity}"
+                        th:attr="data-subtitle=${destination}" selected>Cape Town</option>
               </select>
+              <span class="strip-sub" id="searchDestSub" th:text="${destination}">CPT &middot; Cape Town International</span>
             </label>
 
-            <label class="glass-tile field-tile">
-              <span class="field-label">Departure Date</span>
-              <input type="date" id="fDate" name="date" class="field-control" th:value="${date}" required>
+            <label class="strip-cell">
+              <span class="strip-label">Departure</span>
+              <input type="date" name="date" id="searchDateInput" class="strip-date"
+                     th:value="${date}" data-sync-sub="searchDateSub" required>
+              <span class="strip-sub" id="searchDateSub" th:text="${dateWeekday}">Monday</span>
             </label>
 
-            <div class="search-submit-wrap">
-              <button type="submit" class="btn-pill btn-white">Update Search</button>
-            </div>
+            <label class="strip-cell">
+              <span class="strip-label">Travellers &amp; cabin</span>
+              <select name="cabin" id="searchCabinSelect" class="strip-select" aria-label="Cabin"
+                      data-sync-sub="searchCabinSub">
+                <option value="ECONOMY" data-subtitle="Economy" th:selected="${selectedCabin != 'FIRST'}">1 Traveller</option>
+                <option value="FIRST" data-subtitle="First Class" th:selected="${selectedCabin == 'FIRST'}">1 Traveller</option>
+              </select>
+              <span class="strip-sub" id="searchCabinSub" th:text="${selectedCabin == 'FIRST' ? 'First Class' : 'Economy'}">Economy</span>
+            </label>
+
+            <button type="submit" class="search-square-btn" aria-label="Update search">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z" fill="currentColor"/>
+              </svg>
+            </button>
           </div>
         </form>
 
+        <!-- Error State -->
         <div th:if="${searchError != null}" class="status-banner is-error" role="alert">
-          <strong>Search Note:</strong> <span th:text="${searchError}">Validation issue</span>
+          <strong>Search error:</strong> <span th:text="${searchError}">Validation issue</span>
         </div>
 
-        <section class="flights-legacy-list">
-          <div class="frame-page-head">
-            <h1 class="checkout-section-title" th:text="${'Available Flights (' + origin + ' &rarr; ' + destination + ')'}">
-              Available Flights
-            </h1>
-            <span class="search-meta-note" th:text="${'Date: ' + date}">Date</span>
-          </div>
+        <div class="search-workspace">
+          <!-- Left Sidebar: Filters -->
+          <aside class="flights-sidebar" aria-label="Flight filters">
+            <h2 class="filters-title">Filters</h2>
 
-          <div th:if="${flights.isEmpty() and searchError == null}" class="glass-tile content-glass-card">
-            <h2 class="checkout-section-title">No Direct Flights Found</h2>
-            <p class="auth-sub">We could not locate scheduled flights for this corridor on the selected date. Try searching another date or route.</p>
-            <div>
-              <a href="/flights" class="btn-pill btn-white">View Available JNB &rarr; CPT Flights</a>
-            </div>
-          </div>
+            <form id="filtersForm" action="/flights" method="GET" class="glass-tile filter-panel-card">
+              <input type="hidden" name="origin" th:value="${origin}">
+              <input type="hidden" name="destination" th:value="${destination}">
+              <input type="hidden" name="date" th:value="${date}">
+              <input type="hidden" name="cabin" th:value="${selectedCabin}">
 
-          <div th:each="f : ${flights}" class="glass-tile flights-legacy-card">
-            <div class="flight-meta">
-              <span class="bp-flight-pill" th:text="${f.flightNumber}">SR 204</span>
-              <div class="field-hint" th:text="${f.aircraftModel != null ? f.aircraftModel : 'Airbus A320'}">Airbus A320</div>
-            </div>
+              <fieldset class="filter-group">
+                <legend class="filter-group-label">Departure</legend>
+                <div class="dep-chip-grid">
+                  <label class="dep-chip-label">
+                    <input type="checkbox" name="dep" value="before6" class="dep-chip-input"
+                           th:checked="${depSlots.contains('before6')}">
+                    <span class="dep-chip-btn">Before 6 AM</span>
+                  </label>
+                  <label class="dep-chip-label">
+                    <input type="checkbox" name="dep" value="6to12" class="dep-chip-input"
+                           th:checked="${depSlots.contains('6to12')}">
+                    <span class="dep-chip-btn">6 AM – 12 PM</span>
+                  </label>
+                  <label class="dep-chip-label">
+                    <input type="checkbox" name="dep" value="12to18" class="dep-chip-input"
+                           th:checked="${depSlots.contains('12to18')}">
+                    <span class="dep-chip-btn">12 PM – 6 PM</span>
+                  </label>
+                  <label class="dep-chip-label">
+                    <input type="checkbox" name="dep" value="after18" class="dep-chip-input"
+                           th:checked="${depSlots.contains('after18')}">
+                    <span class="dep-chip-btn">After 6 PM</span>
+                  </label>
+                </div>
+              </fieldset>
 
-            <div class="flight-schedule">
-              <div>
-                <div class="checkout-section-title" th:text="${f.departureTime}">06:30</div>
-                <div class="field-hint" th:text="${origin}">JNB</div>
+              <div class="filter-group" th:if="${filterResult.totalUnfiltered > 0}">
+                <div class="filter-group-head">
+                  <label for="priceRangeSlider" class="filter-group-label">Price</label>
+                  <button type="button" id="resetPriceBtn" class="filter-reset-btn">Reset</button>
+                </div>
+                <div id="priceCurrentLabel" class="filter-price-current"
+                     th:text="${'Up to ' + filterResult.activeMaxPriceFormatted}">Up to R 4,494</div>
+                <input type="range" id="priceRangeSlider" name="maxPrice" class="price-slider"
+                       th:min="${filterResult.minPrice}"
+                       th:max="${filterResult.maxPriceBound}"
+                       th:value="${filterResult.activeMaxPrice}"
+                       step="1">
+                <div class="filter-price-bounds">
+                  <span th:text="${filterResult.minPriceFormatted}">R 950</span>
+                  <span th:text="${filterResult.maxPriceBoundFormatted}">R 4,494</span>
+                </div>
               </div>
-              <div>
-                <div class="field-hint" style="text-align: center;" th:text="${f.duration}">2h 10m</div>
-                <div class="duration-track"></div>
+
+              <fieldset class="filter-group" th:if="${filterResult.totalUnfiltered > 0}">
+                <div class="filter-group-head">
+                  <legend class="filter-group-label">Cabin</legend>
+                  <button type="button" id="resetCabinBtn" class="filter-reset-btn">Reset</button>
+                </div>
+                <label class="cabin-check-row">
+                  <span class="cabin-check-left">
+                    <input type="checkbox" name="cabinFilter" value="ECONOMY" class="filter-cabin-check"
+                           th:checked="${cabinFilter.contains('ECONOMY')}">
+                    <span>Economy</span>
+                  </span>
+                  <span class="cabin-check-price" th:text="${filterResult.minEconomyPriceFormatted}">R 1,284</span>
+                </label>
+                <label class="cabin-check-row">
+                  <span class="cabin-check-left">
+                    <input type="checkbox" name="cabinFilter" value="FIRST" class="filter-cabin-check"
+                           th:checked="${cabinFilter.contains('FIRST')}">
+                    <span>First</span>
+                  </span>
+                  <span class="cabin-check-price" th:text="${filterResult.minFirstPriceFormatted}">R 4,494</span>
+                </label>
+              </fieldset>
+
+              <div class="filter-submit-fallback">
+                <button type="submit" class="btn-pill btn-translucent btn-block">Apply filters</button>
               </div>
-              <div>
-                <div class="checkout-section-title" th:text="${f.arrivalTime}">08:40</div>
-                <div class="field-hint" th:text="${destination}">CPT</div>
+            </form>
+          </aside>
+
+          <!-- Right Results Column -->
+          <section class="flights-results-col" aria-label="Available flights">
+            <div class="results-header-row">
+              <h1 class="results-heading" th:text="${'Flights from ' + originCity + ' to ' + destCity}">
+                Flights from Johannesburg to Cape Town
+              </h1>
+              <span id="resultsCountText" class="results-count"
+                    th:text="${filterResult.paginated ? ('Showing ' + filterResult.pageStart + '–' + filterResult.pageEnd + ' of ' + filterResult.totalMatched + ' flights') : ('Showing ' + filterResult.totalMatched + (filterResult.totalMatched == 1 ? ' flight' : ' flights'))}">
+                Showing 6 flights
+              </span>
+            </div>
+
+            <!-- Empty State: 0 unfiltered results -->
+            <div th:if="${searchError == null and filterResult.totalUnfiltered == 0}" class="glass-tile content-glass-card">
+              <h2 class="checkout-section-title">No scheduled flights for this date</h2>
+              <p class="auth-sub" th:text="${'We found no open flights from ' + originCity + ' to ' + destCity + ' on ' + date + ' (sales close ' + salesCloseMinutes + ' minutes before departure).'}">
+                No flights match this date.
+              </p>
+              <div class="checkout-state-actions">
+                <a th:if="${nextAvailableDate != null}"
+                   th:href="@{/flights(origin=${origin},destination=${destination},date=${nextAvailableDate},cabin=${selectedCabin})}"
+                   class="btn-pill btn-white"
+                   th:text="${'Next available: ' + nextAvailableDate}">Next available date</a>
+                <a href="/" class="btn-pill btn-translucent">Return to Home</a>
               </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-              <div class="checkout-section-title" th:text="${f.priceFormatted}">R 1,200</div>
-              <a th:href="@{'/flights/' + ${f.flightId} + '/seats'(origin=${origin},destination=${destination},departureDate=${date})}"
-                 class="btn-pill btn-white">Select Flight &rarr;</a>
+            <!-- Filter Empty State: unfiltered > 0, filtered == 0 (server or client) -->
+            <div id="filterEmptyState"
+                 class="glass-tile content-glass-card"
+                 th:hidden="${!(filterResult.totalUnfiltered > 0 and filterResult.totalMatched == 0)}">
+              <h2 class="checkout-section-title">No flights match your active filters</h2>
+              <p class="auth-sub">Try clearing the departure window, price ceiling, or cabin filter.</p>
+              <div>
+                <button type="button" id="filterEmptyResetBtn" class="btn-pill btn-white"
+                        th:if="${!filterResult.paginated and filterResult.totalMatched > 0}">Reset all filters</button>
+                <a th:href="@{/flights(origin=${origin},destination=${destination},date=${date},cabin=${selectedCabin})}"
+                   class="btn-pill btn-white"
+                   th:if="${filterResult.totalMatched == 0 or filterResult.paginated}">Reset all filters</a>
+              </div>
             </div>
-          </div>
-        </section>
+
+            <!-- Cards List -->
+            <div id="flightResultsGrid"
+                 class="flight-results-stack"
+                 th:attr="data-paginated=${filterResult.paginated ? 'true' : 'false'},data-server-filtered=${hasServerFilters ? 'true' : 'false'}">
+
+              <article th:each="card : ${cards}"
+                       class="glass-tile flight-result-card"
+                       th:attr="data-slot=${card.depSlot},data-price=${card.displayPrice},data-econ-avail=${card.flight.availableEconomy},data-first-avail=${card.flight.availableFirst}">
+
+                <div class="flight-card-top">
+                  <div class="flight-airline-id">
+                    <span class="nav-brand-badge is-mini" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+                    </span>
+                    <strong th:text="${appName + ' · ' + card.flight.flightNumber}">Sky Royal &middot; SR 305</strong>
+                  </div>
+
+                  <span th:class="${'seats-left-pill ' + card.seatBadgeClass}">
+                    <span class="seats-left-dot" aria-hidden="true"></span>
+                    <span th:text="${card.seatBadgeText}">34 seats left</span>
+                  </span>
+                </div>
+
+                <div class="flight-card-mid">
+                  <div class="flight-endpoint">
+                    <div class="flight-time-big" th:text="${card.flight.departureTime}">06:30</div>
+                    <div class="flight-airport-sub"
+                         th:text="${card.flight.originCode + ' · ' + card.flight.originAirportName}">
+                      JNB &middot; O. R. Tambo International
+                    </div>
+                  </div>
+
+                  <div class="flight-track-col">
+                    <div class="flight-track-line"></div>
+                    <span class="flight-duration-pill" th:text="${card.flight.duration}">2h 10m</span>
+                    <span class="flight-track-plane" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="16" height="16">
+                        <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor" transform="rotate(90 12 12)"/>
+                      </svg>
+                    </span>
+                  </div>
+
+                  <div class="flight-endpoint">
+                    <div class="flight-time-big" th:text="${card.flight.arrivalTime}">08:40</div>
+                    <div class="flight-airport-sub"
+                         th:text="${card.flight.destCode + ' · ' + card.flight.destAirportName}">
+                      CPT &middot; Cape Town International
+                    </div>
+                  </div>
+
+                  <div class="flight-fare-col">
+                    <span class="flight-fare-kicker" th:text="${card.displayCabinLabel}">Economy from</span>
+                    <span class="flight-fare-big" th:text="${card.displayPriceFormatted}">R 1,284</span>
+                  </div>
+                </div>
+
+                <div class="flight-card-foot">
+                  <span class="flight-aircraft-note"
+                        th:text="${'Direct · ' + (card.flight.aircraftModel != null ? card.flight.aircraftModel : 'Airbus A320') + ' · ' + card.aircraftLayout}">
+                    Direct &middot; Airbus A320 &middot; 3-3 layout
+                  </span>
+
+                  <div class="flight-card-actions">
+                    <button type="button"
+                            class="flight-details-toggle"
+                            aria-expanded="false"
+                            th:attr="aria-controls=${'details-' + card.flight.flightId}">
+                      <span>Flight details</span>
+                      <span class="details-chevron" aria-hidden="true">&#x2304;</span>
+                    </button>
+
+                    <a th:if="${!card.soldOut}"
+                       th:href="@{'/flights/' + ${card.flight.flightId} + '/seats'(origin=${origin},destination=${destination},departureDate=${date})}"
+                       class="btn-pill btn-white">Select flight</a>
+                    <span th:if="${card.soldOut}"
+                          class="btn-pill btn-translucent is-disabled"
+                          aria-disabled="true">Sold out</span>
+                  </div>
+                </div>
+
+                <!-- Expandable Flight Details Panel with 4 policy tabs -->
+                <div th:id="${'details-' + card.flight.flightId}" class="flight-details-panel" hidden>
+                  <div class="details-tablist" role="tablist" aria-label="Flight details tabs">
+                    <button type="button" role="tab" aria-selected="true"
+                            th:id="${'tab-info-' + card.flight.flightId}"
+                            th:attr="aria-controls=${'pane-info-' + card.flight.flightId}"
+                            class="details-tab-btn is-active">Flight information</button>
+                    <button type="button" role="tab" aria-selected="false"
+                            th:id="${'tab-dates-' + card.flight.flightId}"
+                            th:attr="aria-controls=${'pane-dates-' + card.flight.flightId}"
+                            class="details-tab-btn">Date details</button>
+                    <button type="button" role="tab" aria-selected="false"
+                            th:id="${'tab-bag-' + card.flight.flightId}"
+                            th:attr="aria-controls=${'pane-bag-' + card.flight.flightId}"
+                            class="details-tab-btn">Baggage rules</button>
+                    <button type="button" role="tab" aria-selected="false"
+                            th:id="${'tab-cancel-' + card.flight.flightId}"
+                            th:attr="aria-controls=${'pane-cancel-' + card.flight.flightId}"
+                            class="details-tab-btn">Cancellation rules</button>
+                  </div>
+
+                  <div role="tabpanel" class="details-tabpanel"
+                       th:id="${'pane-info-' + card.flight.flightId}"
+                       th:attr="aria-labelledby=${'tab-info-' + card.flight.flightId}">
+                    <div class="details-kv-grid">
+                      <div>
+                        <span class="details-k">Baggage</span>
+                        <strong class="details-v" th:text="${card.checkedBagKg + ' kg checked'}">23 kg checked</strong>
+                      </div>
+                      <div>
+                        <span class="details-k">Boarding</span>
+                        <strong class="details-v" th:text="${'Closes ' + card.boardingCloseMins + ' min before'}">Closes 30 min before</strong>
+                      </div>
+                      <div>
+                        <span class="details-k">Sales close</span>
+                        <strong class="details-v" th:text="${card.salesCloseMins + ' min before'}">60 min before</strong>
+                      </div>
+                      <div>
+                        <span class="details-k">Cabin availability</span>
+                        <strong class="details-v" th:text="${card.flight.availableEconomy + ' Economy · ' + card.flight.availableFirst + ' First'}">140 Economy &middot; 12 First</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div role="tabpanel" class="details-tabpanel" hidden
+                       th:id="${'pane-dates-' + card.flight.flightId}"
+                       th:attr="aria-labelledby=${'tab-dates-' + card.flight.flightId}">
+                    <div class="details-kv-grid">
+                      <div>
+                        <span class="details-k">Local departure</span>
+                        <strong class="details-v" th:text="${card.departureDateFull}">2026-11-23 &middot; 06:30 SAST</strong>
+                      </div>
+                      <div>
+                        <span class="details-k">Local arrival</span>
+                        <strong class="details-v" th:text="${card.arrivalDateFull}">2026-11-23 &middot; 08:40 SAST</strong>
+                      </div>
+                      <div>
+                        <span class="details-k">Online check-in</span>
+                        <strong class="details-v" th:text="${card.checkinOpensText}">Opens Sun, 22 Nov at 06:30</strong>
+                      </div>
+                      <div>
+                        <span class="details-k">Bag drop closes</span>
+                        <strong class="details-v" th:text="${card.bagDropCloseText}">05:30 at JNB</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div role="tabpanel" class="details-tabpanel" hidden
+                       th:id="${'pane-bag-' + card.flight.flightId}"
+                       th:attr="aria-labelledby=${'tab-bag-' + card.flight.flightId}">
+                    <div class="details-kv-grid">
+                      <div>
+                        <span class="details-k">Checked allowance</span>
+                        <strong class="details-v" th:text="${card.checkedBagKg + ' kg per passenger'}">23 kg per passenger</strong>
+                      </div>
+                      <div>
+                        <span class="details-k">Gate info</span>
+                        <strong class="details-v" th:text="${card.gateNote}">Gate shown 60 min before departure</strong>
+                      </div>
+                      <div>
+                        <span class="details-k">Bag drop closes</span>
+                        <strong class="details-v" th:text="${card.bagDropCloseText}">05:30 at JNB</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div role="tabpanel" class="details-tabpanel" hidden
+                       th:id="${'pane-cancel-' + card.flight.flightId}"
+                       th:attr="aria-labelledby=${'tab-cancel-' + card.flight.flightId}">
+                    <div class="details-kv-grid">
+                      <div>
+                        <span class="details-k">Free cancellation</span>
+                        <strong class="details-v" th:text="${'Until ' + card.freeCancelHours + ' hours before departure'}">Until 24 hours before departure</strong>
+                      </div>
+                      <div>
+                        <span class="details-k">Policy detail</span>
+                        <strong class="details-v" th:text="${card.cancellationSummary}">Eligible for a 100% full refund.</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <!-- Pagination Bar (for 100+ results) -->
+            <nav th:if="${filterResult.totalPages > 1}" class="pagination-bar" aria-label="Search result pages">
+              <a th:if="${filterResult.page > 1}"
+                 th:href="@{/flights(origin=${origin},destination=${destination},date=${date},cabin=${selectedCabin},dep=${depSlots},maxPrice=${filterResult.activeMaxPrice},cabinFilter=${cabinFilter},page=${filterResult.page - 1})}"
+                 class="btn-pill btn-translucent">&larr; Previous</a>
+              <span class="results-count"
+                    th:text="${'Page ' + filterResult.page + ' of ' + filterResult.totalPages}">Page 1 of 6</span>
+              <a th:if="${filterResult.page < filterResult.totalPages}"
+                 th:href="@{/flights(origin=${origin},destination=${destination},date=${date},cabin=${selectedCabin},dep=${depSlots},maxPrice=${filterResult.activeMaxPrice},cabinFilter=${cabinFilter},page=${filterResult.page + 1})}"
+                 class="btn-pill btn-white">Next &rarr;</a>
+            </nav>
+          </section>
+        </div>
       </main>
 
       <div th:replace="~{fragments/shell :: footer()}"></div>

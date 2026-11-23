@@ -169,4 +169,18 @@ public class FlightService {
         Instant minDeparture = clock.instant().plus(FlightSalesPolicy.SALES_CLOSE_BEFORE_DEPARTURE);
         return flightDao.findRouteSummaries(minDeparture);
     }
+
+    /**
+     * Quotes all given flights for the specified cabin class in a single batch query.
+     */
+    public Map<Long, PriceQuote> quoteCabinBatch(List<Long> flightIds, SeatClass seatClass) {
+        if (flightIds == null || flightIds.isEmpty()) {
+            return Map.of();
+        }
+        return pricingService.quoteBatch(flightIds, seatClass, clock);
+    }
+
+    public Clock getClock() {
+        return clock;
+    }
 }

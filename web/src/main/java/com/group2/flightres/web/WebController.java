@@ -322,6 +322,8 @@ public class WebController {
         String origin = ctx.queryParam("origin");
         String destination = ctx.queryParam("destination");
         String dateStr = ctx.queryParam("date");
+        String selectedCabin = SeatClass.FIRST.name().equalsIgnoreCase(ctx.queryParam("cabin"))
+                ? SeatClass.FIRST.name() : SeatClass.ECONOMY.name();
 
         if (origin == null || origin.isBlank()) origin = "Johannesburg (JNB)";
         if (destination == null || destination.isBlank()) destination = "Cape Town (CPT)";
@@ -330,31 +332,160 @@ public class WebController {
             dateStr = flightService.nextAvailableDate(origin, destination, today).orElse(today).toString();
         }
 
-        model.put("origin", origin);
-        model.put("destination", destination);
-        model.put("date", dateStr);
-
         LocalDate date;
         try {
-            date = LocalDate.parse(dateStr);
+            date = LocalDate.parse(dateStr.trim());
         } catch (Exception e) {
-            date = flightService.nextAvailableDate(origin, destination, LocalDate.now()).orElse(LocalDate.now());
-            model.put("date", date.toString());
+            date = flightService.nextAvailableDate(origin, destination, LocalDate.now(bookingService.getClock()))
+                    .orElse(LocalDate.now(bookingService.getClock()));
         }
 
-        List<FlightSearchResult> flights = Collections.emptyList();
-        String searchError = null;
-
+        List<Airport> airports = Collections.emptyList();
         try {
-            flights = flightService.searchFlights(origin, destination, date);
+            airports = flightService.listAirports();
+        } catch (Exception e) {
+            logger.warn("Failed to list airports on /flights: {}", e.getMessage());
+        }
+
+        List<FlightSearchResult> rawFlights = Collections.emptyList();
+        String searchError = null;
+        try {
+            rawFlights = flightService.searchFlights(origin, destination, date);
         } catch (Exception e) {
             logger.warn("Flight search error: {}", e.getMessage());
             searchError = e.getMessage();
         }
 
-        model.put("flights", flights);
+        Map<Long, PriceQuote> econQuotes = Map.of();
+        Map<Long, PriceQuote> firstQuotes = Map.of();
+        if (!rawFlights.isEmpty()) {
+            List<Long> fids = rawFlights.stream().map(FlightSearchResult::getFlightId).filter(Objects::nonNull).toList();
+            try {
+                econQuotes = flightService.quoteCabinBatch(fids, SeatClass.ECONOMY);
+                firstQuotes = flightService.quoteCabinBatch(fids, SeatClass.FIRST);
+            } catch (Exception e) {
+                logger.debug("Fallback to flight search base quotes: {}", e.getMessage());
+            }
+        }
+
+        List<FlightSearchFilter.FlightCardView> allCards = FlightSearchFilter.buildCardViews(
+                rawFlights, econQuotes, firstQuotes, selectedCabin, bookingService.getCancellationPolicy());
+
+        Set<String> depSlots = parseMultiSet(ctx.queryParams("dep"), Set.of(
+                FlightSearchFilter.SLOT_BEFORE_6,
+                FlightSearchFilter.SLOT_6_TO_12,
+                FlightSearchFilter.SLOT_12_TO_18,
+                FlightSearchFilter.SLOT_AFTER_18
+        ));
+        Set<String> cabinFilter = parseMultiSet(ctx.queryParams("cabinFilter"), Set.of(
+                SeatClass.ECONOMY.name(), SeatClass.FIRST.name()
+        ));
+        BigDecimal reqMaxPrice = parseDecimalParam(ctx.queryParam("maxPrice"));
+        int reqPage = parseIntParam(ctx.queryParam("page"), 1);
+
+        FlightSearchFilter.FilterResult filterResult = FlightSearchFilter.filterAndPaginate(
+                allCards, depSlots, reqMaxPrice, cabinFilter, reqPage, FlightSearchFilter.DEFAULT_PAGE_SIZE);
+
+        String originCode = extractAirportCode(origin, airports);
+        String destCode = extractAirportCode(destination, airports);
+        String originCity = resolveAirportCityName(origin, originCode, airports);
+        String destCity = resolveAirportCityName(destination, destCode, airports);
+
+        String nextAvailDateStr = null;
+        if (rawFlights.isEmpty() && searchError == null) {
+            nextAvailDateStr = flightService.nextAvailableDate(origin, destination, date.plusDays(1))
+                    .map(LocalDate::toString).orElse(null);
+        }
+
+        model.put("airports", airports);
+        model.put("origin", origin);
+        model.put("destination", destination);
+        model.put("originCode", originCode);
+        model.put("destCode", destCode);
+        model.put("originCity", originCity);
+        model.put("destCity", destCity);
+        model.put("date", date.toString());
+        model.put("dateWeekday", date.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH));
+        model.put("selectedCabin", selectedCabin);
+        model.put("flights", rawFlights);
+        model.put("cards", filterResult.getPageCards());
+        model.put("filterResult", filterResult);
+        boolean hasServerFilters = !depSlots.isEmpty() || !cabinFilter.isEmpty() || reqMaxPrice != null;
+        model.put("depSlots", depSlots);
+        model.put("cabinFilter", cabinFilter);
+        model.put("hasServerFilters", hasServerFilters);
+        model.put("nextAvailableDate", nextAvailDateStr);
+        model.put("tomorrowDate", LocalDate.now(bookingService.getClock()).plusDays(1).toString());
         model.put("searchError", searchError);
         ctx.render("flights.html", model);
+    }
+
+    private static Set<String> parseMultiSet(List<String> rawVals, Set<String> allowed) {
+        if (rawVals == null || rawVals.isEmpty()) {
+            return Collections.emptySet();
+        }
+        Set<String> res = new LinkedHashSet<>();
+        for (String rv : rawVals) {
+            if (rv == null || rv.isBlank()) continue;
+            for (String token : rv.split(",")) {
+                String clean = token.trim();
+                for (String a : allowed) {
+                    if (a.equalsIgnoreCase(clean)) {
+                        res.add(a);
+                        break;
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
+    private static BigDecimal parseDecimalParam(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return new BigDecimal(raw.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static int parseIntParam(String raw, int fallback) {
+        if (raw == null || raw.isBlank()) return fallback;
+        try {
+            return Integer.parseInt(raw.trim());
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private static String extractAirportCode(String param, List<Airport> airports) {
+        if (param == null) return "";
+        String t = param.trim();
+        int open = t.lastIndexOf('(');
+        int close = t.lastIndexOf(')');
+        if (open >= 0 && close > open) {
+            return t.substring(open + 1, close).trim().toUpperCase(Locale.ROOT);
+        }
+        for (Airport a : airports) {
+            if (a.code().equalsIgnoreCase(t) || a.city().equalsIgnoreCase(t)) {
+                return a.code().toUpperCase(Locale.ROOT);
+            }
+        }
+        return t.toUpperCase(Locale.ROOT);
+    }
+
+    private static String resolveAirportCityName(String rawParam, String code, List<Airport> airports) {
+        for (Airport a : airports) {
+            if (a.code().equalsIgnoreCase(code)) {
+                return a.city();
+            }
+        }
+        if (rawParam != null) {
+            int open = rawParam.indexOf('(');
+            String trimmed = (open > 0 ? rawParam.substring(0, open) : rawParam).trim();
+            if (!trimmed.isEmpty()) return trimmed;
+        }
+        return code;
     }
 
     public void handleSeats(Context ctx) {
