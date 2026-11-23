@@ -1071,8 +1071,51 @@ public class WebController {
         model.put("isBookingOwner", owner);
         model.put("isCancelled", isCancelled);
         model.put("canCancel", canCancel);
+
+        String originCity = firstNonBlank(record.getOriginCity(), firstNonBlank(extractCityName(record.getOrigin()), "Origin"));
+        String destCity = firstNonBlank(record.getDestinationCity(), firstNonBlank(extractCityName(record.getDestination()), "Your destination"));
+        String originCode = firstNonBlank(extractAirportCode(record.getOrigin()), originCity.length() >= 3 ? originCity.substring(0, 3).toUpperCase(Locale.ROOT) : "JNB");
+        String destCode = firstNonBlank(extractAirportCode(record.getDestination()), destCity.length() >= 3 ? destCity.substring(0, 3).toUpperCase(Locale.ROOT) : "CPT");
+        String durationText = (record.getDepartureInstant() != null && record.getArrivalInstant() != null)
+                ? FlightTimes.formatDuration(record.getDepartureInstant(), record.getArrivalInstant())
+                : "";
+        String cabinDisplay = record.getSeatClass() == SeatClass.FIRST ? "First Class" : "Economy";
+        String destPhotoUrl = WebBackdropResolver.destinationBackdrop(firstNonBlank(record.getDestination(), destCity));
+
+        model.put("originCode", originCode);
+        model.put("destCode", destCode);
+        model.put("originCity", originCity);
+        model.put("destCity", destCity);
+        model.put("durationText", durationText);
+        model.put("cabinDisplay", cabinDisplay);
+        model.put("destPhotoUrl", destPhotoUrl);
+
         applyDestinationBackdrop(model, record.getDestination(), true);
         ctx.render("confirmation.html", model);
+    }
+
+    private static String extractAirportCode(String label) {
+        if (label == null || label.isBlank()) {
+            return "";
+        }
+        int open = label.lastIndexOf('(');
+        int close = label.lastIndexOf(')');
+        if (open >= 0 && close > open + 1) {
+            return label.substring(open + 1, close).trim().toUpperCase(Locale.ROOT);
+        }
+        String trimmed = label.trim().toUpperCase(Locale.ROOT);
+        return trimmed.length() == 3 ? trimmed : "";
+    }
+
+    private static String extractCityName(String label) {
+        if (label == null || label.isBlank()) {
+            return "";
+        }
+        int open = label.lastIndexOf('(');
+        if (open > 0) {
+            return label.substring(0, open).trim();
+        }
+        return label.trim();
     }
 
     public void handleConfirmationLookup(Context ctx) {

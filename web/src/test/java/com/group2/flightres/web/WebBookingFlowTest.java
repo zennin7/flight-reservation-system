@@ -339,6 +339,13 @@ class WebBookingFlowTest {
         String confirmHtml = confirmResp.body();
 
         assertTrue(confirmHtml.contains("Booking Confirmed!"), "Confirmation page must show success header");
+        assertTrue(confirmHtml.contains("is waiting."), "Confirmation page must show destination waiting headline");
+        assertTrue(confirmHtml.contains("Download boarding pass"), "Confirmation page must show primary download CTA");
+        assertTrue(confirmHtml.contains("View my bookings"), "Confirmation page must show secondary My bookings CTA");
+        assertTrue(!confirmHtml.contains("inner-glass-frame"), "Confirmation page must be full-bleed with no inner glass frame");
+        String lowerConf = confirmHtml.toLowerCase(java.util.Locale.ROOT);
+        assertTrue(!lowerConf.contains("emailed") && !lowerConf.contains("sent to your") && !lowerConf.contains("inbox"),
+                "Confirmation page must not falsely claim email delivery");
         assertTrue(confirmHtml.contains("WTEST1"), "Confirmation page must display booking reference");
         assertTrue(confirmHtml.contains("David Miller"), "Confirmation page must display passenger name");
         assertTrue(confirmHtml.contains("GRP 204"), "Confirmation page must display flight number");

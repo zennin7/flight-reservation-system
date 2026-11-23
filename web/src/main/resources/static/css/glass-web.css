@@ -912,199 +912,335 @@ main, section, .glass-panel, .routes-panel, .routes-table-wrap {
 /* ===================================================================
  * Boarding Pass & Auth Glass Pages
  * =================================================================== */
-.bp-wrap {
-    max-width: 920px;
+/* Confirmation Full-Bleed Scene (P3b board-7 redesign) */
+.page-shell.conf-page-shell {
+    max-width: 1240px;
     margin: 0 auto;
+    min-height: 100vh;
+    padding: 18px 28px 36px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-}
-
-.bp-header-card {
-    padding: 24px 28px;
-    display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
+    gap: 28px;
 }
 
-.bp-status-row {
-    display: flex;
+.conf-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(320px, 430px);
+    gap: 36px;
     align-items: center;
-    gap: 14px;
+    margin: auto 0;
 }
 
-.bp-check {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--glass-seat-free);
-    border: 1px solid var(--glass-seat-free-edge);
-    box-shadow: var(--glass-seat-free-glow);
+.conf-hero-copy {
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+    max-width: 560px;
+}
+
+.conf-eyebrow-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: var(--glass-panel);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-panel-edge);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--glass-white);
+}
+
+.conf-check-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--glass-white);
+    color: var(--glass-ink);
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 11px;
     font-weight: 700;
+}
+
+.conf-hero-title {
+    font-size: clamp(36px, 5vw, 58px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.06;
     color: var(--glass-white);
-    flex-shrink: 0;
+    text-shadow: 0 4px 24px var(--glass-scrim-bot);
 }
 
-.bp-actions {
+.conf-hero-sub {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--glass-text);
+    max-width: 480px;
+}
+
+.conf-actions {
     display: flex;
-    gap: 10px;
     flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 4px;
 }
 
-.bp-ticket {
-    display: grid;
-    grid-template-columns: 1fr 270px;
-    overflow: hidden;
+.conf-cta-primary {
+    min-height: 46px;
+    padding-inline: 22px;
+    font-weight: 700;
 }
 
-.bp-main {
-    padding: 28px;
+.conf-secondary-links {
     display: flex;
-    flex-direction: column;
-    gap: 22px;
-}
-
-.bp-stub {
-    padding: 28px 24px;
-    border-left: 2px dashed var(--glass-panel-edge);
-    background: var(--glass-field);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 16px;
 }
 
-.bp-airline-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--glass-line);
+.conf-cancel-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--glass-text-nav);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    background: none;
+    border: none;
+    padding: 4px 0;
+    cursor: pointer;
+    font-family: inherit;
 }
 
-.bp-flight-pill {
-    padding: 6px 14px;
+.conf-cancel-link:hover {
+    color: var(--glass-white);
+}
+
+.conf-pass-card {
+    background: var(--glass-white);
+    color: var(--glass-ink);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--glass-shadow-lg);
+    display: flex;
+    flex-direction: column;
+}
+
+.conf-pass-photo-wrap {
+    position: relative;
+    height: 148px;
+    overflow: hidden;
+    background: var(--glass-bg-base);
+}
+
+.conf-pass-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.conf-pass-photo-scrim {
+    position: absolute;
+    inset: 0;
+    background: var(--glass-card-scrim);
+}
+
+.conf-pass-photo-overlay {
+    position: absolute;
+    inset: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.conf-flight-badge {
+    padding: 5px 12px;
     border-radius: 999px;
     background: var(--glass-white);
     color: var(--glass-ink);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.04em;
 }
 
-.bp-route-row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 16px;
-    align-items: center;
-}
-
-.bp-endpoint-city {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-}
-
-.bp-endpoint-time {
-    font-size: 14px;
-    color: var(--glass-text-muted);
-    margin-top: 4px;
-}
-
-.bp-route-arrow {
-    font-size: 22px;
-    color: var(--glass-accent);
-    text-align: center;
-}
-
-.bp-meta-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--glass-line);
-}
-
-.bp-meta-label {
+.conf-status-chip {
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--glass-surface-strong);
+    color: var(--glass-white);
+    border: 1px solid var(--glass-panel-edge);
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--glass-text-muted);
-    margin-bottom: 4px;
 }
 
-.bp-meta-val {
-    font-size: 15px;
-    font-weight: 600;
-    word-break: break-word;
+.conf-status-chip.is-cancelled {
+    background: var(--glass-seat-taken);
+    border-color: var(--glass-danger);
+    color: var(--glass-danger);
 }
 
-.bp-pnr-val {
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: var(--glass-cream);
-}
-
-.bp-barcode-box {
-    background: var(--glass-white);
-    border-radius: 14px;
-    padding: 10px 12px;
+.conf-pass-body {
+    padding: 20px 22px 22px;
     display: flex;
     flex-direction: column;
+    gap: 14px;
+}
+
+.conf-route-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.conf-pass-codes {
+    display: flex;
     align-items: center;
-    gap: 6px;
-}
-
-.bp-barcode-img {
-    width: 100%;
-    height: auto;
-    max-width: 220px;
-    display: block;
-}
-
-.bp-barcode-caption {
-    font-size: 11px;
+    gap: 10px;
+    font-size: 28px;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: -0.02em;
     color: var(--glass-ink);
 }
 
-.bp-qr-box {
-    background: var(--glass-white);
-    border-radius: 14px;
-    padding: 12px;
+.conf-pass-arrow {
+    color: var(--glass-ink-muted);
+    font-weight: 500;
+}
+
+.conf-pass-cities {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--glass-ink);
+}
+
+.conf-pass-schedule {
+    font-size: 12px;
+    color: var(--glass-ink-muted);
+}
+
+.conf-pass-schedule strong {
+    color: var(--glass-ink);
+}
+
+.conf-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--glass-ink-line);
+}
+
+.conf-meta-lbl {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--glass-ink-muted);
+}
+
+.conf-meta-val {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--glass-ink);
+    margin-top: 2px;
+    word-break: break-word;
+}
+
+.conf-tear-line {
+    border-top: 2px dashed var(--glass-ink-line);
+}
+
+.conf-verify-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.conf-pnr-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 150px;
+}
+
+.conf-pnr-code {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--glass-ink);
+}
+
+.conf-barcode-img {
+    width: 100%;
+    max-width: 170px;
+    height: auto;
+    display: block;
+}
+
+.conf-qr-box {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+    flex-shrink: 0;
 }
 
-.bp-qr-img {
-    width: 164px;
-    height: 164px;
-    max-width: 100%;
-    aspect-ratio: 1 / 1;
+.conf-qr-img {
+    width: 112px;
+    height: 112px;
     display: block;
+    border-radius: 10px;
+    border: 1px solid var(--glass-ink-line);
+    padding: 4px;
+    background: var(--glass-white);
     image-rendering: pixelated;
 }
 
-.bp-qr-locked {
+.conf-qr-caption {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--glass-ink-muted);
+}
+
+.conf-qr-locked {
+    max-width: 168px;
     padding: 10px 12px;
     border-radius: 12px;
-    background: var(--glass-tile);
-    border: 1px solid var(--glass-line);
-    font-size: 12px;
-    color: var(--glass-text-muted);
+    background: var(--glass-ink-chip);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--glass-ink-muted);
     text-align: center;
+}
+
+.conf-qr-locked.is-cancelled {
+    color: var(--glass-ink);
+}
+
+@media (max-width: 900px) {
+    .conf-hero-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    .page-shell.conf-page-shell {
+        padding: 14px 16px 28px;
+    }
 }
 
 .verify-shell {
