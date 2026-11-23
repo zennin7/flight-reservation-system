@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+  <header th:fragment="topbar(activeNav)" class="sr-topbar">
+    <a href="/" class="nav-brand">
+      <span class="nav-brand-badge" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+      </span>
+      <span th:text="${appName != null ? appName : 'Sky Royal'}">Sky Royal</span>
+    </a>
+
+    <nav class="nav-pill-bar" aria-label="Primary navigation">
+      <ul class="nav-pill-list">
+        <li>
+          <a href="/" th:class="${activeNav == 'home' ? 'nav-pill-link is-active' : 'nav-pill-link'}">Home</a>
+        </li>
+        <li>
+          <a href="/flights" th:class="${activeNav == 'flights' ? 'nav-pill-link is-active' : 'nav-pill-link'}">Flights</a>
+        </li>
+        <li>
+          <a href="/my-bookings" th:class="${activeNav == 'my-bookings' ? 'nav-pill-link is-active' : 'nav-pill-link'}">My bookings</a>
+        </li>
+        <li th:if="${isAdmin == true}">
+          <a href="/admin" th:class="${activeNav == 'admin' ? 'nav-pill-link is-active' : 'nav-pill-link'}">Admin</a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="nav-right-slot">
+      <div th:if="${user != null}" class="avatar-menu-wrap">
+        <button type="button"
+                class="avatar-pill-btn"
+                id="avatarMenuBtn"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                aria-controls="avatarMenu">
+          <span class="avatar-initials" th:text="${userInitials}">DZ</span>
+          <span class="avatar-name" th:text="${userDisplayName}">David Zenn</span>
+        </button>
+        <div id="avatarMenu" class="avatar-menu" role="menu" aria-labelledby="avatarMenuBtn" hidden>
+          <div class="avatar-menu-header">
+            <strong th:text="${userDisplayName}">David Zenn</strong>
+            <span class="avatar-menu-handle" th:text="${user.username}">username</span>
+          </div>
+          <a href="/my-bookings" class="avatar-menu-item" role="menuitem">My bookings</a>
+          <a th:if="${isAdmin == true}" href="/admin" class="avatar-menu-item" role="menuitem">Admin</a>
+          <a href="/logout" class="avatar-menu-item is-logout" role="menuitem">Log out</a>
+        </div>
+      </div>
+
+      <div th:if="${user == null}" class="nav-auth-btns">
+        <a href="/login" class="btn-pill btn-translucent">Log in</a>
+        <a href="/register" class="btn-pill btn-white">Register</a>
+      </div>
+
+      <button type="button"
+              class="mobile-menu-btn"
+              id="mobileMenuBtn"
+              aria-label="Open navigation menu"
+              aria-expanded="false"
+              aria-controls="mobileNavSheet">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M4 7h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" fill="currentColor"/>
+        </svg>
+        <span>Menu</span>
+      </button>
+    </div>
+  </header>
+
+  <div th:fragment="mobileSheet(activeNav)" id="mobileNavSheet" class="mobile-sheet-backdrop" hidden>
+    <div class="mobile-sheet-panel" role="dialog" aria-modal="true" aria-label="Navigation menu">
+      <div class="mobile-sheet-head">
+        <a href="/" class="nav-brand">
+          <span class="nav-brand-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+          </span>
+          <span th:text="${appName != null ? appName : 'Sky Royal'}">Sky Royal</span>
+        </a>
+        <button type="button" class="mobile-sheet-close" id="mobileSheetClose" aria-label="Close navigation menu">&times;</button>
+      </div>
+
+      <nav class="mobile-sheet-nav" aria-label="Mobile primary navigation">
+        <a href="/" th:class="${activeNav == 'home' ? 'mobile-sheet-link is-active' : 'mobile-sheet-link'}">Home</a>
+        <a href="/flights" th:class="${activeNav == 'flights' ? 'mobile-sheet-link is-active' : 'mobile-sheet-link'}">Flights</a>
+        <a href="/my-bookings" th:class="${activeNav == 'my-bookings' ? 'mobile-sheet-link is-active' : 'mobile-sheet-link'}">My bookings</a>
+        <a th:if="${isAdmin == true}" href="/admin" th:class="${activeNav == 'admin' ? 'mobile-sheet-link is-active' : 'mobile-sheet-link'}">Admin</a>
+      </nav>
+
+      <div class="mobile-sheet-divider"></div>
+
+      <div th:if="${user != null}" class="mobile-sheet-auth">
+        <div class="mobile-sheet-user">
+          <span class="avatar-initials" th:text="${userInitials}">DZ</span>
+          <div>
+            <div class="avatar-name" th:text="${userDisplayName}">David Zenn</div>
+            <div class="avatar-menu-handle" th:text="${user.username}">username</div>
+          </div>
+        </div>
+        <a href="/logout" class="btn-pill btn-translucent mobile-sheet-cta">Log out</a>
+      </div>
+
+      <div th:if="${user == null}" class="mobile-sheet-auth">
+        <a href="/login" class="btn-pill btn-translucent mobile-sheet-cta">Log in</a>
+        <a href="/register" class="btn-pill btn-white mobile-sheet-cta">Register</a>
+      </div>
+
+      <div class="mobile-sheet-divider"></div>
+
+      <div class="mobile-sheet-secondary">
+        <a href="/about" class="mobile-sheet-sec-link">About</a>
+        <a href="/contact" class="mobile-sheet-sec-link">Contact</a>
+        <a href="/confirmation" class="mobile-sheet-sec-link">Manage booking</a>
+      </div>
+    </div>
+  </div>
+
+  <footer th:fragment="footer()" class="site-footer glass-panel">
+    <div class="footer-top">
+      <div class="footer-brand-note">
+        <strong th:text="${appName != null ? appName : 'Sky Royal'}">Sky Royal</strong>
+        <span>Sky Royal is a university project. No real bookings are made.</span>
+      </div>
+      <nav class="footer-util-links" aria-label="Footer navigation">
+        <a href="/about" class="footer-util-link">About</a>
+        <a href="/contact" class="footer-util-link">Contact</a>
+        <a href="/confirmation" class="footer-util-link">Manage booking</a>
+      </nav>
+    </div>
+    <div class="footer-credit">
+      <span>Original website: Nikki and Thaledi. Integrated by David.</span>
+    </div>
+  </footer>
+
+</body>
+</html>

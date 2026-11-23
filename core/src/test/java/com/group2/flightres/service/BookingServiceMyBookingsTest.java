@@ -55,7 +55,7 @@ class BookingServiceMyBookingsTest {
                 // Item 1: 2 hours in future
                 Instant tFuture1 = now.plusSeconds(7200);
                 list.add(new BookingSummary(
-                        1L, "UPC001", userId, "ALT 101",
+                        1L, "UPC001", userId, "SR 101",
                         "JNB", "Johannesburg", tFuture1, ZoneId.of("Africa/Johannesburg"),
                         "CPT", "Cape Town", tFuture1.plusSeconds(7200), ZoneId.of("Africa/Johannesburg"),
                         "UPCOMING", "CONFIRMED", List.of("1A"), new BigDecimal("1200.00"),
@@ -65,7 +65,7 @@ class BookingServiceMyBookingsTest {
                 // Item 2: 24 hours in future
                 Instant tFuture2 = now.plusSeconds(86400);
                 list.add(new BookingSummary(
-                        2L, "UPC002", userId, "ALT 102",
+                        2L, "UPC002", userId, "SR 102",
                         "CPT", "Cape Town", tFuture2, ZoneId.of("Africa/Johannesburg"),
                         "DUR", "Durban", tFuture2.plusSeconds(7200), ZoneId.of("Africa/Johannesburg"),
                         "UPCOMING", "CONFIRMED", List.of("2B"), new BigDecimal("1500.00"),
@@ -75,7 +75,7 @@ class BookingServiceMyBookingsTest {
                 // Item 3: 2 days in past
                 Instant tPast1 = now.minusSeconds(172800);
                 list.add(new BookingSummary(
-                        3L, "PST001", userId, "ALT 201",
+                        3L, "PST001", userId, "SR 201",
                         "DUR", "Durban", tPast1, ZoneId.of("Africa/Johannesburg"),
                         "JNB", "Johannesburg", tPast1.plusSeconds(7200), ZoneId.of("Africa/Johannesburg"),
                         "COMPLETED", "CONFIRMED", List.of("3C"), new BigDecimal("900.00"),
@@ -85,7 +85,7 @@ class BookingServiceMyBookingsTest {
                 // Item 4: 10 days in past
                 Instant tPast2 = now.minusSeconds(864000);
                 list.add(new BookingSummary(
-                        4L, "PST002", userId, "ALT 202",
+                        4L, "PST002", userId, "SR 202",
                         "JNB", "Johannesburg", tPast2, ZoneId.of("Africa/Johannesburg"),
                         "CPT", "Cape Town", tPast2.plusSeconds(7200), ZoneId.of("Africa/Johannesburg"),
                         "COMPLETED", "CONFIRMED", List.of("4D"), new BigDecimal("1100.00"),
@@ -95,7 +95,7 @@ class BookingServiceMyBookingsTest {
                 // Item 5: Cancelled in future
                 Instant tCancelled = now.plusSeconds(3600);
                 list.add(new BookingSummary(
-                        5L, "CAN001", userId, "ALT 301",
+                        5L, "CAN001", userId, "SR 301",
                         "CPT", "Cape Town", tCancelled, ZoneId.of("Africa/Johannesburg"),
                         "JNB", "Johannesburg", tCancelled.plusSeconds(7200), ZoneId.of("Africa/Johannesburg"),
                         "CANCELLED", "CANCELLED", List.of("5E"), new BigDecimal("1300.00"),

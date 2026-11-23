@@ -4,175 +4,97 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title th:text="${appName + ' – About Us &amp; Our Fleet'}">Sky Royal – About Us &amp; Our Fleet</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/glass-web.css">
+  <script defer src="/js/shell.js"></script>
 </head>
 <body>
+  <div class="backdrop-aerial" aria-hidden="true"></div>
+  <div class="glass-backdrop-scrim" aria-hidden="true"></div>
 
-  <!-- ================================================================= -->
-  <!-- Navigation Bar (Shared Component)                                 -->
-  <!-- ================================================================= -->
-  <header class="site-header">
-    <div class="header-container">
-      <a href="/" class="brand-logo">
-        <svg class="brand-icon" viewBox="0 0 40 32">
-          <path d="M3 21 L35 4 L38 7 L26 16 L28 28 L24 29 L18 19 L9 24 L6 22 Z"/>
-        </svg>
-        <div>
-          <div class="brand-name">
-            <span class="logo-sky" th:text="${logoPrefix}">Sky</span><span class="logo-voyage" th:text="${logoSuffix}">Voyage</span>
+  <div class="page-shell is-framed-shell">
+    <div class="inner-glass-frame">
+      <div th:replace="~{fragments/shell :: topbar('')}"></div>
+
+      <main class="frame-main">
+        <section class="frame-page-head">
+          <div>
+            <span class="eyebrow">Our Heritage &amp; Vision</span>
+            <h1 class="checkout-title" th:text="${'About ' + appName}">About Sky Royal</h1>
+            <p class="auth-sub">Redefining air travel in Southern Africa through refined hospitality, punctuality, and transparent fares.</p>
           </div>
-          <div class="brand-tagline">Flight Reservations</div>
-        </div>
-      </a>
+          <a href="/flights" class="btn-pill btn-white">Search flights</a>
+        </section>
 
-      <ul class="nav-links">
-        <li><a href="/" class="nav-link">Home</a></li>
-        <li><a href="/flights" class="nav-link">Flights</a></li>
-        <li><a href="/about" class="nav-link active">About</a></li>
-        <li><a href="/contact" class="nav-link">Contact</a></li>
-      </ul>
+        <section class="glass-tile content-glass-card">
+          <h2 class="checkout-section-title">Premium Travel, Made Simple</h2>
+          <div class="content-prose">
+            <p>
+              Founded to bring clarity back to air travel, <strong th:text="${appName}">Sky Royal</strong> connects South Africa's economic and leisure gateways as well as key international destinations.
+            </p>
+            <p>
+              Our fare structure shows base fare, demand, timing adjustments, and VAT breakdown before you pay, with a 5-minute seat hold while you complete checkout.
+            </p>
+          </div>
+        </section>
 
-      <div class="nav-actions">
-        <!-- TEMPLATE PLACEHOLDER: User Auth Status -->
-        <span th:if="${user != null}" class="user-badge" th:text="${user.username}">Traveller</span>
-        <a th:if="${user != null}" href="/logout" class="btn btn-secondary btn-sm">Log Out</a>
-        <a th:if="${user == null}" href="/login" class="btn btn-primary btn-sm">Log In</a>
-      </div>
+        <section id="fleet" aria-labelledby="fleet-heading">
+          <div class="section-head" style="margin-bottom: 14px;">
+            <div>
+              <div class="section-kicker">Fleet &amp; Comfort</div>
+              <h2 class="checkout-section-title" id="fleet-heading">Our Modern Fleet</h2>
+            </div>
+          </div>
+
+          <div class="about-card-grid">
+            <article class="glass-tile content-glass-card">
+              <span class="eyebrow">Mainline Cabin &middot; 162 Seats</span>
+              <h3 class="checkout-section-title">Airbus A320</h3>
+              <p class="auth-sub">
+                Dual-cabin interior with 2-2 First Class rows (rows 1–3) and 3-3 Economy seating (rows 4–28), 23 kg checked baggage included, and real-time seat selection.
+              </p>
+            </article>
+
+            <article class="glass-tile content-glass-card">
+              <span class="eyebrow">Regional Trunk Flagship</span>
+              <h3 class="checkout-section-title">Boeing 737-800</h3>
+              <p class="auth-sub">
+                Spacious narrowbody configuration engineered for domestic trunk corridors between Johannesburg, Cape Town, Durban, Gqeberha, and George.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="features-grid-4" aria-label="Core commitments">
+          <div class="glass-tile content-glass-card">
+            <span class="eyebrow">Safety</span>
+            <h3 class="checkout-section-title">Uncompromising Standards</h3>
+            <p class="auth-sub">Continuous crew recurrence training and strict airframe maintenance inspections.</p>
+          </div>
+          <div class="glass-tile content-glass-card">
+            <span class="eyebrow">Clarity</span>
+            <h3 class="checkout-section-title">Transparent Fares</h3>
+            <p class="auth-sub">Every fare includes 15% VAT and displays clear seat, timing, and demand adjustments.</p>
+          </div>
+          <div class="glass-tile content-glass-card">
+            <span class="eyebrow">Control</span>
+            <h3 class="checkout-section-title">Live Seat Map</h3>
+            <p class="auth-sub">Choose your exact window, middle, or aisle seat with an instant 5-minute hold.</p>
+          </div>
+          <div class="glass-tile content-glass-card">
+            <span class="eyebrow">Verification</span>
+            <h3 class="checkout-section-title">QR Boarding Pass</h3>
+            <p class="auth-sub">Download PDF passes and verify authentic reservations via signed QR codes.</p>
+          </div>
+        </section>
+      </main>
+
+      <div th:replace="~{fragments/shell :: footer()}"></div>
     </div>
-  </header>
+  </div>
 
-  <!-- ================================================================= -->
-  <!-- Content Hero Banner                                               -->
-  <!-- ================================================================= -->
-  <section class="content-hero">
-    <div style="max-width: 800px; margin: 0 auto;">
-      <span class="hero-badge" style="margin-bottom: 8px;">Our Heritage &amp; Vision</span>
-      <h1 th:text="${'About ' + appName}">About Sky Royal</h1>
-      <p>Redefining domestic air travel in Southern Africa through refined hospitality, punctuality, and uncompromised safety.</p>
-    </div>
-  </section>
-
-  <main class="section">
-    <!-- Story & Mission -->
-    <div class="search-card" style="margin-bottom: 40px; padding: 36px;">
-      <h2 style="font-size: 24px; font-weight: 800; color: var(--sv-text); margin-bottom: 16px;">
-        Premium Travel, Made Simple
-      </h2>
-      <div class="prose">
-        <p>
-          Founded to bring refinement and clarity back to air travel, <strong th:text="${appName}">Sky Royal</strong> connects South Africa’s vital economic and tourism gateways. We believe flying should be an uplifting experience from the instant you choose your seat until your wheels touch down.
-        </p>
-        <p>
-          Unlike conventional low-cost carriers that layer fees on every convenience, our transparent fare architecture includes carry-on luggage, seat selection transparency, and complimentary refreshments. Whether flying between Johannesburg and Cape Town for business or heading to Durban's warm beaches, you travel with absolute peace of mind.
-        </p>
-      </div>
-    </div>
-
-    <!-- Fleet Presentation -->
-    <div id="fleet" style="margin-bottom: 40px;">
-      <div class="section-header">
-        <h2 class="section-title">Our Modern Fleet</h2>
-        <p class="section-subtitle">Operated under strict SACAA oversight with world-class maintenance standards.</p>
-      </div>
-
-      <div class="fleet-grid">
-        <div class="fleet-card">
-          <div style="font-size: 28px; margin-bottom: 8px;">✈</div>
-          <h3 style="font-size: 18px; font-weight: 800; color: var(--sv-text); margin-bottom: 6px;">
-            Boeing 737-800
-          </h3>
-          <p style="font-size: 13px; color: var(--sv-gold-primary); font-weight: 700; margin-bottom: 12px;">
-            Trunk Route Flagship &middot; 162 Seats
-          </p>
-          <p style="font-size: 14px; color: var(--sv-text-secondary); line-height: 1.6;">
-            The backbone of our Johannesburg &ndash; Cape Town shuttle service. Features hand-stitched leather seating, dedicated 2x2 First Class reclining suites, quiet Boeing Sky Interior lighting, and high-capacity overhead luggage bins.
-          </p>
-        </div>
-
-        <div class="fleet-card">
-          <div style="font-size: 28px; margin-bottom: 8px;">🛫</div>
-          <h3 style="font-size: 18px; font-weight: 800; color: var(--sv-text); margin-bottom: 6px;">
-            Airbus A320neo
-          </h3>
-          <p style="font-size: 13px; color: var(--sv-gold-primary); font-weight: 700; margin-bottom: 12px;">
-            Regional Efficiency &middot; 150 Seats
-          </p>
-          <p style="font-size: 14px; color: var(--sv-text-secondary); line-height: 1.6;">
-            Delivers up to 20% lower fuel consumption and an acoustic footprint nearly 50% quieter than previous generation aircraft. Ensuring sustainable connectivity across our regional routes with generous seat pitch.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Core Commitments -->
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon-circle">🛡</div>
-        <h3 class="feature-title">Uncompromising Safety</h3>
-        <p class="feature-desc">Continuous pilot recurrence training and multi-stage airframe inspections exceed international ICAO safety standards.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon-circle">🌱</div>
-        <h3 class="feature-title">Sustainable Skies</h3>
-        <p class="feature-desc">Optimized flight profiles and modern fuel-efficient twin-jets minimize our environmental footprint on every nautical mile.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon-circle">🤝</div>
-        <h3 class="feature-title">Human Concierge</h3>
-        <p class="feature-desc">Our travel specialists are empowered to resolve schedule adjustments, group reservations, and special requirements with direct empathy.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon-circle">⭐</div>
-        <h3 class="feature-title">Punctuality Standard</h3>
-        <p class="feature-desc">Over 98% of our departures depart within 15 minutes of scheduled pushback, respecting your valuable time.</p>
-      </div>
-    </div>
-  </main>
-
-  <!-- ================================================================= -->
-  <!-- Footer                                                            -->
-  <!-- ================================================================= -->
-  <footer class="site-footer">
-    <div class="footer-container">
-      <div class="footer-col">
-        <div class="brand-name" style="margin-bottom: 12px;">
-          <span class="logo-sky" th:text="${logoPrefix}">Sky</span><span class="logo-voyage" style="color: #ffffff;" th:text="${logoSuffix}">Voyage</span>
-        </div>
-        <p>Premium air travel designed for seamless comfort, exceptional reliability, and human-centred hospitality across Southern Africa.</p>
-      </div>
-
-      <div class="footer-col">
-        <h5>Direct Routes</h5>
-        <ul class="footer-links">
-          <li><a href="/flights?origin=Johannesburg+(JNB)&destination=Cape+Town+(CPT)&date=2026-11-02">Johannesburg &ndash; Cape Town</a></li>
-          <li><a href="/flights?origin=Cape+Town+(CPT)&destination=Johannesburg+(JNB)&date=2026-11-02">Cape Town &ndash; Johannesburg</a></li>
-          <li><a href="/flights?origin=Johannesburg+(JNB)&destination=Durban+(DUR)&date=2026-11-02">Johannesburg &ndash; Durban</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h5>Company</h5>
-        <ul class="footer-links">
-          <li><a href="/about">About Us</a></li>
-          <li><a href="/about#fleet">Our Fleet</a></li>
-          <li><a href="/contact">Support</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h5>Project Notice</h5>
-        <p>Sky Royal is a university project. No real bookings are made.</p>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <div>&copy; 2026 <span th:text="${appName}">Sky Royal</span> Ltd. All rights reserved.</div>
-      <div>Privacy Policy &middot; Terms &amp; Conditions</div>
-    </div>
-  </footer>
-
+  <div th:replace="~{fragments/shell :: mobileSheet('')}"></div>
 </body>
 </html>

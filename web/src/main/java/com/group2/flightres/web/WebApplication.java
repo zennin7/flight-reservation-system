@@ -1,6 +1,7 @@
 package com.group2.flightres.web;
 
 import com.group2.flightres.dao.impl.UserDaoImpl;
+import com.group2.flightres.service.AdminDashboardService;
 import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BoardingPassVerificationService;
 import com.group2.flightres.service.BookingService;
@@ -80,10 +81,23 @@ public class WebApplication {
                           RegistrationThrottle registrationThrottle,
                           PaymentService paymentService, PaymentThrottle paymentThrottle,
                           BoardingPassVerificationService verificationService, VerifyThrottle verifyThrottle) {
+        this(flightService, seatMapService, bookingService, authService, loginThrottle,
+                registrationService, registrationThrottle, paymentService, paymentThrottle,
+                verificationService, verifyThrottle, new AdminDashboardService());
+    }
+
+    public WebApplication(FlightService flightService, SeatMapService seatMapService,
+                          BookingService bookingService, AuthService authService,
+                          LoginThrottle loginThrottle, RegistrationService registrationService,
+                          RegistrationThrottle registrationThrottle,
+                          PaymentService paymentService, PaymentThrottle paymentThrottle,
+                          BoardingPassVerificationService verificationService, VerifyThrottle verifyThrottle,
+                          AdminDashboardService adminDashboardService) {
         this.authService = authService;
         this.controller = new WebController(flightService, seatMapService, bookingService, authService,
                 loginThrottle, registrationService, registrationThrottle,
-                paymentService, paymentThrottle, verificationService, verifyThrottle);
+                paymentService, paymentThrottle, verificationService, verifyThrottle,
+                adminDashboardService);
 
         // Configure Thymeleaf
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
@@ -205,10 +219,11 @@ public class WebApplication {
         app.post("/register", controller::handleRegisterPost);
         app.get("/logout", controller::handleLogout);
 
-        // Informational Pages
+        // Informational Pages & Admin
         app.get("/about", controller::handleAbout);
         app.get("/contact", controller::handleContactGet);
         app.post("/contact", controller::handleContactPost);
+        app.get("/admin", controller::handleAdmin);
     }
 
     private void setupErrorHandling() {

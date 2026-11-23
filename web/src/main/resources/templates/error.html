@@ -4,64 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title th:text="${appName + ' – Notice'}">Sky Royal – Notice</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/glass-web.css">
+  <script defer src="/js/shell.js"></script>
 </head>
 <body>
+  <div class="backdrop-aerial" aria-hidden="true"></div>
+  <div class="glass-backdrop-scrim" aria-hidden="true"></div>
 
-  <!-- ================================================================= -->
-  <!-- Header / Navigation Bar                                           -->
-  <!-- ================================================================= -->
-  <header class="site-header">
-    <div class="header-container">
-      <a href="/" class="brand-logo">
-        <svg class="brand-icon" viewBox="0 0 40 32">
-          <path d="M3 21 L35 4 L38 7 L26 16 L28 28 L24 29 L18 19 L9 24 L6 22 Z"/>
-        </svg>
-        <div>
-          <div class="brand-name">
-            <span class="logo-sky" th:text="${logoPrefix}">Sky</span><span class="logo-voyage" th:text="${logoSuffix}">Voyage</span>
-          </div>
-          <div class="brand-tagline">Flight Reservations</div>
+  <div class="page-shell is-framed-shell">
+    <div class="inner-glass-frame">
+      <div th:replace="~{fragments/shell :: topbar('')}"></div>
+
+      <main class="frame-main">
+        <div class="auth-shell">
+          <section class="glass-tile content-glass-card" role="alert" aria-label="Notice">
+            <span class="checkout-state-badge">Notice</span>
+            <h1 class="checkout-title">Something went wrong</h1>
+            <p class="auth-sub" th:text="${error}">We could not locate the requested page or action.</p>
+            <div class="checkout-state-actions">
+              <a href="/" class="btn-pill btn-white">Return to Home</a>
+              <a href="/flights" class="btn-pill btn-translucent">Search Flights</a>
+            </div>
+          </section>
         </div>
-      </a>
-      <ul class="nav-links">
-        <li><a href="/" class="nav-link">Home</a></li>
-        <li><a href="/flights" class="nav-link">Flights</a></li>
-        <li><a href="/about" class="nav-link">About</a></li>
-        <li><a href="/contact" class="nav-link">Contact</a></li>
-      </ul>
-      <div class="nav-actions">
-        <!-- TEMPLATE PLACEHOLDER: Auth Status -->
-        <span th:if="${user != null}" class="user-badge" th:text="${user.username}">User</span>
-        <a th:if="${user != null}" href="/logout" class="btn btn-secondary btn-sm">Log Out</a>
-        <a th:if="${user == null}" href="/login" class="btn btn-primary btn-sm">Log In</a>
-      </div>
-    </div>
-  </header>
+      </main>
 
-  <!-- ================================================================= -->
-  <!-- Main Content Card                                                 -->
-  <!-- ================================================================= -->
-  <main class="section">
-    <div class="confirmation-card" style="max-width: 540px;">
-      <div class="confirm-check-circle" style="background: var(--sv-gold-primary); font-size: 28px;">!</div>
-      <h1 class="confirm-title" style="font-size: 24px;">Notice</h1>
-      <p class="confirm-subtitle" th:text="${error}">We could not locate the requested page or action.</p>
-      <div style="margin-top: 24px;">
-        <a href="/" class="btn btn-primary">Return to Home</a>
-      </div>
+      <div th:replace="~{fragments/shell :: footer()}"></div>
     </div>
-  </main>
+  </div>
 
-  <!-- ================================================================= -->
-  <!-- Footer                                                            -->
-  <!-- ================================================================= -->
-  <footer class="site-footer">
-    <div class="footer-bottom">
-      <div>&copy; 2026 <span th:text="${appName}">Sky Royal</span> Ltd. All rights reserved.</div>
-      <div>Privacy Policy &middot; Terms of Service &middot; Contact Support</div>
-    </div>
-  </footer>
-
+  <div th:replace="~{fragments/shell :: mobileSheet('')}"></div>
 </body>
 </html>

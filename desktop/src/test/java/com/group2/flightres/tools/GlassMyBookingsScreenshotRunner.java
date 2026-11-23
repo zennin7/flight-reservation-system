@@ -1,5 +1,6 @@
 package com.group2.flightres.tools;
 
+import com.group2.flightres.config.AppInfo;
 import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.controller.MyBookingsController;
 import com.group2.flightres.model.BookingContext;
@@ -145,7 +146,7 @@ public class GlassMyBookingsScreenshotRunner extends Application {
         int needed = Math.max(neededTotal, neededUpcoming);
 
         if (needed > 0) {
-            System.out.println("Creating " + needed + " upcoming demo booking(s) on ALT flights (3-14 days out)...");
+            System.out.println("Creating " + needed + " upcoming demo booking(s) on " + AppInfo.FLIGHT_PREFIX + " flights (3-14 days out)...");
 
             String query = """
                 SELECT f.flight_id, f.flight_number, f.departure_time, f.arrival_time, f.base_price,
@@ -154,7 +155,7 @@ public class GlassMyBookingsScreenshotRunner extends Application {
                 FROM flights f
                 JOIN airports orig ON orig.airport_id = f.origin_airport_id
                 JOIN airports dest ON dest.airport_id = f.dest_airport_id
-                WHERE f.flight_number LIKE 'ALT%'
+                WHERE f.flight_number LIKE ?
                   AND f.status = 'SCHEDULED'
                   AND f.departure_time >= NOW() + INTERVAL '3 days'
                   AND f.departure_time <= NOW() + INTERVAL '14 days'
@@ -163,86 +164,88 @@ public class GlassMyBookingsScreenshotRunner extends Application {
                 """;
 
             try (Connection conn = DatabaseConfig.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query);
-                 ResultSet rs = stmt.executeQuery()) {
+                 PreparedStatement stmt = conn.prepareStatement(query)) {
 
-                int created = 0;
-                while (rs.next() && created < needed) {
-                    long flightId = rs.getLong("flight_id");
-                    String flightNumber = rs.getString("flight_number");
-                    Timestamp depTs = rs.getTimestamp("departure_time");
-                    Timestamp arrTs = rs.getTimestamp("arrival_time");
-                    Instant depInstant = depTs != null ? depTs.toInstant() : Instant.now().plusSeconds(7200);
-                    Instant arrInstant = arrTs != null ? arrTs.toInstant() : depInstant.plusSeconds(7200);
+                stmt.setString(1, AppInfo.FLIGHT_PREFIX + " %");
+                try (ResultSet rs = stmt.executeQuery()) {
+                    int created = 0;
+                    while (rs.next() && created < needed) {
+                        long flightId = rs.getLong("flight_id");
+                        String flightNumber = rs.getString("flight_number");
+                        Timestamp depTs = rs.getTimestamp("departure_time");
+                        Timestamp arrTs = rs.getTimestamp("arrival_time");
+                        Instant depInstant = depTs != null ? depTs.toInstant() : Instant.now().plusSeconds(7200);
+                        Instant arrInstant = arrTs != null ? arrTs.toInstant() : depInstant.plusSeconds(7200);
 
-                    BigDecimal basePrice = rs.getBigDecimal("base_price");
-                    String originName = rs.getString("origin_name");
-                    String originCode = rs.getString("origin_code");
-                    String originCity = rs.getString("origin_city");
-                    String destName = rs.getString("dest_name");
-                    String destCode = rs.getString("dest_code");
-                    String destCity = rs.getString("dest_city");
+                        BigDecimal basePrice = rs.getBigDecimal("base_price");
+                        String originName = rs.getString("origin_name");
+                        String originCode = rs.getString("origin_code");
+                        String originCity = rs.getString("origin_city");
+                        String destName = rs.getString("dest_name");
+                        String destCode = rs.getString("dest_code");
+                        String destCity = rs.getString("dest_city");
 
-                    ZoneId saZone = ZoneId.of("Africa/Johannesburg");
-                    String depDate = FlightDateFormatter.format(LocalDate.ofInstant(depInstant, saZone));
-                    DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm").withZone(saZone);
-                    String depTime = timeFmt.format(depInstant);
-                    String arrTime = timeFmt.format(arrInstant);
-                    String duration = FlightTimes.formatDuration(depInstant, arrInstant);
+                        ZoneId saZone = ZoneId.of("Africa/Johannesburg");
+                        String depDate = FlightDateFormatter.format(LocalDate.ofInstant(depInstant, saZone));
+                        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm").withZone(saZone);
+                        String depTime = timeFmt.format(depInstant);
+                        String arrTime = timeFmt.format(arrInstant);
+                        String duration = FlightTimes.formatDuration(depInstant, arrInstant);
 
-                    // Find available seats for this flight
-                    List<FlightSeat> seats = loadAvailableSeatsForFlight(conn, flightId);
-                    if (seats.isEmpty()) continue;
+                        // Find available seats for this flight
+                        List<FlightSeat> seats = loadAvailableSeatsForFlight(conn, flightId);
+                        if (seats.isEmpty()) continue;
 
-                    FlightSeat seat = seats.get(0);
-                    PriceQuote quote = pricingService.quote(flightId, seat.getSeatClass(), clock);
+                        FlightSeat seat = seats.get(0);
+                        PriceQuote quote = pricingService.quote(flightId, seat.getSeatClass(), clock);
 
-                    String[] romanNumerals = {"II", "III", "IV", "V", "VI"};
-                    String roman = created < romanNumerals.length ? romanNumerals[created] : "Plus";
-                    String passName = "Demo Traveller " + roman;
+                        String[] romanNumerals = {"II", "III", "IV", "V", "VI"};
+                        String roman = created < romanNumerals.length ? romanNumerals[created] : "Plus";
+                        String passName = "Demo Traveller " + roman;
 
-                    User demoUser = new User();
-                    demoUser.setUserId(userId);
-                    demoUser.setEmail("demo.traveller@example.com");
-                    demoUser.setFullName(passName);
-                    demoUser.setRole(UserRole.CUSTOMER);
+                        User demoUser = new User();
+                        demoUser.setUserId(userId);
+                        demoUser.setEmail("demo.traveller@example.com");
+                        demoUser.setFullName(passName);
+                        demoUser.setRole(UserRole.CUSTOMER);
 
-                    BookingContext ctx = new BookingContext();
-                    ctx.setCurrentUser(demoUser);
-                    ctx.setFlightId(flightId);
-                    ctx.setFlightNumber(flightNumber);
-                    ctx.setOrigin(originCity + " (" + originCode + ")");
-                    ctx.setOriginCity(originCity);
-                    ctx.setDestination(destCity + " (" + destCode + ")");
-                    ctx.setDestinationCity(destCity);
-                    ctx.setDepartureTime(depTime);
-                    ctx.setArrivalTime(arrTime);
-                    ctx.setDepartureDate(depDate);
-                    ctx.setDepartureInstant(depInstant);
-                    ctx.setArrivalInstant(arrInstant);
-                    ctx.setAircraftModel("Airbus A320");
-                    ctx.setDuration(duration);
-                    ctx.setPassengerName(passName);
-                    ctx.setPassengerEmail("demo.traveller@example.com");
-                    ctx.setPassportNumber("DT98765" + (created + 2));
-                    ctx.setDateOfBirth(LocalDate.of(1990, 5, 20));
-                    ctx.setBaseFare(basePrice);
-                    ctx.setPriceQuotes(List.of(quote));
-                    ctx.setTotalPrice(quote.total());
-                    seat.setCalculatedPrice(quote.total());
-                    ctx.setSelectedSeats(new ArrayList<>(List.of(seat)));
+                        BookingContext ctx = new BookingContext();
+                        ctx.setCurrentUser(demoUser);
+                        ctx.setFlightId(flightId);
+                        ctx.setFlightNumber(flightNumber);
+                        ctx.setOrigin(originCity + " (" + originCode + ")");
+                        ctx.setOriginCity(originCity);
+                        ctx.setDestination(destCity + " (" + destCode + ")");
+                        ctx.setDestinationCity(destCity);
+                        ctx.setDepartureTime(depTime);
+                        ctx.setArrivalTime(arrTime);
+                        ctx.setDepartureDate(depDate);
+                        ctx.setDepartureInstant(depInstant);
+                        ctx.setArrivalInstant(arrInstant);
+                        ctx.setAircraftModel("Airbus A320");
+                        ctx.setDuration(duration);
+                        ctx.setPassengerName(passName);
+                        ctx.setPassengerEmail("demo.traveller@example.com");
+                        ctx.setPassportNumber("DT98765" + (created + 2));
+                        ctx.setDateOfBirth(LocalDate.of(1990, 5, 20));
+                        ctx.setBaseFare(basePrice);
+                        ctx.setPriceQuotes(List.of(quote));
+                        ctx.setTotalPrice(quote.total());
+                        seat.setCalculatedPrice(quote.total());
+                        ctx.setSelectedSeats(new ArrayList<>(List.of(seat)));
 
-                    // Payment via simulated gateway
-                    PaymentResult payRes = new SimulatedPaymentGateway().processPayment(
-                            "4242424242424242", "08/28", "123", quote.total()
-                    );
-                    ctx.setPaymentResult(payRes);
+                        // Payment via simulated gateway
+                        PaymentResult payRes = new SimulatedPaymentGateway().processPayment(
+                                "4242424242424242", "08/28", "123", quote.total()
+                        );
+                        ctx.setPaymentResult(payRes);
 
-                    // Create booking through service
-                    BookingRecord createdRec = bookingService.createBooking(ctx);
-                    System.out.println("Created Demo Booking: " + createdRec.getBookingReference() +
-                            " (Flight " + flightNumber + " " + originCode + "->" + destCode + ", Seat " + seat.getSeatLabel() + ", Total R " + quote.total() + ")");
-                    created++;
+                        // Create booking through service
+                        BookingRecord createdRec = bookingService.createBooking(ctx);
+                        System.out.println("Created Demo Booking: " + createdRec.getBookingReference() +
+                                " (Flight " + flightNumber + " " + originCode + "->" + destCode + ", Seat " + seat.getSeatLabel() + ", Total R " + quote.total() + ")");
+                        created++;
+                    }
                 }
             } catch (Exception e) {
                 logger.error("Error creating demo bookings", e);

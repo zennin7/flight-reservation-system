@@ -50,12 +50,12 @@ class SeatHoldExpiryTest {
                 long testFlightId = 53L;
                 try (java.sql.Connection conn = com.group2.flightres.config.DatabaseConfig.getConnection();
                      java.sql.PreparedStatement ps = conn.prepareStatement(
-                             "SELECT flight_id FROM flights WHERE departure_time > NOW() + INTERVAL '2 hours' AND flight_number = 'ALT 204' LIMIT 1")) {
+                             "SELECT flight_id FROM flights WHERE departure_time > NOW() + INTERVAL '2 hours' AND flight_number LIKE '% 204' LIMIT 1")) {
                     var rs = ps.executeQuery();
                     if (rs.next()) testFlightId = rs.getLong(1);
                 } catch (Exception ignored) {}
                 ctx.setFlightId(testFlightId);
-                ctx.setFlightNumber("ALT 204");
+                ctx.setFlightNumber("SR 204");
                 controller.init(ctx, () -> {});
 
                 // Select a seat

@@ -4,6 +4,7 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.oned.Code128Writer;
+import com.group2.flightres.config.BoardingPolicy;
 import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.config.SeatHoldPolicy;
 import com.group2.flightres.exception.AuthenticationException;
@@ -13,10 +14,12 @@ import com.group2.flightres.exception.RefundFailedException;
 import com.group2.flightres.exception.SeatUnavailableException;
 import com.group2.flightres.exception.ValidationException;
 import com.group2.flightres.model.*;
+import com.group2.flightres.service.AdminDashboardService;
 import com.group2.flightres.service.AuthService;
 import com.group2.flightres.service.BoardingPassVerificationService;
 import com.group2.flightres.service.BookingService;
 import com.group2.flightres.service.CancellationPolicy;
+import com.group2.flightres.service.FlightSalesPolicy;
 import com.group2.flightres.service.FlightService;
 import com.group2.flightres.service.LoginThrottle;
 import com.group2.flightres.service.PaymentResult;
@@ -28,6 +31,10 @@ import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.service.SimulatedPaymentGateway;
 import com.group2.flightres.service.VerifyThrottle;
 import com.group2.flightres.util.BoardingPassPdfGenerator;
+import com.group2.flightres.util.DestinationPhotoResolver;
+import com.group2.flightres.util.FlightTimes;
+import com.group2.flightres.util.MoneyFormatter;
+import com.group2.flightres.util.NameInitials;
 import com.group2.flightres.util.QrCodeGenerator;
 import com.group2.flightres.util.ValidationUtil;
 import io.javalin.http.Context;
@@ -44,6 +51,7 @@ import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -66,6 +74,7 @@ public class WebController {
     private final PaymentThrottle paymentThrottle;
     private final BoardingPassVerificationService verificationService;
     private final VerifyThrottle verifyThrottle;
+    private final AdminDashboardService adminDashboardService;
 
     public WebController(FlightService flightService, SeatMapService seatMapService,
                          BookingService bookingService, AuthService authService) {
@@ -107,6 +116,18 @@ public class WebController {
                          RegistrationThrottle registrationThrottle,
                          PaymentService paymentService, PaymentThrottle paymentThrottle,
                          BoardingPassVerificationService verificationService, VerifyThrottle verifyThrottle) {
+        this(flightService, seatMapService, bookingService, authService, loginThrottle,
+                registrationService, registrationThrottle, paymentService, paymentThrottle,
+                verificationService, verifyThrottle, new AdminDashboardService());
+    }
+
+    public WebController(FlightService flightService, SeatMapService seatMapService,
+                         BookingService bookingService, AuthService authService,
+                         LoginThrottle loginThrottle, RegistrationService registrationService,
+                         RegistrationThrottle registrationThrottle,
+                         PaymentService paymentService, PaymentThrottle paymentThrottle,
+                         BoardingPassVerificationService verificationService, VerifyThrottle verifyThrottle,
+                         AdminDashboardService adminDashboardService) {
         this.flightService = flightService;
         this.seatMapService = seatMapService;
         this.bookingService = bookingService;
@@ -120,31 +141,43 @@ public class WebController {
                 ? verificationService
                 : new BoardingPassVerificationService(bookingService);
         this.verifyThrottle = verifyThrottle != null ? verifyThrottle : new VerifyThrottle();
+        this.adminDashboardService = adminDashboardService != null ? adminDashboardService : new AdminDashboardService();
     }
 
     public Map<String, Object> baseModel(Context ctx) {
         Map<String, Object> model = new HashMap<>();
+        User user = ctx.sessionAttribute("user");
+        boolean isAdmin = user != null && user.getRole() == UserRole.ADMIN;
+        String userDisplayName = user != null ? firstNonBlank(user.getFullName(), user.getUsername()) : null;
+        String userInitials = user != null ? NameInitials.of(userDisplayName) : null;
+
         model.put("appName", BrandConfig.APP_NAME);
         model.put("logoPrefix", BrandConfig.LOGO_PREFIX);
         model.put("logoSuffix", BrandConfig.LOGO_SUFFIX);
         model.put("supportEmail", BrandConfig.SUPPORT_EMAIL);
         model.put("supportPhone", BrandConfig.SUPPORT_PHONE);
         model.put("csrf_token", ctx.sessionAttribute("csrf_token"));
-        model.put("user", ctx.sessionAttribute("user"));
+        model.put("user", user);
+        model.put("isAdmin", isAdmin);
+        model.put("userDisplayName", userDisplayName);
+        model.put("userInitials", userInitials);
+        model.put("salesCloseMinutes", BoardingPolicy.SALES_CLOSE_MINUTES_BEFORE);
+        model.put("holdDurationText", (SeatHoldPolicy.HOLD_SECONDS / 60) + " min");
+        model.put("activeNav", "");
         return model;
     }
 
     public void handleHome(Context ctx) {
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "home");
         String flashSuccess = ctx.sessionAttribute("flash_success");
         if (flashSuccess != null) {
             ctx.req().getSession().removeAttribute("flash_success");
             model.put("flashSuccess", flashSuccess);
         }
-        LocalDate tomorrow = LocalDate.now().plusDays(1);
-        LocalDate returnDate = tomorrow.plusDays(2);
+        LocalDate tomorrow = LocalDate.now(bookingService.getClock()).plusDays(1);
         model.put("tomorrowDate", tomorrow.toString());
-        model.put("returnDate", returnDate.toString());
+        model.put("tomorrowWeekday", tomorrow.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH));
         model.put("holdDurationText", (com.group2.flightres.config.SeatHoldPolicy.HOLD_SECONDS / 60) + " min");
 
         List<Airport> airports = Collections.emptyList();
@@ -156,6 +189,31 @@ public class WebController {
         } catch (Exception e) {
             logger.warn("Failed to load live home routes: {}", e.getMessage());
             homeError = "Unable to load live schedules right now. Please try searching directly.";
+        }
+
+        String heroEyebrow = buildHeroEyebrow(airports);
+
+        List<RouteSummary> popularWeekRoutes = new ArrayList<>();
+        Set<String> seenPopularRoutes = new HashSet<>();
+        List<String[]> preferredPairs = List.of(
+                new String[]{"JNB", "CPT"},
+                new String[]{"JNB", "DUR"},
+                new String[]{"CPT", "JNB"}
+        );
+        for (String[] pair : preferredPairs) {
+            for (RouteSummary r : allRoutes) {
+                if (pair[0].equals(r.getOriginCode()) && pair[1].equals(r.getDestCode())
+                        && seenPopularRoutes.add(r.getOriginCode() + "->" + r.getDestCode())) {
+                    popularWeekRoutes.add(r);
+                    break;
+                }
+            }
+        }
+        for (RouteSummary r : allRoutes) {
+            if (!r.isInternational() && popularWeekRoutes.size() < 3
+                    && seenPopularRoutes.add(r.getOriginCode() + "->" + r.getDestCode())) {
+                popularWeekRoutes.add(r);
+            }
         }
 
         List<HomeDestinationCard> popularRoutes = new ArrayList<>();
@@ -196,7 +254,9 @@ public class WebController {
             return idx >= 0 ? idx : intlOrder.size();
         }));
 
+        model.put("heroEyebrow", heroEyebrow);
         model.put("airports", airports);
+        model.put("popularWeekRoutes", popularWeekRoutes);
         model.put("popularRoutes", popularRoutes);
         model.put("moreRoutes", moreRoutes);
         model.put("internationalRoutes", internationalRoutes);
@@ -204,21 +264,37 @@ public class WebController {
         ctx.render("home.html", model);
     }
 
+    private static String buildHeroEyebrow(List<Airport> airports) {
+        if (airports == null || airports.isEmpty()) {
+            return "JOHANNESBURG \u00B7 CAPE TOWN \u00B7 DURBAN";
+        }
+        Map<String, Airport> byCode = new LinkedHashMap<>();
+        for (Airport a : airports) {
+            if (a.code() != null) {
+                byCode.putIfAbsent(a.code().toUpperCase(Locale.ROOT), a);
+            }
+        }
+        List<String> cities = new ArrayList<>();
+        for (String hub : List.of("JNB", "CPT", "DUR")) {
+            Airport a = byCode.get(hub);
+            if (a != null && a.city() != null && !a.city().isBlank()) {
+                cities.add(a.city().trim().toUpperCase(Locale.ROOT));
+            }
+        }
+        for (Airport a : airports) {
+            if (cities.size() >= 3) break;
+            if (a.city() != null && !a.city().isBlank()) {
+                String c = a.city().trim().toUpperCase(Locale.ROOT);
+                if (!cities.contains(c)) {
+                    cities.add(c);
+                }
+            }
+        }
+        return cities.isEmpty() ? "JOHANNESBURG \u00B7 CAPE TOWN \u00B7 DURBAN" : String.join(" \u00B7 ", cities);
+    }
+
     private HomeDestinationCard toDestinationCard(RouteSummary route, int gradIdx) {
-        String photo = switch (route.getDestCode()) {
-            case "CPT" -> "/photos/dest-capetown.jpg";
-            case "DUR" -> "/photos/dest-durban.jpg";
-            case "JNB" -> "/photos/dest-johannesburg.jpg";
-            case "DXB" -> "/photos/dest-dubai.jpg";
-            case "FCO" -> "/photos/dest-rome.jpg";
-            case "ZRH" -> "/photos/dest-swiss-alps.jpg";
-            case "MXP" -> "/photos/dest-lake-como.jpg";
-            case "JTR" -> "/photos/dest-santorini.jpg";
-            case "NCE" -> "/photos/dest-monaco.jpg";
-            case "PSA" -> "/photos/dest-cinque-terre.jpg";
-            case "GVA" -> "/photos/dest-valais.jpg";
-            default -> null;
-        };
+        String photo = DestinationPhotoResolver.resolveWebPath(route.getDestCode());
         String gradientClass = "dest-grad-" + (((gradIdx - 1) % 6) + 1);
         return new HomeDestinationCard(route, photo, gradientClass);
     }
@@ -241,40 +317,175 @@ public class WebController {
 
     public void handleFlights(Context ctx) {
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "flights");
 
         String origin = ctx.queryParam("origin");
         String destination = ctx.queryParam("destination");
         String dateStr = ctx.queryParam("date");
+        String selectedCabin = SeatClass.FIRST.name().equalsIgnoreCase(ctx.queryParam("cabin"))
+                ? SeatClass.FIRST.name() : SeatClass.ECONOMY.name();
 
         if (origin == null || origin.isBlank()) origin = "Johannesburg (JNB)";
         if (destination == null || destination.isBlank()) destination = "Cape Town (CPT)";
-        if (dateStr == null || dateStr.isBlank()) dateStr = "2026-11-02";
-
-        model.put("origin", origin);
-        model.put("destination", destination);
-        model.put("date", dateStr);
+        if (dateStr == null || dateStr.isBlank()) {
+            LocalDate today = LocalDate.now(bookingService.getClock());
+            dateStr = flightService.nextAvailableDate(origin, destination, today).orElse(today).toString();
+        }
 
         LocalDate date;
         try {
-            date = LocalDate.parse(dateStr);
+            date = LocalDate.parse(dateStr.trim());
         } catch (Exception e) {
-            date = flightService.nextAvailableDate(origin, destination, LocalDate.now()).orElse(LocalDate.now());
-            model.put("date", date.toString());
+            date = flightService.nextAvailableDate(origin, destination, LocalDate.now(bookingService.getClock()))
+                    .orElse(LocalDate.now(bookingService.getClock()));
         }
 
-        List<FlightSearchResult> flights = Collections.emptyList();
-        String searchError = null;
-
+        List<Airport> airports = Collections.emptyList();
         try {
-            flights = flightService.searchFlights(origin, destination, date);
+            airports = flightService.listAirports();
+        } catch (Exception e) {
+            logger.warn("Failed to list airports on /flights: {}", e.getMessage());
+        }
+
+        List<FlightSearchResult> rawFlights = Collections.emptyList();
+        String searchError = null;
+        try {
+            rawFlights = flightService.searchFlights(origin, destination, date);
         } catch (Exception e) {
             logger.warn("Flight search error: {}", e.getMessage());
             searchError = e.getMessage();
         }
 
-        model.put("flights", flights);
+        Map<Long, PriceQuote> econQuotes = Map.of();
+        Map<Long, PriceQuote> firstQuotes = Map.of();
+        if (!rawFlights.isEmpty()) {
+            List<Long> fids = rawFlights.stream().map(FlightSearchResult::getFlightId).filter(Objects::nonNull).toList();
+            try {
+                econQuotes = flightService.quoteCabinBatch(fids, SeatClass.ECONOMY);
+                firstQuotes = flightService.quoteCabinBatch(fids, SeatClass.FIRST);
+            } catch (Exception e) {
+                logger.debug("Fallback to flight search base quotes: {}", e.getMessage());
+            }
+        }
+
+        List<FlightSearchFilter.FlightCardView> allCards = FlightSearchFilter.buildCardViews(
+                rawFlights, econQuotes, firstQuotes, selectedCabin, bookingService.getCancellationPolicy());
+
+        Set<String> depSlots = parseMultiSet(ctx.queryParams("dep"), Set.of(
+                FlightSearchFilter.SLOT_BEFORE_6,
+                FlightSearchFilter.SLOT_6_TO_12,
+                FlightSearchFilter.SLOT_12_TO_18,
+                FlightSearchFilter.SLOT_AFTER_18
+        ));
+        Set<String> cabinFilter = parseMultiSet(ctx.queryParams("cabinFilter"), Set.of(
+                SeatClass.ECONOMY.name(), SeatClass.FIRST.name()
+        ));
+        BigDecimal reqMaxPrice = parseDecimalParam(ctx.queryParam("maxPrice"));
+        int reqPage = parseIntParam(ctx.queryParam("page"), 1);
+
+        FlightSearchFilter.FilterResult filterResult = FlightSearchFilter.filterAndPaginate(
+                allCards, depSlots, reqMaxPrice, cabinFilter, reqPage, FlightSearchFilter.DEFAULT_PAGE_SIZE);
+
+        String originCode = extractAirportCode(origin, airports);
+        String destCode = extractAirportCode(destination, airports);
+        String originCity = resolveAirportCityName(origin, originCode, airports);
+        String destCity = resolveAirportCityName(destination, destCode, airports);
+
+        String nextAvailDateStr = null;
+        if (rawFlights.isEmpty() && searchError == null) {
+            nextAvailDateStr = flightService.nextAvailableDate(origin, destination, date.plusDays(1))
+                    .map(LocalDate::toString).orElse(null);
+        }
+
+        model.put("airports", airports);
+        model.put("origin", origin);
+        model.put("destination", destination);
+        model.put("originCode", originCode);
+        model.put("destCode", destCode);
+        model.put("originCity", originCity);
+        model.put("destCity", destCity);
+        model.put("date", date.toString());
+        model.put("dateWeekday", date.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH));
+        model.put("selectedCabin", selectedCabin);
+        model.put("flights", rawFlights);
+        model.put("cards", filterResult.getPageCards());
+        model.put("filterResult", filterResult);
+        boolean hasServerFilters = !depSlots.isEmpty() || !cabinFilter.isEmpty() || reqMaxPrice != null;
+        model.put("depSlots", depSlots);
+        model.put("cabinFilter", cabinFilter);
+        model.put("hasServerFilters", hasServerFilters);
+        model.put("nextAvailableDate", nextAvailDateStr);
+        model.put("tomorrowDate", LocalDate.now(bookingService.getClock()).plusDays(1).toString());
         model.put("searchError", searchError);
         ctx.render("flights.html", model);
+    }
+
+    private static Set<String> parseMultiSet(List<String> rawVals, Set<String> allowed) {
+        if (rawVals == null || rawVals.isEmpty()) {
+            return Collections.emptySet();
+        }
+        Set<String> res = new LinkedHashSet<>();
+        for (String rv : rawVals) {
+            if (rv == null || rv.isBlank()) continue;
+            for (String token : rv.split(",")) {
+                String clean = token.trim();
+                for (String a : allowed) {
+                    if (a.equalsIgnoreCase(clean)) {
+                        res.add(a);
+                        break;
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
+    private static BigDecimal parseDecimalParam(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return new BigDecimal(raw.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static int parseIntParam(String raw, int fallback) {
+        if (raw == null || raw.isBlank()) return fallback;
+        try {
+            return Integer.parseInt(raw.trim());
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private static String extractAirportCode(String param, List<Airport> airports) {
+        if (param == null) return "";
+        String t = param.trim();
+        int open = t.lastIndexOf('(');
+        int close = t.lastIndexOf(')');
+        if (open >= 0 && close > open) {
+            return t.substring(open + 1, close).trim().toUpperCase(Locale.ROOT);
+        }
+        for (Airport a : airports) {
+            if (a.code().equalsIgnoreCase(t) || a.city().equalsIgnoreCase(t)) {
+                return a.code().toUpperCase(Locale.ROOT);
+            }
+        }
+        return t.toUpperCase(Locale.ROOT);
+    }
+
+    private static String resolveAirportCityName(String rawParam, String code, List<Airport> airports) {
+        for (Airport a : airports) {
+            if (a.code().equalsIgnoreCase(code)) {
+                return a.city();
+            }
+        }
+        if (rawParam != null) {
+            int open = rawParam.indexOf('(');
+            String trimmed = (open > 0 ? rawParam.substring(0, open) : rawParam).trim();
+            if (!trimmed.isEmpty()) return trimmed;
+        }
+        return code;
     }
 
     public void handleSeats(Context ctx) {
@@ -301,6 +512,15 @@ public class WebController {
         }
 
         FlightSearchResult flight = flightOpt.get();
+        if (flight.getDeparture() != null
+                && !FlightSalesPolicy.isOpen(flight.getDeparture(), bookingService.getClock())) {
+            ctx.status(409);
+            renderSeatsWithError(ctx, flightId,
+                    "Sales for this flight have closed (bookings close "
+                            + FlightSalesPolicy.SALES_CLOSE_BEFORE_DEPARTURE.toMinutes()
+                            + " minutes before departure).");
+            return;
+        }
         List<FlightSeat> seats = seatMapService.loadSeatMap(flightId);
         FlightSeat targetSeat = seats.stream()
                 .filter(s -> s.getFlightSeatId() == flightSeatId)
@@ -332,7 +552,8 @@ public class WebController {
                 flight.getOriginCity() != null ? flight.getOriginCity() + " (" + flight.getOriginCode() + ")" : "Johannesburg (JNB)");
         String destination = firstNonBlank(ctx.formParam("destination"),
                 flight.getDestCity() != null ? flight.getDestCity() + " (" + flight.getDestCode() + ")" : "Cape Town (CPT)");
-        String departureDate = firstNonBlank(ctx.formParam("departureDate"), "2026-11-02");
+        String departureDate = firstNonBlank(resolveDepartureDate(flight),
+                LocalDate.now(bookingService.getClock()).toString());
 
         // 2. Acquire owner-bound seat hold
         String holdOwner = resolveHoldOwner(ctx);
@@ -386,6 +607,16 @@ public class WebController {
             ctx.status(403);
             renderCheckoutModel(ctx, cs, "forbidden", "This seat hold belongs to another user or session",
                     "This seat hold belongs to another user or browser session. Please select your own seat.", null);
+            return;
+        }
+
+        if (cs.getDepartureInstant() != null
+                && !FlightSalesPolicy.isOpen(cs.getDepartureInstant(), bookingService.getClock())) {
+            seatMapService.deselectSeat(cs.getSeat(), cs.getHoldOwner());
+            ctx.status(409);
+            renderCheckoutModel(ctx, cs, "expired", "Flight sales have closed",
+                    "Sales close " + FlightSalesPolicy.SALES_CLOSE_BEFORE_DEPARTURE.toMinutes()
+                            + " minutes before departure. This flight can no longer be booked.", null);
             return;
         }
 
@@ -512,6 +743,16 @@ public class WebController {
                 return;
             }
 
+            if (cs.getDepartureInstant() != null
+                    && !FlightSalesPolicy.isOpen(cs.getDepartureInstant(), bookingService.getClock())) {
+                seatMapService.deselectSeat(cs.getSeat(), cs.getHoldOwner());
+                ctx.status(409);
+                renderCheckoutModel(ctx, cs, "expired", "Flight sales have closed",
+                        "Sales close " + FlightSalesPolicy.SALES_CLOSE_BEFORE_DEPARTURE.toMinutes()
+                                + " minutes before departure. This flight can no longer be booked.", null);
+                return;
+            }
+
             // Recompute server-side fare (completely ignoring any price/total submitted by client)
             PriceQuote authoritativeQuote;
             try {
@@ -607,6 +848,7 @@ public class WebController {
         }
 
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "my-bookings");
         BookingRecord record = recordOpt.get();
         boolean owner = isBookingOwner(ctx, record);
         boolean isCancelled = isCancelledStatus(record.getStatus());
@@ -763,6 +1005,7 @@ public class WebController {
         }
 
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "my-bookings");
         String flashSuccess = ctx.sessionAttribute("flash_success");
         if (flashSuccess != null) {
             ctx.req().getSession().removeAttribute("flash_success");
@@ -883,6 +1126,7 @@ public class WebController {
 
     private void renderCancelModel(Context ctx, BookingRecord record, String cancelError, String cancelNotice) {
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "my-bookings");
         CancellationPolicy.Decision decision = bookingService.getCancellationPolicy().evaluate(record);
         model.put("record", record);
         model.put("canConfirm", decision.allowed());
@@ -1129,6 +1373,33 @@ public class WebController {
         ctx.render("contact.html", model);
     }
 
+    public void handleAdmin(Context ctx) {
+        User user = ctx.sessionAttribute("user");
+        if (user == null) {
+            ctx.redirect("/login?next=/admin");
+            return;
+        }
+        if (user.getRole() != UserRole.ADMIN) {
+            ctx.status(403);
+            Map<String, Object> model = baseModel(ctx);
+            model.put("error", "Administrator access is required to view this page.");
+            ctx.render("error.html", model);
+            return;
+        }
+
+        Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "admin");
+        try {
+            AdminDashboardData data = adminDashboardService.getDashboardData(user);
+            model.put("dashboardData", data);
+            model.put("revenueFormatted", MoneyFormatter.format(data.getTotalRevenue()));
+        } catch (Exception e) {
+            logger.warn("Failed to load admin dashboard data: {}", e.getMessage());
+            model.put("adminError", "Unable to load live admin metrics right now. Please try again.");
+        }
+        ctx.render("admin.html", model);
+    }
+
     private BookingContext buildBookingContext(Context ctx, CheckoutSession cs, PriceQuote quote, PaymentResult paymentResult) {
         BookingContext bc = new BookingContext();
         bc.setFlightId(cs.getFlightId());
@@ -1162,6 +1433,7 @@ public class WebController {
     private void renderCheckoutModel(Context ctx, CheckoutSession cs, String state,
                                      String stateHeading, String payError, String errorField) {
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "flights");
         model.put("checkoutSession", cs);
         model.put("checkoutState", state);
         if (stateHeading != null) model.put("stateHeading", stateHeading);
@@ -1296,6 +1568,7 @@ public class WebController {
         }
 
         Map<String, Object> model = baseModel(ctx);
+        model.put("activeNav", "flights");
         model.put("flight", flightOpt.get());
 
         String origin = ctx.queryParam("origin");
@@ -1308,7 +1581,10 @@ public class WebController {
 
         String departureDate = ctx.queryParam("departureDate");
         if (departureDate == null || departureDate.isBlank()) departureDate = ctx.formParam("departureDate");
-        if (departureDate == null || departureDate.isBlank()) departureDate = "2026-11-02";
+        if (departureDate == null || departureDate.isBlank()) {
+            departureDate = firstNonBlank(resolveDepartureDate(flightOpt.get()),
+                    LocalDate.now(bookingService.getClock()).toString());
+        }
 
         model.put("origin", origin);
         model.put("destination", destination);
@@ -1355,6 +1631,14 @@ public class WebController {
             rowList.sort(Comparator.comparing(FlightSeat::getSeatCol));
         }
         return seatsByRow;
+    }
+
+    private static String resolveDepartureDate(FlightSearchResult flight) {
+        if (flight == null || flight.getDeparture() == null) {
+            return null;
+        }
+        ZoneId zone = flight.getOriginZone() != null ? flight.getOriginZone() : ZoneId.of("Africa/Johannesburg");
+        return FlightTimes.formatLocalDate(flight.getDeparture(), zone);
     }
 
     private long parseFlightId(String str) {

@@ -389,6 +389,7 @@ public class BookingDaoImpl implements BookingDao {
         record.setOriginCity(context.getOriginCity());
         record.setDestination(context.getDestination());
         record.setDestinationCity(context.getDestinationCity());
+        record.setDepartureDate(context.getDepartureDate());
         record.setDepartureTime(context.getDepartureTime());
         record.setArrivalTime(context.getArrivalTime());
         record.setDepartureInstant(context.getDepartureInstant());

@@ -6,6 +6,7 @@ package com.group2.flightres.config;
 public final class AppInfo {
 
     public static final String NAME = "Sky Royal";
+    public static final String FLIGHT_PREFIX = "SR";
 
     private AppInfo() {
     }

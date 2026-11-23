@@ -1,5 +1,5 @@
 -- seed_destinations_relative.sql
--- Rolling 14-day schedule of Sky Royal (ALT) domestic and international destination flights
+-- Rolling 14-day schedule of Sky Royal (SR) domestic and international destination flights
 -- on the existing A320 type, generated from the South African calendar date.
 -- Safe to run repeatedly (idempotent); no DELETE, TRUNCATE or DROP.
 BEGIN;
@@ -32,19 +32,19 @@ CREATE TEMP TABLE dest_seed_template (
 ) ON COMMIT DROP;
 
 INSERT INTO dest_seed_template VALUES
-    ('ALT 720','JNB','PLZ',TIME '08:15',INTERVAL '1 hour 40 minutes',1140.00),
-    ('ALT 721','PLZ','JNB',TIME '10:45',INTERVAL '1 hour 40 minutes',1140.00),
-    ('ALT 730','JNB','GRJ',TIME '09:30',INTERVAL '1 hour 55 minutes',1290.00),
-    ('ALT 731','GRJ','JNB',TIME '12:15',INTERVAL '1 hour 55 minutes',1290.00),
-    ('ALT 801','JNB','DXB',TIME '19:40',INTERVAL '8 hours 10 minutes',8450.00),
-    ('ALT 802','CPT','DXB',TIME '20:15',INTERVAL '9 hours 20 minutes',8990.00),
-    ('ALT 811','JNB','FCO',TIME '20:50',INTERVAL '10 hours 15 minutes',9750.00),
-    ('ALT 821','JNB','ZRH',TIME '21:10',INTERVAL '10 hours 35 minutes',10200.00),
-    ('ALT 831','JNB','MXP',TIME '18:40',INTERVAL '10 hours 40 minutes',9450.00),
-    ('ALT 841','JNB','JTR',TIME '19:15',INTERVAL '9 hours 50 minutes',10500.00),
-    ('ALT 851','JNB','NCE',TIME '21:30',INTERVAL '10 hours 25 minutes',9800.00),
-    ('ALT 861','JNB','PSA',TIME '20:05',INTERVAL '10 hours 30 minutes',9350.00),
-    ('ALT 871','JNB','GVA',TIME '21:45',INTERVAL '10 hours 45 minutes',10150.00);
+    ('SR 720','JNB','PLZ',TIME '08:15',INTERVAL '1 hour 40 minutes',1140.00),
+    ('SR 721','PLZ','JNB',TIME '10:45',INTERVAL '1 hour 40 minutes',1140.00),
+    ('SR 730','JNB','GRJ',TIME '09:30',INTERVAL '1 hour 55 minutes',1290.00),
+    ('SR 731','GRJ','JNB',TIME '12:15',INTERVAL '1 hour 55 minutes',1290.00),
+    ('SR 801','JNB','DXB',TIME '19:40',INTERVAL '8 hours 10 minutes',8450.00),
+    ('SR 802','CPT','DXB',TIME '20:15',INTERVAL '9 hours 20 minutes',8990.00),
+    ('SR 811','JNB','FCO',TIME '20:50',INTERVAL '10 hours 15 minutes',9750.00),
+    ('SR 821','JNB','ZRH',TIME '21:10',INTERVAL '10 hours 35 minutes',10200.00),
+    ('SR 831','JNB','MXP',TIME '18:40',INTERVAL '10 hours 40 minutes',9450.00),
+    ('SR 841','JNB','JTR',TIME '19:15',INTERVAL '9 hours 50 minutes',10500.00),
+    ('SR 851','JNB','NCE',TIME '21:30',INTERVAL '10 hours 25 minutes',9800.00),
+    ('SR 861','JNB','PSA',TIME '20:05',INTERVAL '10 hours 30 minutes',9350.00),
+    ('SR 871','JNB','GVA',TIME '21:45',INTERVAL '10 hours 45 minutes',10150.00);
 
 CREATE TEMP TABLE dest_seed_days ON COMMIT DROP AS
 SELECT ((NOW() AT TIME ZONE 'Africa/Johannesburg')::date + i) AS op_date
@@ -72,7 +72,7 @@ INSERT INTO flight_seats (flight_id, seat_template_id, status)
 SELECT f.flight_id, st.seat_template_id, 'AVAILABLE'::seat_status
 FROM flights f
 JOIN seat_templates st ON st.aircraft_type_id = f.aircraft_type_id
-WHERE f.flight_number LIKE 'ALT %'
+WHERE f.flight_number LIKE 'SR %'
   AND NOT EXISTS (SELECT 1 FROM flight_seats x WHERE x.flight_id = f.flight_id)
 ON CONFLICT (flight_id, seat_template_id) DO NOTHING;
 

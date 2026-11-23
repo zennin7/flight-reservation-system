@@ -62,7 +62,7 @@ class AdminBookingsServiceTest {
         ZoneId sast = ZoneId.of("Africa/Johannesburg");
         AdminBookingRow hostile = new AdminBookingRow(
                 1L, "PNR999", "=HYPERLINK(\"http://evil.example\",\"Click\")", "+user@example.com",
-                "Hostile", 10L, "ALT 101", "JNB", "Johannesburg", "CPT", "Cape Town",
+                "Hostile", 10L, "SR 101", "JNB", "Johannesburg", "CPT", "Cape Town",
                 Instant.now(), sast, Instant.now().plusSeconds(7200), sast,
                 "1A", SeatClass.ECONOMY, new BigDecimal("1522.00"), "CONFIRMED"
         );
