@@ -100,6 +100,37 @@ a {
 }
 
 /* Full-bleed aerial / destination / cabin backdrops */
+.sr-backdrop-root {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    overflow: hidden;
+    background-color: var(--glass-bg-base);
+}
+
+.backdrop-layer {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-color: var(--glass-bg-base);
+    background-size: cover;
+    background-position: center center;
+}
+
+.backdrop-layer.is-next {
+    opacity: 0;
+    transition: opacity 1.5s ease;
+}
+
+.backdrop-layer.is-next.is-visible {
+    opacity: 1;
+}
+
+.backdrop-layer.no-transition {
+    transition: none !important;
+}
+
 .glass-backdrop,
 .backdrop-aerial {
     position: fixed;

@@ -163,11 +163,39 @@ public class WebController {
         model.put("salesCloseMinutes", BoardingPolicy.SALES_CLOSE_MINUTES_BEFORE);
         model.put("holdDurationText", (SeatHoldPolicy.HOLD_SECONDS / 60) + " min");
         model.put("activeNav", "");
+        applyFixedAerialBackdrop(model);
         return model;
+    }
+
+    private static void applyFixedAerialBackdrop(Map<String, Object> model) {
+        model.put("backdropMode", "fixed");
+        model.put("backdropUrl", WebBackdropResolver.FIXED_AERIAL);
+        model.put("backdropRotation", "");
+    }
+
+    private static void applyRotatingBackdrop(Map<String, Object> model) {
+        model.put("backdropMode", "rotate");
+        model.put("backdropUrl", WebBackdropResolver.ROTATING_PHOTOS.get(0));
+        model.put("backdropRotation", WebBackdropResolver.ROTATING_PHOTOS_CSV);
+    }
+
+    private static void applyDestinationBackdrop(Map<String, Object> model, String airportCodeOrLabel, boolean fullBleed) {
+        model.put("backdropMode", fullBleed ? "destination-full" : "destination");
+        model.put("backdropUrl", WebBackdropResolver.destinationBackdrop(airportCodeOrLabel));
+        model.put("backdropRotation", "");
+    }
+
+    private static void applyCabinBackdrop(Map<String, Object> model, SeatClass initialCabin) {
+        model.put("backdropMode", "cabin");
+        model.put("backdropUrl", WebBackdropResolver.cabinBackdrop(initialCabin));
+        model.put("backdropRotation", "");
+        model.put("cabinEconomyPhoto", WebBackdropResolver.CABIN_ECONOMY);
+        model.put("cabinFirstPhoto", WebBackdropResolver.CABIN_FIRST);
     }
 
     public void handleHome(Context ctx) {
         Map<String, Object> model = baseModel(ctx);
+        applyRotatingBackdrop(model);
         model.put("activeNav", "home");
         String flashSuccess = ctx.sessionAttribute("flash_success");
         if (flashSuccess != null) {
@@ -418,6 +446,7 @@ public class WebController {
         model.put("nextAvailableDate", nextAvailDateStr);
         model.put("tomorrowDate", LocalDate.now(bookingService.getClock()).plusDays(1).toString());
         model.put("searchError", searchError);
+        applyDestinationBackdrop(model, destCode, false);
         ctx.render("flights.html", model);
     }
 
@@ -860,6 +889,7 @@ public class WebController {
         model.put("isBookingOwner", owner);
         model.put("isCancelled", isCancelled);
         model.put("canCancel", canCancel);
+        applyDestinationBackdrop(model, record.getDestination(), true);
         ctx.render("confirmation.html", model);
     }
 
@@ -975,6 +1005,7 @@ public class WebController {
             Map<String, Object> invalidModel = new HashMap<>();
             invalidModel.put("appName", BrandConfig.APP_NAME);
             invalidModel.put("verifyState", "INVALID");
+            applyFixedAerialBackdrop(invalidModel);
             ctx.render("verify.html", invalidModel);
             return;
         }
@@ -1182,6 +1213,7 @@ public class WebController {
 
     public void handleLoginGet(Context ctx) {
         Map<String, Object> model = baseModel(ctx);
+        applyRotatingBackdrop(model);
         String nextUrl = sanitizeLocalNext(ctx.queryParam("next"));
         if (nextUrl != null) {
             model.put("nextUrl", nextUrl);
@@ -1203,6 +1235,7 @@ public class WebController {
             logger.info("Login throttled: identifier={} wait={}", AuthService.maskIdentifier(username), waitText);
             ctx.status(429);
             Map<String, Object> model = baseModel(ctx);
+            applyRotatingBackdrop(model);
             model.put("loginError", "Too many failed login attempts. Please wait " + waitText + " before trying again.");
             model.put("username", username);
             if (nextUrl != null) model.put("nextUrl", nextUrl);
@@ -1225,6 +1258,7 @@ public class WebController {
             loginThrottle.recordFailure(username, clientIp);
             Optional<Duration> triggeredLockout = loginThrottle.remainingLockout(username, clientIp);
             Map<String, Object> model = baseModel(ctx);
+            applyRotatingBackdrop(model);
             if (triggeredLockout.isPresent()) {
                 String waitText = LoginThrottle.formatWait(triggeredLockout.get());
                 logger.info("Login throttled: identifier={} wait={}", AuthService.maskIdentifier(username), waitText);
@@ -1246,6 +1280,7 @@ public class WebController {
 
     public void handleRegisterGet(Context ctx) {
         Map<String, Object> model = baseModel(ctx);
+        applyRotatingBackdrop(model);
         ctx.render("register.html", model);
     }
 
@@ -1266,6 +1301,7 @@ public class WebController {
                     RegistrationService.maskEmail(email), waitText);
             ctx.status(429);
             Map<String, Object> model = baseModel(ctx);
+            applyRotatingBackdrop(model);
             model.put("registerError",
                     "Too many registration attempts. Please wait " + waitText + " before trying again.");
             model.put("fullName", fullName);
@@ -1278,6 +1314,7 @@ public class WebController {
         if (honeypot != null && !honeypot.isBlank()) {
             logger.warn("Registration honeypot triggered for email={}", RegistrationService.maskEmail(email));
             Map<String, Object> model = baseModel(ctx);
+            applyRotatingBackdrop(model);
             model.put("registerNotice", "Thank you. Your submission has been received.");
             ctx.render("register.html", model);
             return;
@@ -1312,6 +1349,7 @@ public class WebController {
         } catch (DuplicateEmailException e) {
             ctx.status(409);
             Map<String, Object> model = baseModel(ctx);
+            applyRotatingBackdrop(model);
             model.put("registerError", e.getMessage());
             model.put("errorField", "email");
             model.put("fullName", fullName);
@@ -1321,6 +1359,7 @@ public class WebController {
         } catch (ValidationException e) {
             ctx.status(400);
             Map<String, Object> model = baseModel(ctx);
+            applyRotatingBackdrop(model);
             model.put("registerError", e.getMessage());
             model.put("errorField", e.getField());
             model.put("fullName", fullName);
@@ -1435,6 +1474,7 @@ public class WebController {
     private void renderCheckoutModel(Context ctx, CheckoutSession cs, String state,
                                      String stateHeading, String payError, String errorField) {
         Map<String, Object> model = baseModel(ctx);
+        applyFixedAerialBackdrop(model);
         model.put("activeNav", "flights");
         model.put("checkoutSession", cs);
         model.put("checkoutState", state);
@@ -1562,6 +1602,7 @@ public class WebController {
         }
 
         Map<String, Object> model = baseModel(ctx);
+        applyCabinBackdrop(model, SeatClass.ECONOMY);
         model.put("activeNav", "flights");
         model.put("flight", flightOpt.get());
 

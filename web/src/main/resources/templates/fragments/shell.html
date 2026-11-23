@@ -2,6 +2,17 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 
+  <div th:fragment="backdrop()" class="sr-backdrop-root"
+       th:attr="data-backdrop-mode=${backdropMode != null ? backdropMode : 'fixed'},data-backdrop-src=${backdropUrl != null ? backdropUrl : '/photos/aerial-1.jpg'},data-backdrop-list=${backdropRotation != null ? backdropRotation : ''}">
+    <div th:class="${backdropMode == 'cabin' ? 'backdrop-aerial backdrop-cabin backdrop-layer is-primary' : (backdropMode == 'destination' or backdropMode == 'destination-full' ? 'backdrop-aerial backdrop-destination backdrop-layer is-primary' : 'backdrop-aerial backdrop-layer is-primary')}"
+         th:style="|background-image: url(${backdropUrl != null ? backdropUrl : '/photos/aerial-1.jpg'});|"
+         aria-hidden="true"></div>
+    <div th:class="${backdropMode == 'cabin' ? 'backdrop-aerial backdrop-cabin backdrop-layer is-next' : (backdropMode == 'destination' or backdropMode == 'destination-full' ? 'backdrop-aerial backdrop-destination backdrop-layer is-next' : 'backdrop-aerial backdrop-layer is-next')}"
+         aria-hidden="true"></div>
+    <div th:class="${backdropMode == 'rotate' or backdropMode == 'destination-full' ? 'glass-backdrop-scrim is-hero-scrim' : 'glass-backdrop-scrim'}"
+         aria-hidden="true"></div>
+  </div>
+
   <header th:fragment="topbar(activeNav)" class="sr-topbar">
     <a href="/" class="nav-brand">
       <span class="nav-brand-badge" aria-hidden="true">

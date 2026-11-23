@@ -9,11 +9,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/glass-web.css">
+  <script defer src="/js/backdrop.js"></script>
   <script defer src="/js/shell.js"></script>
 </head>
 <body>
-  <div class="backdrop-aerial" aria-hidden="true"></div>
-  <div class="glass-backdrop-scrim is-hero-scrim" aria-hidden="true"></div>
+  <div th:replace="~{fragments/shell :: backdrop()}"></div>
 
   <div class="page-shell home-page-shell">
     <section class="home-above-fold" aria-label="Home hero and flight search">
