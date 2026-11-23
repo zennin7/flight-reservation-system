@@ -41,7 +41,7 @@ import java.util.List;
 
 /**
  * Renders the Glass Checkout screen at 1280x800 and 900x680
- * with real data on an open ALT flight.
+ * with real data on an open SR flight.
  */
 public class GlassCheckoutScreenshotRunner extends Application {
 

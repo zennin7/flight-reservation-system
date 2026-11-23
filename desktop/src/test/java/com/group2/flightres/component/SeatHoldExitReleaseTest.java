@@ -67,7 +67,7 @@ class SeatHoldExitReleaseTest {
         SeatDao seatDao = new SeatDaoImpl();
         SeatMapService seatMapService = new SeatMapService(seatDao);
 
-        // Pick an open ALT flight and available seat
+        // Pick an open SR flight and available seat
         TestFlightFinder.OpenAltFlight openFlight = TestFlightFinder.findEarliestOpenAltFlight();
         long flightId = openFlight.flightId();
         List<FlightSeat> seats = seatDao.getSeatMapForFlight(flightId);

@@ -1,5 +1,6 @@
 package com.group2.flightres.service;
 
+import com.group2.flightres.config.AppInfo;
 import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.model.PriceQuote;
@@ -37,7 +38,7 @@ class PricingServiceProofTest {
     }
 
     @Test
-    @DisplayName("PricingService proof: real quotes for 3 ALT flights tomorrow in SAST for ECONOMY and FIRST")
+    @DisplayName("PricingService proof: real quotes for 3 Sky Royal (SR) flights tomorrow in SAST for ECONOMY and FIRST")
     void testLivePricingProofTomorrowFlights() throws SQLException {
         PricingService pricingService = new PricingService(new SeatDaoImpl(), Clock.systemUTC());
 
@@ -49,7 +50,8 @@ class PricingServiceProofTest {
                    base_price
             FROM flights
             WHERE (departure_time AT TIME ZONE 'Africa/Johannesburg')::date = (NOW() AT TIME ZONE 'Africa/Johannesburg')::date + 1
-              AND flight_number LIKE 'ALT%'
+              AND status = 'SCHEDULED'
+              AND flight_number LIKE ?
             ORDER BY departure_time
             LIMIT 3;
             """;
@@ -58,40 +60,42 @@ class PricingServiceProofTest {
         Instant now = Instant.now();
 
         try (Connection conn = DatabaseConfig.getDataSource().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            while (rs.next()) {
-                flightCount++;
-                long flightId = rs.getLong("flight_id");
-                String flightNo = rs.getString("flight_number");
-                String depSast = rs.getString("dep_sast");
-                Timestamp depTs = rs.getTimestamp("departure_time");
-                Instant depInstant = depTs.toInstant();
+            stmt.setString(1, AppInfo.FLIGHT_PREFIX + " %");
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    flightCount++;
+                    long flightId = rs.getLong("flight_id");
+                    String flightNo = rs.getString("flight_number");
+                    String depSast = rs.getString("dep_sast");
+                    Timestamp depTs = rs.getTimestamp("departure_time");
+                    Instant depInstant = depTs.toInstant();
 
-                double hoursToDep = Duration.between(now, depInstant).toSeconds() / 3600.0;
+                    double hoursToDep = Duration.between(now, depInstant).toSeconds() / 3600.0;
 
-                // 1. Cheapest ECONOMY quote
-                PriceQuote econQuote = pricingService.quote(flightId, SeatClass.ECONOMY);
-                assertNotNull(econQuote, "Economy quote must not be null for flight " + flightNo);
-                printQuoteLine(flightNo, depSast, SeatClass.ECONOMY, hoursToDep, econQuote);
+                    // 1. Cheapest ECONOMY quote
+                    PriceQuote econQuote = pricingService.quote(flightId, SeatClass.ECONOMY);
+                    assertNotNull(econQuote, "Economy quote must not be null for flight " + flightNo);
+                    printQuoteLine(flightNo, depSast, SeatClass.ECONOMY, hoursToDep, econQuote);
 
-                // 2. FIRST seat quote
-                PriceQuote firstQuote = pricingService.quote(flightId, SeatClass.FIRST);
-                assertNotNull(firstQuote, "First class quote must not be null for flight " + flightNo);
-                printQuoteLine(flightNo, depSast, SeatClass.FIRST, hoursToDep, firstQuote);
+                    // 2. FIRST seat quote
+                    PriceQuote firstQuote = pricingService.quote(flightId, SeatClass.FIRST);
+                    assertNotNull(firstQuote, "First class quote must not be null for flight " + flightNo);
+                    printQuoteLine(flightNo, depSast, SeatClass.FIRST, hoursToDep, firstQuote);
 
-                // Arithmetic integrity proof
-                assertEquals(econQuote.total(),
-                        econQuote.classFare().add(econQuote.demandAdjustment()).add(econQuote.timingAdjustment()),
-                        "Quote arithmetic must balance for " + flightNo + " ECONOMY");
-                assertEquals(firstQuote.total(),
-                        firstQuote.classFare().add(firstQuote.demandAdjustment()).add(firstQuote.timingAdjustment()),
-                        "Quote arithmetic must balance for " + flightNo + " FIRST");
+                    // Arithmetic integrity proof
+                    assertEquals(econQuote.total(),
+                            econQuote.classFare().add(econQuote.demandAdjustment()).add(econQuote.timingAdjustment()),
+                            "Quote arithmetic must balance for " + flightNo + " ECONOMY");
+                    assertEquals(firstQuote.total(),
+                            firstQuote.classFare().add(firstQuote.demandAdjustment()).add(firstQuote.timingAdjustment()),
+                            "Quote arithmetic must balance for " + flightNo + " FIRST");
+                }
             }
         }
 
-        assertTrue(flightCount >= 3, "Expected at least 3 ALT flights tomorrow in SAST, found: " + flightCount);
+        assertTrue(flightCount >= 3, "Expected at least 3 " + AppInfo.FLIGHT_PREFIX + " flights tomorrow in SAST, found: " + flightCount);
     }
 
     @Test

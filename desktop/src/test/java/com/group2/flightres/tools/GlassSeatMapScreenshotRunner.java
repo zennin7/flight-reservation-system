@@ -34,7 +34,7 @@ import java.util.List;
 
 /**
  * Renders the Glass Seat Map screen at 1280x800 and 900x680
- * with real data and a held seat on an open ALT flight.
+ * with real data and a held seat on an open SR flight.
  */
 public class GlassSeatMapScreenshotRunner extends Application {
 

@@ -1,5 +1,6 @@
 package com.group2.flightres.util;
 
+import com.group2.flightres.config.AppInfo;
 import com.group2.flightres.service.FlightSalesPolicy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,19 +15,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TestFlightFinderTest {
 
     @Test
-    @DisplayName("TestFlightFinder finds earliest open ALT flight with all seats available")
+    @DisplayName("TestFlightFinder finds earliest open SR flight with all seats available")
     void testFindEarliestOpenAltFlight() {
         Clock clock = Clock.systemUTC();
         TestFlightFinder.OpenAltFlight flight = TestFlightFinder.findEarliestOpenAltFlight(clock);
         assertNotNull(flight);
-        assertTrue(flight.flightNumber().startsWith("ALT"));
+        assertTrue(flight.flightNumber().startsWith(AppInfo.FLIGHT_PREFIX + " "),
+                "Expected flight number starting with '" + AppInfo.FLIGHT_PREFIX + " ', got: " + flight.flightNumber());
         assertNotNull(flight.originCode());
         assertNotNull(flight.destCode());
         assertFalse(flight.availableSeats().isEmpty());
 
         // Assert FlightSalesPolicy.isOpen(departure, clock) is true with that margin
         assertTrue(FlightSalesPolicy.isOpen(flight.departureInstant(), clock),
-                "Earliest open ALT flight must be open for sales per FlightSalesPolicy");
+                "Earliest open " + AppInfo.FLIGHT_PREFIX + " flight must be open for sales per FlightSalesPolicy");
 
         Duration requiredMargin = FlightSalesPolicy.SALES_CLOSE_BEFORE_DEPARTURE.plusMinutes(15);
         assertTrue(!flight.departureInstant().isBefore(clock.instant().plus(requiredMargin)),

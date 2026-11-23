@@ -29,13 +29,14 @@ class BrandGuardTest {
     );
 
     private static final Pattern FORBIDDEN_FLIGHT_PREFIX = Pattern.compile(
-            "\\bALT\\s+\\d+|['\"]ALT\\s"
+            "\\bALT\\s+\\d+|['\"]ALT(?:\\s|%)|['\"]ALT['\"]|startsWith\\s*\\(\\s*\"ALT\"|(?i)\\bALT\\s+flights?\\b"
     );
 
     @Test
-    @DisplayName("AppInfo.NAME and BrandConfig.APP_NAME are Sky Royal")
+    @DisplayName("AppInfo.NAME is Sky Royal, FLIGHT_PREFIX is SR, and BrandConfig.APP_NAME matches")
     void testBrandIsSkyRoyal() {
         assertEquals("Sky Royal", AppInfo.NAME);
+        assertEquals("SR", AppInfo.FLIGHT_PREFIX);
         assertEquals("Sky Royal", BrandConfig.APP_NAME);
     }
 

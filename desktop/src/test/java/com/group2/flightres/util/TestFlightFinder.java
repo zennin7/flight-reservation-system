@@ -1,5 +1,6 @@
 package com.group2.flightres.util;
 
+import com.group2.flightres.config.AppInfo;
 import com.group2.flightres.config.DatabaseConfig;
 import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
@@ -22,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Test-scope helper finding the earliest open ALT flight with all seats AVAILABLE
+ * Test-scope helper finding the earliest open Sky Royal (SR) flight with all seats AVAILABLE
  * in the next 14 days (SA time Africa/Johannesburg).
  */
 public final class TestFlightFinder {
@@ -66,7 +67,7 @@ public final class TestFlightFinder {
             JOIN airports orig ON orig.airport_id = f.origin_airport_id
             JOIN airports dest ON dest.airport_id = f.dest_airport_id
             JOIN flight_seats fs ON fs.flight_id = f.flight_id
-            WHERE f.flight_number LIKE 'ALT%'
+            WHERE f.flight_number LIKE ?
               AND f.status = 'SCHEDULED'
               AND f.departure_time >= ?
               AND f.departure_time <= NOW() + INTERVAL '14 days'
@@ -81,10 +82,11 @@ public final class TestFlightFinder {
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
-            stmt.setTimestamp(1, Timestamp.from(minDepartureTime));
+            stmt.setString(1, AppInfo.FLIGHT_PREFIX + " %");
+            stmt.setTimestamp(2, Timestamp.from(minDepartureTime));
             try (ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next()) {
-                    throw new IllegalStateException("No open ALT flight found with 100% available seats in next 14 days.");
+                    throw new IllegalStateException("No open " + AppInfo.FLIGHT_PREFIX + " flight found with 100% available seats in next 14 days.");
                 }
 
             long flightId = rs.getLong("flight_id");
@@ -118,7 +120,7 @@ public final class TestFlightFinder {
                 );
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Database error looking up open ALT flight", e);
+            throw new RuntimeException("Database error looking up open " + AppInfo.FLIGHT_PREFIX + " flight", e);
         }
     }
 
