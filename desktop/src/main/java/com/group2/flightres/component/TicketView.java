@@ -255,16 +255,15 @@ public class TicketView extends StackPane {
 
     private static String shortCity(String city, String code) {
         String c = (city != null ? city.trim() : "");
-        String lower = c.toLowerCase(java.util.Locale.ROOT);
-        if (lower.contains("tambo") || lower.contains("johannesburg") || "JNB".equalsIgnoreCase(code)) return "Johannesburg";
-        if (lower.contains("cape town") || "CPT".equalsIgnoreCase(code)) return "Cape Town";
-        if (lower.contains("shaka") || lower.contains("durban") || "DUR".equalsIgnoreCase(code)) return "Durban";
-        if (lower.contains("stuurman") || lower.contains("gqeberha") || "PLZ".equalsIgnoreCase(code)) return "Gqeberha";
-        if (lower.contains("geneva") || "GVA".equalsIgnoreCase(code)) return "Geneva";
-        if (lower.contains("nice") || lower.contains("monaco") || "NCE".equalsIgnoreCase(code)) return "Monaco";
-        if (lower.contains("dubai") || "DXB".equalsIgnoreCase(code)) return "Dubai";
-        if (!c.isEmpty()) return c;
-        return code != null ? code : "";
+        if (c.isEmpty()) {
+            return code != null ? code : "";
+        }
+        int paren = c.indexOf('(');
+        if (paren > 0) {
+            c = c.substring(0, paren).trim();
+        }
+        String cleaned = com.group2.flightres.util.AirportNames.shortName(c);
+        return !cleaned.isBlank() ? cleaned : c;
     }
 
     /**

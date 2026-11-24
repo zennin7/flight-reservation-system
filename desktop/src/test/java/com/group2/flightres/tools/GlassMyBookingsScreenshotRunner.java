@@ -385,6 +385,13 @@ public class GlassMyBookingsScreenshotRunner extends Application {
                 controller.updateResponsiveLayout(scene.getWidth(), scene.getHeight());
                 captureSnapshot(scene, "glass-bookings-populated.png", outputDir, brainDir);
 
+                // Capture Cancelled tab at 1280x800
+                controller.setActiveTab(MyBookingsController.Tab.CANCELLED);
+                scene.getRoot().applyCss();
+                scene.getRoot().layout();
+                captureSnapshot(scene, "glass-bookings-cancelled.png", outputDir, brainDir);
+                controller.setActiveTab(MyBookingsController.Tab.UPCOMING);
+
                 // Resize to 900x680
                 stage.setWidth(900);
                 stage.setHeight(680);

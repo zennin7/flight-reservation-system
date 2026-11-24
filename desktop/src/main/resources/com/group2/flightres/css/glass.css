@@ -3,7 +3,7 @@
  * Elevated Look with Atmospheric Backdrop Blur & Translucent Surfaces
  * =================================================================== */
 
-.root, .glass-root, .glass-panel, .admin-main-card, .admin-main-card-compact {
+.root, .glass-root, .glass-panel, .seat-map-glass-root, .flight-search-root, .home-root, .login-root, .admin-main-card, .admin-main-card-compact {
     /* Sky Royal Glass Design Tokens (aligned with web glass-web.css; zero gold, zero navy) */
     -glass-bg-base: #0d1c24;
     -glass-surface: rgba(15, 19, 24, 0.52);
@@ -3077,3 +3077,133 @@
     -fx-font-size: 11.5px;
     -fx-text-fill: rgba(255, 255, 255, 0.86);
 }
+
+/* ============================================================================
+   P5b Step 4: My Bookings 2-Column Web Layout & Live White Pass Preview
+   ============================================================================ */
+.mb-kicker { -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif; -fx-font-size: 12px; -fx-text-fill: -glass-text-muted; }
+.mb-list-panel {
+    -fx-background-color: rgba(12, 16, 22, 0.56);
+    -fx-background-radius: 20px;
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-padding: 14px;
+}
+.mb-row {
+    -fx-background-color: rgba(15, 19, 24, 0.62);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 14px 16px;
+    -fx-cursor: hand;
+}
+.mb-row:hover {
+    -fx-border-color: rgba(255, 255, 255, 0.34);
+    -fx-background-color: rgba(20, 26, 33, 0.72);
+}
+.mb-row-selected {
+    -fx-background-color: -glass-cream;
+    -fx-background-radius: 16px;
+    -fx-border-color: -glass-cream;
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 14px 16px;
+    -fx-cursor: hand;
+}
+.mb-row-route { -fx-font-family: 'Inter Bold', 'Inter', sans-serif; -fx-font-size: 17px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.mb-row-selected .mb-row-route { -fx-text-fill: -glass-ink; }
+.mb-row-meta { -fx-font-family: 'Inter', sans-serif; -fx-font-size: 12px; -fx-text-fill: -glass-text-muted; }
+.mb-row-selected .mb-row-meta { -fx-text-fill: -glass-ink-muted; }
+.mb-row-price { -fx-font-family: 'Inter Bold', 'Inter', sans-serif; -fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.mb-row-selected .mb-row-price { -fx-text-fill: -glass-ink; }
+.mb-search-bar {
+    -fx-background-color: rgba(15, 19, 24, 0.56);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 12px 16px;
+}
+.mb-search-prompt { -fx-font-family: 'Inter Medium', 'Inter', sans-serif; -fx-font-size: 13px; -fx-text-fill: -glass-text-muted; }
+.mb-search-cta { -fx-padding: 8px 18px; -fx-font-size: 13px; }
+
+.mb-pass-card {
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 22px;
+    -fx-border-color: rgba(255, 255, 255, 0.88);
+    -fx-border-width: 1px;
+    -fx-border-radius: 22px;
+    -fx-padding: 20px 22px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 26, 0.0, 0, 10);
+}
+.mb-pass-brand { -fx-font-family: 'Inter Bold', 'Inter', sans-serif; -fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: -glass-ink; }
+.mb-pass-tag {
+    -fx-background-color: rgba(21, 24, 28, 0.08);
+    -fx-background-radius: 999px;
+    -fx-padding: 3px 9px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 10px;
+    -fx-text-fill: -glass-ink;
+}
+.mb-pass-status {
+    -fx-background-color: rgba(21, 24, 28, 0.08);
+    -fx-background-radius: 999px;
+    -fx-padding: 3px 10px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 10px;
+    -fx-text-fill: -glass-ink;
+}
+.mb-pass-pnr { -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif; -fx-font-size: 12.5px; -fx-text-fill: -glass-ink-muted; }
+.mb-pass-route-box {
+    -fx-background-color: -glass-cream;
+    -fx-background-radius: 16px;
+    -fx-padding: 14px 16px;
+}
+.mb-pass-route-code { -fx-font-family: 'Inter Bold', 'Inter', sans-serif; -fx-font-size: 24px; -fx-font-weight: 800; -fx-text-fill: -glass-ink; }
+.mb-pass-flight-pill {
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 999px;
+    -fx-padding: 4px 10px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: -glass-ink;
+}
+.mb-pass-route-cities { -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif; -fx-font-size: 13px; -fx-text-fill: -glass-ink; }
+.mb-pass-route-time { -fx-font-family: 'Inter', sans-serif; -fx-font-size: 11.5px; -fx-text-fill: -glass-ink-muted; }
+.mb-pass-divider { -fx-min-height: 1px; -fx-pref-height: 1px; -fx-border-color: rgba(21, 24, 28, 0.16); -fx-border-style: dashed; -fx-border-width: 1 0 0 0; }
+.mb-qr-frame {
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 12px;
+    -fx-border-color: rgba(21, 24, 28, 0.12);
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+    -fx-padding: 8px;
+}
+.mb-qr-caption { -fx-font-family: 'Inter', sans-serif; -fx-font-size: 10px; -fx-text-fill: -glass-ink-muted; }
+.mb-btn-dark {
+    -fx-background-color: -glass-ink;
+    -fx-text-fill: -glass-white;
+    -fx-background-radius: 999px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 12.5px;
+    -fx-font-weight: 700;
+    -fx-padding: 9px 14px;
+    -fx-cursor: hand;
+}
+.mb-btn-dark:hover { -fx-opacity: 0.90; }
+.mb-btn-outline {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(21, 24, 28, 0.22);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 12.5px;
+    -fx-font-weight: 600;
+    -fx-padding: 8px 14px;
+    -fx-cursor: hand;
+}
+.mb-btn-outline:hover { -fx-background-color: -glass-cream; }

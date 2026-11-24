@@ -7,6 +7,9 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
@@ -44,40 +47,118 @@
             </VBox.margin>
 
             <!-- Main Glass Card Container -->
-            <VBox fx:id="mainContainer" spacing="16" styleClass="glass-card" style="-fx-padding: 24 32 24 32;" VBox.vgrow="ALWAYS">
+            <VBox fx:id="mainContainer" spacing="14" styleClass="glass-card" style="-fx-padding: 20 26 20 26;" VBox.vgrow="ALWAYS">
 
-                <!-- Header Block: Headline + Subtitle -->
-                <VBox spacing="4">
-                    <Label fx:id="dashboardTitleLabel" text="My Bookings" styleClass="headline-serif"/>
-                    <Label fx:id="dashboardSubtitleLabel" text="Manage your upcoming journeys, view boarding passes, and browse past trips." styleClass="subheadline"/>
-                </VBox>
+                <!-- Header Block: Title + Filter Chips Row (Web Traveller Portal header) -->
+                <HBox alignment="CENTER_LEFT" spacing="14" styleClass="mb-header-bar">
+                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                        <Label text="Traveller Portal" styleClass="mb-kicker"/>
+                        <Label fx:id="dashboardTitleLabel" text="My bookings" styleClass="headline-serif"/>
+                        <Label fx:id="dashboardSubtitleLabel" text="Manage your upcoming journeys, view boarding passes, and browse past trips." styleClass="subheadline" wrapText="true"/>
+                    </VBox>
 
-                <!-- Tab Pills Bar -->
-                <HBox fx:id="tabsBar" spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 4 0 8 0;">
-                    <Button fx:id="upcomingTabBtn" text="Upcoming (0)" onAction="#handleShowUpcoming"
-                            style="-fx-background-radius: 999px; -fx-padding: 8 18; -fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-cursor: hand;"/>
-                    <Button fx:id="pastTabBtn" text="Past (0)" onAction="#handleShowPast"
-                            style="-fx-background-radius: 999px; -fx-padding: 8 18; -fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-cursor: hand;"/>
-                    <Button fx:id="cancelledTabBtn" text="Cancelled (0)" onAction="#handleShowCancelled"
-                            style="-fx-background-radius: 999px; -fx-padding: 8 18; -fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-cursor: hand;"/>
+                    <!-- Tab Pills Bar -->
+                    <HBox fx:id="tabsBar" spacing="8" alignment="CENTER_RIGHT" minWidth="-Infinity">
+                        <Button fx:id="upcomingTabBtn" text="Upcoming (0)" onAction="#handleShowUpcoming" minWidth="-Infinity" styleClass="mb-tab-chip"/>
+                        <Button fx:id="pastTabBtn" text="Past (0)" onAction="#handleShowPast" minWidth="-Infinity" styleClass="mb-tab-chip"/>
+                        <Button fx:id="cancelledTabBtn" text="Cancelled (0)" onAction="#handleShowCancelled" minWidth="-Infinity" styleClass="mb-tab-chip"/>
+                    </HBox>
                 </HBox>
 
-                <!-- Content Area: Switch between Populated, Empty, and Error states -->
+                <!-- Content Area: Switch between Populated (2-col), Empty, and Error states -->
                 <StackPane fx:id="contentStack" VBox.vgrow="ALWAYS">
 
-                    <!-- 1. POPULATED STATE (Scrollable booking cards) -->
-                    <ScrollPane fx:id="bookingsScrollPane"
-                                styleClass="confirmation-scroll-pane"
-                                fitToWidth="true"
-                                fitToHeight="false"
-                                hbarPolicy="NEVER"
-                                vbarPolicy="AS_NEEDED"
-                                VBox.vgrow="ALWAYS">
-                        <VBox fx:id="cardsContainer" spacing="14" alignment="TOP_CENTER" VBox.vgrow="ALWAYS"
-                              style="-fx-padding: 4 10 16 0; -fx-background-color: transparent;">
-                            <!-- Populated dynamically with booking cards -->
+                    <!-- 1. POPULATED STATE: Left booking list + Search bar | Right live white pass preview -->
+                    <HBox fx:id="populatedSplitBox" spacing="18" alignment="TOP_LEFT" VBox.vgrow="ALWAYS">
+
+                        <!-- LEFT COLUMN: Booking list + Search flights bar -->
+                        <VBox spacing="12" HBox.hgrow="ALWAYS" styleClass="mb-list-panel" VBox.vgrow="ALWAYS">
+                            <ScrollPane fx:id="bookingsScrollPane"
+                                        styleClass="confirmation-scroll-pane"
+                                        fitToWidth="true"
+                                        fitToHeight="false"
+                                        hbarPolicy="NEVER"
+                                        vbarPolicy="AS_NEEDED"
+                                        VBox.vgrow="ALWAYS">
+                                <VBox fx:id="cardsContainer" spacing="10" alignment="TOP_CENTER" VBox.vgrow="ALWAYS"
+                                      style="-fx-padding: 2 6 6 2; -fx-background-color: transparent;">
+                                    <!-- Populated dynamically with selectable booking rows -->
+                                </VBox>
+                            </ScrollPane>
+
+                            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="mb-search-bar">
+                                <Label text="Need another trip?" styleClass="mb-search-prompt"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="bottomSearchFlightsBtn" text="Search flights →" onAction="#handleSearchFlights"
+                                        minWidth="-Infinity" styleClass="btn-checkout-gold, mb-search-cta"/>
+                            </HBox>
                         </VBox>
-                    </ScrollPane>
+
+                        <!-- RIGHT COLUMN: Live White Boarding Pass Preview -->
+                        <VBox fx:id="passPreviewCard" prefWidth="420" minWidth="360" maxWidth="440" spacing="12" styleClass="mb-pass-card">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="Sky Royal" styleClass="mb-pass-brand"/>
+                                <Label text="BOARDING PASS" styleClass="mb-pass-tag"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="previewStatusBadge" text="UPCOMING" styleClass="mb-pass-status"/>
+                            </HBox>
+
+                            <Label fx:id="previewPnrLabel" text="PNR —" styleClass="mb-pass-pnr"/>
+
+                            <!-- Cream Route Box -->
+                            <VBox spacing="4" styleClass="mb-pass-route-box">
+                                <HBox alignment="CENTER_LEFT" spacing="8">
+                                    <Label fx:id="previewRouteCodeLabel" text="JNB → CPT" styleClass="mb-pass-route-code"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="previewFlightNoLabel" text="SR 204" styleClass="mb-pass-flight-pill"/>
+                                </HBox>
+                                <Label fx:id="previewRouteCitiesLabel" text="Johannesburg to Cape Town" styleClass="mb-pass-route-cities"/>
+                                <Label fx:id="previewDateTimeLabel" text="" styleClass="mb-pass-route-time"/>
+                            </VBox>
+
+                            <!-- Metadata 2x2 Grid -->
+                            <GridPane hgap="16" vgap="8">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="55"/>
+                                    <ColumnConstraints percentWidth="45"/>
+                                </columnConstraints>
+                                <VBox spacing="2" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <Label text="PASSENGER" styleClass="ticket-grid-label"/>
+                                    <Label fx:id="previewPassengerLabel" text="—" styleClass="ticket-grid-value"/>
+                                </VBox>
+                                <VBox spacing="2" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <Label text="SEAT" styleClass="ticket-grid-label"/>
+                                    <Label fx:id="previewSeatLabel" text="—" styleClass="ticket-grid-value"/>
+                                </VBox>
+                                <VBox spacing="2" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                    <Label text="AIRCRAFT" styleClass="ticket-grid-label"/>
+                                    <Label fx:id="previewAircraftLabel" text="—" styleClass="ticket-grid-value"/>
+                                </VBox>
+                                <VBox spacing="2" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                    <Label text="PAID FARE" styleClass="ticket-grid-label"/>
+                                    <Label fx:id="previewFareLabel" text="R 0.00" styleClass="ticket-grid-value"/>
+                                </VBox>
+                            </GridPane>
+
+                            <Region styleClass="mb-pass-divider"/>
+
+                            <!-- Bottom Row: Real QR + Stacked Actions -->
+                            <HBox spacing="16" alignment="CENTER_LEFT">
+                                <VBox alignment="CENTER" spacing="4" styleClass="mb-qr-frame">
+                                    <ImageView fx:id="previewQrImageView" fitWidth="104" fitHeight="104" preserveRatio="true"/>
+                                    <Label text="Verify at gate" styleClass="mb-qr-caption"/>
+                                </VBox>
+                                <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                    <Button fx:id="previewDownloadPdfBtn" text="Download PDF" onAction="#handlePreviewDownloadPdf"
+                                            maxWidth="Infinity" styleClass="mb-btn-dark"/>
+                                    <Button fx:id="previewAddCalendarBtn" text="Add to calendar" onAction="#handlePreviewAddCalendar"
+                                            maxWidth="Infinity" styleClass="mb-btn-outline"/>
+                                    <Button fx:id="previewViewPassBtn" text="View pass" onAction="#handlePreviewViewPass"
+                                            maxWidth="Infinity" styleClass="mb-btn-outline"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </HBox>
 
                     <!-- 2. EMPTY STATE -->
                     <VBox fx:id="emptyStateContainer" alignment="CENTER" spacing="16" visible="false" managed="false"

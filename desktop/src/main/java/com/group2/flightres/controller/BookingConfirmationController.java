@@ -384,17 +384,10 @@ public class BookingConfirmationController implements WizardStepController {
     private String resolveShortCity(String city, String raw) {
         String candidate = (city != null && !city.isBlank()) ? city.trim() : (raw != null ? raw.trim() : "");
         if (candidate.isEmpty()) return "";
-        String lower = candidate.toLowerCase(Locale.ROOT);
-        if (lower.contains("tambo") || lower.contains("johannesburg") || lower.contains("jnb")) return "Johannesburg";
-        if (lower.contains("cape town") || lower.contains("cpt")) return "Cape Town";
-        if (lower.contains("shaka") || lower.contains("durban") || lower.contains("dur")) return "Durban";
-        if (lower.contains("stuurman") || lower.contains("gqeberha") || lower.contains("plz")) return "Gqeberha";
-        if (lower.contains("geneva") || lower.contains("gva")) return "Geneva";
-        if (lower.contains("nice") || lower.contains("monaco") || lower.contains("nce")) return "Monaco";
-        if (lower.contains("dubai") || lower.contains("dxb")) return "Dubai";
         int paren = candidate.indexOf('(');
         if (paren > 0) candidate = candidate.substring(0, paren).trim();
-        return candidate;
+        String cleaned = com.group2.flightres.util.AirportNames.shortName(candidate);
+        return !cleaned.isBlank() ? cleaned : candidate;
     }
 
     private String formatTotalText(BigDecimal price) {
