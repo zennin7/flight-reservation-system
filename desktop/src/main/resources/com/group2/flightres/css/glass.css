@@ -2852,3 +2852,7 @@
 .ticket-stub-ref { -fx-font-family: 'Inter'; -fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: -glass-ink; -fx-letter-spacing: 0.1em; }
 .ticket-stub-fare { -fx-font-family: 'Inter SemiBold', 'Inter'; -fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: -glass-ink; }
 .ticket-perf-line { -fx-border-color: rgba(21, 24, 28, 0.22); -fx-border-style: dashed; -fx-border-width: 0 0 0 2; }
+
+/* Step 5: unclipped admin status badges & clean active nav pills */
+.badge { -fx-padding: 3px 9px; -fx-alignment: center; }
+.nav-link-btn.nav-link-active, .nav-link-active { -fx-border-color: transparent; -fx-border-width: 0; }

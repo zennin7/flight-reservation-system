@@ -132,7 +132,7 @@
                                     <Label fx:id="hdrRouteLabel" text="ROUTE" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="68"/>
                                     <Label fx:id="hdrSeatLabel" text="SEAT" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="34"/>
                                     <Label fx:id="hdrTotalLabel" text="TOTAL" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="84"/>
-                                    <Label fx:id="hdrStatusLabel" text="STATUS" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="82"/>
+                                    <Label fx:id="hdrStatusLabel" text="STATUS" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="96"/>
                                 </HBox>
 
                                 <ScrollPane fx:id="tableScrollPane"

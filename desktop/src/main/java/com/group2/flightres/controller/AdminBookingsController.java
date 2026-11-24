@@ -488,7 +488,7 @@ public class AdminBookingsController {
             status.getStyleClass().add("badge-gold");
         }
         status.setMinWidth(Region.USE_PREF_SIZE);
-        status.setPrefWidth(82);
+        status.setPrefWidth(96);
 
         box.setOnMouseClicked(e -> selectRow(row));
         box.setOnKeyPressed(e -> {
