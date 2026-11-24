@@ -2764,3 +2764,91 @@
     -fx-text-fill: -glass-ink;
     -fx-font-weight: 700;
 }
+
+/* ============================================================================
+   P5 Step 4: Checkout + Confirmation / White Boarding Pass (board-4, board-7)
+   ============================================================================ */
+.paycard.paycard-cream, .paycard-cream {
+    -fx-background-color: -glass-cream;
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.55);
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 16px 18px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.30), 20, 0.0, 0, 8);
+}
+.paycard-brand { -fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: -glass-ink; }
+.paycard-demo-tag { -fx-font-family: 'Inter SemiBold', 'Inter'; -fx-font-size: 10px; -fx-font-weight: 700; -fx-text-fill: rgba(21, 24, 28, 0.58); -fx-letter-spacing: 0.12em; }
+.paycard-number { -fx-font-family: 'Inter SemiBold', 'Inter'; -fx-font-size: 15px; -fx-font-weight: 600; -fx-letter-spacing: 0.12em; -fx-text-fill: -glass-ink; }
+.paycard-meta { -fx-font-family: 'Inter Medium', 'Inter'; -fx-font-size: 10.5px; -fx-letter-spacing: 0.06em; -fx-text-fill: rgba(21, 24, 28, 0.72); }
+
+.gold-primary-action-btn, .pay-cta-btn {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-weight: 700;
+    -fx-cursor: hand;
+}
+.gold-primary-action-btn:hover, .pay-cta-btn:hover { -fx-background-color: -glass-cream; }
+
+/* Confirmation white badge (board-7) */
+.confirmation-emerald-circle {
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 999px;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.25), 18, 0.10, 0, 0);
+}
+.confirmation-check-icon {
+    -fx-stroke: -glass-ink;
+    -fx-stroke-width: 3.2;
+    -fx-fill: transparent;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+/* White Boarding Pass (TicketView — shared by Confirmation & My Bookings) */
+.ticket-card {
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 22px;
+    -fx-border-color: rgba(255, 255, 255, 0.85);
+    -fx-border-width: 1px;
+    -fx-border-radius: 22px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.42), 34, 0.0, 0, 14);
+}
+.ticket-grid-label, .ticket-stub-label { -fx-text-fill: rgba(21, 24, 28, 0.56); -fx-font-weight: 700; }
+.ticket-grid-value, .ticket-stub-value { -fx-text-fill: -glass-ink; -fx-font-weight: 700; }
+.ticket-airport-code { -fx-text-fill: -glass-ink; -fx-font-weight: 800; }
+.ticket-city-time, .ticket-stub-sub { -fx-text-fill: rgba(21, 24, 28, 0.65); }
+.ticket-cabin-badge {
+    -fx-background-color: -glass-cream;
+    -fx-text-fill: -glass-ink;
+    -fx-border-color: rgba(21, 24, 28, 0.14);
+    -fx-border-width: 1px;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-weight: 700;
+}
+.ticket-duration-pill {
+    -fx-background-color: rgba(21, 24, 28, 0.08);
+    -fx-text-fill: -glass-ink;
+    -fx-background-radius: 999px;
+    -fx-padding: 3px 10px;
+    -fx-font-weight: 600;
+}
+.ticket-route-dot { -fx-fill: -glass-ink; }
+.ticket-route-dash { -fx-border-color: rgba(21, 24, 28, 0.28); -fx-border-style: dashed; -fx-border-width: 1.5 0 0 0; }
+.ticket-route-plane { -fx-fill: -glass-ink; -fx-rotate: 90; -fx-scale-x: 0.85; -fx-scale-y: 0.85; }
+.ticket-stub-seat { -fx-text-fill: -glass-ink; -fx-font-weight: 800; }
+.ticket-stub-ref { -fx-text-fill: -glass-ink; -fx-font-weight: 800; }
+.ticket-stub-fare { -fx-text-fill: -glass-ink; -fx-font-weight: 700; }
+.ticket-perf-line { -fx-border-color: rgba(21, 24, 28, 0.22); -fx-border-style: dashed; }
+.ticket-barcode-strip { -fx-background-color: -glass-white; -fx-padding: 6px 12px; -fx-background-radius: 8px; }
+
+/* Step 4 R13 polish: dark ink on white boarding pass stub */
+.ticket-seat-label { -fx-text-fill: rgba(21, 24, 28, 0.56); -fx-font-weight: 700; -fx-font-size: 11px; }
+.ticket-seat-value { -fx-text-fill: -glass-ink; -fx-font-weight: 800; -fx-font-size: 46px; }
+.ticket-stub-gate { -fx-font-family: 'Inter'; -fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: -glass-ink; }
+.ticket-stub-note { -fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(21, 24, 28, 0.62); }
+.ticket-stub-ref { -fx-font-family: 'Inter'; -fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: -glass-ink; -fx-letter-spacing: 0.1em; }
+.ticket-stub-fare { -fx-font-family: 'Inter SemiBold', 'Inter'; -fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: -glass-ink; }
+.ticket-perf-line { -fx-border-color: rgba(21, 24, 28, 0.22); -fx-border-style: dashed; -fx-border-width: 0 0 0 2; }
