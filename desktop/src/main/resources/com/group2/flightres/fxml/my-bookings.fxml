@@ -20,7 +20,7 @@
                  darkness="-0.50"
                  saturation="0.20"
                  linearOverlay="linear-gradient(to bottom, rgba(11,18,32,0.40) 0%, rgba(11,18,32,0.74) 100%)"
-                 radialGlow="radial-gradient(center 80% 0%, radius 45%, rgba(212,166,60,0.16) 0%, transparent 100%)"
+                 radialGlow="radial-gradient(center 80% 0%, radius 45%, rgba(241, 238, 223, 0.16) 0%, transparent 100%)"
                  enableSecondaryGlow="true"
                  stylesheets="@../css/glass.css"
                  styleClass="seat-map-glass-root"
@@ -35,7 +35,7 @@
              TOP NAV (64 high, padding 0 56)
              =================================================================== -->
         <HBox alignment="CENTER_LEFT" prefHeight="64" minHeight="64" maxHeight="64" styleClass="glass-nav-bar">
-            <!-- Brand: gold plane icon + BrandConfig.APP_NAME -->
+            <!-- Brand: white plane icon + BrandConfig.APP_NAME -->
             <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleNavHome" style="-fx-cursor: hand;" focusTraversable="true">
                 <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" styleClass="nav-brand-plane"/>
                 <Label styleClass="nav-brand-text">
@@ -112,8 +112,8 @@
                     <VBox fx:id="emptyStateContainer" alignment="CENTER" spacing="16" visible="false" managed="false"
                           style="-fx-padding: 60 20 60 20;" VBox.vgrow="ALWAYS">
                         <StackPane prefWidth="56" prefHeight="56" maxWidth="56" maxHeight="56"
-                                   style="-fx-background-color: rgba(212, 166, 60, 0.15); -fx-background-radius: 999px; -fx-border-color: rgba(212, 166, 60, 0.40); -fx-border-radius: 999px;">
-                            <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" style="-fx-stroke: #d4a63c; -fx-stroke-width: 2.2; -fx-fill: transparent;"/>
+                                   style="-fx-background-color: rgba(241, 238, 223, 0.15); -fx-background-radius: 999px; -fx-border-color: rgba(241, 238, 223, 0.40); -fx-border-radius: 999px;">
+                            <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" style="-fx-stroke: -glass-cream; -fx-stroke-width: 2.2; -fx-fill: transparent;"/>
                         </StackPane>
                         <Label fx:id="emptyTitleLabel" text="No trips yet" styleClass="headline-serif" style="-fx-font-size: 24px;"/>
                         <Label fx:id="emptySubtitleLabel" text="When you book a flight, your tickets and trip details will appear here." styleClass="subheadline"/>

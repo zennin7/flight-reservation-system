@@ -25,7 +25,7 @@
                  darkness="-0.50"
                  saturation="0.20"
                  linearOverlay="linear-gradient(to bottom, rgba(11,18,32,0.40) 0%, rgba(11,18,32,0.72) 100%)"
-                 radialGlow="radial-gradient(center 80% 0%, radius 50%, rgba(212,166,60,0.16) 0%, transparent 100%)"
+                 radialGlow="radial-gradient(center 80% 0%, radius 50%, rgba(241, 238, 223, 0.16) 0%, transparent 100%)"
                  enableSecondaryGlow="false"
                  stylesheets="@../css/glass.css"
                  styleClass="seat-map-glass-root"
@@ -42,7 +42,7 @@
              TOP NAV (64 high, padding 0 56)
              =================================================================== -->
         <HBox alignment="CENTER_LEFT" prefHeight="64" minHeight="64" maxHeight="64" styleClass="glass-nav-bar">
-            <!-- Brand row: gold plane icon + APP_NAME -->
+            <!-- Brand row: white plane icon + APP_NAME -->
             <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleNavHome" style="-fx-cursor: hand;">
                 <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" styleClass="nav-brand-plane"/>
                 <Label styleClass="nav-brand-text">
@@ -63,7 +63,7 @@
 
             <Region HBox.hgrow="ALWAYS"/>
 
-            <!-- Right avatar circle: 34px diameter, #d4a63c with initials AM -->
+            <!-- Right avatar circle: 34px diameter, -glass-cream with initials AM -->
             <StackPane styleClass="glass-avatar-circle" onMouseClicked="#handleNavAvatar" style="-fx-cursor: hand;">
                 <Label text="AM" styleClass="glass-avatar-initials"/>
             </StackPane>
@@ -180,7 +180,7 @@
                                         <Label text="Taken" style="-fx-font-family: 'Inter'; -fx-font-size: 11.5px; -fx-text-fill: rgba(255,255,255,0.60);"/>
                                     </HBox>
                                     <HBox alignment="CENTER" spacing="5">
-                                        <Region style="-fx-min-width: 10px; -fx-min-height: 10px; -fx-max-width: 10px; -fx-max-height: 10px; -fx-background-radius: 3px; -fx-background-color: #d4a63c;"/>
+                                        <Region style="-fx-min-width: 10px; -fx-min-height: 10px; -fx-max-width: 10px; -fx-max-height: 10px; -fx-background-radius: 3px; -fx-background-color: -glass-cream;"/>
                                         <Label text="Yours" style="-fx-font-family: 'Inter'; -fx-font-size: 11.5px; -fx-text-fill: rgba(255,255,255,0.60);"/>
                                     </HBox>
                                 </HBox>
@@ -204,12 +204,12 @@
                 <VBox prefWidth="330" minWidth="330" maxWidth="330" spacing="14">
 
                     <!-- A. Selection Card -->
-                    <VBox styleClass="glass-card" style="-fx-padding: 20px 22px; -fx-background-color: linear-gradient(to bottom right, rgba(212,166,60,0.22), rgba(8,12,22,0.40) 60%);" spacing="10">
-                        <Label text="YOUR SELECTION" styleClass="sec" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 11px; -fx-font-weight: 600; -fx-text-fill: #e8c46a; -fx-letter-spacing: 0.14em;"/>
+                    <VBox styleClass="glass-card" style="-fx-padding: 20px 22px; -fx-background-color: linear-gradient(to bottom right, rgba(241, 238, 223, 0.22), rgba(15,19,24,0.52) 60%);" spacing="10">
+                        <Label text="YOUR SELECTION" styleClass="sec" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 11px; -fx-font-weight: 600; -fx-text-fill: -glass-cream; -fx-letter-spacing: 0.14em;"/>
 
                         <!-- Seat Number & Price Row -->
                         <HBox alignment="BOTTOM_LEFT">
-                            <Label fx:id="bigSeatLabel" text="�" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 72px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-line-spacing: 0; -fx-padding: 0;"/>
+                            <Label fx:id="bigSeatLabel" text="�" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 72px; -fx-font-weight: 700; -fx-text-fill: -glass-cream; -fx-line-spacing: 0; -fx-padding: 0;"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <VBox alignment="BOTTOM_RIGHT" style="-fx-padding: 0 0 8px 0;">
                                 <Label text="Seat fare, before taxes and fees" style="-fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.60); -fx-alignment: CENTER_RIGHT;"/>
@@ -246,7 +246,7 @@
                             <HBox alignment="CENTER_LEFT">
                                 <Label text="Total" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #ffffff;"/>
                                 <Region HBox.hgrow="ALWAYS"/>
-                                <Label fx:id="seatTotalLabel" text="-" style="-fx-font-family: 'Inter Bold'; -fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #f3d98b;"/>
+                                <Label fx:id="seatTotalLabel" text="-" style="-fx-font-family: 'Inter Bold'; -fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: -glass-cream;"/>
                             </HBox>
                             <Label fx:id="seatVatLabel" text="" style="-fx-font-family: 'Inter'; -fx-font-size: 10.5px; -fx-text-fill: rgba(255,255,255,0.50); -fx-alignment: CENTER_RIGHT;"/>
                         </VBox>
@@ -256,7 +256,7 @@
                             <StackPane prefWidth="44" prefHeight="44" minWidth="44" minHeight="44" maxWidth="44" maxHeight="44">
                                 <Circle radius="18" fill="transparent" stroke="rgba(255,255,255,0.14)" strokeWidth="4"/>
                                 <Arc fx:id="timerArc" radiusX="18" radiusY="18" startAngle="90" length="0" type="OPEN"
-                                     fill="transparent" stroke="#e8c46a" strokeWidth="4" strokeLineCap="ROUND"/>
+                                     fill="transparent" stroke="#4da3ff" strokeWidth="4" strokeLineCap="ROUND"/>
                             </StackPane>
                             <VBox spacing="1" HBox.hgrow="ALWAYS">
                                 <Label fx:id="timerLabel" text="--:--" style="-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #ffffff;"/>
@@ -291,7 +291,7 @@
 
                     <!-- B. Flight Card -->
                     <VBox styleClass="glass-card" style="-fx-padding: 18px 22px;" spacing="10" VBox.vgrow="ALWAYS">
-                        <Label text="FLIGHT" styleClass="sec" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 11px; -fx-font-weight: 600; -fx-text-fill: #e8c46a; -fx-letter-spacing: 0.14em;"/>
+                        <Label text="FLIGHT" styleClass="sec" style="-fx-font-family: 'Inter SemiBold'; -fx-font-size: 11px; -fx-font-weight: 600; -fx-text-fill: -glass-cream; -fx-letter-spacing: 0.14em;"/>
 
                         <!-- Route Row -->
                         <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-padding: 4px 0 0 0;">
@@ -302,10 +302,10 @@
 
                             <!-- Route Connector: Dot -> Dashed Line -> Plane Icon -->
                             <HBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="6">
-                                <Region style="-fx-min-width: 7px; -fx-min-height: 7px; -fx-max-width: 7px; -fx-max-height: 7px; -fx-background-color: #e8c46a; -fx-background-radius: 4px;"/>
+                                <Region style="-fx-min-width: 7px; -fx-min-height: 7px; -fx-max-width: 7px; -fx-max-height: 7px; -fx-background-color: -glass-cream; -fx-background-radius: 4px;"/>
                                 <Region HBox.hgrow="ALWAYS" style="-fx-border-color: rgba(255,255,255,0.35); -fx-border-style: dashed; -fx-border-width: 1.5px 0 0 0; -fx-min-height: 2px;"/>
                                 <SVGPath content="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"
-                                         style="-fx-fill: #e8c46a; -fx-scale-x: 0.7; -fx-scale-y: 0.7; -fx-rotate: 90;"/>
+                                         style="-fx-fill: -glass-cream; -fx-scale-x: 0.7; -fx-scale-y: 0.7; -fx-rotate: 90;"/>
                             </HBox>
 
                             <VBox alignment="CENTER_RIGHT">

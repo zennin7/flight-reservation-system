@@ -12,10 +12,10 @@ import java.io.IOException;
 
 public class App extends Application {
 
-    private static final int DEFAULT_WIDTH = 1000;
-    private static final int DEFAULT_HEIGHT = 740;
-    private static final int MIN_WIDTH = 900;
-    private static final int MIN_HEIGHT = 680;
+    private static final int DEFAULT_WIDTH = 1280;
+    private static final int DEFAULT_HEIGHT = 800;
+    private static final int MIN_WIDTH = 1024;
+    private static final int MIN_HEIGHT = 700;
 
     @Override
     public void start(Stage stage) throws IOException {

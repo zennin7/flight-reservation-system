@@ -215,9 +215,9 @@ public class MyBookingsController {
     private void styleTabButton(Button btn, boolean active) {
         if (btn == null) return;
         if (active) {
-            btn.setStyle("-fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c); " +
-                    "-fx-text-fill: #0b1220; -fx-font-weight: 700; -fx-background-radius: 999px; " +
-                    "-fx-border-color: #f3d98b; -fx-border-width: 1px; -fx-border-radius: 999px; " +
+            btn.setStyle("-fx-background-color: -glass-white; " +
+                    "-fx-text-fill: -glass-ink; -fx-font-weight: 700; -fx-background-radius: 999px; " +
+                    "-fx-border-color: -glass-white; -fx-border-width: 1px; -fx-border-radius: 999px; " +
                     "-fx-padding: 8 18; -fx-cursor: hand;");
         } else {
             btn.setStyle("-fx-background-color: rgba(255, 255, 255, 0.08); -fx-text-fill: rgba(255, 255, 255, 0.75); " +
@@ -338,7 +338,7 @@ public class MyBookingsController {
         topRow.setAlignment(Pos.CENTER_LEFT);
 
         Label flightNoLabel = new Label(summary.getFlightNumber());
-        flightNoLabel.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 15px; -fx-text-fill: #d4a63c;");
+        flightNoLabel.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 15px; -fx-text-fill: -glass-cream;");
 
         Label bullet1 = new Label("·");
         bullet1.setStyle("-fx-text-fill: rgba(255, 255, 255, 0.40);");
@@ -367,8 +367,8 @@ public class MyBookingsController {
         }
 
         Label pnrPill = new Label("PNR: " + summary.getBookingReference());
-        pnrPill.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-text-fill: #e8c46a; " +
-                "-fx-background-color: rgba(212, 166, 60, 0.12); -fx-padding: 4 10; -fx-background-radius: 6px;");
+        pnrPill.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-text-fill: -glass-cream; " +
+                "-fx-background-color: rgba(241, 238, 223, 0.12); -fx-padding: 4 10; -fx-background-radius: 6px;");
 
         topRow.getChildren().addAll(flightNoLabel, bullet1, dateLabel, bullet2, aircraftLabel, topSpacer, statusBadge, pnrPill);
 
@@ -387,7 +387,7 @@ public class MyBookingsController {
         Label origTime = new Label(summary.getFormattedDepartureTime());
         origTime.setStyle("-fx-font-family: 'Inter'; -fx-font-weight: 700; -fx-font-size: 22px; -fx-text-fill: #ffffff;");
         Label origCode = new Label(summary.getOriginCode());
-        origCode.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 16px; -fx-text-fill: #e8c46a;");
+        origCode.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 16px; -fx-text-fill: -glass-cream;");
         Label origCity = new Label(summary.getOriginCity());
         origCity.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255, 255, 255, 0.60);");
         origBox.getChildren().addAll(origTime, origCode, origCity);
@@ -410,7 +410,7 @@ public class MyBookingsController {
         leftLine.setMaxHeight(2.0);
         SVGPath planeIcon = new SVGPath();
         planeIcon.setContent("M3 13l18-8-6 16-3-7-9-1z");
-        planeIcon.setStyle("-fx-stroke: #d4a63c; -fx-stroke-width: 1.5; -fx-fill: transparent;");
+        planeIcon.setStyle("-fx-stroke: -glass-cream; -fx-stroke-width: 1.5; -fx-fill: transparent;");
         Region rightLine = new Region();
         rightLine.getStyleClass().add("route-connector-line");
         rightLine.setPrefWidth(40);
@@ -429,7 +429,7 @@ public class MyBookingsController {
         Label destTime = new Label(summary.getFormattedArrivalTime());
         destTime.setStyle("-fx-font-family: 'Inter'; -fx-font-weight: 700; -fx-font-size: 22px; -fx-text-fill: #ffffff;");
         Label destCode = new Label(summary.getDestinationCode());
-        destCode.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 16px; -fx-text-fill: #e8c46a;");
+        destCode.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 16px; -fx-text-fill: -glass-cream;");
         Label destCity = new Label(summary.getDestinationCity());
         destCity.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255, 255, 255, 0.60);");
         destBox.getChildren().addAll(destTime, destCode, destCity);
@@ -443,7 +443,7 @@ public class MyBookingsController {
         Label passName = new Label(summary.getPassengerName());
         passName.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;");
         Label seatLabel = new Label("Seat: " + summary.getSeatLabelsString());
-        seatLabel.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-text-fill: #e8c46a;");
+        seatLabel.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-text-fill: -glass-cream;");
         Label priceLabel = new Label(MoneyFormatter.format(summary.getTotalPaid()));
         priceLabel.setStyle("-fx-font-family: 'Inter'; -fx-font-weight: 700; -fx-font-size: 18px; -fx-text-fill: #ffffff;");
         detailsBox.getChildren().addAll(passName, seatLabel, priceLabel);

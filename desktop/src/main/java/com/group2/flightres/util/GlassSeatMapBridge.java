@@ -535,9 +535,9 @@ public class GlassSeatMapBridge extends StackPane {
             if (bigSeatLabel != null) {
                 bigSeatLabel.setText(seatLabel);
                 if (seatLabel.length() > 2) {
-                    bigSeatLabel.setStyle("-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 54px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-line-spacing: 0; -fx-padding: 0;");
+                    bigSeatLabel.setStyle("-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 54px; -fx-font-weight: 700; -fx-text-fill: -glass-cream; -fx-line-spacing: 0; -fx-padding: 0;");
                 } else {
-                    bigSeatLabel.setStyle("-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 72px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-line-spacing: 0; -fx-padding: 0;");
+                    bigSeatLabel.setStyle("-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 72px; -fx-font-weight: 700; -fx-text-fill: -glass-cream; -fx-line-spacing: 0; -fx-padding: 0;");
                 }
             }
             if (totalPriceLabel != null && bigPriceLabel != null) {

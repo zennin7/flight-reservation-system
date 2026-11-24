@@ -110,6 +110,10 @@ public class ThemeManager {
         if (skyRoyalCssUrl != null) {
             stylesheets.add(skyRoyalCssUrl);
         }
+        if (glassCssUrl != null && !stylesheets.contains(glassCssUrl)) {
+            FontLoader.loadFonts();
+            stylesheets.add(glassCssUrl);
+        }
 
         if (scene.getRoot() != null) {
             scene.getRoot().applyCss();

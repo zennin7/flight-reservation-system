@@ -27,14 +27,15 @@ public class GlassBackground extends StackPane {
 
     private static final Logger logger = LoggerFactory.getLogger(GlassBackground.class);
 
-    public static final double DEFAULT_BLUR_RADIUS = 28.0;
-    public static final double DEFAULT_DARKNESS = -0.35; // -35% brightness
+    public static final double DEFAULT_BLUR_RADIUS = 18.0;
+    public static final double DEFAULT_DARKNESS = -0.22;
     public static final double DEFAULT_SATURATION = 0.0;
-    public static final String DEFAULT_NAVY_OVERLAY_COLOR = "rgba(11, 18, 32, 0.60)";
+    public static final String DEFAULT_NAVY_OVERLAY_COLOR =
+            "linear-gradient(to bottom, rgba(11, 16, 22, 0.28) 0%, rgba(11, 16, 22, 0.38) 45%, rgba(11, 16, 22, 0.58) 100%)";
     public static final String DEFAULT_RADIAL_GLOW_GOLD =
-            "radial-gradient(center 20% 22%, radius 65%, rgba(212,166,60,0.16) 0%, transparent 100%);";
+            "radial-gradient(center 20% 22%, radius 65%, rgba(255,255,255,0.06) 0%, transparent 100%);";
     public static final String DEFAULT_RADIAL_GLOW_BLUE =
-            "radial-gradient(center 80% 78%, radius 60%, rgba(79,124,255,0.12) 0%, transparent 100%);";
+            "radial-gradient(center 80% 78%, radius 60%, rgba(77,163,255,0.10) 0%, transparent 100%);";
 
     private final ImageView backgroundImageView = new ImageView();
     private final ColorAdjust colorAdjust = new ColorAdjust();
@@ -54,7 +55,7 @@ public class GlassBackground extends StackPane {
     private boolean enableSecondaryGlow = true;
 
     public GlassBackground() {
-        this("/images/destinations/cpt.jpg");
+        this("/com/group2/flightres/photos/aerial-1.jpg");
     }
 
     public GlassBackground(String photoPath) {

@@ -28,7 +28,7 @@
                  darkness="-0.50"
                  saturation="0.15"
                  linearOverlay="linear-gradient(to bottom, rgba(11,18,32,0.35) 0%, rgba(11,18,32,0.70) 100%)"
-                 radialGlow="radial-gradient(center 20% 0%, radius 50%, rgba(212,166,60,0.16) 0%, transparent 100%)"
+                 radialGlow="radial-gradient(center 20% 0%, radius 50%, rgba(241, 238, 223, 0.16) 0%, transparent 100%)"
                  enableSecondaryGlow="false"
                  stylesheets="@../css/glass.css"
                  styleClass="flight-search-root"
@@ -43,7 +43,7 @@
              TOP NAV (64 high, padding 0 56)
              =================================================================== -->
         <HBox alignment="CENTER_LEFT" prefHeight="64" minHeight="64" maxHeight="64" styleClass="glass-nav-bar">
-            <!-- Brand row: gold plane icon + APP_NAME -->
+            <!-- Brand row: white plane icon + APP_NAME -->
             <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleNavHome" style="-fx-cursor: hand;">
                 <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" styleClass="nav-brand-plane"/>
                 <Label styleClass="nav-brand-text">
@@ -64,7 +64,7 @@
 
             <Region HBox.hgrow="ALWAYS"/>
 
-            <!-- Right avatar circle: 34px diameter, #d4a63c with initials AM -->
+            <!-- Right avatar circle: 34px diameter, -glass-cream with initials AM -->
             <StackPane styleClass="glass-avatar-circle" onMouseClicked="#handleNavAvatar" style="-fx-cursor: hand;">
                 <Label text="AM" styleClass="glass-avatar-initials"/>
             </StackPane>
@@ -145,7 +145,7 @@
                     <ComboBox fx:id="passengersCombo" visible="false" managed="false" minHeight="0" prefHeight="0" maxHeight="0"/>
                 </VBox>
 
-                <!-- GOLD SEARCH BUTTON (84 wide, vertical gradient #d9ac47 to #b98a2e) -->
+                <!-- WHITE SEARCH BUTTON (84 wide, vertical gradient -glass-cream to -glass-cream) -->
                 <Button fx:id="searchButton" onAction="#handleSearch" styleClass="search-btn-gold">
                     <graphic>
                         <SVGPath content="M11 4.5 A 6.5 6.5 0 1 0 11 17.5 A 6.5 6.5 0 1 0 11 4.5 M 16 16 L 21 21"

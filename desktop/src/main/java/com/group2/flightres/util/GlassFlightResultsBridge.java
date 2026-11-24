@@ -475,7 +475,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             double val = slider.getValue();
             double pct = (max > min) ? Math.max(0.0, Math.min(100.0, (val - min) / (max - min) * 100.0)) : 100.0;
             track.setStyle(String.format(Locale.US,
-                    "-fx-background-color: linear-gradient(to right, #b98a2e 0%%, #e8c46a %.2f%%, rgba(255, 255, 255, 0.12) %.2f%%, rgba(255, 255, 255, 0.12) 100%%); -fx-background-radius: 4px;",
+                    "-fx-background-color: linear-gradient(to right, -glass-accent 0%%, -glass-accent %.2f%%, rgba(255, 255, 255, 0.12) %.2f%%, rgba(255, 255, 255, 0.12) 100%%); -fx-background-radius: 4px;",
                     pct, pct));
         }
     }
@@ -915,7 +915,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         SVGPath planeIconGold = new SVGPath();
         planeIconGold.setContent(SVG_PLANE_TINY);
-        planeIconGold.setStyle("-fx-fill: #e8c46a; -fx-rotate: 90; -fx-scale-x: 0.75; -fx-scale-y: 0.75;");
+        planeIconGold.setStyle("-fx-fill: -glass-cream; -fx-rotate: 90; -fx-scale-x: 0.75; -fx-scale-y: 0.75;");
 
         flightPath.getChildren().addAll(dot, dashLine1, durLabel, dashLine2, planeIconGold);
 
@@ -968,7 +968,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         SVGPath chevron = new SVGPath();
         chevron.setContent(isExpanded ? SVG_CHEVRON_UP : SVG_CHEVRON_DOWN);
-        chevron.setStyle("-fx-stroke: #e8c46a; -fx-stroke-width: 3; -fx-stroke-linecap: round; -fx-fill: transparent; -fx-scale-x: 0.6; -fx-scale-y: 0.6;");
+        chevron.setStyle("-fx-stroke: -glass-cream; -fx-stroke-width: 3; -fx-stroke-linecap: round; -fx-fill: transparent; -fx-scale-x: 0.6; -fx-scale-y: 0.6;");
         detailsBtn.setGraphic(chevron);
         detailsBtn.setContentDisplay(ContentDisplay.RIGHT);
 
@@ -1153,7 +1153,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         HBox.setHgrow(dash2, Priority.ALWAYS);
         SVGPath planeIcon = new SVGPath();
         planeIcon.setContent(SVG_PLANE_TINY);
-        planeIcon.setStyle("-fx-fill: #e8c46a; -fx-rotate: 90; -fx-scale-x: 0.65; -fx-scale-y: 0.65;");
+        planeIcon.setStyle("-fx-fill: -glass-cream; -fx-rotate: 90; -fx-scale-x: 0.65; -fx-scale-y: 0.65;");
         path.getChildren().addAll(dot, dash1, dur, dash2, planeIcon);
 
         VBox destBlock = new VBox(2);
@@ -1180,7 +1180,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         Label lbl = new Label(label);
         lbl.setPrefWidth(150);
         lbl.setMinWidth(Region.USE_PREF_SIZE);
-        lbl.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-text-fill: #e8c46a;");
+        lbl.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-text-fill: -glass-cream;");
 
         Label val = new Label(value);
         val.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.85);");

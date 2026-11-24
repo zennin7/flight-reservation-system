@@ -66,8 +66,8 @@ public class GlassPlaneGraphic extends Pane {
         hlBox.setHeight(58);
         hlBox.setArcWidth(28);
         hlBox.setArcHeight(28);
-        hlBox.setFill(Color.web("rgba(212,166,60,0.28)"));
-        hlBox.setStroke(Color.web("#e8c46a"));
+        hlBox.setFill(Color.web("rgba(241,238,223,0.28)"));
+        hlBox.setStroke(Color.web("#f1eedf"));
         hlBox.setStrokeWidth(2);
 
         // 6. Windows (38 total windows from x=128 to 744 every 16px)
@@ -99,12 +99,12 @@ public class GlassPlaneGraphic extends Pane {
 
         pinCube.setContent("M0 0l9 5v10l-9 5l-9 -5v-10z M0 10l9 -5 M0 10v10 M0 10l-9 -5");
         pinCube.setFill(Color.TRANSPARENT);
-        pinCube.setStroke(Color.web("#e8c46a"));
+        pinCube.setStroke(Color.web("#f1eedf"));
         pinCube.setStrokeWidth(1.8);
         pinCube.setStrokeLineCap(StrokeLineCap.ROUND);
         pinCube.setStrokeLineJoin(StrokeLineJoin.ROUND);
 
-        sectionLabel.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-alignment: center;");
+        sectionLabel.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: -glass-cream; -fx-alignment: center;");
         sectionLabel.setLayoutY(48);
         sectionLabel.setPrefWidth(120);
         sectionLabel.setAlignment(Pos.CENTER);
@@ -163,7 +163,7 @@ public class GlassPlaneGraphic extends Pane {
         for (Rectangle win : windowRects) {
             double wx = win.getX();
             if (wx >= winStart && wx <= winEnd) {
-                win.setFill(Color.web("#e8c46a"));
+                win.setFill(Color.web("#f1eedf"));
             } else {
                 win.setFill(Color.web("#8793aa"));
             }
