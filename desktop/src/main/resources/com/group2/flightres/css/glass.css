@@ -2546,3 +2546,221 @@
     -fx-min-height: 50px;
     -fx-max-height: 50px;
 }
+
+/* ============================================================================
+   P5 Step 3: Seat Map — Sky Royal Glass (board-3 + seatmap-ref)
+   ============================================================================ */
+.glass-nav-pill {
+    -fx-max-height: 40px;
+    -fx-pref-height: 40px;
+    -fx-padding: 3px 5px;
+}
+.glass-nav-pill .glass-nav-link {
+    -fx-padding: 5px 15px;
+}
+
+.seat-plane-card { -fx-padding: 16px 22px 0 22px; }
+.seat-card-title { -fx-font-family: 'Inter SemiBold', 'Inter'; -fx-font-size: 19px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.seat-card-subtitle { -fx-font-family: 'Inter'; -fx-font-size: 12.5px; -fx-text-fill: -glass-text-muted; }
+.seat-zoom-col { -fx-padding: 14px 0 0 0; }
+.seat-zoom-icon { -fx-fill: transparent; -fx-stroke: -glass-white; -fx-stroke-width: 1.8; -fx-stroke-line-cap: round; -fx-scale-x: 0.75; -fx-scale-y: 0.75; }
+
+.section-tab-bar {
+    -fx-background-color: rgba(15, 19, 24, 0.56);
+    -fx-background-radius: 999px;
+    -fx-border-color: -glass-border-panel;
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 3px;
+}
+.section-tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 999px;
+    -fx-text-fill: -glass-text-muted;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-padding: 5px 12px;
+    -fx-min-width: 78px;
+    -fx-cursor: hand;
+}
+.section-tab:hover { -fx-text-fill: -glass-white; -fx-background-color: rgba(255, 255, 255, 0.08); }
+.section-tab-on {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-font-weight: 700;
+}
+
+/* Bottom-left Cabin Preview photo card */
+.seat-cabin-photo-card {
+    -fx-background-color: -glass-surface-solid;
+    -fx-background-radius: 18px;
+    -fx-border-color: -glass-border-panel;
+    -fx-border-width: 1px;
+    -fx-border-radius: 18px;
+}
+.seat-cabin-photo-scrim {
+    -fx-background-color: linear-gradient(to bottom, rgba(13,28,36,0.12) 0%, rgba(15,19,24,0.88) 78%, rgba(15,19,24,0.96) 100%);
+}
+.seat-cabin-photo-content { -fx-padding: 18px; }
+.seat-cabin-kicker { -fx-text-fill: -glass-cream; -fx-font-size: 10px; -fx-font-weight: 700; -fx-letter-spacing: 0.14em; }
+.seat-cabin-title { -fx-text-fill: -glass-white; -fx-font-size: 17px; -fx-font-weight: 700; }
+.seat-cabin-desc { -fx-text-fill: -glass-text-muted; -fx-font-size: 11.5px; -fx-line-spacing: 2px; }
+
+/* Seat Grid Card & Legend */
+.seat-grid-card { -fx-padding: 16px 18px; }
+.seat-section-header { -fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.seat-legend-label { -fx-font-size: 11px; -fx-text-fill: -glass-text-muted; }
+.seat-legend-swatch {
+    -fx-min-width: 12px; -fx-min-height: 12px; -fx-max-width: 12px; -fx-max-height: 12px;
+    -fx-background-radius: 4px; -fx-border-radius: 4px; -fx-border-width: 1px;
+}
+.seat-legend-available { -fx-background-color: rgba(255,255,255,0.12); -fx-border-color: rgba(255,255,255,0.34); }
+.seat-legend-first { -fx-background-color: rgba(241,238,223,0.18); -fx-border-color: rgba(241,238,223,0.58); }
+.seat-legend-taken { -fx-background-color: rgba(15,19,24,0.78); -fx-border-color: rgba(255,255,255,0.12); }
+.seat-legend-taken-x { -fx-text-fill: rgba(255,255,255,0.42); -fx-font-size: 9px; -fx-font-weight: 700; -fx-padding: -2px 0 0 0; }
+.seat-legend-yours { -fx-background-color: -glass-white; -fx-border-color: -glass-white; }
+
+/* Seat cells — frosted glass palette matching board-3 (zero green/red seats) */
+.seat-available,
+.seat-free,
+.seat-economy,
+.seat-button.seat-available {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+    -fx-border-color: rgba(255, 255, 255, 0.30);
+    -fx-border-width: 1px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -glass-white;
+    -fx-cursor: hand;
+}
+.seat-available:hover,
+.seat-free:hover,
+.seat-economy:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.24);
+    -fx-border-color: -glass-white;
+}
+.seat-first,
+.seat-first-class {
+    -fx-background-color: rgba(241, 238, 223, 0.16);
+    -fx-border-color: rgba(241, 238, 223, 0.55);
+    -fx-border-width: 1.2px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -glass-cream;
+    -fx-cursor: hand;
+}
+.seat-first:hover,
+.seat-first-class:hover {
+    -fx-background-color: rgba(241, 238, 223, 0.28);
+    -fx-border-color: -glass-cream;
+}
+.seat-taken,
+.seat-occupied,
+.seat-booked,
+.seat-unavailable {
+    -fx-background-color: rgba(15, 19, 24, 0.72);
+    -fx-border-color: rgba(255, 255, 255, 0.10);
+    -fx-border-width: 1px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: rgba(255, 255, 255, 0.32);
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+.seat-held,
+.seat-held-other {
+    -fx-background-color: rgba(77, 163, 255, 0.22);
+    -fx-border-color: -glass-accent;
+    -fx-border-width: 1.2px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -glass-accent;
+}
+.seat-selected,
+.seat-yours {
+    -fx-background-color: -glass-white;
+    -fx-border-color: -glass-white;
+    -fx-border-width: 1.5px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -glass-ink;
+    -fx-font-weight: 700;
+    -fx-font-size: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.35), 10, 0.15, 0, 0);
+}
+
+/* Right Column: Cream YOUR SEAT card + breakdown + Flight card */
+.seat-right-card { -fx-padding: 16px 18px; }
+.seat-selection-cream-box {
+    -fx-background-color: -glass-cream;
+    -fx-background-radius: 16px;
+    -fx-padding: 14px 16px;
+}
+.seat-cream-kicker { -fx-text-fill: rgba(21, 24, 28, 0.62); -fx-font-size: 10.5px; -fx-font-weight: 700; -fx-letter-spacing: 0.14em; }
+.seat-cream-big-seat { -fx-text-fill: -glass-ink; -fx-font-size: 48px; -fx-font-weight: 700; -fx-padding: -4px 0 -4px 0; }
+.seat-cream-fare-sub { -fx-text-fill: rgba(21, 24, 28, 0.62); -fx-font-size: 11px; }
+.seat-cream-fare-val { -fx-text-fill: -glass-ink; -fx-font-size: 22px; -fx-font-weight: 700; }
+.selection-chip {
+    -fx-background-color: rgba(21, 24, 28, 0.10);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(21, 24, 28, 0.16);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-text-fill: -glass-ink;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-padding: 3px 9px;
+}
+.seat-breakdown-box { -fx-padding: 4px 0 2px 0; }
+.seat-break-lbl { -fx-font-size: 12px; -fx-text-fill: -glass-text-muted; }
+.seat-break-val { -fx-font-size: 12px; -fx-font-weight: 600; -fx-text-fill: -glass-white; }
+.seat-divider { -fx-min-height: 1px; -fx-pref-height: 1px; -fx-max-height: 1px; -fx-background-color: rgba(255,255,255,0.12); }
+.seat-total-lbl { -fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.seat-total-val { -fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: -glass-cream; }
+.seat-vat-lbl { -fx-font-size: 10.5px; -fx-text-fill: -glass-text-faint; }
+
+.seat-timer-row { -fx-padding: 8px 12px; -fx-background-color: rgba(15, 19, 24, 0.56); -fx-background-radius: 14px; -fx-border-color: -glass-border-panel; -fx-border-radius: 14px; -fx-border-width: 1px; }
+.seat-timer-val { -fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.seat-timer-sub { -fx-font-size: 11px; -fx-text-fill: -glass-text-muted; }
+
+.btn-checkout-gold {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-weight: 700;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+.btn-checkout-gold:hover { -fx-background-color: -glass-cream; }
+.seat-continue-arrow { -fx-fill: transparent; -fx-stroke: -glass-ink; -fx-stroke-width: 2.4; -fx-stroke-line-cap: round; -fx-stroke-line-join: round; -fx-scale-x: 0.78; -fx-scale-y: 0.78; }
+.btn-release-ghost {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-text-fill: -glass-white;
+    -fx-border-color: -glass-border-panel;
+    -fx-border-width: 1px;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-size: 12.5px;
+    -fx-font-weight: 600;
+    -fx-cursor: hand;
+}
+.btn-release-ghost:hover { -fx-background-color: rgba(255, 255, 255, 0.18); }
+
+.seat-flight-card { -fx-padding: 14px 18px; }
+.seat-flight-kicker { -fx-font-size: 10.5px; -fx-font-weight: 700; -fx-text-fill: -glass-cream; -fx-letter-spacing: 0.14em; }
+.seat-flight-code { -fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.seat-flight-time { -fx-font-size: 11.5px; -fx-text-fill: -glass-text-muted; }
+.seat-route-dot { -fx-min-width: 6px; -fx-min-height: 6px; -fx-max-width: 6px; -fx-max-height: 6px; -fx-background-color: -glass-cream; -fx-background-radius: 999px; }
+.seat-route-dash { -fx-border-color: rgba(255,255,255,0.32); -fx-border-style: dashed; -fx-border-width: 1.5px 0 0 0; -fx-min-height: 2px; }
+.seat-route-plane { -fx-fill: -glass-cream; -fx-scale-x: 0.65; -fx-scale-y: 0.65; -fx-rotate: 90; }
+.seat-free-seats-val { -fx-font-size: 12.5px; -fx-font-weight: 700; -fx-text-fill: -glass-ok; }
+
+/* Step 3 R13 polish: unclipped Section 1/2/3 tabs + high-specificity selected seat */
+.section-tab { -fx-min-width: 88px; -fx-padding: 5px 10px; }
+.button.seat-selected, .button.seat-yours, .seat-btn.seat-selected, .seat-btn.seat-yours, .seat-selected, .seat-yours {
+    -fx-background-color: -glass-white;
+    -fx-border-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-font-weight: 700;
+}

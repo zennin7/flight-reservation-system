@@ -511,8 +511,11 @@ public class GlassSeatMapBridge extends StackPane {
     public void syncButtonVisual(Button btn, String seatLabel) {
         if (btn == null) return;
         boolean isSelected = btn.getStyleClass().contains("seat-selected") || btn.getStyleClass().contains("seat-yours");
+        boolean isTaken = btn.getStyleClass().contains("seat-occupied") || btn.getStyleClass().contains("seat-taken");
         if (isSelected) {
             btn.setText(seatLabel);
+        } else if (isTaken) {
+            btn.setText("×");
         } else {
             btn.setText("");
         }
@@ -534,11 +537,7 @@ public class GlassSeatMapBridge extends StackPane {
 
             if (bigSeatLabel != null) {
                 bigSeatLabel.setText(seatLabel);
-                if (seatLabel.length() > 2) {
-                    bigSeatLabel.setStyle("-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 54px; -fx-font-weight: 700; -fx-text-fill: -glass-cream; -fx-line-spacing: 0; -fx-padding: 0;");
-                } else {
-                    bigSeatLabel.setStyle("-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 72px; -fx-font-weight: 700; -fx-text-fill: -glass-cream; -fx-line-spacing: 0; -fx-padding: 0;");
-                }
+                bigSeatLabel.setStyle(null);
             }
             if (totalPriceLabel != null && bigPriceLabel != null) {
                 bigPriceLabel.setText(totalPriceLabel.getText());
@@ -550,11 +549,11 @@ public class GlassSeatMapBridge extends StackPane {
                 boolean isFirst = (seat.getSeatClass() == SeatClass.FIRST);
                 char col = seat.getSeatCol();
 
-                String cls = isFirst ? "First Class" : "Economy";
-                String pos = (col == 'A' || col == 'F') ? "Window seat" :
-                        ((col == 'C' || col == 'D') ? "Aisle seat" : "Middle seat");
+                String cls = isFirst ? "First" : "Economy";
+                String pos = (col == 'A' || col == 'F') ? "Window" :
+                        ((col == 'C' || col == 'D') ? "Aisle" : "Middle");
                 String leg = isFirst ? "Extra legroom" :
-                        (seat.getSeatRow() == 6 ? "Extra legroom" : "Standard legroom");
+                        (seat.getSeatRow() == 6 ? "Extra legroom" : "Std legroom");
 
                 chipsContainer.getChildren().addAll(createChip(cls), createChip(pos), createChip(leg));
             }
@@ -578,6 +577,7 @@ public class GlassSeatMapBridge extends StackPane {
 
     private Label createChip(String text) {
         Label chip = new Label(text);
+        chip.setMinWidth(Region.USE_PREF_SIZE);
         chip.getStyleClass().add("selection-chip");
         return chip;
     }
