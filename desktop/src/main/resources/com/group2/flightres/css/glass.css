@@ -3038,3 +3038,42 @@
     -fx-font-size: 10.5px;
     -fx-font-weight: 600;
 }
+
+/* ============================================================================
+   P5b Step 3: Checkout Cream Card Lock & Hold Pill
+   ============================================================================ */
+.paycard,
+.paycard:hover,
+.paycard:focused,
+.paycard:disabled,
+.paycard.paycard-cream,
+.paycard-cream,
+.paycard-cream:hover,
+.paycard-cream:focused,
+.paycard-cream:disabled {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #f1eedf 0%, #ffffff 100%);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.72);
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 16px 18px;
+    -fx-opacity: 1.0;
+}
+.paycard-chip {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(21, 24, 28, 0.24) 0%, rgba(21, 24, 28, 0.10) 100%);
+    -fx-background-radius: 6px;
+    -fx-border-color: rgba(21, 24, 28, 0.26);
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+}
+.checkout-hold-pill {
+    -fx-background-color: rgba(15, 19, 24, 0.62);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 255, 255, 0.20);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 6px 14px;
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 11.5px;
+    -fx-text-fill: rgba(255, 255, 255, 0.86);
+}

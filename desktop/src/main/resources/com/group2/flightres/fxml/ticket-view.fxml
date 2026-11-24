@@ -52,7 +52,7 @@
 
                     <VBox spacing="3">
                         <Label text="WELCOME TO" styleClass="ticket-welcome-label"/>
-                        <Label fx:id="welcomeCityLabel" text="" styleClass="ticket-welcome-city" wrapText="false"/>
+                        <Label fx:id="welcomeCityLabel" text="" styleClass="ticket-welcome-city" wrapText="true" maxWidth="136"/>
                     </VBox>
                 </VBox>
             </StackPane>
@@ -85,7 +85,7 @@
                         <Circle radius="3" styleClass="ticket-route-dot"/>
                         <Region minHeight="1.5" prefHeight="1.5" maxHeight="1.5" HBox.hgrow="ALWAYS"
                                 styleClass="ticket-route-dash"/>
-                        <Label fx:id="durationLabel" text="" styleClass="ticket-duration-pill"/>
+                        <Label fx:id="durationLabel" text="" minWidth="-Infinity" styleClass="ticket-duration-pill"/>
                         <Region minHeight="1.5" prefHeight="1.5" maxHeight="1.5" HBox.hgrow="ALWAYS"
                                 styleClass="ticket-route-dash"/>
                         <SVGPath content="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"

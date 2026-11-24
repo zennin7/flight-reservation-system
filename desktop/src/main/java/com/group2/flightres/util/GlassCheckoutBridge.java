@@ -121,7 +121,7 @@ public class GlassCheckoutBridge {
         long seconds = remaining % 60;
 
         if (holdTimerLabel != null) {
-            holdTimerLabel.setText(String.format("Your seat is held for %02d:%02d. You are only charged when you confirm.", minutes, seconds));
+            holdTimerLabel.setText(String.format("SEAT HOLD %02d:%02d", minutes, seconds));
         }
 
         if (remaining <= 0) {

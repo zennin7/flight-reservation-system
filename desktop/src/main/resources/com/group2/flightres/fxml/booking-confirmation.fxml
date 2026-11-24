@@ -5,6 +5,7 @@
 <?import com.group2.flightres.config.BrandConfig?>
 <?import com.group2.flightres.util.GlassBackground?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.Group?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
@@ -43,7 +44,7 @@
              =================================================================== -->
         <StackPane fx:id="cardMarginWrapper" VBox.vgrow="ALWAYS">
             <VBox.margin>
-                <Insets top="4" bottom="20" left="56" right="56"/>
+                <Insets top="4" bottom="18" left="36" right="36"/>
             </VBox.margin>
 
             <!-- 1. ERROR STATE (Shown when booking not found / null context) -->
@@ -61,7 +62,7 @@
             </VBox>
 
             <!-- 2. CONFIRMED STATE (Shown when real booking exists) -->
-            <VBox fx:id="confirmedContainer" spacing="16" styleClass="glass-card" style="-fx-padding: 22 28 22 28;" VBox.vgrow="ALWAYS">
+            <VBox fx:id="confirmedContainer" spacing="14" styleClass="glass-card" style="-fx-padding: 18 22 18 22;" VBox.vgrow="ALWAYS">
 
                 <!-- Header Row -->
                 <HBox alignment="CENTER_LEFT" spacing="18">
@@ -94,13 +95,15 @@
                             VBox.vgrow="ALWAYS">
                     <StackPane fx:id="scrollContentRoot" alignment="TOP_CENTER">
                         <!-- Two-Column Body (default for scene width >= 1100) -->
-                        <HBox fx:id="twoColumnBox" spacing="20" alignment="CENTER_LEFT" fillHeight="false" VBox.vgrow="ALWAYS">
+                        <HBox fx:id="twoColumnBox" spacing="24" alignment="CENTER_LEFT" fillHeight="false" VBox.vgrow="ALWAYS">
 
-                            <!-- LEFT COLUMN: BOARDING PASS TICKET (TicketView) -->
-                            <TicketView fx:id="ticketView"/>
+                            <!-- LEFT COLUMN: BOARDING PASS TICKET (scaled cleanly so 24px gap separates pass from sidebar) -->
+                            <Group>
+                                <TicketView fx:id="ticketView" scaleX="0.93" scaleY="0.93"/>
+                            </Group>
 
-                            <!-- RIGHT COLUMN: SIDEBAR (Width 310) -->
-                            <VBox fx:id="sidebarContainer" prefWidth="310" minWidth="310" maxWidth="310" spacing="12">
+                            <!-- RIGHT COLUMN: SIDEBAR (Width 340, zero overlap with pass) -->
+                            <VBox fx:id="sidebarContainer" prefWidth="340" minWidth="320" maxWidth="350" spacing="12">
 
                                 <!-- Payment Summary Panel: THREE ROWS (Base fare, Demand pricing, Booking time) then Paid -->
                                 <VBox fx:id="paymentBox" spacing="8" styleClass="inner-card, glass-inner-panel" style="-fx-padding: 14 18;">

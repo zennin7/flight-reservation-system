@@ -55,6 +55,7 @@ public class CheckoutController implements WizardStepController {
     @FXML private Label demandPricingLabel;
     @FXML private Label taxesFeesLabel;
     @FXML private Label totalLabel;
+    @FXML private Label vatIncludedLabel;
 
     @FXML private TextField fullNameField;
     @FXML private TextField emailField;
@@ -252,6 +253,9 @@ public class CheckoutController implements WizardStepController {
         BigDecimal timing = bookingContext.getPriceQuotes().stream()
                 .map(PriceQuote::timingAdjustment)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal vat = bookingContext.getPriceQuotes().stream()
+                .map(PriceQuote::vatIncluded)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal total = bookingContext.getTotalPrice();
 
         if (baseFareLabel != null) baseFareLabel.setText(formatExactPrice(base));
@@ -259,6 +263,7 @@ public class CheckoutController implements WizardStepController {
         if (taxesFeesLabel != null) taxesFeesLabel.setText(formatExactPrice(timing));
         if (totalLabel != null) totalLabel.setText(formatTotalText(total));
         if (confirmTotalLabel != null) confirmTotalLabel.setText(formatTotalText(total));
+        if (vatIncludedLabel != null) vatIncludedLabel.setText("Includes 15% VAT (" + formatExactPrice(vat) + ")");
     }
 
     private void showNoQuoteErrorState(String message) {

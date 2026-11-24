@@ -242,13 +242,12 @@ public class BookingConfirmationController implements WizardStepController {
             bookingRefLabel.setText(pnr);
         }
 
-        String email = bookingContext.getPassengerEmail();
+        if (confirmationTitleLabel != null) {
+            String destCity = resolveShortCity(bookingContext.getDestinationCity(), bookingContext.getDestination());
+            confirmationTitleLabel.setText(!destCity.isBlank() ? destCity + " is waiting." : "Your flight is booked");
+        }
         if (confirmationSubtitleLabel != null) {
-            if (email != null && !email.isBlank()) {
-                confirmationSubtitleLabel.setText("Booking confirmation for " + email.trim());
-            } else {
-                confirmationSubtitleLabel.setText("Booking confirmation");
-            }
+            confirmationSubtitleLabel.setText("Your boarding pass is ready. Download it below or find it any time in My bookings.");
         }
 
         // User Avatar Initials
@@ -380,6 +379,22 @@ public class BookingConfirmationController implements WizardStepController {
 
     private String formatExactPrice(BigDecimal price) {
         return com.group2.flightres.util.MoneyFormatter.format(price);
+    }
+
+    private String resolveShortCity(String city, String raw) {
+        String candidate = (city != null && !city.isBlank()) ? city.trim() : (raw != null ? raw.trim() : "");
+        if (candidate.isEmpty()) return "";
+        String lower = candidate.toLowerCase(Locale.ROOT);
+        if (lower.contains("tambo") || lower.contains("johannesburg") || lower.contains("jnb")) return "Johannesburg";
+        if (lower.contains("cape town") || lower.contains("cpt")) return "Cape Town";
+        if (lower.contains("shaka") || lower.contains("durban") || lower.contains("dur")) return "Durban";
+        if (lower.contains("stuurman") || lower.contains("gqeberha") || lower.contains("plz")) return "Gqeberha";
+        if (lower.contains("geneva") || lower.contains("gva")) return "Geneva";
+        if (lower.contains("nice") || lower.contains("monaco") || lower.contains("nce")) return "Monaco";
+        if (lower.contains("dubai") || lower.contains("dxb")) return "Dubai";
+        int paren = candidate.indexOf('(');
+        if (paren > 0) candidate = candidate.substring(0, paren).trim();
+        return candidate;
     }
 
     private String formatTotalText(BigDecimal price) {
