@@ -1,5 +1,6 @@
 package com.group2.flightres.controller;
 
+import com.group2.flightres.component.GlassTopBar;
 import com.group2.flightres.component.StepperBar;
 import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.exception.SeatUnavailableException;
@@ -92,6 +93,7 @@ public class CheckoutController implements WizardStepController {
     @FXML private Label tripFlightLabel;
     @FXML private Label tripSeatLabel;
 
+    @FXML private GlassTopBar topBar;
     @FXML private StepperBar stepperBar;
     @FXML private ImageView tripHeroImageView;
     @FXML private Label tripOriginSubLabel;
@@ -130,6 +132,9 @@ public class CheckoutController implements WizardStepController {
         this.bookingContext = context;
         this.onNext = onNext;
         this.onBack = onBack;
+        if (topBar != null) {
+            topBar.bind(context);
+        }
 
         if (stepperBar != null) {
             stepperBar.setActiveStep(BookingStep.CHECKOUT);
@@ -323,13 +328,11 @@ public class CheckoutController implements WizardStepController {
     }
 
     private String formatExactPrice(BigDecimal price) {
-        if (price == null) return "R 0.00";
-        return String.format(Locale.US, "R %,.2f", price.doubleValue());
+        return com.group2.flightres.util.MoneyFormatter.format(price);
     }
 
     private String formatTotalText(BigDecimal price) {
-        if (price == null) return "R 0";
-        return String.format(Locale.US, "R %,d", price.longValue());
+        return com.group2.flightres.util.MoneyFormatter.format(price);
     }
 
     private String formatDateBadge(String depDate) {
@@ -477,9 +480,10 @@ public class CheckoutController implements WizardStepController {
             logger.warn("Price changed during checkout: {}", pce.getMessage());
             refundIfApproved(payResult);
             clearCardFields();
-            showAlert("Fare Updated", String.format(Locale.US,
-                    "The fare changed from R %,d to R %,d. The price summary has been refreshed.",
-                    pce.getOldTotal().longValue(), pce.getNewTotal().longValue()));
+            showAlert("Fare Updated",
+                    "The fare changed from " + com.group2.flightres.util.MoneyFormatter.format(pce.getOldTotal())
+                            + " to " + com.group2.flightres.util.MoneyFormatter.format(pce.getNewTotal())
+                            + ". The price summary has been refreshed.");
             bookingContext.setTotalPrice(pce.getNewTotal());
             populatePriceSummary();
             return;

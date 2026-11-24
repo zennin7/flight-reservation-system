@@ -25,6 +25,10 @@ class DesktopTokenGuardTest {
             "(?i)(altitude|skyvoyage|\\bFL-\\d+)"
     );
 
+    private static final Pattern SERIF_FONT = Pattern.compile(
+            "(?i)(\\bLora\\b|\\bGeorgia\\b|,\\s*serif\\b)"
+    );
+
     private static Path desktopRoot() {
         Path cwd = Path.of("").toAbsolutePath();
         if (Files.exists(cwd.resolve("src/main/resources/com/group2/flightres/css/glass.css"))) {
@@ -83,6 +87,36 @@ class DesktopTokenGuardTest {
             }
         }
         assertTrue(hits.isEmpty(), "Legacy brand/prefix found:\n" + String.join("\n", hits));
+    }
+
+    @Test
+    @DisplayName("No serif fonts (Lora, Georgia, serif) remain in desktop/src/main (CSS, FXML, Java)")
+    void noSerifFontsInDesktopMain() throws IOException {
+        Path mainDir = desktopRoot().resolve("src/main");
+        List<String> hits = new ArrayList<>();
+        try (Stream<Path> walk = Files.walk(mainDir)) {
+            List<Path> files = walk
+                    .filter(Files::isRegularFile)
+                    .filter(p -> {
+                        String n = p.getFileName().toString().toLowerCase();
+                        return n.endsWith(".css") || n.endsWith(".fxml") || n.endsWith(".java");
+                    })
+                    .toList();
+            for (Path f : files) {
+                List<String> lines = Files.readAllLines(f, StandardCharsets.UTF_8);
+                for (int i = 0; i < lines.size(); i++) {
+                    String line = lines.get(i);
+                    if (line.contains("sans-serif")) {
+                        line = line.replace("sans-serif", "");
+                    }
+                    Matcher m = SERIF_FONT.matcher(line);
+                    if (m.find()) {
+                        hits.add(mainDir.relativize(f) + ":" + (i + 1) + " -> " + m.group());
+                    }
+                }
+            }
+        }
+        assertTrue(hits.isEmpty(), "Serif font leftovers found in desktop/src/main:\n" + String.join("\n", hits));
     }
 
     @Test

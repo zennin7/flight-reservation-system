@@ -1,5 +1,6 @@
 package com.group2.flightres.controller;
 
+import com.group2.flightres.component.GlassTopBar;
 import com.group2.flightres.model.Airport;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.Route;
@@ -26,6 +27,7 @@ public class HomeController implements WizardStepController {
 
     private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 
+    @FXML private GlassTopBar topBar;
     @FXML private ComboBox<Airport> fromCombo;
     @FXML private ComboBox<Airport> toCombo;
     @FXML private DatePicker departureDatePicker;
@@ -49,6 +51,9 @@ public class HomeController implements WizardStepController {
     public void init(BookingContext context, Runnable onNext) {
         this.bookingContext = context;
         this.onNext = onNext;
+        if (topBar != null) {
+            topBar.bind(context);
+        }
     }
 
     @FXML

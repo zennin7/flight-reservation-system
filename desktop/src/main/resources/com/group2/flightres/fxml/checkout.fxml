@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import com.group2.flightres.component.GlassTopBar?>
 <?import com.group2.flightres.component.StepperBar?>
 <?import com.group2.flightres.config.BrandConfig?>
 <?import com.group2.flightres.util.GlassBackground?>
@@ -22,51 +23,24 @@
 <GlassBackground xmlns="http://javafx.com/javafx"
                  xmlns:fx="http://javafx.com/fxml"
                  fx:controller="com.group2.flightres.controller.CheckoutController"
-                 photoPath="/com/group2/flightres/photos/aerial-1.jpg"
-                 blurRadius="26.0"
-                 darkness="-0.52"
-                 saturation="0.10"
-                 linearOverlay="linear-gradient(to bottom, rgba(13,28,36,0.45) 0%, rgba(18,23,29,0.82) 100%)"
-                 radialGlow="radial-gradient(center 15% 100%, radius 50%, rgba(241, 238, 223, 0.14) 0%, transparent 100%)"
+                 photoPath="/com/group2/flightres/photos/aerial-2.jpg"
+                 blurRadius="0.0"
+                 darkness="0.0"
+                 saturation="0.0"
                  enableSecondaryGlow="false"
                  stylesheets="@../css/glass.css"
                  styleClass="seat-map-glass-root"
                  prefWidth="1280"
-                 prefHeight="860"
-                 minWidth="1280"
-                 minHeight="860"
-                 maxWidth="1280"
-                 maxHeight="860">
+                 prefHeight="800"
+                 minWidth="1024"
+                 minHeight="700">
 
-    <VBox alignment="TOP_CENTER" spacing="0" prefWidth="1280" prefHeight="860" minWidth="1280" minHeight="860" maxWidth="1280" maxHeight="860">
+    <VBox alignment="TOP_CENTER" spacing="0" VBox.vgrow="ALWAYS">
 
         <!-- ===================================================================
-             TOP NAV (64 high, padding 0 56)
+             TOP NAV (64 high, web-parity GlassTopBar)
              =================================================================== -->
-        <HBox alignment="CENTER_LEFT" prefHeight="64" minHeight="64" maxHeight="64" styleClass="glass-nav-bar">
-            <!-- Brand row: white plane icon + APP_NAME -->
-            <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleNavHome" style="-fx-cursor: hand;">
-                <SVGPath content="M3 13l18-8-6 16-3-7-9-1z" styleClass="nav-brand-plane"/>
-                <Label styleClass="nav-brand-text">
-                    <text><BrandConfig fx:constant="APP_NAME"/></text>
-                </Label>
-            </HBox>
-
-            <Region HBox.hgrow="ALWAYS"/>
-
-            <!-- Center floating pill nav links: Flights (active), My Bookings -->
-            <HBox alignment="CENTER" spacing="6" styleClass="glass-nav-pill">
-                <Button text="Flights" styleClass="glass-nav-link, glass-nav-link-active" onAction="#handleNavFlights"/>
-                <Button text="My Bookings" styleClass="glass-nav-link" onAction="#handleComingSoonMyBookings"/>
-            </HBox>
-
-            <Region HBox.hgrow="ALWAYS"/>
-
-            <!-- Right avatar circle: 34px diameter, -glass-cream with initials AM -->
-            <StackPane styleClass="glass-avatar-circle" onMouseClicked="#handleNavAvatar" style="-fx-cursor: hand;">
-                <Label text="AM" styleClass="glass-avatar-initials"/>
-            </StackPane>
-        </HBox>
+        <GlassTopBar fx:id="topBar" activeNav="flights"/>
 
         <!-- ===================================================================
              MAIN GLASS CARD (Margins: left/right 56, top 4, bottom 32)
@@ -108,7 +82,7 @@
                                 </HBox>
                                 <Region VBox.vgrow="ALWAYS"/>
                                 <Label text="FROM JOHANNESBURG TO" style="-fx-font-size: 11px; -fx-font-family: 'Inter Medium', sans-serif; -fx-text-fill: rgba(255,255,255,0.85); -fx-letter-spacing: 0.16em;"/>
-                                <Label fx:id="tripOriginDestLabel" text="Cape Town" style="-fx-font-family: 'Lora Medium', Georgia, serif; -fx-font-size: 26px; -fx-font-weight: 500; -fx-text-fill: #ffffff;"/>
+                                <Label fx:id="tripOriginDestLabel" text="Cape Town" style="-fx-font-family: 'Inter Bold', 'Inter', sans-serif; -fx-font-size: 26px; -fx-font-weight: 700; -fx-text-fill: #ffffff;"/>
                             </VBox>
                         </StackPane>
 

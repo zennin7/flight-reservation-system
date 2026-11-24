@@ -2,6 +2,7 @@ package com.group2.flightres.controller;
 
 import com.group2.flightres.config.BoardingPolicy;
 import com.group2.flightres.config.BrandConfig;
+import com.group2.flightres.component.GlassTopBar;
 import com.group2.flightres.component.TicketView;
 import com.group2.flightres.model.TicketData;
 import com.group2.flightres.service.BookingService;
@@ -113,6 +114,7 @@ public class BookingConfirmationController implements WizardStepController {
     @FXML private Circle topNotch;
     @FXML private Circle bottomNotch;
 
+    @FXML private GlassTopBar topBar;
     // Payment & Timeline controls
     @FXML private Label baseFareLabel;
     @FXML private Label demandPricingLabel;
@@ -135,6 +137,9 @@ public class BookingConfirmationController implements WizardStepController {
     public void init(BookingContext context, Runnable onHome) {
         this.bookingContext = context;
         this.onHome = onHome;
+        if (topBar != null) {
+            topBar.bind(context);
+        }
         populateData();
     }
 
@@ -374,13 +379,11 @@ public class BookingConfirmationController implements WizardStepController {
     }
 
     private String formatExactPrice(BigDecimal price) {
-        if (price == null) return "R 0";
-        return String.format(Locale.US, "R %,d", price.longValue());
+        return com.group2.flightres.util.MoneyFormatter.format(price);
     }
 
     private String formatTotalText(BigDecimal price) {
-        if (price == null) return "R 0";
-        return String.format(Locale.US, "R %,d", price.longValue());
+        return com.group2.flightres.util.MoneyFormatter.format(price);
     }
 
     @FXML

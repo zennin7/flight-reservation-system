@@ -300,7 +300,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     }
 
     private String formatPrice(double val) {
-        return "R " + String.format(Locale.ENGLISH, "%,d", Math.round(val));
+        return MoneyFormatter.format(java.math.BigDecimal.valueOf(val));
     }
 
     /**

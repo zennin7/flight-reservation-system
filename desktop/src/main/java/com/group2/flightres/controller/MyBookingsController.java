@@ -1,5 +1,6 @@
 package com.group2.flightres.controller;
 
+import com.group2.flightres.component.GlassTopBar;
 import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
@@ -73,6 +74,7 @@ public class MyBookingsController {
     @FXML private Label errorMessageLabel;
     @FXML private Button retryButton;
 
+    @FXML private GlassTopBar topBar;
     @FXML private Label avatarInitialsLabel;
     @FXML private StackPane avatarCircle;
 
@@ -101,6 +103,12 @@ public class MyBookingsController {
     public void init(BookingContext context, Runnable onSearchFlights) {
         this.bookingContext = context != null ? context : new BookingContext();
         this.onSearchFlights = onSearchFlights;
+        if (topBar != null) {
+            topBar.bind(this.bookingContext);
+            if (onSearchFlights != null) {
+                topBar.setOnFlightsAction(onSearchFlights);
+            }
+        }
         updateAvatar();
         loadBookings();
     }

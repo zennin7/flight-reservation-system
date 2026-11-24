@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import com.group2.flightres.component.GlassTopBar?>
 <?import com.group2.flightres.config.BrandConfig?>
 <?import com.group2.flightres.util.GlassBackground?>
 <?import javafx.geometry.Insets?>
@@ -16,12 +17,11 @@
 <GlassBackground xmlns="http://javafx.com/javafx"
                  xmlns:fx="http://javafx.com/fxml"
                  fx:controller="com.group2.flightres.controller.HomeController"
-                 photoPath="/com/group2/flightres/photos/aerial-1.jpg"
-                 blurRadius="18.0"
-                 darkness="-0.45"
-                 saturation="0.08"
-                 linearOverlay="linear-gradient(to bottom, rgba(13,28,36,0.42) 0%, rgba(18,23,29,0.84) 100%)"
-                 radialGlow="radial-gradient(center 20% 10%, radius 55%, rgba(241, 238, 223, 0.14) 0%, transparent 100%)"
+                 photoPath="/com/group2/flightres/photos/home-hero.jpg"
+                 blurRadius="0.0"
+                 darkness="0.0"
+                 saturation="0.0"
+                 heroScrim="true"
                  enableSecondaryGlow="false"
                  stylesheets="@../css/glass.css"
                  styleClass="home-root"
@@ -30,7 +30,10 @@
                  minWidth="1024"
                  minHeight="700">
 
-    <VBox alignment="CENTER" spacing="28" maxWidth="1040">
+    <VBox alignment="TOP_CENTER" spacing="0" VBox.vgrow="ALWAYS">
+        <GlassTopBar fx:id="topBar" activeNav="home"/>
+
+        <VBox alignment="CENTER" spacing="28" maxWidth="1040" VBox.vgrow="ALWAYS">
         <padding>
             <Insets top="36" right="48" bottom="36" left="48"/>
         </padding>
@@ -136,6 +139,7 @@
                 </VBox>
             </HBox>
         </HBox>
+        </VBox>
     </VBox>
 
 </GlassBackground>

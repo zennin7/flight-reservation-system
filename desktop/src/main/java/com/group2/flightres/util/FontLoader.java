@@ -8,7 +8,8 @@ import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Loads and registers custom Google Fonts (Inter and Lora) into JavaFX's global font registry.
+ * Loads and registers the bundled Inter sans-serif fonts into JavaFX's global font registry,
+ * matching the Sky Royal web typography.
  */
 public final class FontLoader {
 
@@ -19,9 +20,7 @@ public final class FontLoader {
             "/com/group2/flightres/fonts/Inter-Regular.ttf",
             "/com/group2/flightres/fonts/Inter-Medium.ttf",
             "/com/group2/flightres/fonts/Inter-SemiBold.ttf",
-            "/com/group2/flightres/fonts/Inter-Bold.ttf",
-            "/com/group2/flightres/fonts/Lora-Medium.ttf",
-            "/com/group2/flightres/fonts/Lora-SemiBold.ttf"
+            "/com/group2/flightres/fonts/Inter-Bold.ttf"
     };
 
     private FontLoader() {
@@ -49,11 +48,11 @@ public final class FontLoader {
                     logger.error("Failed to load font from resource: {}", fontFile, e);
                 }
             }
-            // Diagnostic: print all registered families so we can verify exact names
+            // Diagnostic: print registered Inter families so we can verify exact names
             java.util.List<String> families = Font.getFamilies();
-            logger.info("FONT_FAMILIES_WITH_LORA: {}",
+            logger.info("FONT_FAMILIES_INTER: {}",
                     families.stream()
-                            .filter(f -> f.toLowerCase().contains("lora") || f.toLowerCase().contains("inter"))
+                            .filter(f -> f.toLowerCase().contains("inter"))
                             .collect(java.util.stream.Collectors.toList()));
             logger.info("ALL_FONT_FAMILIES_COUNT: {}", families.size());
         }

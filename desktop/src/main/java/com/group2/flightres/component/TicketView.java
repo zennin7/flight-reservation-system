@@ -241,7 +241,7 @@ public class TicketView extends StackPane {
         }
         if (stubFareContainer != null && stubFareLabel != null) {
             if (ticketData.totalPrice() != null) {
-                stubFareLabel.setText(String.format(java.util.Locale.US, "R %,d", ticketData.totalPrice().longValue()));
+                stubFareLabel.setText(com.group2.flightres.util.MoneyFormatter.format(ticketData.totalPrice()));
                 stubFareContainer.setVisible(true);
                 stubFareContainer.setManaged(true);
             } else {

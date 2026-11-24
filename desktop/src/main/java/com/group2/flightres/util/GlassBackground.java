@@ -27,15 +27,15 @@ public class GlassBackground extends StackPane {
 
     private static final Logger logger = LoggerFactory.getLogger(GlassBackground.class);
 
-    public static final double DEFAULT_BLUR_RADIUS = 18.0;
-    public static final double DEFAULT_DARKNESS = -0.22;
+    public static final double DEFAULT_BLUR_RADIUS = 0.0;
+    public static final double DEFAULT_DARKNESS = 0.0;
     public static final double DEFAULT_SATURATION = 0.0;
     public static final String DEFAULT_NAVY_OVERLAY_COLOR =
-            "linear-gradient(to bottom, rgba(11, 16, 22, 0.28) 0%, rgba(11, 16, 22, 0.38) 45%, rgba(11, 16, 22, 0.58) 100%)";
-    public static final String DEFAULT_RADIAL_GLOW_GOLD =
-            "radial-gradient(center 20% 22%, radius 65%, rgba(255,255,255,0.06) 0%, transparent 100%);";
-    public static final String DEFAULT_RADIAL_GLOW_BLUE =
-            "radial-gradient(center 80% 78%, radius 60%, rgba(77,163,255,0.10) 0%, transparent 100%);";
+            "linear-gradient(to bottom, rgba(11, 16, 22, 0.24) 0%, rgba(11, 16, 22, 0.30) 48%, rgba(11, 16, 22, 0.48) 100%)";
+    public static final String HERO_LEFT_SCRIM =
+            "linear-gradient(to right, rgba(11, 16, 22, 0.62) 0%, rgba(11, 16, 22, 0.34) 44%, rgba(11, 16, 22, 0.0) 76%)";
+    public static final String DEFAULT_RADIAL_GLOW_GOLD = "transparent";
+    public static final String DEFAULT_RADIAL_GLOW_BLUE = "transparent";
 
     private final ImageView backgroundImageView = new ImageView();
     private final ColorAdjust colorAdjust = new ColorAdjust();
@@ -52,7 +52,8 @@ public class GlassBackground extends StackPane {
     private double currentSaturation = DEFAULT_SATURATION;
     private String currentLinearOverlay = DEFAULT_NAVY_OVERLAY_COLOR;
     private String currentRadialGlow = DEFAULT_RADIAL_GLOW_GOLD;
-    private boolean enableSecondaryGlow = true;
+    private boolean enableSecondaryGlow = false;
+    private boolean heroScrim = false;
 
     public GlassBackground() {
         this("/com/group2/flightres/photos/aerial-1.jpg");
@@ -68,7 +69,7 @@ public class GlassBackground extends StackPane {
 
     public GlassBackground(String photoPath, double blurRadius, double darkness, Node content) {
         this(photoPath, blurRadius, darkness, DEFAULT_SATURATION,
-                DEFAULT_NAVY_OVERLAY_COLOR, DEFAULT_RADIAL_GLOW_GOLD, true, content);
+                DEFAULT_NAVY_OVERLAY_COLOR, DEFAULT_RADIAL_GLOW_GOLD, false, content);
     }
 
     public GlassBackground(String photoPath, double blurRadius, double darkness, double saturation,
@@ -82,8 +83,7 @@ public class GlassBackground extends StackPane {
         setDarkness(darkness);
         setSaturation(saturation);
         setBlurRadius(blurRadius);
-        gaussianBlur.setInput(colorAdjust);
-        backgroundImageView.setEffect(gaussianBlur);
+        updateImageEffects();
 
         // 2. Configure linear overlay
         setLinearOverlay(linearOverlay != null ? linearOverlay : DEFAULT_NAVY_OVERLAY_COLOR);
@@ -173,8 +173,9 @@ public class GlassBackground extends StackPane {
     }
 
     public void setBlurRadius(double radius) {
-        this.currentBlurRadius = radius;
-        gaussianBlur.setRadius(Math.max(0.0, radius));
+        this.currentBlurRadius = Math.max(0.0, radius);
+        gaussianBlur.setRadius(this.currentBlurRadius);
+        updateImageEffects();
     }
 
     public double getDarkness() {
@@ -184,6 +185,7 @@ public class GlassBackground extends StackPane {
     public void setDarkness(double darkness) {
         this.currentDarkness = darkness;
         colorAdjust.setBrightness(Math.max(-1.0, Math.min(1.0, darkness)));
+        updateImageEffects();
     }
 
     public double getSaturation() {
@@ -193,6 +195,36 @@ public class GlassBackground extends StackPane {
     public void setSaturation(double saturation) {
         this.currentSaturation = saturation;
         colorAdjust.setSaturation(Math.max(-1.0, Math.min(1.0, saturation)));
+        updateImageEffects();
+    }
+
+    private void updateImageEffects() {
+        boolean needsColor = Math.abs(currentDarkness) > 0.001 || Math.abs(currentSaturation) > 0.001;
+        boolean needsBlur = currentBlurRadius > 0.05;
+        if (needsBlur && needsColor) {
+            gaussianBlur.setInput(colorAdjust);
+            backgroundImageView.setEffect(gaussianBlur);
+        } else if (needsBlur) {
+            gaussianBlur.setInput(null);
+            backgroundImageView.setEffect(gaussianBlur);
+        } else if (needsColor) {
+            backgroundImageView.setEffect(colorAdjust);
+        } else {
+            backgroundImageView.setEffect(null);
+        }
+    }
+
+    public boolean isHeroScrim() {
+        return heroScrim;
+    }
+
+    public void setHeroScrim(boolean heroScrim) {
+        this.heroScrim = heroScrim;
+        if (heroScrim) {
+            setLinearOverlay(HERO_LEFT_SCRIM + ", " + DEFAULT_NAVY_OVERLAY_COLOR);
+        } else {
+            setLinearOverlay(DEFAULT_NAVY_OVERLAY_COLOR);
+        }
     }
 
     public String getLinearOverlay() {

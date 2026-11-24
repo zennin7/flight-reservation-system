@@ -22,11 +22,9 @@
                  xmlns:fx="http://javafx.com/fxml"
                  fx:controller="com.group2.flightres.controller.LoginController"
                  photoPath="/com/group2/flightres/photos/aerial-1.jpg"
-                 blurRadius="26.0"
-                 darkness="-0.52"
-                 saturation="0.10"
-                 linearOverlay="linear-gradient(to bottom, rgba(13,28,36,0.45) 0%, rgba(18,23,29,0.82) 100%)"
-                 radialGlow="radial-gradient(center 85% 10%, radius 45%, rgba(241, 238, 223, 0.14) 0%, transparent 100%)"
+                 blurRadius="0.0"
+                 darkness="0.0"
+                 saturation="0.0"
                  enableSecondaryGlow="false"
                  stylesheets="@../css/glass.css"
                  styleClass="login-root"
@@ -57,7 +55,7 @@
 
             <ImageView fitWidth="520" fitHeight="592" preserveRatio="false">
                 <image>
-                    <Image url="@../photos/dest-cape-town.jpg"/>
+                    <Image url="@../photos/login-side.jpg"/>
                 </image>
             </ImageView>
 

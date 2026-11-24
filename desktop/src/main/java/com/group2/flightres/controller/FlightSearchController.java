@@ -1,5 +1,6 @@
 package com.group2.flightres.controller;
 
+import com.group2.flightres.component.GlassTopBar;
 import com.group2.flightres.model.Airport;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.FlightSearchResult;
@@ -46,6 +47,7 @@ public class FlightSearchController implements WizardStepController {
     private static final Logger logger = LoggerFactory.getLogger(FlightSearchController.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    @FXML private GlassTopBar topBar;
     @FXML private ComboBox<Airport> fromCombo;
     @FXML private ComboBox<Airport> toCombo;
     @FXML private DatePicker departureDatePicker;
@@ -82,6 +84,9 @@ public class FlightSearchController implements WizardStepController {
     public void init(BookingContext context, Runnable onNext) {
         this.bookingContext = context;
         this.onNext = onNext;
+        if (topBar != null) {
+            topBar.bind(context);
+        }
         if (bookingContext != null) {
             List<Airport> airports = flightService.listAirports();
             if (bookingContext.getOrigin() != null && !bookingContext.getOrigin().isBlank() && fromCombo != null) {

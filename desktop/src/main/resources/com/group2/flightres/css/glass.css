@@ -53,18 +53,18 @@
  * ------------------------------------------------------------------- */
 
 .glass-panel {
-    -fx-background-color: rgba(255, 255, 255, 0.09);
+    -fx-background-color: rgba(15, 19, 24, 0.48);
     -fx-background-radius: 28px;
-    -fx-border-color: rgba(255, 255, 255, 0.16);
+    -fx-border-color: rgba(255, 255, 255, 0.18);
     -fx-border-width: 1px;
     -fx-border-radius: 28px;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 32, 0.0, 0, 12);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.42), 32, 0.0, 0, 12);
 }
 
 .glass-card {
-    -fx-background-color: rgba(15, 19, 24, 0.34);
+    -fx-background-color: rgba(12, 16, 22, 0.48);
     -fx-background-radius: 20px;
-    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-color: rgba(255, 255, 255, 0.16);
     -fx-border-width: 1px;
     -fx-border-radius: 20px;
 }
@@ -256,8 +256,9 @@
  * ------------------------------------------------------------------- */
 
 .headline-serif, .glass-headline {
-    -fx-font-family: 'Lora SemiBold';
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
     -fx-font-size: 32px;
+    -fx-font-weight: 700;
     -fx-text-fill: #ffffff;
 }
 
@@ -307,10 +308,11 @@
     -fx-text-fill: #ffffff;
 }
 
-/* Left panel headline: Lora Medium 38px, line-height 1.12 */
+/* Left panel headline: Inter Bold 38px */
 .login-hero-headline {
-    -fx-font-family: 'Lora Medium';
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
     -fx-font-size: 38px;
+    -fx-font-weight: 700;
     -fx-text-fill: #ffffff;
     -fx-line-spacing: -2px;
 }
@@ -345,10 +347,11 @@
     -fx-text-fill: -glass-cream;
 }
 
-/* Right side title: "Sign in" Lora Medium 34px */
+/* Right side title: "Sign in" Inter Bold 32px */
 .login-title-serif {
-    -fx-font-family: 'Lora Medium';
-    -fx-font-size: 34px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 32px;
+    -fx-font-weight: 700;
     -fx-text-fill: #ffffff;
 }
 
@@ -1422,9 +1425,9 @@
 }
 
 .confirmation-title-serif {
-    -fx-font-family: 'Lora Medium', 'Lora', Georgia, serif;
-    -fx-font-size: 38px;
-    -fx-font-weight: 500;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 42px;
+    -fx-font-weight: 700;
     -fx-text-fill: #ffffff;
 }
 
@@ -1650,9 +1653,9 @@
 }
 
 .ticket-welcome-city {
-    -fx-font-family: 'Lora Medium', 'Lora SemiBold', 'Lora', Georgia, serif;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
     -fx-font-size: 21px;
-    -fx-font-weight: 500;
+    -fx-font-weight: 700;
     -fx-text-fill: #ffffff;
 }
 
@@ -2856,3 +2859,123 @@
 /* Step 5: unclipped admin status badges & clean active nav pills */
 .badge { -fx-padding: 3px 9px; -fx-alignment: center; }
 .nav-link-btn.nav-link-active, .nav-link-active { -fx-border-color: transparent; -fx-border-width: 0; }
+
+/* ============================================================================
+   P5b Step 1: Web-Parity Foundation (Inter sans, Vivid Glass, Exact TopBar)
+   ============================================================================ */
+.glass-nav-bar {
+    -fx-padding: 0 56px;
+    -fx-background-color: transparent;
+}
+.login-split-card {
+    -fx-background-color: rgba(15, 19, 24, 0.68);
+    -fx-background-radius: 28px;
+    -fx-border-color: rgba(255, 255, 255, 0.22);
+    -fx-border-width: 1px;
+    -fx-border-radius: 28px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 48, 0.0, 0, 18);
+}
+.inner-card {
+    -fx-background-color: rgba(15, 19, 24, 0.68);
+    -fx-border-color: rgba(255, 255, 255, 0.16);
+}
+.search-main-glass {
+    -fx-background-color: rgba(15, 19, 24, 0.56);
+    -fx-border-color: rgba(255, 255, 255, 0.18);
+}
+.nav-brand-box {
+    -fx-cursor: hand;
+}
+.nav-brand-badge {
+    -fx-min-width: 34px;
+    -fx-min-height: 34px;
+    -fx-pref-width: 34px;
+    -fx-pref-height: 34px;
+    -fx-max-width: 34px;
+    -fx-max-height: 34px;
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.24), 10, 0.0, 0, 3);
+}
+.nav-brand-badge-icon {
+    -fx-fill: -glass-ink;
+}
+.nav-brand-text {
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -glass-white;
+}
+.glass-nav-pill {
+    -fx-background-color: rgba(15, 19, 24, 0.52);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 255, 255, 0.20);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 4px 5px;
+    -fx-max-height: 44px;
+    -fx-pref-height: 44px;
+}
+.glass-nav-pill .glass-nav-link {
+    -fx-background-color: transparent;
+    -fx-text-fill: rgba(255, 255, 255, 0.86);
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-padding: 6px 16px;
+    -fx-background-radius: 999px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+}
+.glass-nav-pill .glass-nav-link:hover {
+    -fx-text-fill: -glass-white;
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+}
+.glass-nav-pill .glass-nav-link-active {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-font-weight: 700;
+}
+.glass-nav-pill .glass-nav-link-active:hover {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+}
+.glass-avatar-pill {
+    -fx-background-color: rgba(15, 19, 24, 0.52);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 255, 255, 0.20);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 4px 14px 4px 5px;
+    -fx-max-height: 40px;
+    -fx-pref-height: 40px;
+    -fx-cursor: hand;
+}
+.glass-avatar-pill:hover {
+    -fx-background-color: rgba(15, 19, 24, 0.68);
+    -fx-border-color: rgba(255, 255, 255, 0.34);
+}
+.glass-avatar-pill .glass-avatar-circle {
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-pref-width: 30px;
+    -fx-pref-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+    -fx-background-color: -glass-cream;
+    -fx-background-radius: 999px;
+    -fx-border-width: 0;
+}
+.glass-avatar-pill .glass-avatar-initials {
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -glass-ink;
+}
+.glass-avatar-name {
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -glass-white;
+}

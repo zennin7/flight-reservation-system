@@ -1,5 +1,6 @@
 package com.group2.flightres.controller;
 
+import com.group2.flightres.component.GlassTopBar;
 import com.group2.flightres.dao.FlightDao;
 import com.group2.flightres.dao.impl.FlightDaoImpl;
 import com.group2.flightres.dao.impl.SeatDaoImpl;
@@ -92,6 +93,7 @@ public class SeatMapController implements WizardStepController {
     private final Map<String, Button> seatButtonsByLabel = new HashMap<>();
     private final Map<String, FlightSeat> seatsByLabel = new HashMap<>();
     private final List<FlightSeat> selectedSeats = new ArrayList<>();
+    @FXML private GlassTopBar topBar;
     private boolean isSampleData = false;
 
     private BookingContext bookingContext;
@@ -120,6 +122,9 @@ public class SeatMapController implements WizardStepController {
         this.bookingContext = context;
         this.onNext = onNext;
         this.onBack = onBack;
+        if (topBar != null) {
+            topBar.bind(context);
+        }
         if (context != null && context.getFlightId() != null) {
             this.flightId = context.getFlightId();
         }
@@ -352,7 +357,7 @@ public class SeatMapController implements WizardStepController {
             String demandStr = (quote.demandAdjustment().compareTo(BigDecimal.ZERO) >= 0 ? "+ " : "") + formatPrice(quote.demandAdjustment());
             String timingStr = (quote.timingAdjustment().compareTo(BigDecimal.ZERO) >= 0 ? "+ " : "") + formatPrice(quote.timingAdjustment());
             String totalStr = formatPrice(quote.total());
-            String vatStr = String.format(Locale.US, "Includes VAT R %,.2f", quote.vatIncluded().doubleValue());
+            String vatStr = "Includes VAT (15%) " + com.group2.flightres.util.MoneyFormatter.format(quote.vatIncluded());
 
             if (baseFareLabel != null) baseFareLabel.setText(baseStr);
             if (classMultiplierLabel != null) classMultiplierLabel.setText("x " + quote.classMultiplier());
@@ -388,8 +393,7 @@ public class SeatMapController implements WizardStepController {
     }
 
     private String formatPrice(BigDecimal price) {
-        if (price == null) return "R 0";
-        return String.format(Locale.US, "R %,d", price.longValue());
+        return com.group2.flightres.util.MoneyFormatter.format(price);
     }
 
     @FXML
