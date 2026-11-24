@@ -693,11 +693,18 @@ public class GlassSeatMapBridge extends StackPane {
         if (flightDurationLabel != null) flightDurationLabel.setText(duration);
 
         if (planeCardSubtitle != null) {
-            String sub = (!aircraft.isBlank() ? aircraft + " · " : "")
-                    + (!orig.isBlank() && !dest.isBlank() ? orig + " to " + dest : "")
-                    + (!dateStr.isBlank() ? " · " + dateStr : "")
-                    + (!duration.isBlank() ? " · " + duration : "");
-            planeCardSubtitle.setText(sub);
+            String route = (!orig.isBlank() && !dest.isBlank()) ? (orig + " to " + dest) : "";
+            StringBuilder sb = new StringBuilder();
+            if (!route.isBlank()) sb.append(route);
+            if (!dateStr.isBlank()) {
+                if (sb.length() > 0) sb.append(" · ");
+                sb.append(dateStr);
+            }
+            if (!aircraft.isBlank()) {
+                if (sb.length() > 0) sb.append(" · ");
+                sb.append(aircraft);
+            }
+            planeCardSubtitle.setText(sb.toString());
         }
 
         // Count free seats
@@ -718,13 +725,27 @@ public class GlassSeatMapBridge extends StackPane {
     }
 
     private String extractAirportCode(String val) {
-        if (val == null) return "";
+        if (val == null || val.isBlank()) return "";
         int open = val.lastIndexOf('(');
         int close = val.lastIndexOf(')');
         if (open >= 0 && close > open) {
-            return val.substring(open + 1, close);
+            return val.substring(open + 1, close).trim().toUpperCase(Locale.ROOT);
         }
-        return val.trim();
+        String trimmed = val.trim();
+        if (trimmed.length() == 3 && trimmed.chars().allMatch(Character::isLetter)) {
+            return trimmed.toUpperCase(Locale.ROOT);
+        }
+        String lower = trimmed.toLowerCase(Locale.ROOT);
+        if (lower.contains("tambo") || lower.contains("johannesburg")) return "JNB";
+        if (lower.contains("cape town")) return "CPT";
+        if (lower.contains("shaka") || lower.contains("durban")) return "DUR";
+        if (lower.contains("stuurman") || lower.contains("gqeberha") || lower.contains("port elizabeth")) return "PLZ";
+        if (lower.contains("geneva")) return "GVA";
+        if (lower.contains("nice") || lower.contains("monaco")) return "NCE";
+        if (lower.contains("dubai")) return "DXB";
+        if (lower.contains("rome") || lower.contains("fiumicino")) return "FCO";
+        if (lower.contains("santorini")) return "JTR";
+        return trimmed.length() <= 6 ? trimmed : trimmed.substring(0, 3).toUpperCase(Locale.ROOT);
     }
 
 
@@ -741,8 +762,13 @@ public class GlassSeatMapBridge extends StackPane {
         btn.getStyleClass().add("seat-btn");
         if (seat != null && seat.getStatus() == SeatStatus.BOOKED) {
             btn.getStyleClass().add("seat-taken");
+            btn.setText("× " + label);
+        } else if (seat != null && seat.getStatus() == SeatStatus.HELD) {
+            btn.getStyleClass().add("seat-held-other");
+            btn.setText("• " + label);
         } else {
             btn.getStyleClass().add("seat-available");
+            btn.setText(label);
             if (seat != null && seat.getSeatClass() == SeatClass.FIRST) {
                 btn.getStyleClass().add("seat-first-class");
             }

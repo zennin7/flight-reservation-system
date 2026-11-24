@@ -66,7 +66,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     private double minDurationBound = 0.0;
     private double maxDurationBound = Double.MAX_VALUE;
 
-    private boolean economyFilterActive = false;
+    private boolean economyFilterActive = true;
     private boolean firstClassFilterActive = false;
 
     private Long expandedFlightId = null; // expand 2nd card (index 1) by default
@@ -220,6 +220,8 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             }
 
             updateLocationLabels();
+            updateCheckStyles();
+            updatePillStyles();
             ObservableList<FlightSearchResult> items = getItems();
             if (items != null && !items.isEmpty() && cardsContainer != null) {
                 updateFilterBounds(new ArrayList<>(items));
@@ -934,8 +936,11 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         destTime.setMinWidth(Region.USE_PREF_SIZE);
         destBlock.getChildren().addAll(destName, destTime);
 
-        // Price Block (right aligned)
-        Label priceLabel = new Label(flight.getPriceFormatted());
+        // Price Block (right aligned) — single MoneyFormatter format (R 1,284.00)
+        String priceStr = flight.getBasePrice() != null
+                ? MoneyFormatter.format(flight.getBasePrice())
+                : flight.getPriceFormatted();
+        Label priceLabel = new Label(priceStr);
         priceLabel.getStyleClass().add("flight-price-bold");
         priceLabel.setMinWidth(Region.USE_PREF_SIZE);
         priceLabel.setAlignment(Pos.CENTER_RIGHT);

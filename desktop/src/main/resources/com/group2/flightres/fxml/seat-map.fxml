@@ -7,6 +7,7 @@
 <?import com.group2.flightres.util.GlassPlaneGraphic?>
 <?import com.group2.flightres.util.GlassSeatMapBridge?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.Group?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.image.Image?>
@@ -32,10 +33,12 @@
                  styleClass="seat-map-glass-root"
                  prefWidth="1280"
                  prefHeight="800"
-                 minWidth="1024"
-                 minHeight="700">
+                 minWidth="1280"
+                 minHeight="800"
+                 maxWidth="1280"
+                 maxHeight="800">
 
-    <VBox alignment="TOP_CENTER" spacing="0" VBox.vgrow="ALWAYS">
+    <VBox alignment="TOP_CENTER" spacing="0" prefWidth="1280" prefHeight="800" minWidth="1280" minHeight="800" maxWidth="1280" maxHeight="800">
 
         <!-- ===================================================================
              TOP NAV (64 high, web-parity GlassTopBar)
@@ -45,45 +48,42 @@
         <!-- ===================================================================
              MAIN GLASS CARD
              =================================================================== -->
-        <VBox VBox.vgrow="ALWAYS" spacing="14" styleClass="search-main-glass"
-              prefWidth="1168" minWidth="1168" maxWidth="1168">
+        <VBox VBox.vgrow="ALWAYS" spacing="12" styleClass="search-main-glass"
+              maxWidth="1168">
             <VBox.margin>
-                <Insets top="4" right="56" bottom="32" left="56"/>
+                <Insets top="4" right="40" bottom="20" left="40"/>
             </VBox.margin>
 
             <!-- 1. Stepper Bar -->
-            <HBox alignment="CENTER" prefHeight="52" minHeight="52" maxHeight="52" styleClass="glass-stepper-card">
-                <StepperBar fx:id="stepperBar" alignment="CENTER" prefHeight="52"/>
+            <HBox alignment="CENTER" prefHeight="48" minHeight="48" maxHeight="48" styleClass="glass-stepper-card">
+                <StepperBar fx:id="stepperBar" alignment="CENTER" prefHeight="48"/>
             </HBox>
 
-            <!-- 2. Main Workspace Split: Left Columns (796w) + Right Column (330w) -->
-            <HBox VBox.vgrow="ALWAYS" spacing="14" minHeight="0" prefWidth="1140" minWidth="1140" maxWidth="1140">
+            <!-- 2. Main Workspace Split: Left Columns + Right Column (320w) -->
+            <HBox VBox.vgrow="ALWAYS" spacing="14" minHeight="0">
 
                 <!-- LEFT COLUMN: Plane Card + (Cabin Photo Card + Seat Grid) -->
-                <VBox prefWidth="796" minWidth="796" maxWidth="796" spacing="14" minHeight="0">
+                <VBox HBox.hgrow="ALWAYS" spacing="12" minHeight="0">
 
                     <!-- A. Plane Card -->
-                    <VBox prefHeight="236" minHeight="236" maxHeight="236" prefWidth="796" minWidth="796" maxWidth="796"
+                    <VBox prefHeight="214" minHeight="214" maxHeight="214"
                           styleClass="glass-card, seat-plane-card">
-                        <clip>
-                            <Rectangle width="796" height="236" arcWidth="40" arcHeight="40"/>
-                        </clip>
 
-                        <HBox alignment="TOP_LEFT" prefWidth="752" minWidth="752" maxWidth="752" spacing="12">
+                        <HBox alignment="TOP_LEFT" spacing="12">
                             <VBox spacing="2" HBox.hgrow="ALWAYS">
-                                <Label text="Choose your seat" styleClass="seat-card-title"/>
+                                <Label text="Choose your seat" styleClass="seat-card-title" minWidth="-Infinity"/>
                                 <Label fx:id="planeCardSubtitle" text="-" styleClass="seat-card-subtitle"/>
                             </VBox>
 
-                            <HBox styleClass="section-tab-bar" spacing="4">
+                            <HBox styleClass="section-tab-bar" spacing="4" minWidth="-Infinity">
                                 <Button fx:id="section1Tab" text="Section 1" minWidth="-Infinity" styleClass="section-tab, section-tab-on" onAction="#handleSelectSection1"/>
                                 <Button fx:id="section2Tab" text="Section 2" minWidth="-Infinity" styleClass="section-tab" onAction="#handleSelectSection2"/>
                                 <Button fx:id="section3Tab" text="Section 3" minWidth="-Infinity" styleClass="section-tab" onAction="#handleSelectSection3"/>
                             </HBox>
                         </HBox>
 
-                        <HBox spacing="6" VBox.vgrow="ALWAYS" alignment="CENTER_LEFT" prefWidth="752" minWidth="752" maxWidth="752">
-                            <VBox spacing="10" alignment="TOP_CENTER" styleClass="seat-zoom-col" minWidth="44" maxWidth="44">
+                        <HBox spacing="6" VBox.vgrow="ALWAYS" alignment="CENTER_LEFT">
+                            <VBox spacing="10" alignment="TOP_CENTER" styleClass="seat-zoom-col" minWidth="40" maxWidth="40">
                                 <Button styleClass="plane-action-btn" onAction="#handleZoomGrid" accessibleText="Zoom">
                                     <graphic>
                                         <SVGPath content="M11 4.5 A 6.5 6.5 0 1 0 11 17.5 A 6.5 6.5 0 1 0 11 4.5 M16 16l5 5 M11 8v6 M8 11h6"
@@ -92,44 +92,44 @@
                                 </Button>
                             </VBox>
 
-                            <StackPane alignment="CENTER" prefWidth="700" minWidth="700" maxWidth="700" prefHeight="170" minHeight="170" maxHeight="170">
-                                <GlassPlaneGraphic fx:id="planeGraphic" scaleX="0.77" scaleY="0.77" translateX="-36"/>
+                            <StackPane alignment="CENTER" HBox.hgrow="ALWAYS" prefHeight="152" minHeight="152" maxHeight="152" minWidth="0">
+                                <Group>
+                                    <GlassPlaneGraphic fx:id="planeGraphic" scaleX="0.72" scaleY="0.72"/>
+                                </Group>
                             </StackPane>
                         </HBox>
                     </VBox>
 
-                    <!-- B. Bottom Row: Cabin Photo Card (206w) + Seat Grid Card (576w) -->
-                    <HBox VBox.vgrow="ALWAYS" spacing="14" minHeight="0" prefWidth="796" minWidth="796" maxWidth="796">
+                    <!-- B. Bottom Row: Cabin Photo Card + Seat Grid Card -->
+                    <HBox VBox.vgrow="ALWAYS" spacing="14" minHeight="0">
 
                         <!-- Inside the cabin photo card (real bundled cabin photo) -->
-                        <StackPane prefWidth="206" minWidth="206" maxWidth="206" styleClass="seat-cabin-photo-card">
+                        <StackPane prefWidth="176" minWidth="172" maxWidth="180" styleClass="seat-cabin-photo-card">
                             <clip>
-                                <Rectangle width="206" height="440" arcWidth="36" arcHeight="36"/>
+                                <Rectangle width="176" height="400" arcWidth="36" arcHeight="36"/>
                             </clip>
-                            <ImageView fitWidth="206" fitHeight="440" preserveRatio="false">
+                            <ImageView fitWidth="176" fitHeight="400" preserveRatio="false">
                                 <image>
                                     <Image url="@../photos/cabin-economy-1.jpg"/>
                                 </image>
                             </ImageView>
                             <Region styleClass="seat-cabin-photo-scrim"/>
                             <VBox alignment="BOTTOM_LEFT" spacing="6" styleClass="seat-cabin-photo-content">
-                                <Label text="CABIN PREVIEW" styleClass="seat-cabin-kicker"/>
+                                <Label text="ECONOMY CABIN" styleClass="seat-cabin-kicker"/>
                                 <Label text="Inside the cabin" styleClass="seat-cabin-title"/>
                                 <Label text="Economy 3-3 and First 2-2 seating. Select any available seat on the map."
-                                       wrapText="true" prefWidth="170"
+                                       wrapText="true" prefWidth="136"
                                        styleClass="seat-cabin-desc"/>
                             </VBox>
                         </StackPane>
 
-                        <!-- Seat Grid Card (width 576) -->
-                        <VBox prefWidth="576" minWidth="576" maxWidth="576" styleClass="glass-card, seat-grid-card" spacing="10" minHeight="0">
-                            <HBox alignment="CENTER_LEFT" spacing="6">
-                                <Label fx:id="sectionHeaderLabel" text="-" styleClass="seat-section-header"/>
+                        <!-- Seat Grid Card -->
+                        <VBox HBox.hgrow="ALWAYS" styleClass="glass-card, seat-grid-card" spacing="8" minHeight="0">
+                            <VBox spacing="6">
+                                <Label fx:id="sectionHeaderLabel" text="-" styleClass="seat-section-header" minWidth="-Infinity"/>
 
-                                <Region HBox.hgrow="ALWAYS"/>
-
-                                <!-- Sky Royal Glass Legend: Available, First, Taken (x), Yours -->
-                                <HBox alignment="CENTER" spacing="8" minWidth="-Infinity">
+                                <!-- Sky Royal Glass Legend: Available, First, Taken (x), Held by another, Yours -->
+                                <HBox alignment="CENTER_LEFT" spacing="12" minWidth="-Infinity">
                                     <HBox alignment="CENTER" spacing="4" minWidth="-Infinity">
                                         <Region styleClass="seat-legend-swatch, seat-legend-available"/>
                                         <Label text="Available" minWidth="-Infinity" styleClass="seat-legend-label"/>
@@ -145,11 +145,15 @@
                                         <Label text="Taken" minWidth="-Infinity" styleClass="seat-legend-label"/>
                                     </HBox>
                                     <HBox alignment="CENTER" spacing="4" minWidth="-Infinity">
+                                        <Region styleClass="seat-legend-swatch, seat-legend-held"/>
+                                        <Label text="Held by another" minWidth="-Infinity" styleClass="seat-legend-label"/>
+                                    </HBox>
+                                    <HBox alignment="CENTER" spacing="4" minWidth="-Infinity">
                                         <Region styleClass="seat-legend-swatch, seat-legend-yours"/>
                                         <Label text="Yours" minWidth="-Infinity" styleClass="seat-legend-label"/>
                                     </HBox>
                                 </HBox>
-                            </HBox>
+                            </VBox>
 
                             <VBox fx:id="zoomContainer" alignment="CENTER" spacing="7" VBox.vgrow="ALWAYS">
                                 <HBox fx:id="seatGridNumbersRow" spacing="8" alignment="CENTER"/>
@@ -160,8 +164,8 @@
                     </HBox>
                 </VBox>
 
-                <!-- RIGHT COLUMN (width 330): Cream Selection Card + Flight Card -->
-                <VBox prefWidth="330" minWidth="330" maxWidth="330" spacing="12">
+                <!-- RIGHT COLUMN (width 306): Cream Selection Card + Flight Card -->
+                <VBox prefWidth="306" minWidth="296" maxWidth="310" spacing="10">
 
                     <!-- A. Selection Card (with Cream highlight header matching board-3) -->
                     <VBox styleClass="glass-card, seat-right-card" spacing="10">
@@ -221,7 +225,7 @@
                             </StackPane>
                             <VBox spacing="1" HBox.hgrow="ALWAYS">
                                 <Label fx:id="timerLabel" text="--:--" styleClass="seat-timer-val"/>
-                                <Label text="Held for you. Nobody else can take it." wrapText="true" prefWidth="204" maxWidth="240" styleClass="seat-timer-sub"/>
+                                <Label text="Held for you. Nobody else can take it." wrapText="true" prefWidth="172" minHeight="-Infinity" maxWidth="172" styleClass="seat-timer-sub"/>
                             </VBox>
                         </HBox>
 
@@ -229,21 +233,18 @@
                         <Button fx:id="continueButton"
                                 text="Continue to checkout"
                                 onAction="#handleContinue"
-                                prefHeight="48" minHeight="48" maxHeight="48"
+                                prefHeight="46" minHeight="46" maxHeight="46"
                                 maxWidth="Infinity"
                                 styleClass="btn-checkout-gold">
                             <graphic>
-                                <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
-                                    <Region HBox.hgrow="ALWAYS"/>
-                                    <SVGPath content="M9 6l6 6-6 6" styleClass="seat-continue-arrow"/>
-                                </HBox>
+                                <SVGPath content="M9 6l6 6-6 6" styleClass="seat-continue-arrow"/>
                             </graphic>
                         </Button>
 
                         <Button fx:id="releaseButton"
                                 text="Release seat and choose another"
                                 onAction="#handleReleaseSeat"
-                                prefHeight="40" minHeight="40" maxHeight="40"
+                                prefHeight="38" minHeight="38" maxHeight="38"
                                 maxWidth="Infinity"
                                 styleClass="btn-release-ghost"/>
                     </VBox>

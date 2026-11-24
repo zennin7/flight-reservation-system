@@ -53,7 +53,7 @@ public class FlightSearchController implements WizardStepController {
     @FXML private DatePicker departureDatePicker;
     @FXML private ComboBox<String> passengersCombo;
     @FXML private VBox returnCard;
-    @FXML private VBox travellersCard;
+    @FXML private javafx.scene.layout.Pane travellersCard;
     @FXML private Button searchButton;
 
     @FXML private TableView<FlightSearchResult> flightsTable;
