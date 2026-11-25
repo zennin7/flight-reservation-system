@@ -135,3 +135,38 @@ and visually inspected:
   - docs/screenshots/p8b/seat-map-1100.png  (1086x713) — plane & grid fit cleanly
   - docs/screenshots/p8b/seat-map-1366.png  (1352x731) — full seat map & flight card
 ================================================================================
+
+
+================================================================================
+4. TASK P8c ADDENDUM — SEAT MAP RESPONSIVE STACKING BELOW 1000 PX
+Date: 2026-11-25
+================================================================================
+- Failure addressed:
+  SeatMapAndCheckoutLayoutTest.testSeatMapLayout at width 900 on larger
+  (162-seat) aircraft where the wider seat grid pushed the right-hand
+  "Your selection" panel and top-bar user pill ("Demo Traveller") past rootMaxX
+  by ~35 px (scene maxX 920.8 vs root maxX 885.6).
+- Fix:
+  * desktop/src/main/resources/com/group2/flightres/fxml/seat-map.fxml:
+    Added fx:ids for mainGlassCard, workspaceRoot, workspaceSplit,
+    seatMapRightColumn, selectionCard, flightCard, timerSubLabel, and a hidden
+    stackedSelectionRow container below workspaceSplit (no ScrollPane in FXML so
+    headless root.lookup("#seatBtn_6A") in SeatMapKeyboardTest remains direct).
+  * desktop/src/main/java/com/group2/flightres/controller/SeatMapController.java:
+    Added responsive scene-width listener (threshold 1000 px). Below 1000 px,
+    selectionCard and flightCard move into stackedSelectionRow side-by-side
+    below the seat map, workspaceRoot is wrapped dynamically in a transparent
+    vertical ScrollPane (fitToWidth=true, hbarPolicy=NEVER), and timerSubLabel
+    maxWidth binds to selectionCard width. At >= 1000 px (1100, 1280, 1366+),
+    the original side-by-side layout is preserved identically.
+  * desktop/src/main/java/com/group2/flightres/util/GlassSeatMapBridge.java:
+    Added lookupById helper that also traverses ScrollPane.getContent() cleanly
+    and guards against recursive harvestSeatsFromCabinContainer() calls.
+- Verification (sr_p8 on localhost:5433):
+  * Full desktop module suite (.\mvnw.cmd -pl desktop test):
+    Tests run: 67, Failures: 0, Errors: 0, Skipped: 0 — BUILD SUCCESS.
+  * Refreshed screenshots verified in docs/screenshots/p8b/:
+    - seat-map-900.png  (886x713)  — full-width seat map + stacked cards below
+    - seat-map-1100.png (1086x713) — unchanged side-by-side layout
+    - seat-map-1366.png (1352x731) — unchanged side-by-side layout
+================================================================================

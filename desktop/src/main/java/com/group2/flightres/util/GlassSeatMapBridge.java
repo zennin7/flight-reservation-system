@@ -179,18 +179,18 @@ public class GlassSeatMapBridge extends StackPane {
         }
         if (root == null) return;
 
-        // Lookup Glass elements
-        this.planeGraphic = (GlassPlaneGraphic) root.lookup("#planeGraphic");
-        this.section1Tab = (Button) root.lookup("#section1Tab");
-        this.section2Tab = (Button) root.lookup("#section2Tab");
-        this.section3Tab = (Button) root.lookup("#section3Tab");
-        this.sectionHeaderLabel = (Label) root.lookup("#sectionHeaderLabel");
-        this.seatGridNumbersRow = (HBox) root.lookup("#seatGridNumbersRow");
-        this.seatGridRowsContainer = (VBox) root.lookup("#seatGridRowsContainer");
-        this.zoomContainer = (VBox) root.lookup("#zoomContainer");
-        this.cabinPhotoCard = (StackPane) root.lookup("#cabinPhotoCard");
-        this.cabinPhotoView = (ImageView) root.lookup("#cabinPhotoView");
-        this.cabinKickerLabel = (Label) root.lookup("#cabinKickerLabel");
+        // Lookup Glass elements (falls back into ScrollPane.getContent() before skin creation)
+        this.planeGraphic = (GlassPlaneGraphic) lookupById(root, "planeGraphic");
+        this.section1Tab = (Button) lookupById(root, "section1Tab");
+        this.section2Tab = (Button) lookupById(root, "section2Tab");
+        this.section3Tab = (Button) lookupById(root, "section3Tab");
+        this.sectionHeaderLabel = (Label) lookupById(root, "sectionHeaderLabel");
+        this.seatGridNumbersRow = (HBox) lookupById(root, "seatGridNumbersRow");
+        this.seatGridRowsContainer = (VBox) lookupById(root, "seatGridRowsContainer");
+        this.zoomContainer = (VBox) lookupById(root, "zoomContainer");
+        this.cabinPhotoCard = (StackPane) lookupById(root, "cabinPhotoCard");
+        this.cabinPhotoView = (ImageView) lookupById(root, "cabinPhotoView");
+        this.cabinKickerLabel = (Label) lookupById(root, "cabinKickerLabel");
         if (root instanceof GlassBackground gb) {
             this.glassBackground = gb;
         }
@@ -198,27 +198,27 @@ public class GlassSeatMapBridge extends StackPane {
             this.cabinPhotoCard.setOnMouseClicked(e -> openCabinLightbox());
         }
 
-        this.bigSeatLabel = (Label) root.lookup("#bigSeatLabel");
-        this.bigPriceLabel = (Label) root.lookup("#bigPriceLabel");
-        this.chipsContainer = (HBox) root.lookup("#chipsContainer");
-        this.timerLabel = (Label) root.lookup("#timerLabel");
-        this.timerArc = (Arc) root.lookup("#timerArc");
-        this.continueButton = (Button) root.lookup("#continueButton");
-        this.releaseButton = (Button) root.lookup("#releaseButton");
+        this.bigSeatLabel = (Label) lookupById(root, "bigSeatLabel");
+        this.bigPriceLabel = (Label) lookupById(root, "bigPriceLabel");
+        this.chipsContainer = (HBox) lookupById(root, "chipsContainer");
+        this.timerLabel = (Label) lookupById(root, "timerLabel");
+        this.timerArc = (Arc) lookupById(root, "timerArc");
+        this.continueButton = (Button) lookupById(root, "continueButton");
+        this.releaseButton = (Button) lookupById(root, "releaseButton");
 
-        this.flightOriginCode = (Label) root.lookup("#flightOriginCode");
-        this.flightOriginTime = (Label) root.lookup("#flightOriginTime");
-        this.flightDestCode = (Label) root.lookup("#flightDestCode");
-        this.flightDestTime = (Label) root.lookup("#flightDestTime");
-        this.flightNoLabel = (Label) root.lookup("#flightNoLabel");
-        this.flightDurationLabel = (Label) root.lookup("#flightDurationLabel");
-        this.freeSeatsLabel = (Label) root.lookup("#freeSeatsLabel");
-        this.planeCardSubtitle = (Label) root.lookup("#planeCardSubtitle");
+        this.flightOriginCode = (Label) lookupById(root, "flightOriginCode");
+        this.flightOriginTime = (Label) lookupById(root, "flightOriginTime");
+        this.flightDestCode = (Label) lookupById(root, "flightDestCode");
+        this.flightDestTime = (Label) lookupById(root, "flightDestTime");
+        this.flightNoLabel = (Label) lookupById(root, "flightNoLabel");
+        this.flightDurationLabel = (Label) lookupById(root, "flightDurationLabel");
+        this.freeSeatsLabel = (Label) lookupById(root, "freeSeatsLabel");
+        this.planeCardSubtitle = (Label) lookupById(root, "planeCardSubtitle");
 
-        this.cabinContainer = (VBox) root.lookup("#cabinContainer");
-        this.seatSelectionLabel = (Label) root.lookup("#seatSelectionLabel");
-        this.totalPriceLabel = (Label) root.lookup("#totalPriceLabel");
-        this.stepperBar = (StepperBar) root.lookup("#stepperBar");
+        this.cabinContainer = (VBox) lookupById(root, "cabinContainer");
+        this.seatSelectionLabel = (Label) lookupById(root, "seatSelectionLabel");
+        this.totalPriceLabel = (Label) lookupById(root, "totalPriceLabel");
+        this.stepperBar = (StepperBar) lookupById(root, "stepperBar");
 
         if (stepperBar != null) {
             stepperBar.setActiveStep(BookingStep.SEAT_SELECTION);
@@ -234,15 +234,34 @@ public class GlassSeatMapBridge extends StackPane {
             cabinContainer.getChildren().addListener((javafx.collections.ListChangeListener<Node>) change -> {
                 Platform.runLater(this::harvestSeatsFromCabinContainer);
             });
-            harvestSeatsFromCabinContainer();
+            if (seatGridRowsContainer != null) {
+                harvestSeatsFromCabinContainer();
+            }
         }
 
         updateFlightCardData();
     }
 
+    private static Node lookupById(Node node, String id) {
+        if (node == null) return null;
+        if (id.equals(node.getId())) return node;
+        if (node instanceof javafx.scene.control.ScrollPane sp && sp.getContent() != null) {
+            Node found = lookupById(sp.getContent(), id);
+            if (found != null) return found;
+        }
+        if (node instanceof Parent p) {
+            for (Node child : p.getChildrenUnmodifiable()) {
+                Node found = lookupById(child, id);
+                if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
     private void harvestSeatsFromCabinContainer() {
         if (seatGridRowsContainer == null) {
             initUiBindings();
+            if (seatGridRowsContainer == null) return;
         }
         if (cabinContainer == null && seatsByLabel.isEmpty() && (controller == null || controller.getSeatsByLabelMap().isEmpty())) return;
 

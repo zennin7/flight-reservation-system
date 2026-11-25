@@ -46,7 +46,7 @@
         <!-- ===================================================================
              MAIN GLASS CARD
              =================================================================== -->
-        <VBox VBox.vgrow="ALWAYS" spacing="10" styleClass="search-main-glass"
+        <VBox fx:id="mainGlassCard" VBox.vgrow="ALWAYS" spacing="10" styleClass="search-main-glass"
               maxWidth="1168">
             <VBox.margin>
                 <Insets top="4" right="20" bottom="16" left="20"/>
@@ -57,11 +57,12 @@
                 <StepperBar fx:id="stepperBar" alignment="CENTER" prefHeight="42"/>
             </HBox>
 
-            <!-- 2. Main Workspace Split: Left Columns + Right Column (306w) -->
-            <HBox VBox.vgrow="ALWAYS" spacing="12" minHeight="0">
+            <!-- 2. Main Workspace (side-by-side at >= 1000px; stacks selection under seat map below 1000px) -->
+            <VBox fx:id="workspaceRoot" VBox.vgrow="ALWAYS" spacing="12" minWidth="0" minHeight="0">
+                <HBox fx:id="workspaceSplit" VBox.vgrow="ALWAYS" spacing="12" minHeight="0" minWidth="0">
 
-                <!-- LEFT COLUMN: Plane Card + (Cabin Photo Card + Seat Grid) -->
-                <VBox HBox.hgrow="ALWAYS" spacing="10" minHeight="0">
+                    <!-- LEFT COLUMN: Plane Card + (Cabin Photo Card + Seat Grid) -->
+                    <VBox fx:id="seatMapLeftColumn" HBox.hgrow="ALWAYS" spacing="10" minHeight="0" minWidth="0">
 
                     <!-- A. Plane Card -->
                     <VBox prefHeight="170" minHeight="170" maxHeight="170"
@@ -163,10 +164,10 @@
                 </VBox>
 
                 <!-- RIGHT COLUMN (width 306): Cream Selection Card + Flight Card -->
-                <VBox prefWidth="306" minWidth="296" maxWidth="310" spacing="8">
+                <VBox fx:id="seatMapRightColumn" prefWidth="306" minWidth="296" maxWidth="310" spacing="8">
 
                     <!-- A. Selection Card (with Cream highlight header matching board-3) -->
-                    <VBox styleClass="glass-card, seat-right-card" spacing="7">
+                    <VBox fx:id="selectionCard" styleClass="glass-card, seat-right-card" spacing="7" minWidth="0">
                         <!-- Cream highlight card for selected seat -->
                         <VBox styleClass="seat-selection-cream-box" spacing="8">
                             <Label text="YOUR SEAT" styleClass="seat-cream-kicker"/>
@@ -221,9 +222,9 @@
                                 <Arc fx:id="timerArc" radiusX="17" radiusY="17" startAngle="90" length="0" type="OPEN"
                                      fill="transparent" stroke="#4da3ff" strokeWidth="4" strokeLineCap="ROUND"/>
                             </StackPane>
-                            <VBox spacing="1" HBox.hgrow="ALWAYS">
+                            <VBox spacing="1" HBox.hgrow="ALWAYS" minWidth="0">
                                 <Label fx:id="timerLabel" text="--:--" styleClass="seat-timer-val"/>
-                                <Label text="Held for you. Nobody else can take it." wrapText="true" prefWidth="172" minHeight="-Infinity" maxWidth="172" styleClass="seat-timer-sub"/>
+                                <Label fx:id="timerSubLabel" text="Held for you. Nobody else can take it." wrapText="true" prefWidth="172" minHeight="-Infinity" maxWidth="172" styleClass="seat-timer-sub"/>
                             </VBox>
                         </HBox>
 
@@ -248,7 +249,7 @@
                     </VBox>
 
                     <!-- B. Flight Card -->
-                    <VBox styleClass="glass-card, seat-flight-card" spacing="5" VBox.vgrow="ALWAYS">
+                    <VBox fx:id="flightCard" styleClass="glass-card, seat-flight-card" spacing="5" VBox.vgrow="ALWAYS" minWidth="0">
                         <Label text="FLIGHT" styleClass="seat-flight-kicker"/>
 
                         <HBox alignment="CENTER_LEFT" spacing="8">
@@ -294,7 +295,9 @@
                     </VBox>
 
                 </VBox>
-            </HBox>
+                </HBox>
+                <HBox fx:id="stackedSelectionRow" spacing="12" visible="false" managed="false" minWidth="0"/>
+            </VBox>
 
             <!-- Hidden Compatibility Controls & Bridge -->
             <VBox visible="false" managed="false">
