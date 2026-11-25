@@ -180,6 +180,14 @@ public class FlightService {
         return pricingService.quoteBatch(flightIds, seatClass, clock);
     }
 
+    /**
+     * Counts open scheduled flights departing after the sales cutoff.
+     */
+    public int countUpcomingFlights() {
+        Instant minDeparture = clock.instant().plus(FlightSalesPolicy.SALES_CLOSE_BEFORE_DEPARTURE);
+        return flightDao.countUpcomingFlights(minDeparture);
+    }
+
     public Clock getClock() {
         return clock;
     }

@@ -4,6 +4,7 @@ import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.User;
 import com.group2.flightres.model.UserRole;
+import com.group2.flightres.util.AppSession;
 import com.group2.flightres.util.Navigator;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
@@ -11,6 +12,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -71,6 +73,9 @@ public class GlassTopBar extends HBox {
         brandBox.setAlignment(Pos.CENTER_LEFT);
         brandBox.getStyleClass().add("nav-brand-box");
         brandBox.setOnMouseClicked(e -> triggerHome());
+        Tooltip dbTooltip = new Tooltip();
+        dbTooltip.textProperty().bind(AppSession.dbStatusTextProperty());
+        Tooltip.install(brandBox, dbTooltip);
 
         Region leftSpacer = new Region();
         HBox.setHgrow(leftSpacer, Priority.ALWAYS);

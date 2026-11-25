@@ -5,7 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AppConfig {
@@ -39,6 +43,14 @@ public class AppConfig {
         return instance;
     }
 
+    @FunctionalInterface
+    public interface PortProbe {
+        boolean isOpen(String host, int port);
+    }
+
+    public static final int ALT_DB_PORT = 5433;
+    private static final int PORT_PROBE_TIMEOUT_MS = 500;
+
     private static AppConfig load() {
         ObjectMapper mapper = new ObjectMapper();
         InputStream is = AppConfig.class.getResourceAsStream("/com/group2/flightres/app.json");
@@ -50,9 +62,47 @@ public class AppConfig {
         }
         try (InputStream stream = is) {
             AppConfig fileConfig = mapper.readValue(stream, AppConfig.class);
-            return resolve(fileConfig, System.getenv());
+            return resolveWithPortProbe(fileConfig, System.getenv(), AppConfig::isTcpPortOpen);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load app.json", e);
+        }
+    }
+
+    /**
+     * Resolves configuration using the exact shared precedence for web and desktop:
+     * SKY_ROYAL_DB_* env > LAUNCH_DB_* env > app.json > probe of [configured port, 5432, 5433].
+     * When an explicit valid port is provided via env, that port is honored without probing.
+     */
+    public static AppConfig resolveWithPortProbe(AppConfig fileConfig, Map<String, String> env, PortProbe probe) {
+        AppConfig resolved = resolve(fileConfig, env);
+        boolean explicitEnvPort = parseValidPort(envGet(env, "SKY_ROYAL_DB_PORT")) != null
+                || parseValidPort(envGet(env, "LAUNCH_DB_PORT")) != null;
+        if (!explicitEnvPort && probe != null) {
+            Set<Integer> candidates = new LinkedHashSet<>();
+            if (resolved.getDbPort() > 0 && resolved.getDbPort() <= 65535) {
+                candidates.add(resolved.getDbPort());
+            }
+            candidates.add(DEFAULT_DB_PORT);
+            candidates.add(ALT_DB_PORT);
+            for (int candidate : candidates) {
+                if (probe.isOpen(resolved.getDbHost(), candidate)) {
+                    resolved.setDbPort(candidate);
+                    break;
+                }
+            }
+        }
+        return resolved;
+    }
+
+    public static boolean isTcpPortOpen(String host, int port) {
+        if (host == null || host.isBlank() || port < 1 || port > 65535) {
+            return false;
+        }
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(host, port), PORT_PROBE_TIMEOUT_MS);
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 

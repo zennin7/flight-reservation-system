@@ -370,4 +370,24 @@ public class FlightDaoImpl implements FlightDao {
         }
         return summaries;
     }
+
+    private static final String COUNT_UPCOMING_FLIGHTS_QUERY =
+            "SELECT COUNT(*) FROM flights WHERE status = 'SCHEDULED' AND departure_time >= ?";
+
+    @Override
+    public int countUpcomingFlights(Instant minDepartureInstant) {
+        try (Connection conn = DatabaseConfig.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement(COUNT_UPCOMING_FLIGHTS_QUERY)) {
+            Instant threshold = minDepartureInstant != null ? minDepartureInstant : Instant.now();
+            ps.setTimestamp(1, Timestamp.from(threshold));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to count upcoming flights: {}", e.getMessage(), e);
+        }
+        return 0;
+    }
 }

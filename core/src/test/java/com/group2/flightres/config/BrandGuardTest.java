@@ -117,7 +117,10 @@ class BrandGuardTest {
         if (isBuildOrDocsExcluded(s) || s.startsWith("design-glass/") || s.startsWith("design-v2/")) {
             return true;
         }
-        return s.endsWith("BrandGuardTest.java") || s.endsWith(".log");
+        return s.endsWith("BrandGuardTest.java")
+                || s.endsWith("DesktopTokenGuardTest.java")
+                || s.endsWith("WebTemplateTokenGuardTest.java")
+                || s.endsWith(".log");
     }
 
     private static boolean hasAllowedExt(String name) {

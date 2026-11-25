@@ -67,4 +67,11 @@ public interface FlightDao {
     default List<com.group2.flightres.model.RouteSummary> findRouteSummaries(Instant minDepartureInstant) {
         return List.of();
     }
+
+    /**
+     * Counts open scheduled flights departing on or after minDepartureInstant.
+     */
+    default int countUpcomingFlights(Instant minDepartureInstant) {
+        return 0;
+    }
 }

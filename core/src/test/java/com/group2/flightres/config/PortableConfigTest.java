@@ -96,6 +96,31 @@ class PortableConfigTest {
     }
 
     @Test
+    @DisplayName("AppConfig.resolveWithPortProbe probes configured port, 5432, and 5433 unless env port is explicit")
+    void portProbeMatchesWebResolutionOrder() {
+        AppConfig fileCfg = new AppConfig();
+        fileCfg.setDbHost("localhost");
+        fileCfg.setDbPort(5432);
+        fileCfg.setDbName("sr_p8");
+
+        java.util.List<Integer> probed = new java.util.ArrayList<>();
+        AppConfig probedTo5433 = AppConfig.resolveWithPortProbe(fileCfg, Map.of(), (host, port) -> {
+            probed.add(port);
+            return port == 5433;
+        });
+        assertEquals(5433, probedTo5433.getDbPort());
+        assertEquals(java.util.List.of(5432, 5433), probed);
+
+        java.util.List<Integer> probedWithExplicit = new java.util.ArrayList<>();
+        AppConfig explicitEnv = AppConfig.resolveWithPortProbe(fileCfg, Map.of("SKY_ROYAL_DB_PORT", "5439"), (host, port) -> {
+            probedWithExplicit.add(port);
+            return true;
+        });
+        assertEquals(5439, explicitEnv.getDbPort());
+        assertTrue(probedWithExplicit.isEmpty(), "Explicit SKY_ROYAL_DB_PORT must bypass port probing");
+    }
+
+    @Test
     @DisplayName("Email defaults to FileOutboxEmailService when SMTP env credentials are absent")
     void emailDefaultsToOutboxWithoutSmtp(@TempDir Path tempDir) {
         EmailConfig cfg = EmailConfig.fromSources(Map.of(), new AppConfig(), tempDir);
