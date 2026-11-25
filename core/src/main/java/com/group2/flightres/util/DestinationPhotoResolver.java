@@ -23,6 +23,7 @@ public final class DestinationPhotoResolver {
             Map.entry("JNB", "/photos/dest-johannesburg.jpg"),
             Map.entry("CPT", "/photos/dest-capetown.jpg"),
             Map.entry("DUR", "/photos/dest-durban.jpg"),
+            Map.entry("PLZ", "/photos/dest-gqeberha.jpg"),
             Map.entry("DXB", "/photos/dest-dubai.jpg"),
             Map.entry("FCO", "/photos/dest-rome.jpg"),
             Map.entry("ZRH", "/photos/dest-swiss-alps.jpg"),
@@ -33,7 +34,7 @@ public final class DestinationPhotoResolver {
             Map.entry("GVA", "/photos/dest-valais.jpg")
     );
 
-    private static final Set<String> FALLBACK_AIRPORT_CODES = Set.of("PLZ", "GRJ");
+    private static final Set<String> FALLBACK_AIRPORT_CODES = Set.of("GRJ");
 
     private static final Set<String> KNOWN_AIRPORT_CODES = Set.of(
             "JNB", "CPT", "DUR", "PLZ", "GRJ", "DXB", "FCO", "ZRH", "MXP", "JTR", "NCE", "PSA", "GVA"
