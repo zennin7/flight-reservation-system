@@ -1,5 +1,8 @@
 package com.group2.flightres.util;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.beans.DefaultProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -10,11 +13,16 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Atmospheric background helper for the Glass UI theme.
@@ -54,6 +62,10 @@ public class GlassBackground extends StackPane {
     private String currentRadialGlow = DEFAULT_RADIAL_GLOW_GOLD;
     private boolean enableSecondaryGlow = false;
     private boolean heroScrim = false;
+    private boolean idleRotation = false;
+    private Timeline idleTimeline;
+    private List<String> rotationQueue = new ArrayList<>();
+    private int rotationIndex = 0;
 
     public GlassBackground() {
         this("/com/group2/flightres/photos/aerial-1.jpg");
@@ -125,31 +137,24 @@ public class GlassBackground extends StackPane {
         if (photoPath != null && !photoPath.isBlank()) {
             setPhoto(photoPath);
         }
+
+        sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null) {
+                stopIdleRotation();
+            } else if (idleRotation) {
+                startIdleRotation();
+            }
+        });
     }
 
     /**
-     * Loads a photo into the background image view.
+     * Loads a photo into the background image view using the bounded 6-image LRU cache.
      * Supports classpath resources starting with "/" or file URLs.
      */
     public void setPhoto(String photoPath) {
         this.currentPhotoPath = photoPath;
         try {
-            Image img = null;
-            if (photoPath.startsWith("/")) {
-                URL resource = getClass().getResource(photoPath);
-                if (resource != null) {
-                    img = new Image(resource.toExternalForm(), false);
-                } else {
-                    try (InputStream is = getClass().getResourceAsStream(photoPath)) {
-                        if (is != null) {
-                            img = new Image(is);
-                        }
-                    }
-                }
-            } else {
-                img = new Image(photoPath, false);
-            }
-
+            Image img = loadPhotoImage(photoPath);
             if (img != null) {
                 backgroundImageView.setImage(img);
                 updateImageCover();
@@ -159,6 +164,119 @@ public class GlassBackground extends StackPane {
         } catch (Exception e) {
             logger.error("Error setting glass background photo: {}", photoPath, e);
         }
+    }
+
+    /**
+     * Smoothly fades (200 ms) to a new background photo without flicker.
+     */
+    public void setPhotoWithFade(String photoPath) {
+        if (photoPath == null || photoPath.isBlank() || photoPath.equals(this.currentPhotoPath)) {
+            return;
+        }
+        Image img = loadPhotoImage(photoPath);
+        if (img == null) {
+            logger.warn("Could not load glass background photo for fade: {}", photoPath);
+            return;
+        }
+        this.currentPhotoPath = photoPath;
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(100), backgroundImageView);
+        fadeOut.setFromValue(backgroundImageView.getOpacity());
+        fadeOut.setToValue(0.35);
+        fadeOut.setOnFinished(e -> {
+            backgroundImageView.setImage(img);
+            updateImageCover();
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(120), backgroundImageView);
+            fadeIn.setFromValue(0.35);
+            fadeIn.setToValue(1.0);
+            fadeIn.play();
+        });
+        fadeOut.play();
+    }
+
+    private Image loadPhotoImage(String photoPath) {
+        if (photoPath == null || photoPath.isBlank()) {
+            return null;
+        }
+        if (photoPath.startsWith("/")) {
+            Optional<Image> cached = DestinationPhotos.loadResource(photoPath);
+            if (cached.isPresent()) {
+                return cached.get();
+            }
+            try (InputStream is = getClass().getResourceAsStream(photoPath)) {
+                if (is != null) {
+                    return new Image(is);
+                }
+            } catch (Exception ignored) {
+            }
+            return null;
+        }
+        return new Image(photoPath, false);
+    }
+
+    public boolean isIdleRotation() {
+        return idleRotation;
+    }
+
+    public void setIdleRotation(boolean idleRotation) {
+        this.idleRotation = idleRotation;
+        if (idleRotation && getScene() != null) {
+            startIdleRotation();
+        } else if (!idleRotation) {
+            stopIdleRotation();
+        }
+    }
+
+    private void rebuildShuffledQueue(String firstPath) {
+        List<String> all = new ArrayList<>(DestinationPhotos.ROTATING_PHOTOS);
+        all.remove(firstPath);
+        Collections.shuffle(all);
+        rotationQueue = new ArrayList<>(all.size() + 1);
+        if (firstPath != null && !firstPath.isBlank()) {
+            rotationQueue.add(firstPath);
+        }
+        rotationQueue.addAll(all);
+        rotationIndex = 0;
+    }
+
+    private void preloadNextRotationPhoto() {
+        if (rotationQueue.size() <= 1) return;
+        int nextIdx = (rotationIndex + 1) % rotationQueue.size();
+        DestinationPhotos.loadResource(rotationQueue.get(nextIdx));
+    }
+
+    private void startIdleRotation() {
+        if (idleTimeline != null) return;
+        rebuildShuffledQueue(currentPhotoPath);
+        preloadNextRotationPhoto();
+        idleTimeline = new Timeline(new KeyFrame(Duration.seconds(12), e -> advanceIdleBackdropNow()));
+        idleTimeline.setCycleCount(Timeline.INDEFINITE);
+        idleTimeline.play();
+    }
+
+    private void stopIdleRotation() {
+        if (idleTimeline != null) {
+            idleTimeline.stop();
+            idleTimeline = null;
+        }
+    }
+
+    /**
+     * Advances to the next photo in the shuffled generic rotation queue (no immediate repeats)
+     * and preloads only the subsequent photo.
+     */
+    public void advanceIdleBackdropNow() {
+        if (rotationQueue.isEmpty()) {
+            rebuildShuffledQueue(currentPhotoPath);
+        }
+        if (rotationQueue.size() <= 1) return;
+        int nextIdx = rotationIndex + 1;
+        if (nextIdx >= rotationQueue.size()) {
+            rebuildShuffledQueue(currentPhotoPath);
+            nextIdx = 1;
+        }
+        rotationIndex = nextIdx;
+        setPhotoWithFade(rotationQueue.get(rotationIndex));
+        preloadNextRotationPhoto();
     }
 
     public String getPhotoPath() {

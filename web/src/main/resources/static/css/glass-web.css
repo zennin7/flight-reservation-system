@@ -5479,3 +5479,14 @@ body.has-sheet-open {
         padding: 24px 20px;
     }
 }
+
+/* P5e addition: smooth 200ms crossfade for seat map cabin view & lightbox */
+.cabin-view-photo,
+.cabin-lightbox-img {
+  transition: opacity 200ms ease;
+}
+
+.cabin-view-photo.is-fading,
+.cabin-lightbox-img.is-fading {
+  opacity: 0;
+}

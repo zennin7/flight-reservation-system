@@ -120,30 +120,49 @@ class DesktopTokenGuardTest {
     }
 
     @Test
-    @DisplayName("Bundled web aerial, cabin, and destination photos exist in desktop resources and are <= 350 KB")
+    @DisplayName("Bundled photos are byte-identical with web, <= 350 KB, zero orphans, and cabin-sections.properties matches")
     void bundledWebPhotosExistAndWithinSizeCap() throws IOException {
         Path photosDir = desktopRoot().resolve("src/main/resources/com/group2/flightres/photos");
-        List<String> required = List.of(
-                "aerial-1.jpg", "aerial-2.jpg", "aerial-3.jpg",
-                "cabin-economy-1.jpg", "cabin-first-1.jpg",
-                "dest-capetown.jpg", "dest-durban.jpg", "dest-johannesburg.jpg",
-                "dest-dubai.jpg", "dest-monaco.jpg", "dest-rome.jpg", "dest-santorini.jpg",
-                "sky-wing-1.jpg", "cabin-mood-1.jpg", "sky-engine-1.jpg",
-                "sky-window-peaks.jpg", "sky-jet-clouds.jpg", "sky-jet-ocean.jpg",
-                "cabin-suite-1.jpg", "tarmac-jet-1.jpg", "sky-jet-dark.jpg"
-        );
         Path webPhotosDir = desktopRoot().getParent().resolve("web/src/main/resources/public/photos");
-        for (String name : required) {
-            Path p = photosDir.resolve(name);
-            assertTrue(Files.exists(p), "Missing desktop photo: " + name);
-            long size = Files.size(p);
-            assertTrue(size > 0 && size <= 358_400L,
-                    "Photo " + name + " exceeds 350 KB cap (" + size + " bytes)");
-            Path webCopy = webPhotosDir.resolve(name);
-            if (Files.exists(webCopy)) {
+
+        java.util.Set<String> referenced = com.group2.flightres.util.DestinationPhotos.allReferencedDesktopPaths();
+        List<String> orphans = new ArrayList<>();
+        List<String> desktopImages = new ArrayList<>();
+        try (Stream<Path> walk = Files.list(photosDir)) {
+            for (Path p : walk.filter(Files::isRegularFile).toList()) {
+                String name = p.getFileName().toString();
+                String lower = name.toLowerCase();
+                if (!(lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp"))) {
+                    continue;
+                }
+                desktopImages.add(name);
+                long size = Files.size(p);
+                assertTrue(size > 0 && size <= 358_400L,
+                        "Photo " + name + " exceeds 350 KB cap (" + size + " bytes)");
+                Path webCopy = webPhotosDir.resolve(name);
+                assertTrue(Files.exists(webCopy), "Desktop photo missing from web photos dir: " + name);
                 assertTrue(java.util.Arrays.equals(Files.readAllBytes(p), Files.readAllBytes(webCopy)),
                         "Desktop and web photo bytes differ for " + name);
+                String desktopResPath = com.group2.flightres.util.DestinationPhotos.PHOTOS_PREFIX + name;
+                if (!referenced.contains(desktopResPath)) {
+                    orphans.add(name);
+                }
             }
         }
+        assertTrue(desktopImages.size() >= 18, "Expected full photo library, found " + desktopImages.size());
+        assertTrue(orphans.isEmpty(), "Orphan unreferenced desktop photos found: " + orphans);
+
+        // Verify no mapping points to a missing file
+        for (String resPath : referenced) {
+            assertTrue(com.group2.flightres.util.DestinationPhotos.class.getResource(resPath) != null,
+                    "Desktop photo mapping points to missing resource: " + resPath);
+        }
+
+        // Verify web and desktop cabin-sections.properties are byte-identical
+        Path deskCfg = desktopRoot().resolve("src/main/resources/com/group2/flightres/cabin-sections.properties");
+        Path webCfg = desktopRoot().getParent().resolve("web/src/main/resources/cabin-sections.properties");
+        assertTrue(Files.exists(deskCfg) && Files.exists(webCfg), "cabin-sections.properties must exist in both modules");
+        assertTrue(java.util.Arrays.equals(Files.readAllBytes(deskCfg), Files.readAllBytes(webCfg)),
+                "cabin-sections.properties must match between web and desktop");
     }
 }

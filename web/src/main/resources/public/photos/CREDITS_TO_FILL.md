@@ -1,33 +1,25 @@
 # Photo credits (fill in for every photo, needed for the Harvard references)
 | File | Photographer | Site and link | Licence |
 | --- | --- | --- | --- |
-| aerial-1.jpg | elizabeth-camp (source: aerial\elizabeth-camp-9q7prd3EeT0-unsplash.jpg) | Unsplash (link to be confirmed by David) | to be confirmed by David |
-| aerial-2.jpg | patrick-langwallner (source: aerial\patrick-langwallner-wiFOaBrX_wc-unsplash.jpg) | Unsplash (link to be confirmed by David) | to be confirmed by David |
-| aerial-3.jpg | max-andrey (source: aerial\max-andrey-g6RzHk-2DxE-unsplash.jpg) | Unsplash (link to be confirmed by David) | to be confirmed by David |
-| cabin-economy-1.jpg | mohammad-arrahmanur (source: cabin\mohammad-arrahmanur-x_ZjAC-njW0-unsplash.jpg) | Unsplash (link to be confirmed by David) | to be confirmed by David |
-| cabin-first-1.jpg | supplied by team (source: cabin\2553ba17ef8782291dc1be9082087ecb.jpg) | to be confirmed by David | to be confirmed by David |
+| aerial-1.jpg | Photo by Elizabeth Camp on Unsplash (source: elizabeth-camp-9q7prd3EeT0-unsplash.jpg) | Unsplash | Unsplash licence |
+| aerial-2.jpg | Photo by Patrick Langwallner on Unsplash (source: patrick-langwallner-wiFOaBrX_wc-unsplash.jpg) | Unsplash | Unsplash licence |
+| aerial-3.jpg | Photo by Max Andrey on Unsplash (source: max-andrey-g6RzHk-2DxE-unsplash.jpg) | Unsplash | Unsplash licence |
+| cabin-economy-1.jpg | Photo by Mohammad Arrahmanur on Unsplash (source: mohammad-arrahmanur-x_ZjAC-njW0-unsplash.jpg) | Unsplash | Unsplash licence |
+| karsten-winegeart-TkKTqPPkWP4-unsplash.jpg | Photo by Karsten Winegeart on Unsplash (Unsplash licence) | Unsplash | Unsplash licence |
+| lukas-souza-tgO1I1Mo0Z0-unsplash.jpg | Photo by Lukas Souza on Unsplash (Unsplash licence) | Unsplash | Unsplash licence |
+| tom-barrett-M0AWNxnLaMw-unsplash.jpg | Photo by Tom Barrett on Unsplash (Unsplash licence) | Unsplash | Unsplash licence |
+| sam-mgrdichian-K-xpEUtdtGY-unsplash.jpg | Photo by Sam Mgrdichian on Unsplash (Unsplash licence) | Unsplash | Unsplash licence |
+| thanuj-mathew-BWmxrpY9h3M-unsplash.jpg | Photo by Thanuj Mathew on Unsplash (Unsplash licence) | Unsplash | Unsplash licence |
+| evgeni-tcherkasski-_-tEJGpBS5w-unsplash.jpg | Photo by Evgeni Tcherkasski on Unsplash (Unsplash licence) | Unsplash | Unsplash licence |
 | home-hero.jpg | supplied by team | supplied by team | to be confirmed by David |
-| login-side.jpg | supplied by team | supplied by team | to be confirmed by David |
-| dest-capetown.jpg | supplied by team | supplied by team | to be confirmed by David |
+| dest-capetown.jpg | supplied by team (promoted from 1920x1080 scene-capetown-sunset.jpg) | supplied by team | to be confirmed by David |
 | dest-durban.jpg | supplied by team | supplied by team | to be confirmed by David |
 | dest-johannesburg.jpg | supplied by team | supplied by team | to be confirmed by David |
-| dest-dubai.jpg | supplied by team (source: zq-lee-DcyL0IoCY0A-unsplash.jpg) | supplied by team | to be confirmed by David |
-| dest-rome.jpg | supplied by team (source: matteo-del-piano-7Y015gklIDg-unsplash.jpg) | supplied by team | to be confirmed by David |
-| dest-swiss-alps.jpg | supplied by team (source: ronnie-schmutz-SuATc8TPrMQ-unsplash.jpg) | supplied by team | to be confirmed by David |
-| dest-lake-como.jpg | supplied by team (source: julia-solonina-IilYfjhavow-unsplash.jpg) | supplied by team | to be confirmed by David |
-| dest-santorini.jpg | supplied by team (source: james-ting-6N2mSJsKTtA-unsplash.jpg) | supplied by team | to be confirmed by David |
-| dest-monaco.jpg | supplied by team (source: victor-he-bVXvntN75zY-unsplash.jpg) | supplied by team | to be confirmed by David |
-| dest-cinque-terre.jpg | supplied by team (source: wojciech-wyszkowski-la7mn1xcQvY-unsplash.jpg) | supplied by team | to be confirmed by David |
-| dest-valais.jpg | supplied by team (source: patrick-robert-doyle-eb8dmXNOGP4-unsplash.jpg) | supplied by team | to be confirmed by David |
-| scene-capetown-sunset.jpg | supplied by team | supplied by team | to be confirmed by David |
-| scene-zoolake.jpg | supplied by team | supplied by team | to be confirmed by David |
-| scene-ponte-tower.jpg | supplied by team | supplied by team | to be confirmed by David |
-| sky-wing-1.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
-| cabin-mood-1.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
-| sky-engine-1.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
-| sky-window-peaks.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
-| sky-jet-clouds.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
-| sky-jet-ocean.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
-| cabin-suite-1.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
-| tarmac-jet-1.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
-| sky-jet-dark.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
+| dest-dubai.jpg | Photo by Zq Lee on Unsplash (source: zq-lee-DcyL0IoCY0A-unsplash.jpg) | Unsplash | Unsplash licence |
+| dest-rome.jpg | Photo by Matteo Del Piano on Unsplash (source: matteo-del-piano-7Y015gklIDg-unsplash.jpg) | Unsplash | Unsplash licence |
+| dest-swiss-alps.jpg | Photo by Ronnie Schmutz on Unsplash (source: ronnie-schmutz-SuATc8TPrMQ-unsplash.jpg) | Unsplash | Unsplash licence |
+| dest-lake-como.jpg | Photo by Julia Solonina on Unsplash (source: julia-solonina-IilYfjhavow-unsplash.jpg) | Unsplash | Unsplash licence |
+| dest-santorini.jpg | Photo by James Ting on Unsplash (source: james-ting-6N2mSJsKTtA-unsplash.jpg) | Unsplash | Unsplash licence |
+| dest-monaco.jpg | Photo by Victor He on Unsplash (source: victor-he-bVXvntN75zY-unsplash.jpg) | Unsplash | Unsplash licence |
+| dest-cinque-terre.jpg | Photo by Wojciech Wyszkowski on Unsplash (source: wojciech-wyszkowski-la7mn1xcQvY-unsplash.jpg) | Unsplash | Unsplash licence |
+| dest-valais.jpg | Photo by Patrick Robert Doyle on Unsplash (source: patrick-robert-doyle-eb8dmXNOGP4-unsplash.jpg) | Unsplash | Unsplash licence |

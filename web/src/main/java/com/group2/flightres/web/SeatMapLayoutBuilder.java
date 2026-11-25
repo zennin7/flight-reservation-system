@@ -275,7 +275,7 @@ public final class SeatMapLayoutBuilder {
                     secTitle,
                     cabinSummary,
                     primaryCabin,
-                    WebBackdropResolver.cabinBackdrop(primaryCabin),
+                    WebBackdropResolver.sectionCabinPhoto(secIdx + 1),
                     startRow,
                     endRow,
                     List.copyOf(secRows),

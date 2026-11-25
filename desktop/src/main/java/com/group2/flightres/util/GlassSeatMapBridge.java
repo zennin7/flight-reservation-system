@@ -7,20 +7,26 @@ import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.component.StepperBar;
+import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Arc;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +56,11 @@ public class GlassSeatMapBridge extends StackPane {
     private HBox seatGridNumbersRow;
     private VBox seatGridRowsContainer;
     private VBox zoomContainer;
+    private StackPane cabinPhotoCard;
+    private ImageView cabinPhotoView;
+    private Label cabinKickerLabel;
+    private GlassBackground glassBackground;
+    private String activeCabinPhotoPath;
 
     // Selection Card UI Nodes
     private Label bigSeatLabel;
@@ -177,6 +188,15 @@ public class GlassSeatMapBridge extends StackPane {
         this.seatGridNumbersRow = (HBox) root.lookup("#seatGridNumbersRow");
         this.seatGridRowsContainer = (VBox) root.lookup("#seatGridRowsContainer");
         this.zoomContainer = (VBox) root.lookup("#zoomContainer");
+        this.cabinPhotoCard = (StackPane) root.lookup("#cabinPhotoCard");
+        this.cabinPhotoView = (ImageView) root.lookup("#cabinPhotoView");
+        this.cabinKickerLabel = (Label) root.lookup("#cabinKickerLabel");
+        if (root instanceof GlassBackground gb) {
+            this.glassBackground = gb;
+        }
+        if (this.cabinPhotoCard != null) {
+            this.cabinPhotoCard.setOnMouseClicked(e -> openCabinLightbox());
+        }
 
         this.bigSeatLabel = (Label) root.lookup("#bigSeatLabel");
         this.bigPriceLabel = (Label) root.lookup("#bigPriceLabel");
@@ -342,7 +362,57 @@ public class GlassSeatMapBridge extends StackPane {
             planeGraphic.setSection(section);
         }
 
+        updateCabinSectionPhoto(section);
         renderActiveSection();
+    }
+
+    private void updateCabinSectionPhoto(int section) {
+        String path = DestinationPhotos.sectionCabinPhotoPath(section);
+        if (cabinKickerLabel != null) {
+            cabinKickerLabel.setText("SECTION " + section + " CABIN");
+        }
+        if (path.equals(activeCabinPhotoPath)) {
+            return;
+        }
+        activeCabinPhotoPath = path;
+        Optional<Image> imgOpt = DestinationPhotos.loadResource(path);
+        if (imgOpt.isPresent() && cabinPhotoView != null) {
+            Image nextImg = imgOpt.get();
+            FadeTransition fadeOut = new FadeTransition(Duration.millis(95), cabinPhotoView);
+            fadeOut.setFromValue(cabinPhotoView.getOpacity());
+            fadeOut.setToValue(0.25);
+            fadeOut.setOnFinished(e -> {
+                cabinPhotoView.setImage(nextImg);
+                FadeTransition fadeIn = new FadeTransition(Duration.millis(115), cabinPhotoView);
+                fadeIn.setFromValue(0.25);
+                fadeIn.setToValue(1.0);
+                fadeIn.play();
+            });
+            fadeOut.play();
+        }
+        if (glassBackground != null) {
+            glassBackground.setPhotoWithFade(path);
+        }
+    }
+
+    private void openCabinLightbox() {
+        String path = activeCabinPhotoPath != null ? activeCabinPhotoPath : DestinationPhotos.sectionCabinPhotoPath(currentSection);
+        Optional<Image> imgOpt = DestinationPhotos.loadResource(path);
+        if (imgOpt.isEmpty() || getScene() == null || getScene().getWindow() == null) {
+            return;
+        }
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initOwner(getScene().getWindow());
+        dialog.setTitle("Section " + currentSection + " Cabin View");
+        ImageView view = new ImageView(imgOpt.get());
+        view.setPreserveRatio(true);
+        view.setFitWidth(760);
+        view.setFitHeight(520);
+        StackPane box = new StackPane(view);
+        box.setStyle("-fx-background-color: #15181c; -fx-padding: 16;");
+        dialog.setScene(new Scene(box, 800, 560));
+        dialog.show();
     }
 
     private void renderActiveSection() {

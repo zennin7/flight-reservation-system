@@ -241,7 +241,7 @@ class WebBackdropTest {
         assertTrue(lm.find());
         String[] list = lm.group(1).split(",");
         assertEquals(WebBackdropResolver.ROTATING_PHOTOS.size(), list.length);
-        assertTrue(list.length >= 12, "Rotation list should include all new generic aviation photos");
+        assertTrue(list.length >= 10, "Rotation list should include all generic aviation and cabin photos");
         for (String item : list) {
             HttpResponse<byte[]> asset = http.send(HttpRequest.newBuilder(URI.create(baseUrl + item)).GET().build(),
                     HttpResponse.BodyHandlers.ofByteArray());

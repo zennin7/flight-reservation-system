@@ -23,7 +23,7 @@
 <GlassBackground xmlns="http://javafx.com/javafx/21"
                  xmlns:fx="http://javafx.com/fxml/1"
                  fx:controller="com.group2.flightres.controller.AdminBookingsController"
-                 photoPath="/com/group2/flightres/photos/sky-window-peaks.jpg">
+                 photoPath="/com/group2/flightres/photos/aerial-3.jpg">
     <VBox spacing="0" alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
 
         <NavBar fx:id="navBar"/>

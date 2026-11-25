@@ -24,7 +24,7 @@
 <GlassBackground xmlns="http://javafx.com/javafx"
                  xmlns:fx="http://javafx.com/fxml"
                  fx:controller="com.group2.flightres.controller.SeatMapController"
-                 photoPath="/com/group2/flightres/photos/cabin-economy-1.jpg"
+                 photoPath="/com/group2/flightres/photos/karsten-winegeart-TkKTqPPkWP4-unsplash.jpg"
                  blurRadius="8.0"
                  darkness="0.0"
                  saturation="0.0"
@@ -103,20 +103,20 @@
                     <!-- B. Bottom Row: Cabin Photo Card + Seat Grid Card -->
                     <HBox VBox.vgrow="ALWAYS" spacing="14" minHeight="0">
 
-                        <!-- Inside the cabin photo card (real bundled cabin photo) -->
-                        <StackPane prefWidth="176" minWidth="172" maxWidth="180" styleClass="seat-cabin-photo-card">
+                        <!-- Inside the cabin photo card (dynamic per section, click to expand lightbox) -->
+                        <StackPane fx:id="cabinPhotoCard" prefWidth="176" minWidth="172" maxWidth="180" styleClass="seat-cabin-photo-card">
                             <clip>
                                 <Rectangle width="176" height="400" arcWidth="36" arcHeight="36"/>
                             </clip>
-                            <ImageView fitWidth="176" fitHeight="400" preserveRatio="false">
+                            <ImageView fx:id="cabinPhotoView" fitWidth="176" fitHeight="400" preserveRatio="false">
                                 <image>
-                                    <Image url="@../photos/cabin-economy-1.jpg"/>
+                                    <Image url="@../photos/karsten-winegeart-TkKTqPPkWP4-unsplash.jpg"/>
                                 </image>
                             </ImageView>
                             <Region styleClass="seat-cabin-photo-scrim"/>
                             <VBox alignment="BOTTOM_LEFT" spacing="6" styleClass="seat-cabin-photo-content">
-                                <Label text="ECONOMY CABIN" styleClass="seat-cabin-kicker"/>
-                                <Label text="Inside the cabin" styleClass="seat-cabin-title"/>
+                                <Label fx:id="cabinKickerLabel" text="SECTION 1 CABIN" styleClass="seat-cabin-kicker"/>
+                                <Label fx:id="cabinTitleLabel" text="Inside the cabin" styleClass="seat-cabin-title"/>
                                 <Label text="Economy 3-3 and First 2-2 seating. Select any available seat on the map."
                                        wrapText="true" prefWidth="136"
                                        styleClass="seat-cabin-desc"/>

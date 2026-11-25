@@ -21,7 +21,8 @@
 <GlassBackground xmlns="http://javafx.com/javafx"
                  xmlns:fx="http://javafx.com/fxml"
                  fx:controller="com.group2.flightres.controller.LoginController"
-                 photoPath="/com/group2/flightres/photos/sky-jet-clouds.jpg"
+                 photoPath="/com/group2/flightres/photos/tom-barrett-M0AWNxnLaMw-unsplash.jpg"
+                 idleRotation="true"
                  blurRadius="0.0"
                  darkness="0.0"
                  saturation="0.0"
@@ -55,7 +56,7 @@
 
             <ImageView fitWidth="520" fitHeight="592" preserveRatio="false">
                 <image>
-                    <Image url="@../photos/login-side.jpg"/>
+                    <Image url="@../photos/tom-barrett-M0AWNxnLaMw-unsplash.jpg"/>
                 </image>
             </ImageView>
 

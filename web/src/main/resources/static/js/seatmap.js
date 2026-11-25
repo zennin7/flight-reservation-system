@@ -6,7 +6,7 @@
   var csrfToken = root.getAttribute('data-csrf') || '';
   var totalHoldSecs = Math.max(1, parseInt(root.getAttribute('data-hold-secs') || '300', 10));
   var econPhoto = root.getAttribute('data-econ-photo') || '/photos/cabin-economy-1.jpg';
-  var firstPhoto = root.getAttribute('data-first-photo') || '/photos/cabin-first-1.jpg';
+  var firstPhoto = root.getAttribute('data-first-photo') || '/photos/karsten-winegeart-TkKTqPPkWP4-unsplash.jpg';
 
   var sectionTabs = Array.prototype.slice.call(document.querySelectorAll('.sm-sec-tab'));
   var sectionPanels = Array.prototype.slice.call(document.querySelectorAll('.seat-section-panel'));
@@ -66,13 +66,28 @@
     errorBanner.hidden = false;
   }
 
-  function updateCabinVisuals(cabinName) {
+  function crossfadeImg(imgEl, url) {
+    if (!imgEl || !url) return;
+    if (imgEl.getAttribute('data-current-src') === url) return;
+    var pre = new Image();
+    pre.onload = function () {
+      imgEl.classList.add('is-fading');
+      window.setTimeout(function () {
+        imgEl.src = url;
+        imgEl.setAttribute('data-current-src', url);
+        imgEl.classList.remove('is-fading');
+      }, 90);
+    };
+    pre.src = url;
+  }
+
+  function updateCabinVisuals(cabinName, explicitPhotoUrl, sectionLabel) {
     var isFirst = cabinName === 'FIRST' || cabinName === 'First Class';
-    var url = isFirst ? firstPhoto : econPhoto;
-    var label = isFirst ? 'First Class Cabin' : 'Economy Cabin';
-    if (cabinThumb) cabinThumb.src = url;
+    var url = explicitPhotoUrl || (isFirst ? firstPhoto : econPhoto);
+    var label = sectionLabel || (isFirst ? 'First Class Cabin' : 'Economy Cabin');
+    crossfadeImg(cabinThumb, url);
     if (cabinBadge) cabinBadge.textContent = label;
-    if (lightboxImg) lightboxImg.src = url;
+    crossfadeImg(lightboxImg, url);
     if (lightboxTitle) lightboxTitle.textContent = label;
     if (window.SkyRoyalBackdrop && typeof window.SkyRoyalBackdrop.setCabin === 'function') {
       window.SkyRoyalBackdrop.setCabin(url);
@@ -94,9 +109,9 @@
         if (secHeading) {
           secHeading.textContent = tab.getAttribute('data-sec-title') || '';
         }
-        if (!seatIdInput || !seatIdInput.value) {
-          updateCabinVisuals(tab.getAttribute('data-cabin-name') || 'ECONOMY');
-        }
+        var secPhoto = tab.getAttribute('data-cabin-photo') || '';
+        var secLabel = tab.textContent ? (tab.textContent.trim() + ' Cabin') : '';
+        updateCabinVisuals(tab.getAttribute('data-cabin-name') || 'ECONOMY', secPhoto, secLabel);
       }
     });
     sectionPanels.forEach(function (panel) {
