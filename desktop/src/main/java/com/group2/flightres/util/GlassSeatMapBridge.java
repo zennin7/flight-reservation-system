@@ -7,20 +7,26 @@ import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.model.SeatClass;
 import com.group2.flightres.model.SeatStatus;
 import com.group2.flightres.component.StepperBar;
+import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Arc;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +56,11 @@ public class GlassSeatMapBridge extends StackPane {
     private HBox seatGridNumbersRow;
     private VBox seatGridRowsContainer;
     private VBox zoomContainer;
+    private StackPane cabinPhotoCard;
+    private ImageView cabinPhotoView;
+    private Label cabinKickerLabel;
+    private GlassBackground glassBackground;
+    private String activeCabinPhotoPath;
 
     // Selection Card UI Nodes
     private Label bigSeatLabel;
@@ -168,37 +179,46 @@ public class GlassSeatMapBridge extends StackPane {
         }
         if (root == null) return;
 
-        // Lookup Glass elements
-        this.planeGraphic = (GlassPlaneGraphic) root.lookup("#planeGraphic");
-        this.section1Tab = (Button) root.lookup("#section1Tab");
-        this.section2Tab = (Button) root.lookup("#section2Tab");
-        this.section3Tab = (Button) root.lookup("#section3Tab");
-        this.sectionHeaderLabel = (Label) root.lookup("#sectionHeaderLabel");
-        this.seatGridNumbersRow = (HBox) root.lookup("#seatGridNumbersRow");
-        this.seatGridRowsContainer = (VBox) root.lookup("#seatGridRowsContainer");
-        this.zoomContainer = (VBox) root.lookup("#zoomContainer");
+        // Lookup Glass elements (falls back into ScrollPane.getContent() before skin creation)
+        this.planeGraphic = (GlassPlaneGraphic) lookupById(root, "planeGraphic");
+        this.section1Tab = (Button) lookupById(root, "section1Tab");
+        this.section2Tab = (Button) lookupById(root, "section2Tab");
+        this.section3Tab = (Button) lookupById(root, "section3Tab");
+        this.sectionHeaderLabel = (Label) lookupById(root, "sectionHeaderLabel");
+        this.seatGridNumbersRow = (HBox) lookupById(root, "seatGridNumbersRow");
+        this.seatGridRowsContainer = (VBox) lookupById(root, "seatGridRowsContainer");
+        this.zoomContainer = (VBox) lookupById(root, "zoomContainer");
+        this.cabinPhotoCard = (StackPane) lookupById(root, "cabinPhotoCard");
+        this.cabinPhotoView = (ImageView) lookupById(root, "cabinPhotoView");
+        this.cabinKickerLabel = (Label) lookupById(root, "cabinKickerLabel");
+        if (root instanceof GlassBackground gb) {
+            this.glassBackground = gb;
+        }
+        if (this.cabinPhotoCard != null) {
+            this.cabinPhotoCard.setOnMouseClicked(e -> openCabinLightbox());
+        }
 
-        this.bigSeatLabel = (Label) root.lookup("#bigSeatLabel");
-        this.bigPriceLabel = (Label) root.lookup("#bigPriceLabel");
-        this.chipsContainer = (HBox) root.lookup("#chipsContainer");
-        this.timerLabel = (Label) root.lookup("#timerLabel");
-        this.timerArc = (Arc) root.lookup("#timerArc");
-        this.continueButton = (Button) root.lookup("#continueButton");
-        this.releaseButton = (Button) root.lookup("#releaseButton");
+        this.bigSeatLabel = (Label) lookupById(root, "bigSeatLabel");
+        this.bigPriceLabel = (Label) lookupById(root, "bigPriceLabel");
+        this.chipsContainer = (HBox) lookupById(root, "chipsContainer");
+        this.timerLabel = (Label) lookupById(root, "timerLabel");
+        this.timerArc = (Arc) lookupById(root, "timerArc");
+        this.continueButton = (Button) lookupById(root, "continueButton");
+        this.releaseButton = (Button) lookupById(root, "releaseButton");
 
-        this.flightOriginCode = (Label) root.lookup("#flightOriginCode");
-        this.flightOriginTime = (Label) root.lookup("#flightOriginTime");
-        this.flightDestCode = (Label) root.lookup("#flightDestCode");
-        this.flightDestTime = (Label) root.lookup("#flightDestTime");
-        this.flightNoLabel = (Label) root.lookup("#flightNoLabel");
-        this.flightDurationLabel = (Label) root.lookup("#flightDurationLabel");
-        this.freeSeatsLabel = (Label) root.lookup("#freeSeatsLabel");
-        this.planeCardSubtitle = (Label) root.lookup("#planeCardSubtitle");
+        this.flightOriginCode = (Label) lookupById(root, "flightOriginCode");
+        this.flightOriginTime = (Label) lookupById(root, "flightOriginTime");
+        this.flightDestCode = (Label) lookupById(root, "flightDestCode");
+        this.flightDestTime = (Label) lookupById(root, "flightDestTime");
+        this.flightNoLabel = (Label) lookupById(root, "flightNoLabel");
+        this.flightDurationLabel = (Label) lookupById(root, "flightDurationLabel");
+        this.freeSeatsLabel = (Label) lookupById(root, "freeSeatsLabel");
+        this.planeCardSubtitle = (Label) lookupById(root, "planeCardSubtitle");
 
-        this.cabinContainer = (VBox) root.lookup("#cabinContainer");
-        this.seatSelectionLabel = (Label) root.lookup("#seatSelectionLabel");
-        this.totalPriceLabel = (Label) root.lookup("#totalPriceLabel");
-        this.stepperBar = (StepperBar) root.lookup("#stepperBar");
+        this.cabinContainer = (VBox) lookupById(root, "cabinContainer");
+        this.seatSelectionLabel = (Label) lookupById(root, "seatSelectionLabel");
+        this.totalPriceLabel = (Label) lookupById(root, "totalPriceLabel");
+        this.stepperBar = (StepperBar) lookupById(root, "stepperBar");
 
         if (stepperBar != null) {
             stepperBar.setActiveStep(BookingStep.SEAT_SELECTION);
@@ -214,15 +234,34 @@ public class GlassSeatMapBridge extends StackPane {
             cabinContainer.getChildren().addListener((javafx.collections.ListChangeListener<Node>) change -> {
                 Platform.runLater(this::harvestSeatsFromCabinContainer);
             });
-            harvestSeatsFromCabinContainer();
+            if (seatGridRowsContainer != null) {
+                harvestSeatsFromCabinContainer();
+            }
         }
 
         updateFlightCardData();
     }
 
+    private static Node lookupById(Node node, String id) {
+        if (node == null) return null;
+        if (id.equals(node.getId())) return node;
+        if (node instanceof javafx.scene.control.ScrollPane sp && sp.getContent() != null) {
+            Node found = lookupById(sp.getContent(), id);
+            if (found != null) return found;
+        }
+        if (node instanceof Parent p) {
+            for (Node child : p.getChildrenUnmodifiable()) {
+                Node found = lookupById(child, id);
+                if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
     private void harvestSeatsFromCabinContainer() {
         if (seatGridRowsContainer == null) {
             initUiBindings();
+            if (seatGridRowsContainer == null) return;
         }
         if (cabinContainer == null && seatsByLabel.isEmpty() && (controller == null || controller.getSeatsByLabelMap().isEmpty())) return;
 
@@ -342,7 +381,57 @@ public class GlassSeatMapBridge extends StackPane {
             planeGraphic.setSection(section);
         }
 
+        updateCabinSectionPhoto(section);
         renderActiveSection();
+    }
+
+    private void updateCabinSectionPhoto(int section) {
+        String path = DestinationPhotos.sectionCabinPhotoPath(section);
+        if (cabinKickerLabel != null) {
+            cabinKickerLabel.setText("SECTION " + section + " CABIN");
+        }
+        if (path.equals(activeCabinPhotoPath)) {
+            return;
+        }
+        activeCabinPhotoPath = path;
+        Optional<Image> imgOpt = DestinationPhotos.loadResource(path);
+        if (imgOpt.isPresent() && cabinPhotoView != null) {
+            Image nextImg = imgOpt.get();
+            FadeTransition fadeOut = new FadeTransition(Duration.millis(95), cabinPhotoView);
+            fadeOut.setFromValue(cabinPhotoView.getOpacity());
+            fadeOut.setToValue(0.25);
+            fadeOut.setOnFinished(e -> {
+                cabinPhotoView.setImage(nextImg);
+                FadeTransition fadeIn = new FadeTransition(Duration.millis(115), cabinPhotoView);
+                fadeIn.setFromValue(0.25);
+                fadeIn.setToValue(1.0);
+                fadeIn.play();
+            });
+            fadeOut.play();
+        }
+        if (glassBackground != null) {
+            glassBackground.setPhotoWithFade(path);
+        }
+    }
+
+    private void openCabinLightbox() {
+        String path = activeCabinPhotoPath != null ? activeCabinPhotoPath : DestinationPhotos.sectionCabinPhotoPath(currentSection);
+        Optional<Image> imgOpt = DestinationPhotos.loadResource(path);
+        if (imgOpt.isEmpty() || getScene() == null || getScene().getWindow() == null) {
+            return;
+        }
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initOwner(getScene().getWindow());
+        dialog.setTitle(DestinationPhotos.sectionLightboxTitle(currentSection));
+        ImageView view = new ImageView(imgOpt.get());
+        view.setPreserveRatio(true);
+        view.setFitWidth(760);
+        view.setFitHeight(520);
+        StackPane box = new StackPane(view);
+        box.setStyle("-fx-background-color: #15181c; -fx-padding: 16;");
+        dialog.setScene(new Scene(box, 800, 560));
+        dialog.show();
     }
 
     private void renderActiveSection() {
@@ -511,8 +600,11 @@ public class GlassSeatMapBridge extends StackPane {
     public void syncButtonVisual(Button btn, String seatLabel) {
         if (btn == null) return;
         boolean isSelected = btn.getStyleClass().contains("seat-selected") || btn.getStyleClass().contains("seat-yours");
+        boolean isTaken = btn.getStyleClass().contains("seat-occupied") || btn.getStyleClass().contains("seat-taken");
         if (isSelected) {
             btn.setText(seatLabel);
+        } else if (isTaken) {
+            btn.setText("×");
         } else {
             btn.setText("");
         }
@@ -534,11 +626,7 @@ public class GlassSeatMapBridge extends StackPane {
 
             if (bigSeatLabel != null) {
                 bigSeatLabel.setText(seatLabel);
-                if (seatLabel.length() > 2) {
-                    bigSeatLabel.setStyle("-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 54px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-line-spacing: 0; -fx-padding: 0;");
-                } else {
-                    bigSeatLabel.setStyle("-fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 72px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-line-spacing: 0; -fx-padding: 0;");
-                }
+                bigSeatLabel.setStyle(null);
             }
             if (totalPriceLabel != null && bigPriceLabel != null) {
                 bigPriceLabel.setText(totalPriceLabel.getText());
@@ -550,11 +638,11 @@ public class GlassSeatMapBridge extends StackPane {
                 boolean isFirst = (seat.getSeatClass() == SeatClass.FIRST);
                 char col = seat.getSeatCol();
 
-                String cls = isFirst ? "First Class" : "Economy";
-                String pos = (col == 'A' || col == 'F') ? "Window seat" :
-                        ((col == 'C' || col == 'D') ? "Aisle seat" : "Middle seat");
+                String cls = isFirst ? "First" : "Economy";
+                String pos = (col == 'A' || col == 'F') ? "Window" :
+                        ((col == 'C' || col == 'D') ? "Aisle" : "Middle");
                 String leg = isFirst ? "Extra legroom" :
-                        (seat.getSeatRow() == 6 ? "Extra legroom" : "Standard legroom");
+                        (seat.getSeatRow() == 6 ? "Extra legroom" : "Std legroom");
 
                 chipsContainer.getChildren().addAll(createChip(cls), createChip(pos), createChip(leg));
             }
@@ -578,6 +666,7 @@ public class GlassSeatMapBridge extends StackPane {
 
     private Label createChip(String text) {
         Label chip = new Label(text);
+        chip.setMinWidth(Region.USE_PREF_SIZE);
         chip.getStyleClass().add("selection-chip");
         return chip;
     }
@@ -693,11 +782,18 @@ public class GlassSeatMapBridge extends StackPane {
         if (flightDurationLabel != null) flightDurationLabel.setText(duration);
 
         if (planeCardSubtitle != null) {
-            String sub = (!aircraft.isBlank() ? aircraft + " · " : "")
-                    + (!orig.isBlank() && !dest.isBlank() ? orig + " to " + dest : "")
-                    + (!dateStr.isBlank() ? " · " + dateStr : "")
-                    + (!duration.isBlank() ? " · " + duration : "");
-            planeCardSubtitle.setText(sub);
+            String route = (!orig.isBlank() && !dest.isBlank()) ? (orig + " to " + dest) : "";
+            StringBuilder sb = new StringBuilder();
+            if (!route.isBlank()) sb.append(route);
+            if (!dateStr.isBlank()) {
+                if (sb.length() > 0) sb.append(" · ");
+                sb.append(dateStr);
+            }
+            if (!aircraft.isBlank()) {
+                if (sb.length() > 0) sb.append(" · ");
+                sb.append(aircraft);
+            }
+            planeCardSubtitle.setText(sb.toString());
         }
 
         // Count free seats
@@ -718,13 +814,27 @@ public class GlassSeatMapBridge extends StackPane {
     }
 
     private String extractAirportCode(String val) {
-        if (val == null) return "";
+        if (val == null || val.isBlank()) return "";
         int open = val.lastIndexOf('(');
         int close = val.lastIndexOf(')');
         if (open >= 0 && close > open) {
-            return val.substring(open + 1, close);
+            return val.substring(open + 1, close).trim().toUpperCase(Locale.ROOT);
         }
-        return val.trim();
+        String trimmed = val.trim();
+        if (trimmed.length() == 3 && trimmed.chars().allMatch(Character::isLetter)) {
+            return trimmed.toUpperCase(Locale.ROOT);
+        }
+        String lower = trimmed.toLowerCase(Locale.ROOT);
+        if (lower.contains("tambo") || lower.contains("johannesburg")) return "JNB";
+        if (lower.contains("cape town")) return "CPT";
+        if (lower.contains("shaka") || lower.contains("durban")) return "DUR";
+        if (lower.contains("stuurman") || lower.contains("gqeberha") || lower.contains("port elizabeth")) return "PLZ";
+        if (lower.contains("geneva")) return "GVA";
+        if (lower.contains("nice") || lower.contains("monaco")) return "NCE";
+        if (lower.contains("dubai")) return "DXB";
+        if (lower.contains("rome") || lower.contains("fiumicino")) return "FCO";
+        if (lower.contains("santorini")) return "JTR";
+        return trimmed.length() <= 6 ? trimmed : trimmed.substring(0, 3).toUpperCase(Locale.ROOT);
     }
 
 
@@ -741,8 +851,13 @@ public class GlassSeatMapBridge extends StackPane {
         btn.getStyleClass().add("seat-btn");
         if (seat != null && seat.getStatus() == SeatStatus.BOOKED) {
             btn.getStyleClass().add("seat-taken");
+            btn.setText("× " + label);
+        } else if (seat != null && seat.getStatus() == SeatStatus.HELD) {
+            btn.getStyleClass().add("seat-held-other");
+            btn.setText("• " + label);
         } else {
             btn.getStyleClass().add("seat-available");
+            btn.setText(label);
             if (seat != null && seat.getSeatClass() == SeatClass.FIRST) {
                 btn.getStyleClass().add("seat-first-class");
             }

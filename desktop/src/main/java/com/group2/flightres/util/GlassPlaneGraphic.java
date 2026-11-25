@@ -25,8 +25,6 @@ import java.util.List;
 public class GlassPlaneGraphic extends Pane {
 
     private final Rectangle hlBox = new Rectangle();
-    private final Circle pinCircle = new Circle();
-    private final SVGPath pinCube = new SVGPath();
     private final Label sectionLabel = new Label("SECTION 1");
     private final List<Rectangle> windowRects = new ArrayList<>();
 
@@ -66,8 +64,8 @@ public class GlassPlaneGraphic extends Pane {
         hlBox.setHeight(58);
         hlBox.setArcWidth(28);
         hlBox.setArcHeight(28);
-        hlBox.setFill(Color.web("rgba(212,166,60,0.28)"));
-        hlBox.setStroke(Color.web("#e8c46a"));
+        hlBox.setFill(Color.web("rgba(241,238,223,0.28)"));
+        hlBox.setStroke(Color.web("#f1eedf"));
         hlBox.setStrokeWidth(2);
 
         // 6. Windows (38 total windows from x=128 to 744 every 16px)
@@ -90,29 +88,16 @@ public class GlassPlaneGraphic extends Pane {
         Circle wheelRear = new Circle(520, 156, 10);
         wheelRear.setFill(Color.web("#1a2233"));
 
-        // 9. Section Pin / Badge (circle + cube icon + section label)
-        pinCircle.setRadius(19);
-        pinCircle.setCenterY(99);
-        pinCircle.setFill(Color.web("#0b1220"));
-        pinCircle.setStroke(Color.web("rgba(255,255,255,0.55)"));
-        pinCircle.setStrokeWidth(2);
-
-        pinCube.setContent("M0 0l9 5v10l-9 5l-9 -5v-10z M0 10l9 -5 M0 10v10 M0 10l-9 -5");
-        pinCube.setFill(Color.TRANSPARENT);
-        pinCube.setStroke(Color.web("#e8c46a"));
-        pinCube.setStrokeWidth(1.8);
-        pinCube.setStrokeLineCap(StrokeLineCap.ROUND);
-        pinCube.setStrokeLineJoin(StrokeLineJoin.ROUND);
-
-        sectionLabel.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-font-weight: 700; -fx-text-fill: #f3d98b; -fx-alignment: center;");
-        sectionLabel.setLayoutY(48);
+        // 9. Section label above the highlighted cabin section (no 3D cube icon)
+        sectionLabel.setStyle("-fx-font-family: 'Inter SemiBold', 'Inter', sans-serif; -fx-font-size: 11px; -fx-font-weight: 700; -fx-text-fill: -glass-cream; -fx-alignment: center;");
+        sectionLabel.setLayoutY(46);
         sectionLabel.setPrefWidth(120);
         sectionLabel.setAlignment(Pos.CENTER);
 
         // Assemble all shapes
         getChildren().addAll(shadow, wing, fus, cockpit, hlBox);
         getChildren().addAll(windowRects);
-        getChildren().addAll(engOuter, engInner, wheelFront, wheelRear, pinCircle, pinCube, sectionLabel);
+        getChildren().addAll(engOuter, engInner, wheelFront, wheelRear, sectionLabel);
 
         // Default to section 1
         setSection(1);
@@ -155,15 +140,12 @@ public class GlassPlaneGraphic extends Pane {
         hlBox.setX(hlX);
         hlBox.setWidth(hlW);
 
-        pinCircle.setCenterX(cx);
-        pinCube.setLayoutX(cx);
-        pinCube.setLayoutY(90);
         sectionLabel.setLayoutX(cx - 60);
 
         for (Rectangle win : windowRects) {
             double wx = win.getX();
             if (wx >= winStart && wx <= winEnd) {
-                win.setFill(Color.web("#e8c46a"));
+                win.setFill(Color.web("#f1eedf"));
             } else {
                 win.setFill(Color.web("#8793aa"));
             }

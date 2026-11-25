@@ -23,22 +23,52 @@ CREATE TEMP TABLE seed_template (
 ) ON COMMIT DROP;
 
 INSERT INTO seed_template VALUES
+    -- JNB -> CPT (8 departures/day spanning 05:15 to 21:15 across all 4 time bands)
+    ('SR 200','JNB','CPT',TIME '05:15',INTERVAL '2 hours 10 minutes',1120.00),
+    ('SR 202','JNB','CPT',TIME '05:50',INTERVAL '2 hours 10 minutes',1160.00),
     ('SR 204','JNB','CPT',TIME '06:30',INTERVAL '2 hours 10 minutes',1200.00),
     ('SR 310','JNB','CPT',TIME '09:15',INTERVAL '2 hours 10 minutes',1450.00),
     ('SR 418','JNB','CPT',TIME '13:00',INTERVAL '2 hours 10 minutes',1180.00),
-    ('SR 522','JNB','CPT',TIME '17:45',INTERVAL '2 hours 15 minutes',1350.00),
-    ('SR 205','CPT','JNB',TIME '06:00',INTERVAL '2 hours',1200.00),
+    ('SR 424','JNB','CPT',TIME '15:30',INTERVAL '2 hours 15 minutes',1290.00),
+    ('SR 522','JNB','CPT',TIME '18:30',INTERVAL '2 hours 15 minutes',1350.00),
+    ('SR 528','JNB','CPT',TIME '21:15',INTERVAL '2 hours 10 minutes',1090.00),
+    -- CPT -> JNB (8 departures/day spanning 05:10 to 21:00 across all 4 time bands)
+    ('SR 201','CPT','JNB',TIME '05:10',INTERVAL '2 hours',1120.00),
+    ('SR 203','CPT','JNB',TIME '05:45',INTERVAL '2 hours',1160.00),
+    ('SR 205','CPT','JNB',TIME '06:30',INTERVAL '2 hours',1200.00),
     ('SR 311','CPT','JNB',TIME '10:00',INTERVAL '2 hours',1450.00),
-    ('SR 419','CPT','JNB',TIME '14:00',INTERVAL '2 hours',1180.00),
+    ('SR 419','CPT','JNB',TIME '13:30',INTERVAL '2 hours',1180.00),
+    ('SR 425','CPT','JNB',TIME '16:00',INTERVAL '2 hours',1290.00),
     ('SR 523','CPT','JNB',TIME '18:30',INTERVAL '2 hours',1350.00),
+    ('SR 529','CPT','JNB',TIME '21:00',INTERVAL '2 hours',1090.00),
+    -- JNB -> DUR (6 departures/day spanning 05:25 to 20:15 across all 4 time bands)
+    ('SR 600','JNB','DUR',TIME '05:25',INTERVAL '1 hour 25 minutes',890.00),
     ('SR 602','JNB','DUR',TIME '07:00',INTERVAL '1 hour 25 minutes',950.00),
-    ('SR 604','JNB','DUR',TIME '12:00',INTERVAL '1 hour 25 minutes',1050.00),
+    ('SR 608','JNB','DUR',TIME '10:15',INTERVAL '1 hour 25 minutes',1020.00),
+    ('SR 604','JNB','DUR',TIME '13:00',INTERVAL '1 hour 25 minutes',1050.00),
     ('SR 606','JNB','DUR',TIME '16:30',INTERVAL '1 hour 25 minutes',980.00),
+    ('SR 610','JNB','DUR',TIME '20:15',INTERVAL '1 hour 25 minutes',920.00),
+    -- DUR -> JNB (6 departures/day spanning 05:30 to 20:45 across all 4 time bands)
+    ('SR 601','DUR','JNB',TIME '05:30',INTERVAL '1 hour 25 minutes',890.00),
     ('SR 603','DUR','JNB',TIME '08:45',INTERVAL '1 hour 25 minutes',950.00),
+    ('SR 609','DUR','JNB',TIME '11:30',INTERVAL '1 hour 25 minutes',1020.00),
     ('SR 605','DUR','JNB',TIME '14:00',INTERVAL '1 hour 25 minutes',1050.00),
-    ('SR 607','DUR','JNB',TIME '18:30',INTERVAL '1 hour 25 minutes',980.00),
+    ('SR 607','DUR','JNB',TIME '17:15',INTERVAL '1 hour 25 minutes',980.00),
+    ('SR 611','DUR','JNB',TIME '20:45',INTERVAL '1 hour 25 minutes',920.00),
+    -- CPT -> DUR (6 departures/day spanning 05:20 to 20:30 across all 4 time bands)
+    ('SR 700','CPT','DUR',TIME '05:20',INTERVAL '2 hours',1240.00),
     ('SR 702','CPT','DUR',TIME '08:30',INTERVAL '2 hours',1300.00),
-    ('SR 703','DUR','CPT',TIME '11:30',INTERVAL '2 hours',1300.00);
+    ('SR 704','CPT','DUR',TIME '11:45',INTERVAL '2 hours',1360.00),
+    ('SR 706','CPT','DUR',TIME '14:30',INTERVAL '2 hours',1320.00),
+    ('SR 708','CPT','DUR',TIME '17:40',INTERVAL '2 hours',1390.00),
+    ('SR 710','CPT','DUR',TIME '20:30',INTERVAL '2 hours',1210.00),
+    -- DUR -> CPT (6 departures/day spanning 05:35 to 21:05 across all 4 time bands)
+    ('SR 701','DUR','CPT',TIME '05:35',INTERVAL '2 hours',1240.00),
+    ('SR 703','DUR','CPT',TIME '09:00',INTERVAL '2 hours',1300.00),
+    ('SR 705','DUR','CPT',TIME '11:30',INTERVAL '2 hours',1360.00),
+    ('SR 707','DUR','CPT',TIME '15:00',INTERVAL '2 hours',1320.00),
+    ('SR 709','DUR','CPT',TIME '18:15',INTERVAL '2 hours',1390.00),
+    ('SR 711','DUR','CPT',TIME '21:05',INTERVAL '2 hours',1210.00);
 
 CREATE TEMP TABLE seed_days ON COMMIT DROP AS
 SELECT ((NOW() AT TIME ZONE 'Africa/Johannesburg')::date + i) AS op_date

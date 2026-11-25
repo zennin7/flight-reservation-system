@@ -110,6 +110,10 @@ public class ThemeManager {
         if (skyRoyalCssUrl != null) {
             stylesheets.add(skyRoyalCssUrl);
         }
+        if (glassCssUrl != null && !stylesheets.contains(glassCssUrl)) {
+            FontLoader.loadFonts();
+            stylesheets.add(glassCssUrl);
+        }
 
         if (scene.getRoot() != null) {
             scene.getRoot().applyCss();
@@ -118,7 +122,7 @@ public class ThemeManager {
 
     /**
      * Attaches the glass stylesheet (glass.css) to the specified scene.
-     * Registers custom fonts (Inter and Lora) and attaches glass styling
+     * Registers bundled Inter sans-serif fonts and attaches glass styling
      * without modifying global theme settings or affecting existing screens.
      *
      * @param scene the Scene to style with glass.css

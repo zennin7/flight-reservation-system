@@ -2,6 +2,7 @@ package com.group2.flightres.controller;
 
 import com.group2.flightres.config.BoardingPolicy;
 import com.group2.flightres.config.BrandConfig;
+import com.group2.flightres.component.GlassTopBar;
 import com.group2.flightres.component.TicketView;
 import com.group2.flightres.model.TicketData;
 import com.group2.flightres.service.BookingService;
@@ -113,6 +114,7 @@ public class BookingConfirmationController implements WizardStepController {
     @FXML private Circle topNotch;
     @FXML private Circle bottomNotch;
 
+    @FXML private GlassTopBar topBar;
     // Payment & Timeline controls
     @FXML private Label baseFareLabel;
     @FXML private Label demandPricingLabel;
@@ -135,6 +137,9 @@ public class BookingConfirmationController implements WizardStepController {
     public void init(BookingContext context, Runnable onHome) {
         this.bookingContext = context;
         this.onHome = onHome;
+        if (topBar != null) {
+            topBar.bind(context);
+        }
         populateData();
     }
 
@@ -237,13 +242,12 @@ public class BookingConfirmationController implements WizardStepController {
             bookingRefLabel.setText(pnr);
         }
 
-        String email = bookingContext.getPassengerEmail();
+        if (confirmationTitleLabel != null) {
+            String destCity = resolveShortCity(bookingContext.getDestinationCity(), bookingContext.getDestination());
+            confirmationTitleLabel.setText(!destCity.isBlank() ? destCity + " is waiting." : "Your flight is booked");
+        }
         if (confirmationSubtitleLabel != null) {
-            if (email != null && !email.isBlank()) {
-                confirmationSubtitleLabel.setText("Booking confirmation for " + email.trim());
-            } else {
-                confirmationSubtitleLabel.setText("Booking confirmation");
-            }
+            confirmationSubtitleLabel.setText("Your boarding pass is ready. Download it below or find it any time in My bookings.");
         }
 
         // User Avatar Initials
@@ -374,13 +378,20 @@ public class BookingConfirmationController implements WizardStepController {
     }
 
     private String formatExactPrice(BigDecimal price) {
-        if (price == null) return "R 0";
-        return String.format(Locale.US, "R %,d", price.longValue());
+        return com.group2.flightres.util.MoneyFormatter.format(price);
+    }
+
+    private String resolveShortCity(String city, String raw) {
+        String candidate = (city != null && !city.isBlank()) ? city.trim() : (raw != null ? raw.trim() : "");
+        if (candidate.isEmpty()) return "";
+        int paren = candidate.indexOf('(');
+        if (paren > 0) candidate = candidate.substring(0, paren).trim();
+        String cleaned = com.group2.flightres.util.AirportNames.shortName(candidate);
+        return !cleaned.isBlank() ? cleaned : candidate;
     }
 
     private String formatTotalText(BigDecimal price) {
-        if (price == null) return "R 0";
-        return String.format(Locale.US, "R %,d", price.longValue());
+        return com.group2.flightres.util.MoneyFormatter.format(price);
     }
 
     @FXML

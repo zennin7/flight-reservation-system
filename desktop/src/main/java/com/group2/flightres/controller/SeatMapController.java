@@ -1,5 +1,6 @@
 package com.group2.flightres.controller;
 
+import com.group2.flightres.component.GlassTopBar;
 import com.group2.flightres.dao.FlightDao;
 import com.group2.flightres.dao.impl.FlightDaoImpl;
 import com.group2.flightres.dao.impl.SeatDaoImpl;
@@ -19,7 +20,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +77,18 @@ public class SeatMapController implements WizardStepController {
     @FXML private Label freeSeatsLabel;
     @FXML private Label planeCardSubtitle;
 
+    // Responsive layout containers
+    @FXML private VBox mainGlassCard;
+    @FXML private VBox workspaceRoot;
+    @FXML private HBox workspaceSplit;
+    @FXML private VBox seatMapRightColumn;
+    @FXML private VBox selectionCard;
+    @FXML private VBox flightCard;
+    @FXML private HBox stackedSelectionRow;
+    @FXML private Label timerSubLabel;
+    private ScrollPane narrowScrollPane;
+    private boolean stackedMode = false;
+
     private static boolean preselectForScreenshots = false;
 
     public static void setPreselectForScreenshots(boolean preselect) {
@@ -92,6 +107,7 @@ public class SeatMapController implements WizardStepController {
     private final Map<String, Button> seatButtonsByLabel = new HashMap<>();
     private final Map<String, FlightSeat> seatsByLabel = new HashMap<>();
     private final List<FlightSeat> selectedSeats = new ArrayList<>();
+    @FXML private GlassTopBar topBar;
     private boolean isSampleData = false;
 
     private BookingContext bookingContext;
@@ -120,6 +136,9 @@ public class SeatMapController implements WizardStepController {
         this.bookingContext = context;
         this.onNext = onNext;
         this.onBack = onBack;
+        if (topBar != null) {
+            topBar.bind(context);
+        }
         if (context != null && context.getFlightId() != null) {
             this.flightId = context.getFlightId();
         }
@@ -139,9 +158,100 @@ public class SeatMapController implements WizardStepController {
         if (glassBridge != null) {
             glassBridge.setController(this);
         }
+        setupResponsiveLayout();
         if (bookingContext == null) {
             loadFlightMetadata();
             loadSeatMap();
+        }
+    }
+
+    private void setupResponsiveLayout() {
+        if (workspaceSplit == null) return;
+        workspaceSplit.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                newScene.widthProperty().addListener((wObs, oldW, newW) ->
+                        applyResponsiveSeatMapLayout(newW.doubleValue()));
+                applyResponsiveSeatMapLayout(newScene.getWidth());
+            }
+        });
+        if (workspaceSplit.getScene() != null) {
+            applyResponsiveSeatMapLayout(workspaceSplit.getScene().getWidth());
+        }
+    }
+
+    private void applyResponsiveSeatMapLayout(double width) {
+        if (width <= 0 || workspaceSplit == null || seatMapRightColumn == null
+                || selectionCard == null || flightCard == null || stackedSelectionRow == null) {
+            return;
+        }
+        boolean shouldStack = width < 1000.0;
+        if (shouldStack == stackedMode) {
+            return;
+        }
+        stackedMode = shouldStack;
+        if (shouldStack) {
+            workspaceSplit.getChildren().remove(seatMapRightColumn);
+            seatMapRightColumn.getChildren().removeAll(selectionCard, flightCard);
+            if (!stackedSelectionRow.getChildren().contains(selectionCard)) {
+                stackedSelectionRow.getChildren().add(selectionCard);
+            }
+            if (!stackedSelectionRow.getChildren().contains(flightCard)) {
+                stackedSelectionRow.getChildren().add(flightCard);
+            }
+            HBox.setHgrow(selectionCard, Priority.ALWAYS);
+            HBox.setHgrow(flightCard, Priority.ALWAYS);
+            selectionCard.setMaxWidth(Double.MAX_VALUE);
+            flightCard.setMaxWidth(Double.MAX_VALUE);
+            stackedSelectionRow.setVisible(true);
+            stackedSelectionRow.setManaged(true);
+            if (mainGlassCard != null && workspaceRoot != null) {
+                int idx = mainGlassCard.getChildren().indexOf(workspaceRoot);
+                if (idx >= 0) {
+                    if (narrowScrollPane == null) {
+                        narrowScrollPane = new ScrollPane();
+                        narrowScrollPane.setFitToWidth(true);
+                        narrowScrollPane.setFitToHeight(false);
+                        narrowScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                        narrowScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+                        narrowScrollPane.getStyleClass().add("glass-scroll-pane");
+                        narrowScrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0;");
+                        VBox.setVgrow(narrowScrollPane, Priority.ALWAYS);
+                    }
+                    mainGlassCard.getChildren().remove(workspaceRoot);
+                    narrowScrollPane.setContent(workspaceRoot);
+                    mainGlassCard.getChildren().add(idx, narrowScrollPane);
+                }
+            }
+            if (timerSubLabel != null) {
+                timerSubLabel.maxWidthProperty().unbind();
+                timerSubLabel.maxWidthProperty().bind(selectionCard.widthProperty().subtract(84));
+            }
+        } else {
+            if (mainGlassCard != null && narrowScrollPane != null && workspaceRoot != null) {
+                int idx = mainGlassCard.getChildren().indexOf(narrowScrollPane);
+                if (idx >= 0) {
+                    narrowScrollPane.setContent(null);
+                    mainGlassCard.getChildren().remove(narrowScrollPane);
+                    mainGlassCard.getChildren().add(idx, workspaceRoot);
+                }
+            }
+            stackedSelectionRow.setVisible(false);
+            stackedSelectionRow.setManaged(false);
+            stackedSelectionRow.getChildren().removeAll(selectionCard, flightCard);
+            if (!seatMapRightColumn.getChildren().contains(selectionCard)) {
+                seatMapRightColumn.getChildren().add(selectionCard);
+            }
+            if (!seatMapRightColumn.getChildren().contains(flightCard)) {
+                seatMapRightColumn.getChildren().add(flightCard);
+            }
+            VBox.setVgrow(flightCard, Priority.ALWAYS);
+            if (!workspaceSplit.getChildren().contains(seatMapRightColumn)) {
+                workspaceSplit.getChildren().add(seatMapRightColumn);
+            }
+            if (timerSubLabel != null) {
+                timerSubLabel.maxWidthProperty().unbind();
+                timerSubLabel.setMaxWidth(172);
+            }
         }
     }
 
@@ -352,7 +462,7 @@ public class SeatMapController implements WizardStepController {
             String demandStr = (quote.demandAdjustment().compareTo(BigDecimal.ZERO) >= 0 ? "+ " : "") + formatPrice(quote.demandAdjustment());
             String timingStr = (quote.timingAdjustment().compareTo(BigDecimal.ZERO) >= 0 ? "+ " : "") + formatPrice(quote.timingAdjustment());
             String totalStr = formatPrice(quote.total());
-            String vatStr = String.format(Locale.US, "Includes VAT R %,.2f", quote.vatIncluded().doubleValue());
+            String vatStr = "Includes VAT (15%) " + com.group2.flightres.util.MoneyFormatter.format(quote.vatIncluded());
 
             if (baseFareLabel != null) baseFareLabel.setText(baseStr);
             if (classMultiplierLabel != null) classMultiplierLabel.setText("x " + quote.classMultiplier());
@@ -388,8 +498,7 @@ public class SeatMapController implements WizardStepController {
     }
 
     private String formatPrice(BigDecimal price) {
-        if (price == null) return "R 0";
-        return String.format(Locale.US, "R %,d", price.longValue());
+        return com.group2.flightres.util.MoneyFormatter.format(price);
     }
 
     @FXML

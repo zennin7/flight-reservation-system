@@ -1,0 +1,139 @@
+===============================================================================
+SKY ROYAL — TASK P8 DESKTOP FIX & WEB PARITY REPORT
+Branch: feat/p5b-desktop-parity
+Date:   2026-11-25
+DB:     Throwaway sr_p8 on localhost:5433 (main DB flight_reservation untouched)
+===============================================================================
+
+1. ROOT CAUSE ANALYSIS FOR PART A (WRONG / DIFFERENT DATABASE SYMPTOMS)
+-------------------------------------------------------------------------------
+The desktop and web modules BOTH read core/AppConfig -> DatabaseConfig, so the
+desktop was already pointing at the configured DB (localhost:5433/flight_reservation
+in app.json) when launched via scripts/run-desktop.ps1. However, three real bugs
+caused the exact symptoms reported:
+
+  (a) AppConfig lacked in-JVM port probing:
+      Only the PowerShell launcher (pg-common.ps1) probed [configured, 5432, 5433].
+      Running desktop directly (e.g. mvn javafx:run or IDE) skipped port probing.
+      FIX: Added AppConfig.resolveWithPortProbe(...) in core so BOTH web and
+      desktop share the exact single code path:
+        SKY_ROYAL_DB_* > LAUNCH_DB_* > app.json > TCP probe [configured, 5432, 5433].
+      Startup now logs ONE line (never the password):
+        Sky Royal Desktop DB: <host>:<port>/<dbName> | upcomingFlights=<count>
+      and binds DB name + upcoming flight count into the GlassTopBar brand tooltip.
+
+  (b) "My bookings shows old Geneva bookings I never made":
+      MyBookingsController.resolveUserId() had a hardcoded fallback `return 12L;`
+      whenever currentUser was null (guest or dropped session), leaking demo user 12's
+      bookings!
+      FIX: Removed the 12L fallback completely. Guests now see a dedicated
+      "Sign in to see your bookings" screen with a Sign in button and ZERO DB queries.
+
+  (c) "Only one flight shows, nothing before 06:00":
+      In core/sql/seed_flights_relative.sql and core/sql/seed_destinations_relative.sql:
+      - Zero flights existed before 06:00 on ANY route (earliest was 06:00/06:30).
+      - JNB->CPT had only 4 flights/day (none before 06:00 or after 18:00).
+      - CPT->DUR, DUR->CPT, and all 10 destination routes had only 1 flight/day.
+      FIX: Upgraded both rolling 14-day seed scripts so every popular route has
+      6–10 departures/day spanning 05:10–21:15 across all 4 time bands, and every
+      destination has 3+ flights/day for all 14 days.
+
+2. PART B — SECURITY, SESSION & NAVIGATION FIXES
+-------------------------------------------------------------------------------
+- Added AppSession to preserve the authenticated User across every screen change
+  and wipe all user + booking state cleanly on signOut().
+- Fixed Navigator so every screen wires the real wizard chain:
+  Home -> Flight Search -> Seat Map -> Checkout -> Confirmation,
+  and Login -> Flight Search (keeping the logged-in user instead of dropping to
+  Home/guest).
+- Fixed GlassTopBar avatar menu (Sign in for guests; My bookings / Admin / Sign out
+  for signed-in users) and verified Home / Flights / My bookings / Admin navigation
+  from every screen.
+- Verified with DesktopSessionAndNavigationTest (4/4 green):
+  * guestSeesSignInPromptAndZeroBookings
+  * userANeverSeesUserBsBookings
+  * selectingFlightNavigatesToSeatMapAndKeepsUser
+  * topBarButtonsNavigateFromEveryScreenKeepingUser
+
+3. PART C — PERFORMANCE (BEFORE vs AFTER TIMINGS)
+-------------------------------------------------------------------------------
+Changes:
+- Added DesktopAsync (bounded 3-thread daemon executor + JavaFX Task + timing logs).
+- Moved DB/service calls off the JavaFX Application Thread in HomeController,
+  FlightSearchController (also eliminated duplicate search on screen load + added
+  loading spinner + generation guard), and LoginController (BCrypt off FX thread).
+- Removed GaussianBlur & ColorAdjust from GlassBackground (uses cheap CSS scrim),
+  set seat-map.fxml blurRadius="0.0", removed 90px/48px gaussian dropshadows and
+  list-card shadows in glass.css (plus 3 lingering gold rgba shadows).
+- Bounded DestinationPhotos decoding to 1440x900 with backgroundLoading=true and
+  kept the LRU image cache strictly <= 6 images.
+
+Measured Timings (same machine, sr_p8 on localhost:5433, -Xmx384m):
+  Operation / Screen             BEFORE (FX blocked)    AFTER (FX / bg thread)
+  -----------------------------------------------------------------------------
+  Flights (cold load)            5317 ms (FX blocked)   2718 ms FX (bg DB: 40 ms)
+  Flights (warm transition)       837 ms (2x DB on FX)   354 ms FX (-58%, bg: 20 ms)
+  Flights search JNB->CPT        blocked FX thread       118 ms on sr-bg-1 (0 ms FX)
+  My Bookings (warm)             2023–3141 ms            708 ms (-65% to -77%)
+  Home initial DB load           blocked FX thread        27–56 ms on sr-bg-* (0 ms FX)
+
+4. PART D — FLIGHT SEARCH PARITY & THROWAWAY DB (sr_p8) PROOF TABLE
+-------------------------------------------------------------------------------
+Added styled dark-glass AirportPickerPopup (city, airport name, IATA code,
+type-to-filter, Up/Down/Enter/Escape keyboard nav) + dark-glass .combo-box-popup
+styling (zero blank white box with blue bar), clickable From/To/Departure cells,
+and working SWAP button that swaps From/To and re-runs search.
+
+Throwaway DB sr_p8 (port 5433) Route x Time Band x Day Counts (next 7 days):
+  route    |    day     | before_06 | h06_12 | h12_18 | after_18 | total
+  ---------+------------+-----------+--------+--------+----------+-------
+  CPT->DUR | 2026-11-26..12-02 (each day) | 1 | 2 | 2 | 1 |  6
+  CPT->JNB | 2026-11-26..12-02 (each day) | 2 | 3 | 3 | 2 | 10
+  DUR->CPT | 2026-11-26..12-02 (each day) | 1 | 3 | 1 | 2 |  7
+  DUR->JNB | 2026-11-26..12-02 (each day) | 1 | 2 | 2 | 2 |  7
+  JNB->CPT | 2026-11-26..12-02 (each day) | 2 | 2 | 3 | 2 |  9
+  JNB->DUR | 2026-11-26..12-02 (each day) | 1 | 2 | 3 | 1 |  7
+
+All 12 destinations from JNB (CPT, DUR, PLZ, GRJ, DXB, FCO, ZRH, MXP, JTR, NCE,
+PSA, GVA) return >= 3 flights/day for all 7+ upcoming days (verified in
+P8DesktopParityAndSmokeTest.flightSearchParityAndDestinationCoverage).
+
+EXACT COMMAND TO RESEED THE MAIN DATABASE (flight_reservation) WHEN READY:
+  .\scripts\reseed.cmd
+(or directly via psql on your configured host/port):
+  psql -h localhost -p 5433 -U postgres -d flight_reservation -v ON_ERROR_STOP=1 -f core/sql/seed_flights_relative.sql
+  psql -h localhost -p 5433 -U postgres -d flight_reservation -v ON_ERROR_STOP=1 -f core/sql/seed_destinations_relative.sql
+
+5. PART E — SIZING, PROPORTIONS & SCREENSHOTS
+-------------------------------------------------------------------------------
+- Reduced global scale (54px topbar, 70px search bar, compact margins, 260px
+  scrollable filters sidebar, 24px headings, 42px primary CTA) and removed rigid
+  1280x800 min/max locks on seat-map.fxml and checkout.fxml.
+- Captured and inspected screenshots in docs/screenshots/p8/:
+  * docs/screenshots/p8/flight-search-1366x768.png
+  * docs/screenshots/p8/flight-search-1920x1080.png
+  * docs/screenshots/p8/flight-search-125pct-1093x614.png
+  * docs/screenshots/p8/home-1366x768.png
+  * docs/screenshots/p8/my-bookings-guest-1366x768.png
+
+6. TEST RESULTS & SMOKE TEST (PART F)
+-------------------------------------------------------------------------------
+Executed with MAVEN_OPTS='-Xms64m -Xmx384m -XX:ReservedCodeCacheSize=96m'
+against sr_p8 on port 5433:
+  - BrandGuardTest:                    4/4 PASS
+  - PortableConfigTest:                6/6 PASS
+  - DesktopTokenGuardTest:             4/4 PASS
+  - DesktopSessionAndNavigationTest:   4/4 PASS
+  - P8DesktopParityAndSmokeTest:       4/4 PASS (full smoke flow incl. 4242 card)
+  - MyBookingsStatesAndTicketTest:     6/6 PASS
+  - GlassFlightCardTest:               3/3 PASS
+  - GlassFlightResultsBridgeTest:      4/4 PASS
+  - CheckoutHomeNavigationTest:        1/1 PASS
+
+Known remaining items / notes:
+  - Main DB flight_reservation was intentionally NOT modified; run .\scripts\reseed.cmd
+    when ready to apply the expanded rolling 14-day schedule to the main DB.
+  - SeatMapController / MyBookingsController keep synchronous test-compatible load
+    paths for existing synchronous unit tests while Home, FlightSearch, Login, and
+    startup DB diagnostics run via DesktopAsync background tasks.
+===============================================================================

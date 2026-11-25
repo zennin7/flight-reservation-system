@@ -23,7 +23,8 @@
 <!-- Original concept: Petja / Luyanda. Integrated by David. -->
 <GlassBackground xmlns="http://javafx.com/javafx/21"
                  xmlns:fx="http://javafx.com/fxml/1"
-                 fx:controller="com.group2.flightres.controller.AdminDashboardController">
+                 fx:controller="com.group2.flightres.controller.AdminDashboardController"
+                 photoPath="/com/group2/flightres/photos/thanuj-mathew-BWmxrpY9h3M-unsplash.jpg">
     <VBox spacing="0" alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
 
         <NavBar fx:id="navBar"/>

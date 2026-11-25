@@ -143,53 +143,145 @@
     </section>
 
     <main class="home-main">
-      <section id="destinations" aria-labelledby="intl-heading" th:unless="${#lists.isEmpty(internationalRoutes)}">
+      <!-- 1. TOP DESTINATIONS (Mosaic grid, hidden if fewer than 4 real destinations) -->
+      <section id="top-destinations" aria-labelledby="top-dest-heading"
+               th:if="${topDestinations != null and #lists.size(topDestinations) >= 4}">
         <div class="section-head">
           <div>
-            <div class="section-kicker">International</div>
-            <h2 class="section-title" id="intl-heading">Go further.</h2>
+            <div class="section-kicker">Explore routes</div>
+            <h2 class="section-title" id="top-dest-heading">Top destinations</h2>
           </div>
-          <a href="/flights" class="section-link">Search all flights &rarr;</a>
+          <a href="/flights" class="section-link">View all flights &rarr;</a>
         </div>
 
-        <div class="cards-grid-intl">
-          <a th:each="card : ${internationalRoutes}"
+        <div class="top-dest-mosaic">
+          <a th:each="card, iter : ${topDestinations}"
              th:href="@{/flights(origin=${card.route.originParam},destination=${card.route.destParam},date=${tomorrowDate})}"
-             th:class="${card.photoPath != null ? 'dest-card' : 'dest-card ' + card.gradientClass}">
+             th:class="${iter.index == 0 ? 'dest-card top-dest-tile is-featured' : 'dest-card top-dest-tile'}">
             <img th:if="${card.photoPath != null}" th:src="${card.photoPath}" th:alt="${card.route.destCity}" class="dest-card-img">
             <div class="dest-card-scrim" aria-hidden="true"></div>
             <div class="dest-card-body">
               <div>
-                <div class="dest-city" th:text="${card.route.destCity}">Dubai</div>
-                <div class="dest-meta" th:text="${card.route.destCountry + ' · ' + card.route.durationFormatted}">UAE · 8h 10m</div>
+                <span class="dest-iata-pill" th:text="${card.route.destCode}">CPT</span>
+                <div class="dest-city" th:text="${card.route.destCity}">Cape Town</div>
               </div>
               <div class="dest-fare">
-                <span class="dest-fare-label">From</span>
-                <span class="dest-fare-val" th:text="${card.route.cheapestFareFormatted}">R 8,450.00</span>
+                <span class="dest-fare-label">from</span>
+                <span class="dest-fare-val" th:text="${card.route.cheapestFareFormatted}">R 1,180.00</span>
               </div>
             </div>
           </a>
         </div>
       </section>
 
-      <section aria-label="Platform highlights">
-        <div class="facts-grid">
-          <div class="glass-tile fact-tile">
-            <span class="fact-val" th:text="${holdDurationText}">5 min</span>
-            <span class="fact-label">Seat hold while you check out</span>
+      <!-- 2. WHY SKY ROYAL (3 honest feature cards) -->
+      <section id="why-sky-royal" aria-labelledby="why-heading">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Built for clarity</div>
+            <h2 class="section-title" id="why-heading">Why Sky Royal</h2>
           </div>
-          <div class="glass-tile fact-tile">
-            <span class="fact-val">R 0 hidden fees</span>
-            <span class="fact-label">VAT-inclusive transparent fares</span>
+        </div>
+
+        <div class="why-grid">
+          <article class="glass-panel why-card">
+            <span class="why-icon-badge" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7zm10 0a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V7z" fill="currentColor"/></svg>
+            </span>
+            <h3 class="why-card-title">Live seat map</h3>
+            <p class="why-card-copy">Pick your exact seat on the interactive cabin map with Economy and First Class views.</p>
+          </article>
+
+          <article class="glass-panel why-card">
+            <span class="why-icon-badge" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 10.41 3.3 1.9-1 1.73L11 13.5V7h2z" fill="currentColor"/></svg>
+            </span>
+            <h3 class="why-card-title">5-minute seat hold</h3>
+            <p class="why-card-copy">Nobody can take your seat while you pay (<span th:text="${holdDurationText}">5 min</span> guaranteed hold at checkout).</p>
+          </article>
+
+          <article class="glass-panel why-card">
+            <span class="why-icon-badge" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 0 0 4v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4a2 2 0 0 0 0-4V5zm5 4v6h2V9H8zm4 0v6h4V9h-4z" fill="currentColor"/></svg>
+            </span>
+            <h3 class="why-card-title">Instant boarding pass</h3>
+            <p class="why-card-copy">Download your boarding pass PDF with a scannable QR code and calendar invite right after booking.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- 3. OUR BEST FLIGHTS (up to 8 real upcoming flights, hidden if fewer than 4) -->
+      <section id="best-flights" aria-labelledby="best-flights-heading"
+               th:if="${bestFlightsCheapest != null and #lists.size(bestFlightsCheapest) >= 4}">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Upcoming departures</div>
+            <h2 class="section-title" id="best-flights-heading">Our best flights</h2>
           </div>
-          <div class="glass-tile fact-tile">
-            <span class="fact-val">1 tap boarding pass</span>
-            <span class="fact-label">Instant PDF &amp; QR verification</span>
+          <div class="best-tabs" role="tablist" aria-label="Sort best flights">
+            <label class="best-tab-pill">
+              <input type="radio" name="bestFlightTab" value="cheapest" checked class="sr-only-radio">
+              <span>Cheapest</span>
+            </label>
+            <label class="best-tab-pill">
+              <input type="radio" name="bestFlightTab" value="seats" class="sr-only-radio">
+              <span>Most seats</span>
+            </label>
           </div>
-          <div class="glass-tile fact-tile">
-            <span class="fact-val">2 cabins</span>
-            <span class="fact-label">Economy &amp; First Class</span>
-          </div>
+        </div>
+
+        <div class="best-flights-grid best-panel-cheapest">
+          <article th:each="f : ${bestFlightsCheapest}" class="glass-panel best-flight-card">
+            <div class="best-flight-media">
+              <img th:src="${f.photoPath}" th:alt="${f.destCity}" class="best-flight-img">
+              <span class="best-flight-no" th:text="${f.flightNumber}">SR 204</span>
+            </div>
+            <div class="best-flight-body">
+              <div class="best-flight-route" th:text="${f.routeText}">JNB to CPT</div>
+              <div class="best-flight-date" th:text="${f.dateTime}">Wed 26 Nov · 06:30</div>
+              <div class="best-flight-meta">
+                <span class="best-flight-fare" th:text="${'From ' + f.fareFormatted}">From R 1,344.00</span>
+                <span class="best-flight-seats" th:text="${f.seatsLeft + ' seats left'}">44 seats left</span>
+              </div>
+              <a th:href="@{/flights(origin=${f.originParam},destination=${f.destParam},date=${f.dateParam})}"
+                 class="btn-pill btn-white best-flight-cta">View flight</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="best-flights-grid best-panel-seats">
+          <article th:each="f : ${bestFlightsMostSeats}" class="glass-panel best-flight-card">
+            <div class="best-flight-media">
+              <img th:src="${f.photoPath}" th:alt="${f.destCity}" class="best-flight-img">
+              <span class="best-flight-no" th:text="${f.flightNumber}">SR 204</span>
+            </div>
+            <div class="best-flight-body">
+              <div class="best-flight-route" th:text="${f.routeText}">JNB to CPT</div>
+              <div class="best-flight-date" th:text="${f.dateTime}">Wed 26 Nov · 06:30</div>
+              <div class="best-flight-meta">
+                <span class="best-flight-fare" th:text="${'From ' + f.fareFormatted}">From R 1,344.00</span>
+                <span class="best-flight-seats" th:text="${f.seatsLeft + ' seats left'}">44 seats left</span>
+              </div>
+              <a th:href="@{/flights(origin=${f.originParam},destination=${f.destParam},date=${f.dateParam})}"
+                 class="btn-pill btn-white best-flight-cta">View flight</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- 4. TRAVEL TIPS BANNER -->
+      <section id="travel-tips" aria-labelledby="tips-heading" class="tips-banner glass-panel">
+        <img src="/photos/tom-barrett-M0AWNxnLaMw-unsplash.jpg" alt="Aircraft wing above sunset clouds" class="tips-banner-img">
+        <div class="tips-banner-scrim" aria-hidden="true"></div>
+        <div class="tips-banner-body">
+          <div class="section-kicker">Travel tips</div>
+          <h2 class="section-title" id="tips-heading">Before you fly</h2>
+          <ul class="tips-list">
+            <li>Arrive 90 minutes early for smooth check-in and security.</li>
+            <li>Have your boarding pass QR code ready on your phone or printed.</li>
+            <li>Cancellations are free up to 24 hours before departure.</li>
+          </ul>
+          <a href="/my-bookings" class="btn-pill btn-white tips-cta">Go to My bookings &rarr;</a>
         </div>
       </section>
     </main>

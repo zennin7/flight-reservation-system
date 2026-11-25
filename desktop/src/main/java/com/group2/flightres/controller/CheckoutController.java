@@ -1,5 +1,6 @@
 package com.group2.flightres.controller;
 
+import com.group2.flightres.component.GlassTopBar;
 import com.group2.flightres.component.StepperBar;
 import com.group2.flightres.dao.impl.SeatDaoImpl;
 import com.group2.flightres.exception.SeatUnavailableException;
@@ -28,7 +29,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +57,7 @@ public class CheckoutController implements WizardStepController {
     @FXML private Label demandPricingLabel;
     @FXML private Label taxesFeesLabel;
     @FXML private Label totalLabel;
+    @FXML private Label vatIncludedLabel;
 
     @FXML private TextField fullNameField;
     @FXML private TextField emailField;
@@ -92,6 +96,7 @@ public class CheckoutController implements WizardStepController {
     @FXML private Label tripFlightLabel;
     @FXML private Label tripSeatLabel;
 
+    @FXML private GlassTopBar topBar;
     @FXML private StepperBar stepperBar;
     @FXML private ImageView tripHeroImageView;
     @FXML private Label tripOriginSubLabel;
@@ -130,6 +135,9 @@ public class CheckoutController implements WizardStepController {
         this.bookingContext = context;
         this.onNext = onNext;
         this.onBack = onBack;
+        if (topBar != null) {
+            topBar.bind(context);
+        }
 
         if (stepperBar != null) {
             stepperBar.setActiveStep(BookingStep.CHECKOUT);
@@ -150,6 +158,16 @@ public class CheckoutController implements WizardStepController {
     public void initialize() {
         if (stepperBar != null) {
             stepperBar.setActiveStep(BookingStep.CHECKOUT);
+        }
+        if (tripHeroImageView != null && tripHeroImageView.getParent() instanceof StackPane heroBanner) {
+            tripHeroImageView.fitWidthProperty().bind(heroBanner.widthProperty());
+            tripHeroImageView.fitHeightProperty().bind(heroBanner.heightProperty());
+            Rectangle bannerClip = new Rectangle();
+            bannerClip.setArcWidth(32);
+            bannerClip.setArcHeight(32);
+            bannerClip.widthProperty().bind(heroBanner.widthProperty());
+            bannerClip.heightProperty().bind(heroBanner.heightProperty());
+            heroBanner.setClip(bannerClip);
         }
         populateData();
     }
@@ -247,6 +265,9 @@ public class CheckoutController implements WizardStepController {
         BigDecimal timing = bookingContext.getPriceQuotes().stream()
                 .map(PriceQuote::timingAdjustment)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal vat = bookingContext.getPriceQuotes().stream()
+                .map(PriceQuote::vatIncluded)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal total = bookingContext.getTotalPrice();
 
         if (baseFareLabel != null) baseFareLabel.setText(formatExactPrice(base));
@@ -254,6 +275,7 @@ public class CheckoutController implements WizardStepController {
         if (taxesFeesLabel != null) taxesFeesLabel.setText(formatExactPrice(timing));
         if (totalLabel != null) totalLabel.setText(formatTotalText(total));
         if (confirmTotalLabel != null) confirmTotalLabel.setText(formatTotalText(total));
+        if (vatIncludedLabel != null) vatIncludedLabel.setText("Includes 15% VAT (" + formatExactPrice(vat) + ")");
     }
 
     private void showNoQuoteErrorState(String message) {
@@ -323,13 +345,11 @@ public class CheckoutController implements WizardStepController {
     }
 
     private String formatExactPrice(BigDecimal price) {
-        if (price == null) return "R 0.00";
-        return String.format(Locale.US, "R %,.2f", price.doubleValue());
+        return com.group2.flightres.util.MoneyFormatter.format(price);
     }
 
     private String formatTotalText(BigDecimal price) {
-        if (price == null) return "R 0";
-        return String.format(Locale.US, "R %,d", price.longValue());
+        return com.group2.flightres.util.MoneyFormatter.format(price);
     }
 
     private String formatDateBadge(String depDate) {
@@ -477,9 +497,10 @@ public class CheckoutController implements WizardStepController {
             logger.warn("Price changed during checkout: {}", pce.getMessage());
             refundIfApproved(payResult);
             clearCardFields();
-            showAlert("Fare Updated", String.format(Locale.US,
-                    "The fare changed from R %,d to R %,d. The price summary has been refreshed.",
-                    pce.getOldTotal().longValue(), pce.getNewTotal().longValue()));
+            showAlert("Fare Updated",
+                    "The fare changed from " + com.group2.flightres.util.MoneyFormatter.format(pce.getOldTotal())
+                            + " to " + com.group2.flightres.util.MoneyFormatter.format(pce.getNewTotal())
+                            + ". The price summary has been refreshed.");
             bookingContext.setTotalPrice(pce.getNewTotal());
             populatePriceSummary();
             return;

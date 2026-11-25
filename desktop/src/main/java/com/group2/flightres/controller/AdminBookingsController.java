@@ -293,10 +293,10 @@ public class AdminBookingsController {
             setGridPos(tableCard, 0, 1);
             setGridPos(detailPanel, 0, 2);
         } else {
-            ColumnConstraints c0 = new ColumnConstraints(176, 184, 196);
+            ColumnConstraints c0 = new ColumnConstraints(142, 148, 180);
             ColumnConstraints c1 = new ColumnConstraints();
             c1.setHgrow(Priority.ALWAYS);
-            ColumnConstraints c2 = new ColumnConstraints(285, 296, 310);
+            ColumnConstraints c2 = new ColumnConstraints(220, 228, 290);
             bookingsGrid.getColumnConstraints().addAll(c0, c1, c2);
             setGridPos(filterSidebar, 0, 0);
             setGridPos(tableCard, 1, 0);
@@ -442,7 +442,7 @@ public class AdminBookingsController {
     }
 
     public HBox buildBookingTableRow(AdminBookingRow row, int idx) {
-        HBox box = new HBox(6);
+        HBox box = new HBox(4);
         box.setAlignment(Pos.CENTER_LEFT);
         box.getStyleClass().add("admin-row-card");
         box.setFocusTraversable(true);
@@ -450,9 +450,9 @@ public class AdminBookingsController {
         Label pnr = new Label(row.bookingReference());
         pnr.getStyleClass().add("admin-row-gold");
         pnr.setMinWidth(Region.USE_PREF_SIZE);
-        pnr.setPrefWidth(76);
+        pnr.setPrefWidth(60);
 
-        HBox paxCell = new HBox(8);
+        HBox paxCell = new HBox(6);
         paxCell.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(paxCell, Priority.ALWAYS);
         Label avatar = new Label(initials(row.passengerName()));
@@ -465,17 +465,17 @@ public class AdminBookingsController {
         Label route = new Label(row.originCode() + " to " + row.destinationCode());
         route.getStyleClass().add("admin-row-meta");
         route.setMinWidth(Region.USE_PREF_SIZE);
-        route.setPrefWidth(68);
+        route.setPrefWidth(58);
 
         Label seat = new Label(row.seatLabels() != null && !row.seatLabels().isBlank() ? row.seatLabels() : "-");
         seat.getStyleClass().add("admin-row-title");
         seat.setMinWidth(Region.USE_PREF_SIZE);
-        seat.setPrefWidth(34);
+        seat.setPrefWidth(28);
 
         Label total = new Label(MoneyFormatter.format(row.totalAmount()));
         total.getStyleClass().add("admin-row-title");
         total.setMinWidth(Region.USE_PREF_SIZE);
-        total.setPrefWidth(84);
+        total.setPrefWidth(68);
 
         String displayStatus = formatStatusLabel(row.status());
         Label status = new Label(displayStatus);
@@ -488,7 +488,7 @@ public class AdminBookingsController {
             status.getStyleClass().add("badge-gold");
         }
         status.setMinWidth(Region.USE_PREF_SIZE);
-        status.setPrefWidth(82);
+        status.setPrefWidth(78);
 
         box.setOnMouseClicked(e -> selectRow(row));
         box.setOnKeyPressed(e -> {

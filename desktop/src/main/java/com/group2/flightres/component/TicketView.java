@@ -187,7 +187,7 @@ public class TicketView extends StackPane {
         }
 
         if (welcomeCityLabel != null) {
-            welcomeCityLabel.setText(ticketData.destinationCity());
+            welcomeCityLabel.setText(shortCity(ticketData.destinationCity(), ticketData.destinationCode()));
         }
 
         // 2. Ticket Body
@@ -198,7 +198,7 @@ public class TicketView extends StackPane {
             originCodeLabel.setText(ticketData.originCode());
         }
         if (originCityTimeLabel != null) {
-            originCityTimeLabel.setText(ticketData.originCity() + " · " + ticketData.departureTime());
+            originCityTimeLabel.setText(shortCity(ticketData.originCity(), ticketData.originCode()) + " · " + ticketData.departureTime());
         }
         if (durationLabel != null) {
             durationLabel.setText(ticketData.duration());
@@ -207,7 +207,7 @@ public class TicketView extends StackPane {
             destCodeLabel.setText(ticketData.destinationCode());
         }
         if (destCityTimeLabel != null) {
-            destCityTimeLabel.setText(ticketData.destinationCity() + " · " + ticketData.arrivalTime());
+            destCityTimeLabel.setText(shortCity(ticketData.destinationCity(), ticketData.destinationCode()) + " · " + ticketData.arrivalTime());
         }
 
         if (passengerNameLabel != null) {
@@ -241,7 +241,7 @@ public class TicketView extends StackPane {
         }
         if (stubFareContainer != null && stubFareLabel != null) {
             if (ticketData.totalPrice() != null) {
-                stubFareLabel.setText(String.format(java.util.Locale.US, "R %,d", ticketData.totalPrice().longValue()));
+                stubFareLabel.setText(com.group2.flightres.util.MoneyFormatter.format(ticketData.totalPrice()));
                 stubFareContainer.setVisible(true);
                 stubFareContainer.setManaged(true);
             } else {
@@ -251,6 +251,19 @@ public class TicketView extends StackPane {
         }
 
         updateNotches();
+    }
+
+    private static String shortCity(String city, String code) {
+        String c = (city != null ? city.trim() : "");
+        if (c.isEmpty()) {
+            return code != null ? code : "";
+        }
+        int paren = c.indexOf('(');
+        if (paren > 0) {
+            c = c.substring(0, paren).trim();
+        }
+        String cleaned = com.group2.flightres.util.AirportNames.shortName(c);
+        return !cleaned.isBlank() ? cleaned : c;
     }
 
     /**

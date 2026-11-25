@@ -149,25 +149,13 @@ class MyBookingsLayoutTest {
                             assertFalse(controller.getAllBookings().isEmpty(), "Bookings must be loaded for demo user 12");
                             assertFalse(controller.getCardsContainer().getChildren().isEmpty(), "Cards must be rendered");
 
-                            // 3. Bounds, prefWidth, and ellipsis checks (same rigour as GlassFlightCardTest)
+                            // 3. Bounds, prefWidth, and ellipsis checks on 2-column web layout
                             List<String> violations = new ArrayList<>();
                             for (Node card : controller.getCardsContainer().getChildren()) {
                                 Bounds cardBounds = card.localToScene(card.getBoundsInLocal());
                                 double cardMaxX = cardBounds.getMaxX();
                                 if (cardMaxX > width + 0.5) {
                                     violations.add("Card maxX " + cardMaxX + " exceeds width " + width);
-                                }
-
-                                // Verify route connector nodes stay thin (<= 2px height)
-                                var connectors = card.lookupAll(".route-connector-line");
-                                if (connectors.isEmpty()) {
-                                    violations.add("Expected .route-connector-line nodes on booking card");
-                                }
-                                for (Node conn : connectors) {
-                                    double connHeight = conn.getBoundsInParent().getHeight();
-                                    if (connHeight <= 0.0 || connHeight > 2.0) {
-                                        violations.add("Route connector height must be <= 2.0px, was " + connHeight);
-                                    }
                                 }
 
                                 List<Labeled> labeledNodes = new ArrayList<>();
@@ -197,6 +185,25 @@ class MyBookingsLayoutTest {
                                                 + " > card maxX " + String.format(Locale.US, "%.1f", cardMaxX) + " + 0.5");
                                     }
                                 }
+                            }
+
+                            // 4. Verify live white pass preview card at desktop widths (>= 1000) and hidden at compact (900)
+                            Node passPreview = root.lookup("#passPreviewCard");
+                            assertNotNull(passPreview, "#passPreviewCard must exist in 2-column My Bookings layout");
+                            if (width >= 1000) {
+                                assertTrue(passPreview.isVisible(), "#passPreviewCard must be visible at width " + width);
+                                Bounds previewBounds = passPreview.localToScene(passPreview.getBoundsInLocal());
+                                if (previewBounds.getMaxX() > width + 0.5) {
+                                    violations.add("Pass preview maxX " + previewBounds.getMaxX() + " exceeds width " + width);
+                                }
+                                javafx.scene.image.ImageView qrView = (javafx.scene.image.ImageView) passPreview.lookup("#previewQrImageView");
+                                assertNotNull(qrView, "#previewQrImageView must exist in pass preview");
+                                assertNotNull(qrView.getImage(), "Live pass preview must render a real QR code image");
+                                assertNotNull(passPreview.lookup("#previewDownloadPdfBtn"), "Download PDF button must exist");
+                                assertNotNull(passPreview.lookup("#previewAddCalendarBtn"), "Add to calendar button must exist");
+                                assertNotNull(passPreview.lookup("#previewViewPassBtn"), "View pass button must exist");
+                            } else {
+                                assertFalse(passPreview.isVisible(), "#passPreviewCard must collapse cleanly at width " + width);
                             }
                             violationsRef.set(violations);
                         } catch (Throwable t) {
@@ -276,13 +283,23 @@ class MyBookingsLayoutTest {
                 assertTrue(controller.getPastTabBtn().isFocusTraversable());
                 assertTrue(controller.getCancelledTabBtn().isFocusTraversable());
 
-                // Build a card and verify accessible text on "View ticket" button
+                // Build a booking row card and verify keyboard focus + accessible text, plus preview action buttons
                 BookingSummary summary = createMockSummaries(1).get(0);
                 Node card = controller.buildBookingCard(summary);
-                Button viewTicket = (Button) card.lookup(".btn-gold");
-                assertNotNull(viewTicket);
-                assertNotNull(viewTicket.getAccessibleText());
-                assertTrue(viewTicket.getAccessibleText().contains(summary.getBookingReference()));
+                assertTrue(card.isFocusTraversable(), "Selectable booking row must be keyboard focusable");
+                assertNotNull(card.getAccessibleText(), "Selectable booking row must have accessible text");
+                assertTrue(card.getAccessibleText().contains(summary.getBookingReference()),
+                        "Booking row accessible text must include PNR");
+
+                Button viewPassBtn = (Button) root.lookup("#previewViewPassBtn");
+                assertNotNull(viewPassBtn, "#previewViewPassBtn must exist in pass preview");
+                assertTrue(viewPassBtn.isFocusTraversable(), "View pass button must be focusTraversable");
+                Button downloadPdfBtn = (Button) root.lookup("#previewDownloadPdfBtn");
+                assertNotNull(downloadPdfBtn, "#previewDownloadPdfBtn must exist in pass preview");
+                assertTrue(downloadPdfBtn.isFocusTraversable(), "Download PDF button must be focusTraversable");
+                Button addCalBtn = (Button) root.lookup("#previewAddCalendarBtn");
+                assertNotNull(addCalBtn, "#previewAddCalendarBtn must exist in pass preview");
+                assertTrue(addCalBtn.isFocusTraversable(), "Add to calendar button must be focusTraversable");
             } catch (Throwable t) {
                 errorRef.set(t);
             } finally {

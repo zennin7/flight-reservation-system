@@ -148,7 +148,7 @@
               <aside class="glass-tile cabin-view-card" aria-label="Cabin view">
                 <div class="cabin-view-photo-wrap">
                   <img id="cabinViewThumb"
-                       th:src="${backdropUrl}"
+                       th:src="${seatMapView.activeSection != null ? seatMapView.activeSection.primaryCabinPhoto : backdropUrl}"
                        alt="Aircraft cabin interior view"
                        class="cabin-view-photo">
                   <div class="cabin-view-scrim" aria-hidden="true"></div>

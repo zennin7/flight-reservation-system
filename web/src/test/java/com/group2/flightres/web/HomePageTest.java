@@ -70,6 +70,48 @@ class HomePageTest {
     }
 
     @Test
+    @DisplayName("P5e: Home page renders all five sections and shared footer appears on /flights with no dead links")
+    void testHomeFiveSectionsAndFooterLinks() throws Exception {
+        HttpResponse<String> homeResp = HTTP.send(
+                HttpRequest.newBuilder(URI.create(baseUrl + "/")).GET().build(),
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        assertEquals(200, homeResp.statusCode());
+        String homeHtml = homeResp.body();
+
+        assertTrue(homeHtml.contains("id=\"top-destinations\""), "Home must include Top destinations section");
+        assertTrue(homeHtml.contains("id=\"why-sky-royal\""), "Home must include Why Sky Royal section");
+        assertTrue(homeHtml.contains("Live seat map") && homeHtml.contains("5-minute seat hold") && homeHtml.contains("Instant boarding pass"),
+                "Why Sky Royal must include all 3 honest feature cards");
+        assertTrue(homeHtml.contains("id=\"best-flights\""), "Home must include Our best flights section");
+        assertTrue(homeHtml.contains("id=\"travel-tips\"") && homeHtml.contains("Before you fly"),
+                "Home must include Travel tips banner");
+        assertTrue(homeHtml.contains("Sky Royal Airways (Pty) Ltd (demo company)"),
+                "Home must include real shared footer contact details");
+        assertTrue(homeHtml.contains("Student project by Group 2, Gauteng City College"),
+                "Home footer must include student project disclaimer");
+        assertFalse(homeHtml.toLowerCase().contains("quix"), "Forbidden word must not appear");
+
+        // Footer appears on a second page (/flights)
+        HttpResponse<String> flightsResp = HTTP.send(
+                HttpRequest.newBuilder(URI.create(baseUrl + "/flights")).GET().build(),
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        assertEquals(200, flightsResp.statusCode());
+        assertTrue(flightsResp.body().contains("Sky Royal Airways (Pty) Ltd (demo company)"),
+                "Shared footer must appear on /flights");
+
+        // Every link in the footer returns 200 or 302/303 redirect to login (no dead links)
+        HttpClient noRedirect = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
+        for (String path : List.of("/", "/flights", "/about", "/my-bookings", "/contact", "/login", "/register")) {
+            HttpResponse<Void> r = noRedirect.send(
+                    HttpRequest.newBuilder(URI.create(baseUrl + path)).GET().build(),
+                    HttpResponse.BodyHandlers.discarding());
+            int code = r.statusCode();
+            assertTrue(code == 200 || code == 302 || code == 303,
+                    "Footer link " + path + " returned unexpected HTTP " + code);
+        }
+    }
+
+    @Test
     @DisplayName("Popular routes cheapest fares match independent SQL oracle")
     void testPopularRoutesMatchSqlOracle() throws Exception {
         HttpResponse<String> resp = HTTP.send(

@@ -3,23 +3,48 @@
  * Elevated Look with Atmospheric Backdrop Blur & Translucent Surfaces
  * =================================================================== */
 
-.root, .glass-root, .glass-panel, .admin-main-card, .admin-main-card-compact {
-    /* Color Tokens */
-    -glass-navy: #0b1220;
-    -glass-navy-overlay: rgba(11, 18, 32, 0.60);
-    -glass-gold: #d4a63c;
-    -glass-gold-light: #e8c46a;
-    -glass-gold-pale: #f3d98b;
-    -glass-green: #16a34a;
-    -glass-red: #dc2626;
+.root, .glass-root, .glass-panel, .seat-map-glass-root, .flight-search-root, .home-root, .login-root, .admin-main-card, .admin-main-card-compact {
+    /* Sky Royal Glass Design Tokens (aligned with web glass-web.css; zero gold, zero navy) */
+    -glass-bg-base: #0d1c24;
+    -glass-surface: rgba(15, 19, 24, 0.52);
+    -glass-panel: rgba(15, 19, 24, 0.48);
+    -glass-card: rgba(12, 16, 22, 0.54);
+    -glass-surface-strong: rgba(15, 19, 24, 0.72);
+    -glass-surface-solid: #12171d;
+
+    -glass-white: #ffffff;
+    -glass-cream: #f1eedf;
+    -glass-ink: #15181c;
+    -glass-ink-muted: rgba(21, 24, 28, 0.66);
+
+    -glass-accent: #4da3ff;
+    -glass-ok: #5fe3a8;
+    -glass-warn: #ff9d66;
+    -glass-danger: #ff7a7a;
 
     -glass-text-white: #ffffff;
-    -glass-text-muted: rgba(255, 255, 255, 0.60);
-    -glass-border-panel: rgba(255, 255, 255, 0.16);
-    -glass-border-card: rgba(255, 255, 255, 0.08);
+    -glass-text-muted: rgba(255, 255, 255, 0.74);
+    -glass-text-faint: rgba(255, 255, 255, 0.56);
+    -glass-border-panel: rgba(255, 255, 255, 0.18);
+    -glass-border-card: rgba(255, 255, 255, 0.14);
+    -glass-border-strong: rgba(255, 255, 255, 0.28);
+
+    -glass-input-bg: rgba(9, 13, 18, 0.72);
+    -glass-input-bg-focus: rgba(12, 18, 25, 0.86);
+    -glass-input-border: rgba(255, 255, 255, 0.56);
+    -glass-input-focus: #4da3ff;
+
+    /* Semantic aliases for existing selectors (zero gold / zero navy) */
+    -glass-navy: #15181c;
+    -glass-navy-overlay: rgba(11, 16, 22, 0.48);
+    -glass-gold: #f1eedf;
+    -glass-gold-light: #ffffff;
+    -glass-gold-pale: #f1eedf;
+    -glass-green: #5fe3a8;
+    -glass-red: #ff7a7a;
 
     /* Base Typography */
-    -fx-font-family: 'Inter', -apple-system, sans-serif;
+    -fx-font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
     -fx-text-fill: -glass-text-white;
 }
 
@@ -28,20 +53,19 @@
  * ------------------------------------------------------------------- */
 
 .glass-panel {
-    -fx-background-color: rgba(255, 255, 255, 0.09);
-    -fx-background-radius: 28px;
-    -fx-border-color: rgba(255, 255, 255, 0.16);
+    -fx-background-color: rgba(15, 19, 24, 0.56);
+    -fx-background-radius: 20px;
+    -fx-border-color: rgba(255, 255, 255, 0.18);
     -fx-border-width: 1px;
-    -fx-border-radius: 28px;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 32, 0.0, 0, 12);
+    -fx-border-radius: 20px;
 }
 
 .glass-card {
-    -fx-background-color: rgba(8, 12, 22, 0.34);
-    -fx-background-radius: 20px;
-    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-background-color: rgba(12, 16, 22, 0.54);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.16);
     -fx-border-width: 1px;
-    -fx-border-radius: 20px;
+    -fx-border-radius: 16px;
 }
 
 /* -------------------------------------------------------------------
@@ -49,26 +73,23 @@
  * ------------------------------------------------------------------- */
 
 .btn-gold {
-    -fx-background-color: linear-gradient(to bottom, #d9ac47, #c4952f);
-    -fx-text-fill: #0b1220;
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-weight: 700;
-    -fx-font-size: 14px;
-    -fx-background-radius: 14px;
-    -fx-border-radius: 14px;
-    -fx-padding: 10px 22px;
+    -fx-font-size: 13px;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-padding: 8px 18px;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.35), 14, 0.0, 0, 4);
 }
 
 .btn-gold:hover {
-    -fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c);
-    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.55), 18, 0.0, 0, 6);
+    -fx-background-color: -glass-cream;
 }
 
 .btn-gold:pressed {
-    -fx-background-color: linear-gradient(to bottom, #c4952f, #a87d22);
-    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.20), 8, 0.0, 0, 2);
+    -fx-background-color: rgba(241, 238, 223, 0.86);
 }
 
 .btn-ghost {
@@ -76,12 +97,12 @@
     -fx-text-fill: #ffffff;
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-weight: 600;
-    -fx-font-size: 14px;
+    -fx-font-size: 13px;
     -fx-border-color: rgba(255, 255, 255, 0.22);
     -fx-border-width: 1px;
-    -fx-background-radius: 14px;
-    -fx-border-radius: 14px;
-    -fx-padding: 10px 22px;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-padding: 8px 18px;
     -fx-cursor: hand;
 }
 
@@ -96,7 +117,7 @@
 
 .btn-danger {
     -fx-background-color: rgba(220, 38, 38, 0.16);
-    -fx-text-fill: #fca5a5;
+    -fx-text-fill: -glass-danger;
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-weight: 600;
     -fx-font-size: 14px;
@@ -135,21 +156,21 @@
     -fx-background-color: rgba(22, 163, 74, 0.20);
     -fx-border-color: rgba(34, 197, 94, 0.40);
     -fx-border-width: 1px;
-    -fx-text-fill: #4ade80;
+    -fx-text-fill: -glass-ok;
 }
 
 .badge-gold {
-    -fx-background-color: rgba(212, 166, 60, 0.20);
-    -fx-border-color: rgba(232, 196, 106, 0.40);
+    -fx-background-color: rgba(241, 238, 223, 0.20);
+    -fx-border-color: rgba(255, 255, 255, 0.40);
     -fx-border-width: 1px;
-    -fx-text-fill: #f3d98b;
+    -fx-text-fill: -glass-cream;
 }
 
 .badge-red {
     -fx-background-color: rgba(220, 38, 38, 0.20);
     -fx-border-color: rgba(248, 113, 113, 0.40);
     -fx-border-width: 1px;
-    -fx-text-fill: #fca5a5;
+    -fx-text-fill: -glass-danger;
 }
 
 /* -------------------------------------------------------------------
@@ -157,7 +178,7 @@
  * ------------------------------------------------------------------- */
 
 .text-field, .password-field {
-    -fx-background-color: rgba(15, 23, 42, 0.45);
+    -fx-background-color: rgba(15, 19, 24, 0.45);
     -fx-background-radius: 12px;
     -fx-border-color: rgba(255, 255, 255, 0.16);
     -fx-border-width: 1px;
@@ -170,8 +191,8 @@
 }
 
 .text-field:focused, .password-field:focused {
-    -fx-border-color: #d4a63c;
-    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.35), 8, 0.0, 0, 0);
+    -fx-border-color: -glass-cream;
+    -fx-effect: dropshadow(gaussian, rgba(241, 238, 223, 0.35), 8, 0.0, 0, 0);
 }
 
 /* -------------------------------------------------------------------
@@ -218,12 +239,12 @@
 }
 
 .seat-yours, .seat-selected {
-    -fx-background-color: linear-gradient(to bottom, #f0cf74, #d4a63c);
-    -fx-text-fill: #0b1220;
-    -fx-border-color: #f3d98b;
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-border-color: -glass-cream;
     -fx-border-width: 1px;
     -fx-opacity: 1.0;
-    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.55), 18, 0.0, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(241, 238, 223, 0.55), 18, 0.0, 0, 6);
 }
 
 /* -------------------------------------------------------------------
@@ -231,14 +252,15 @@
  * ------------------------------------------------------------------- */
 
 .headline-serif, .glass-headline {
-    -fx-font-family: 'Lora SemiBold';
-    -fx-font-size: 32px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 24px;
+    -fx-font-weight: 700;
     -fx-text-fill: #ffffff;
 }
 
 .subheadline, .glass-subheadline {
     -fx-font-family: 'Inter', sans-serif;
-    -fx-font-size: 14px;
+    -fx-font-size: 13px;
     -fx-text-fill: -glass-text-muted;
 }
 
@@ -250,26 +272,25 @@
     -fx-alignment: center;
 }
 
-/* Glass Split Card: 980x620 in 1280x800 design, fill rgba(255,255,255,0.085), border rgba(255,255,255,0.16) */
+/* Glass Split Card */
 .login-split-card {
-    -fx-background-color: rgba(255, 255, 255, 0.085);
-    -fx-background-radius: 28px;
+    -fx-background-color: rgba(15, 19, 24, 0.56);
+    -fx-background-radius: 22px;
     -fx-border-color: rgba(255, 255, 255, 0.20) rgba(255, 255, 255, 0.16) rgba(255, 255, 255, 0.16) rgba(255, 255, 255, 0.16);
     -fx-border-width: 1px;
-    -fx-border-radius: 28px;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.40), 90, 0.0, 0, 34);
+    -fx-border-radius: 22px;
 }
 
-/* Left photo panel: gradient overlay from rgba(11,18,32,0.05) at 40% to rgba(11,18,32,0.88) at 100% */
+/* Left photo panel: gradient overlay from rgba(15, 19, 24, 0.05) at 40% to rgba(15, 19, 24, 0.88) at 100% */
 .login-photo-gradient {
-    -fx-background-color: linear-gradient(to bottom, transparent 0%, rgba(11, 18, 32, 0.05) 40%, rgba(11, 18, 32, 0.88) 100%);
+    -fx-background-color: linear-gradient(to bottom, transparent 0%, rgba(15, 19, 24, 0.05) 40%, rgba(15, 19, 24, 0.88) 100%);
     -fx-background-radius: 20px;
 }
 
-/* Brand icon: stroke #d4a63c, 1.8px, fill none */
+/* Brand icon: stroke -glass-cream, 1.8px, fill none */
 .brand-plane-icon {
     -fx-fill: transparent;
-    -fx-stroke: #d4a63c;
+    -fx-stroke: -glass-cream;
     -fx-stroke-width: 1.8;
     -fx-stroke-line-cap: round;
     -fx-stroke-line-join: round;
@@ -282,17 +303,18 @@
     -fx-text-fill: #ffffff;
 }
 
-/* Left panel headline: Lora Medium 38px, line-height 1.12 */
+/* Left panel headline: Inter Bold 38px */
 .login-hero-headline {
-    -fx-font-family: 'Lora Medium';
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
     -fx-font-size: 38px;
+    -fx-font-weight: 700;
     -fx-text-fill: #ffffff;
     -fx-line-spacing: -2px;
 }
 
-/* Three dots: 26x4 pill #e8c46a, two 8x4 pills rgba(255,255,255,0.4), gap 10 */
+/* Three dots: 26x4 pill -glass-cream, two 8x4 pills rgba(255,255,255,0.4), gap 10 */
 .carousel-pill-active {
-    -fx-background-color: #e8c46a;
+    -fx-background-color: -glass-cream;
     -fx-background-radius: 2px;
     -fx-pref-width: 26px;
     -fx-min-width: 26px;
@@ -313,17 +335,18 @@
     -fx-max-height: 4px;
 }
 
-/* Right side overline: "WELCOME BACK" 11px, semibold, letter-spacing .16em, #e8c46a */
+/* Right side overline: "WELCOME BACK" 11px, semibold, letter-spacing .16em, -glass-cream */
 .login-kicker {
     -fx-font-family: 'Inter SemiBold';
     -fx-font-size: 11px;
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
 }
 
-/* Right side title: "Sign in" Lora Medium 34px */
+/* Right side title: "Sign in" Inter Bold 32px */
 .login-title-serif {
-    -fx-font-family: 'Lora Medium';
-    -fx-font-size: 34px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 32px;
+    -fx-font-weight: 700;
     -fx-text-fill: #ffffff;
 }
 
@@ -341,11 +364,11 @@
     -fx-text-fill: rgba(255, 255, 255, 0.70);
 }
 
-/* "Forgot?" link: 12px semibold #e8c46a */
+/* "Forgot?" link: 12px semibold -glass-cream */
 .login-forgot-link {
     -fx-font-family: 'Inter SemiBold';
     -fx-font-size: 12px;
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
     -fx-border-color: transparent;
     -fx-padding: 0;
     -fx-underline: false;
@@ -356,9 +379,9 @@
     -fx-underline: true;
 }
 
-/* Field container: height 52px, radius 14px, fill rgba(8,12,22,0.4), border rgba(255,255,255,0.12), padding 0 16px, gap 12px */
+/* Field container: height 52px, radius 14px, fill rgba(15, 19, 24, 0.4), border rgba(255,255,255,0.12), padding 0 16px, gap 12px */
 .login-field-box {
-    -fx-background-color: rgba(8, 12, 22, 0.40);
+    -fx-background-color: rgba(15, 19, 24, 0.40);
     -fx-background-radius: 14px;
     -fx-border-color: rgba(255, 255, 255, 0.12);
     -fx-border-width: 1px;
@@ -371,8 +394,8 @@
 }
 
 .login-field-box:focus-within {
-    -fx-border-color: #d4a63c;
-    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.35), 8, 0.0, 0, 0);
+    -fx-border-color: -glass-cream;
+    -fx-effect: dropshadow(gaussian, rgba(241, 238, 223, 0.35), 8, 0.0, 0, 0);
 }
 
 /* Inner field input (transparent background inside the field-box) */
@@ -403,7 +426,7 @@
     -fx-stroke-line-join: round;
 }
 
-/* Checkbox: 18x18, radius 6, fill #e8c46a, navy check mark, label 13px rgba(255,255,255,0.7) */
+/* Checkbox: 18x18, radius 6, fill -glass-cream, navy check mark, label 13px rgba(255,255,255,0.7) */
 .glass-checkbox {
     -fx-font-family: 'Inter';
     -fx-font-size: 13px;
@@ -412,7 +435,7 @@
 }
 
 .glass-checkbox .box {
-    -fx-background-color: rgba(8, 12, 22, 0.40);
+    -fx-background-color: rgba(15, 19, 24, 0.40);
     -fx-border-color: rgba(255, 255, 255, 0.16);
     -fx-border-radius: 6px;
     -fx-background-radius: 6px;
@@ -424,21 +447,21 @@
 }
 
 .glass-checkbox:selected .box {
-    -fx-background-color: #e8c46a;
-    -fx-border-color: #e8c46a;
+    -fx-background-color: -glass-cream;
+    -fx-border-color: -glass-cream;
 }
 
 .glass-checkbox:selected .mark {
-    -fx-background-color: #0b1220;
+    -fx-background-color: -glass-ink;
     -fx-shape: "M5 12l5 5 9-10";
 }
 
-/* Sign In Button: height 52, radius 14, gradient #d9ac47 to #c4952f, text #0b1220 bold 15px, shadow 0 12 30 rgba(212,166,60,0.3) */
+/* Sign In Button: height 52, radius 14, gradient -glass-cream to -glass-cream, text -glass-ink bold 15px, shadow 0 12 30 rgba(241, 238, 223, 0.3) */
 .btn-login-gold {
-    -fx-background-color: linear-gradient(to bottom, #d9ac47, #c4952f);
+    -fx-background-color: -glass-white;
     -fx-background-radius: 14px;
     -fx-border-radius: 14px;
-    -fx-text-fill: #0b1220;
+    -fx-text-fill: -glass-ink;
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-weight: 700;
     -fx-font-size: 15px;
@@ -447,20 +470,20 @@
     -fx-max-height: 52px;
     -fx-alignment: center;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.30), 30, 0.0, 0, 12);
+    -fx-effect: dropshadow(gaussian, rgba(241, 238, 223, 0.30), 30, 0.0, 0, 12);
 }
 
 .btn-login-gold:hover {
-    -fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c);
-    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.50), 34, 0.0, 0, 14);
+    -fx-background-color: -glass-cream;
+    -fx-effect: dropshadow(gaussian, rgba(241, 238, 223, 0.50), 34, 0.0, 0, 14);
 }
 
 .btn-login-gold:pressed {
-    -fx-background-color: linear-gradient(to bottom, #c4952f, #a87d22);
-    -fx-effect: dropshadow(gaussian, rgba(212, 166, 60, 0.20), 16, 0.0, 0, 6);
+    -fx-background-color: rgba(241, 238, 223, 0.86);
+    -fx-effect: dropshadow(gaussian, rgba(241, 238, 223, 0.20), 16, 0.0, 0, 6);
 }
 
-/* "New here? Create an account": 13px rgba(255,255,255,0.6), link #e8c46a semibold */
+/* "New here? Create an account": 13px rgba(255,255,255,0.6), link -glass-cream semibold */
 .login-muted-text {
     -fx-font-family: 'Inter';
     -fx-font-size: 13px;
@@ -470,7 +493,7 @@
 .login-signup-link {
     -fx-font-family: 'Inter SemiBold';
     -fx-font-size: 13px;
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
     -fx-border-color: transparent;
     -fx-padding: 0;
     -fx-underline: false;
@@ -503,7 +526,7 @@
 .login-error-text {
     -fx-font-family: 'Inter';
     -fx-font-size: 12px;
-    -fx-text-fill: #fca5a5;
+    -fx-text-fill: -glass-danger;
     -fx-background-color: rgba(220, 38, 38, 0.15);
     -fx-border-color: rgba(248, 113, 113, 0.40);
     -fx-border-radius: 8px;
@@ -529,29 +552,28 @@
     visibility: hidden;
 }
 
-/* Main Glass Card (margins: left/right 56, top 68, bottom 32) */
+/* Main Glass Card (compact web-parity padding, no heavy 90px shadow) */
 .search-main-glass {
-    -fx-background-color: rgba(255, 255, 255, 0.085);
+    -fx-background-color: rgba(15, 19, 24, 0.52);
     -fx-border-color: rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.20) transparent transparent transparent;
     -fx-border-insets: 0, 1;
     -fx-border-width: 1px, 1px 0 0 0;
-    -fx-border-radius: 28px, 27px 27px 0 0;
-    -fx-background-radius: 28px;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.40), 90, 0.0, 0, 34);
-    -fx-padding: 14px;
+    -fx-border-radius: 22px, 21px 21px 0 0;
+    -fx-background-radius: 22px;
+    -fx-padding: 12px;
 }
 
-/* Top Nav (64 high, padding 0 56) */
+/* Top Nav (54 high, padding 0 36) */
 .glass-nav-bar {
-    -fx-min-height: 64px;
-    -fx-pref-height: 64px;
-    -fx-max-height: 64px;
-    -fx-padding: 0 56px;
+    -fx-min-height: 54px;
+    -fx-pref-height: 54px;
+    -fx-max-height: 54px;
+    -fx-padding: 0 36px;
     -fx-alignment: center-left;
 }
 
 .nav-brand-plane {
-    -fx-stroke: #d4a63c;
+    -fx-stroke: -glass-cream;
     -fx-stroke-width: 1.8;
     -fx-fill: transparent;
 }
@@ -581,15 +603,15 @@
 }
 
 .glass-nav-link:hover {
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
 }
 
 .glass-nav-link-active {
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
 }
 
 .glass-avatar-circle {
-    -fx-background-color: #d4a63c;
+    -fx-background-color: -glass-cream;
     -fx-background-radius: 50%;
     -fx-min-width: 34px;
     -fx-min-height: 34px;
@@ -605,12 +627,12 @@
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-weight: 700;
     -fx-font-size: 13px;
-    -fx-text-fill: #0b1220;
+    -fx-text-fill: -glass-ink;
 }
 
 /* Search Bar (inner card 84 high) */
 .glass-search-bar {
-    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-background-color: rgba(15, 19, 24, 0.34);
     -fx-border-color: rgba(255, 255, 255, 0.08);
     -fx-border-width: 1px;
     -fx-border-radius: 20px;
@@ -674,9 +696,9 @@
     -fx-border-color: rgba(255, 255, 255, 0.35);
 }
 
-/* Gold search button 84 wide, vertical gradient #d9ac47 to #b98a2e */
+/* Gold search button 84 wide, vertical gradient -glass-cream to -glass-cream */
 .search-btn-gold {
-    -fx-background-color: linear-gradient(to bottom, #d9ac47, #b98a2e);
+    -fx-background-color: -glass-white;
     -fx-border-radius: 0 20px 20px 0;
     -fx-background-radius: 0 20px 20px 0;
     -fx-min-width: 84px;
@@ -691,11 +713,11 @@
 }
 
 .search-btn-gold:hover {
-    -fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c);
+    -fx-background-color: -glass-cream;
 }
 
 .search-btn-icon {
-    -fx-stroke: #0b1220;
+    -fx-stroke: -glass-ink;
     -fx-stroke-width: 2.4;
     -fx-fill: transparent;
 }
@@ -716,7 +738,7 @@
 }
 
 .filters-card {
-    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-background-color: rgba(15, 19, 24, 0.34);
     -fx-border-color: rgba(255, 255, 255, 0.08);
     -fx-border-width: 1px;
     -fx-border-radius: 20px;
@@ -736,7 +758,7 @@
     -fx-font-family: 'Inter SemiBold', sans-serif;
     -fx-font-size: 12px;
     -fx-font-weight: 600;
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
     -fx-cursor: hand;
     -fx-padding: 0;
     -fx-border-color: transparent;
@@ -771,13 +793,13 @@
 }
 
 .pill-button-on {
-    -fx-background-color: rgba(212, 166, 60, 0.20);
-    -fx-border-color: rgba(212, 166, 60, 0.70);
-    -fx-text-fill: #f3d98b;
+    -fx-background-color: rgba(241, 238, 223, 0.20);
+    -fx-border-color: rgba(241, 238, 223, 0.70);
+    -fx-text-fill: -glass-cream;
 }
 
 .pill-button-on:hover {
-    -fx-background-color: rgba(212, 166, 60, 0.28);
+    -fx-background-color: rgba(241, 238, 223, 0.28);
 }
 
 /* Sliders */
@@ -817,12 +839,12 @@
 }
 
 .check-circle-on {
-    -fx-background-color: #d4a63c;
-    -fx-border-color: #d4a63c;
+    -fx-background-color: -glass-cream;
+    -fx-border-color: -glass-cream;
 }
 
 .check-circle .check-tick-icon {
-    -fx-stroke: #0b1220;
+    -fx-stroke: -glass-ink;
     -fx-stroke-width: 3.5;
     -fx-fill: transparent;
     visibility: hidden;
@@ -849,7 +871,7 @@
 }
 
 .flight-result-card {
-    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-background-color: rgba(15, 19, 24, 0.34);
     -fx-border-color: rgba(255, 255, 255, 0.08);
     -fx-border-width: 1px;
     -fx-border-radius: 20px;
@@ -858,7 +880,7 @@
 }
 
 .flight-result-card:hover {
-    -fx-border-color: rgba(212, 166, 60, 0.30);
+    -fx-border-color: rgba(241, 238, 223, 0.30);
 }
 
 .airline-logo-circle {
@@ -870,7 +892,7 @@
     -fx-max-height: 30px;
     -fx-border-radius: 50%;
     -fx-background-radius: 50%;
-    -fx-background-color: linear-gradient(to bottom right, #e8c46a, #b98a2e);
+    -fx-background-color: -glass-white;
     -fx-alignment: center;
 }
 
@@ -921,7 +943,7 @@
 }
 
 .flight-path-dot {
-    -fx-background-color: #e8c46a;
+    -fx-background-color: -glass-cream;
     -fx-background-radius: 50%;
     -fx-min-width: 7px;
     -fx-min-height: 7px;
@@ -957,14 +979,14 @@
     -fx-font-family: 'Inter SemiBold', sans-serif;
     -fx-font-size: 13px;
     -fx-font-weight: 600;
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
     -fx-cursor: hand;
     -fx-padding: 0;
     -fx-alignment: center;
 }
 
 .flight-details-btn:hover {
-    -fx-text-fill: #f3d98b;
+    -fx-text-fill: -glass-cream;
 }
 
 /* Expanded details box */
@@ -1041,7 +1063,7 @@
  * ------------------------------------------------------------------- */
 
 .glass-stepper-card {
-    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-background-color: rgba(15, 19, 24, 0.34);
     -fx-border-color: rgba(255, 255, 255, 0.08);
     -fx-border-width: 1px;
     -fx-border-radius: 20px;
@@ -1072,7 +1094,7 @@
 }
 
 .stepper-container .step-circle-done {
-    -fx-background-color: #16a34a;
+    -fx-background-color: -glass-ok;
 }
 
 .stepper-container .step-circle-done .step-circle-text {
@@ -1083,14 +1105,14 @@
 }
 
 .stepper-container .step-circle-active {
-    -fx-background-color: #d4a63c;
+    -fx-background-color: -glass-cream;
 }
 
 .stepper-container .step-circle-active .step-circle-text {
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-size: 12px;
     -fx-font-weight: 700;
-    -fx-text-fill: #0b1220;
+    -fx-text-fill: -glass-ink;
 }
 
 .stepper-container .step-circle-pending {
@@ -1131,7 +1153,7 @@
 }
 
 .stepper-container .step-line-done {
-    -fx-background-color: #16a34a;
+    -fx-background-color: -glass-ok;
 }
 
 .stepper-container .step-line-pending {
@@ -1159,8 +1181,8 @@
 }
 
 .section-tab-on {
-    -fx-background-color: linear-gradient(to bottom, #d9ac47, #c4952f);
-    -fx-text-fill: #0b1220;
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
 }
 
 .plane-action-btn {
@@ -1186,7 +1208,7 @@
 }
 
 .cabin-view-card {
-    -fx-background-color: linear-gradient(to bottom right, rgba(212, 166, 60, 0.20), rgba(8, 12, 22, 0.50) 70%);
+    -fx-background-color: linear-gradient(to bottom right, rgba(241, 238, 223, 0.20), rgba(15, 19, 24, 0.50) 70%);
     -fx-border-color: rgba(255, 255, 255, 0.08);
     -fx-border-width: 1px;
     -fx-border-radius: 20px;
@@ -1202,7 +1224,7 @@
     -fx-pref-height: 42px;
     -fx-background-radius: 12px;
     -fx-border-radius: 12px;
-    -fx-background-color: linear-gradient(to bottom right, #e8c46a, #b98a2e);
+    -fx-background-color: -glass-white;
     -fx-alignment: center;
 }
 
@@ -1233,21 +1255,19 @@
 }
 
 .btn-checkout-gold {
-    -fx-background-color: linear-gradient(to bottom, #d9ac47, #c4952f);
-    -fx-background-radius: 14px;
-    -fx-border-radius: 14px;
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
     -fx-font-family: 'Inter', sans-serif;
-    -fx-font-size: 16px;
+    -fx-font-size: 14px;
     -fx-font-weight: 700;
-    -fx-text-fill: #0b1220;
-    -fx-padding: 0 22px;
+    -fx-text-fill: -glass-ink;
+    -fx-padding: 8px 18px;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(196, 149, 47, 0.35), 24, 0.0, 0, 10);
 }
 
 .btn-checkout-gold:hover {
-    -fx-background-color: linear-gradient(to bottom, #e0b44f, #cb9c37);
-    -fx-effect: dropshadow(gaussian, rgba(196, 149, 47, 0.50), 28, 0.0, 0, 12);
+    -fx-background-color: -glass-cream;
 }
 
 .btn-release-ghost {
@@ -1273,7 +1293,7 @@
    =================================================================== */
 
 .paycard {
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #0f1b33 0%, #2a3f6b 100%);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -glass-ink 0%, -glass-surface-solid 100%);
     -fx-background-radius: 16px;
     -fx-border-color: rgba(255, 255, 255, 0.18);
     -fx-border-radius: 16px;
@@ -1282,7 +1302,7 @@
 }
 
 .paycard-chip {
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #f0cf74 0%, #b98a2e 100%);
+    -fx-background-color: -glass-white;
     -fx-background-radius: 6px;
 }
 
@@ -1327,12 +1347,12 @@
 }
 
 .checkout-input:focused {
-    -fx-border-color: #e8c46a;
-    -fx-effect: dropshadow(gaussian, rgba(232, 196, 106, 0.22), 6, 0.0, 0, 0);
+    -fx-border-color: -glass-cream;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.22), 6, 0.0, 0, 0);
 }
 
 .order-summary-card {
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(212, 166, 60, 0.20) 0%, rgba(8, 12, 22, 0.40) 60%);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(241, 238, 223, 0.20) 0%, rgba(15, 19, 24, 0.40) 60%);
     -fx-background-radius: 20px;
     -fx-border-color: rgba(255, 255, 255, 0.08);
     -fx-border-radius: 20px;
@@ -1341,7 +1361,7 @@
 
 .inner-card,
 .glass-inner-panel {
-    -fx-background-color: rgba(8, 12, 22, 0.34);
+    -fx-background-color: rgba(15, 19, 24, 0.34);
     -fx-background-radius: 20px;
     -fx-border-color: rgba(255, 255, 255, 0.08);
     -fx-border-radius: 20px;
@@ -1350,7 +1370,7 @@
 
 .order-summary-overline,
 .section-badge-gold {
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-size: 11px;
     -fx-font-weight: 600;
@@ -1361,13 +1381,13 @@
     -fx-font-family: 'Inter';
     -fx-font-size: 36px;
     -fx-font-weight: 700;
-    -fx-text-fill: #f3d98b;
+    -fx-text-fill: -glass-cream;
 }
 
 .demo-payment-badge {
-    -fx-background-color: rgba(232, 196, 106, 0.15);
+    -fx-background-color: rgba(255, 255, 255, 0.15);
     -fx-background-radius: 999px;
-    -fx-border-color: rgba(232, 196, 106, 0.30);
+    -fx-border-color: rgba(255, 255, 255, 0.30);
     -fx-border-radius: 999px;
     -fx-border-width: 1px;
     -fx-padding: 4px 10px;
@@ -1377,7 +1397,7 @@
     -fx-font-family: 'Inter SemiBold', sans-serif;
     -fx-font-size: 11px;
     -fx-font-weight: 600;
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
 }
 
 /* ===================================================================
@@ -1389,7 +1409,7 @@
     -fx-min-height: 68px;
     -fx-max-width: 68px;
     -fx-max-height: 68px;
-    -fx-background-color: rgba(22, 163, 74, 0.22), #16a34a;
+    -fx-background-color: rgba(22, 163, 74, 0.22), -glass-ok;
     -fx-background-insets: 0, 6;
     -fx-background-radius: 999px, 999px;
     -fx-alignment: center;
@@ -1397,9 +1417,9 @@
 }
 
 .confirmation-title-serif {
-    -fx-font-family: 'Lora Medium', 'Lora', Georgia, serif;
-    -fx-font-size: 38px;
-    -fx-font-weight: 500;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 42px;
+    -fx-font-weight: 700;
     -fx-text-fill: #ffffff;
 }
 
@@ -1421,11 +1441,11 @@
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-size: 26px;
     -fx-font-weight: 700;
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
 }
 
 .ticket-card {
-    -fx-background-color: rgba(8, 12, 22, 0.40);
+    -fx-background-color: rgba(15, 19, 24, 0.40);
     -fx-background-radius: 24px;
     -fx-border-color: rgba(255, 255, 255, 0.12);
     -fx-border-radius: 24px;
@@ -1433,16 +1453,16 @@
 }
 
 .ticket-cabin-badge {
-    -fx-background-color: rgba(212, 166, 60, 0.20);
+    -fx-background-color: rgba(241, 238, 223, 0.20);
     -fx-background-radius: 999px;
-    -fx-border-color: rgba(212, 166, 60, 0.60);
+    -fx-border-color: rgba(241, 238, 223, 0.60);
     -fx-border-radius: 999px;
     -fx-border-width: 1px;
     -fx-padding: 4px 14px;
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-size: 12px;
     -fx-font-weight: 600;
-    -fx-text-fill: #f3d98b;
+    -fx-text-fill: -glass-cream;
 }
 
 .ticket-airport-code {
@@ -1469,7 +1489,7 @@
 }
 
 .ticket-stub-pane {
-    -fx-background-color: radial-gradient(center 100% 0%, radius 60%, rgba(212, 166, 60, 0.26) 0%, transparent 100%);
+    -fx-background-color: radial-gradient(center 100% 0%, radius 60%, rgba(241, 238, 223, 0.26) 0%, transparent 100%);
     -fx-background-radius: 0 24px 24px 0;
 }
 
@@ -1478,14 +1498,14 @@
     -fx-font-size: 11px;
     -fx-font-weight: 600;
     -fx-letter-spacing: 0.14em;
-    -fx-text-fill: #d4a63c;
+    -fx-text-fill: -glass-cream;
 }
 
 .ticket-seat-value {
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-size: 72px;
     -fx-font-weight: 700;
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
 }
 
 .ticket-grid-label {
@@ -1504,11 +1524,11 @@
 }
 
 .ticket-notch-circle {
-    -fx-fill: #0b1220;
+    -fx-fill: -glass-ink;
 }
 
 .timeline-dot-green {
-    -fx-background-color: #4ade80;
+    -fx-background-color: -glass-ok;
     -fx-background-radius: 999px;
     -fx-min-width: 10px;
     -fx-min-height: 10px;
@@ -1517,7 +1537,7 @@
 }
 
 .timeline-dot-gold {
-    -fx-background-color: #e8c46a;
+    -fx-background-color: -glass-cream;
     -fx-background-radius: 999px;
     -fx-min-width: 10px;
     -fx-min-height: 10px;
@@ -1535,33 +1555,31 @@
 }
 
 .gold-primary-action-btn {
-    -fx-background-color: linear-gradient(to bottom, #d9ac47, #b98a2e);
-    -fx-background-radius: 16px;
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 12px;
     -fx-font-family: 'Inter', sans-serif;
-    -fx-font-size: 15px;
+    -fx-font-size: 14px;
     -fx-font-weight: 700;
-    -fx-text-fill: #0b1220;
-    -fx-pref-height: 54px;
+    -fx-text-fill: -glass-ink;
+    -fx-pref-height: 42px;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(185, 138, 46, 0.40), 16, 0.0, 0, 6);
 }
 
 .gold-primary-action-btn:hover {
-    -fx-background-color: linear-gradient(to bottom, #f3d98b, #cfa038);
-    -fx-effect: dropshadow(gaussian, rgba(232, 196, 106, 0.50), 20, 0.0, 0, 8);
+    -fx-background-color: -glass-cream;
 }
 
 .secondary-glass-btn {
     -fx-background-color: rgba(255, 255, 255, 0.10);
-    -fx-background-radius: 14px;
+    -fx-background-radius: 12px;
     -fx-border-color: rgba(255, 255, 255, 0.22);
-    -fx-border-radius: 14px;
+    -fx-border-radius: 12px;
     -fx-border-width: 1px;
     -fx-font-family: 'Inter', sans-serif;
-    -fx-font-size: 14px;
+    -fx-font-size: 13px;
     -fx-font-weight: 600;
     -fx-text-fill: #ffffff;
-    -fx-pref-height: 46px;
+    -fx-pref-height: 38px;
     -fx-cursor: hand;
 }
 
@@ -1571,7 +1589,7 @@
 }
 
 .error-glass-card {
-    -fx-background-color: rgba(8, 12, 22, 0.65);
+    -fx-background-color: rgba(15, 19, 24, 0.65);
     -fx-background-radius: 24px;
     -fx-border-color: rgba(239, 68, 68, 0.35);
     -fx-border-radius: 24px;
@@ -1589,22 +1607,22 @@
 
 .ticket-photo-panel {
     -fx-background-radius: 24px 0 0 24px;
-    -fx-background-color: #0b1220;
+    -fx-background-color: -glass-ink;
 }
 
 .ticket-photo-gradient {
-    -fx-background-color: linear-gradient(to bottom, rgba(11, 18, 32, 0.15) 0%, rgba(11, 18, 32, 0.88) 100%);
+    -fx-background-color: linear-gradient(to bottom, rgba(15, 19, 24, 0.15) 0%, rgba(15, 19, 24, 0.88) 100%);
     -fx-background-radius: 24px 0 0 24px;
 }
 
 .ticket-photo-gradient-fallback {
-    -fx-background-color: linear-gradient(to bottom, #0b1220 0%, #151e30 60%, rgba(212, 166, 60, 0.20) 100%);
+    -fx-background-color: linear-gradient(to bottom, -glass-ink 0%, -glass-ink 60%, rgba(241, 238, 223, 0.20) 100%);
     -fx-background-radius: 24px 0 0 24px;
 }
 
 .ticket-brand-plane {
     -fx-fill: none;
-    -fx-stroke: #d4a63c;
+    -fx-stroke: -glass-cream;
     -fx-stroke-width: 1.8px;
 }
 
@@ -1625,9 +1643,9 @@
 }
 
 .ticket-welcome-city {
-    -fx-font-family: 'Lora Medium', 'Lora SemiBold', 'Lora', Georgia, serif;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
     -fx-font-size: 21px;
-    -fx-font-weight: 500;
+    -fx-font-weight: 700;
     -fx-text-fill: #ffffff;
 }
 
@@ -1664,7 +1682,7 @@
 }
 
 .confirmation-scroll-pane .scroll-bar:vertical .thumb:hover {
-    -fx-background-color: rgba(212, 166, 60, 0.50);
+    -fx-background-color: rgba(241, 238, 223, 0.50);
 }
 
 .confirmation-scroll-pane .scroll-bar:vertical .track,
@@ -1710,7 +1728,7 @@
 }
 
 .route-connector-line {
-    -fx-background-color: rgba(212, 166, 60, 0.55);
+    -fx-background-color: rgba(241, 238, 223, 0.55);
     -fx-min-height: 1.5px;
     -fx-pref-height: 1.5px;
     -fx-max-height: 1.5px;
@@ -1729,7 +1747,7 @@
 }
 
 .admin-kpi-card {
-    -fx-background-color: rgba(8, 12, 22, 0.48);
+    -fx-background-color: rgba(15, 19, 24, 0.48);
     -fx-background-radius: 16px;
     -fx-border-color: rgba(255, 255, 255, 0.08);
     -fx-border-radius: 16px;
@@ -1758,7 +1776,7 @@
 }
 
 .admin-panel-card {
-    -fx-background-color: rgba(8, 12, 22, 0.45);
+    -fx-background-color: rgba(15, 19, 24, 0.45);
     -fx-background-radius: 16px;
     -fx-border-color: rgba(255, 255, 255, 0.08);
     -fx-border-radius: 16px;
@@ -1783,9 +1801,9 @@
 }
 
 .admin-row-card-selected {
-    -fx-background-color: rgba(212, 166, 60, 0.16);
+    -fx-background-color: rgba(241, 238, 223, 0.16);
     -fx-background-radius: 10px;
-    -fx-border-color: rgba(212, 166, 60, 0.55);
+    -fx-border-color: rgba(241, 238, 223, 0.55);
     -fx-border-radius: 10px;
     -fx-border-width: 1px;
     -fx-padding: 10px 14px;
@@ -1833,13 +1851,13 @@
 .admin-error-glyph {
     -fx-font-size: 28px;
     -fx-font-weight: 700;
-    -fx-text-fill: #ef4444;
+    -fx-text-fill: -glass-danger;
 }
 
 .admin-empty-circle {
-    -fx-background-color: rgba(212, 166, 60, 0.15);
+    -fx-background-color: rgba(241, 238, 223, 0.15);
     -fx-background-radius: 999px;
-    -fx-border-color: rgba(212, 166, 60, 0.40);
+    -fx-border-color: rgba(241, 238, 223, 0.40);
     -fx-border-radius: 999px;
     -fx-border-width: 1px;
 }
@@ -1872,7 +1890,7 @@
 }
 
 .admin-bar-chart .default-color0.chart-bar {
-    -fx-bar-fill: linear-gradient(to top, #c4952f, #e8c46a);
+    -fx-bar-fill: -glass-white;
     -fx-background-radius: 4px 4px 0 0;
 }
 
@@ -1896,11 +1914,11 @@
     -fx-stroke: rgba(255, 255, 255, 0.45);
 }
 
-.admin-pie-chart .default-color0.chart-pie { -fx-pie-color: #d4a63c; }
-.admin-pie-chart .default-color1.chart-pie { -fx-pie-color: #e8c46a; }
-.admin-pie-chart .default-color2.chart-pie { -fx-pie-color: #f3d98b; }
+.admin-pie-chart .default-color0.chart-pie { -fx-pie-color: -glass-cream; }
+.admin-pie-chart .default-color1.chart-pie { -fx-pie-color: -glass-cream; }
+.admin-pie-chart .default-color2.chart-pie { -fx-pie-color: -glass-cream; }
 .admin-pie-chart .default-color3.chart-pie { -fx-pie-color: #94a3b8; }
-.admin-pie-chart .default-color4.chart-pie { -fx-pie-color: #4ade80; }
+.admin-pie-chart .default-color4.chart-pie { -fx-pie-color: -glass-ok; }
 .admin-pie-chart .default-color5.chart-pie { -fx-pie-color: #64748b; }
 
 .admin-filter-pill {
@@ -1917,13 +1935,13 @@
 }
 
 .admin-filter-pill-active {
-    -fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c);
+    -fx-background-color: -glass-cream;
     -fx-text-fill: -glass-navy;
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-weight: 700;
     -fx-font-size: 12px;
     -fx-background-radius: 999px;
-    -fx-border-color: #f3d98b;
+    -fx-border-color: -glass-cream;
     -fx-border-width: 1px;
     -fx-border-radius: 999px;
     -fx-padding: 6px 14px;
@@ -1985,7 +2003,7 @@
     -fx-border-width: 1px;
     -fx-border-radius: 999px;
     -fx-background-radius: 999px;
-    -fx-text-fill: #86efac;
+    -fx-text-fill: -glass-ok;
     -fx-font-family: 'Inter SemiBold', sans-serif;
     -fx-font-size: 11px;
     -fx-padding: 2px 8px;
@@ -1997,7 +2015,7 @@
     -fx-border-width: 1px;
     -fx-border-radius: 999px;
     -fx-background-radius: 999px;
-    -fx-text-fill: #fca5a5;
+    -fx-text-fill: -glass-danger;
     -fx-font-family: 'Inter SemiBold', sans-serif;
     -fx-font-size: 11px;
     -fx-padding: 2px 8px;
@@ -2016,19 +2034,19 @@
 }
 
 .sparkline-gold {
-    -fx-stroke: #e8c46a;
+    -fx-stroke: -glass-cream;
     -fx-stroke-width: 2px;
     -fx-fill: transparent;
 }
 
 .sparkline-blue {
-    -fx-stroke: #60a5fa;
+    -fx-stroke: -glass-accent;
     -fx-stroke-width: 2px;
     -fx-fill: transparent;
 }
 
 .sparkline-red {
-    -fx-stroke: #f87171;
+    -fx-stroke: -glass-danger;
     -fx-stroke-width: 2px;
     -fx-fill: transparent;
 }
@@ -2057,22 +2075,22 @@
 }
 
 .admin-area-chart .default-color0.chart-series-area-line {
-    -fx-stroke: #e8c46a;
+    -fx-stroke: -glass-cream;
     -fx-stroke-width: 2.5px;
 }
 
 .admin-area-chart .default-color0.chart-series-area-fill {
-    -fx-fill: linear-gradient(to bottom, rgba(232, 196, 106, 0.32), rgba(232, 196, 106, 0.02));
+    -fx-fill: linear-gradient(to bottom, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.02));
 }
 
 .admin-area-chart .default-color0.chart-area-symbol {
-    -fx-background-color: #e8c46a, #0b1220;
+    -fx-background-color: -glass-cream, -glass-ink;
     -fx-background-radius: 5px;
     -fx-padding: 3px;
 }
 
 .admin-area-chart .default-color1.chart-series-area-line {
-    -fx-stroke: #60a5fa;
+    -fx-stroke: -glass-accent;
     -fx-stroke-width: 2px;
     -fx-stroke-dash-array: 6 5;
 }
@@ -2082,7 +2100,7 @@
 }
 
 .admin-area-chart .default-color1.chart-area-symbol {
-    -fx-background-color: #60a5fa, #0b1220;
+    -fx-background-color: -glass-accent, -glass-ink;
     -fx-background-radius: 4px;
     -fx-padding: 2.5px;
 }
@@ -2092,12 +2110,12 @@
     -fx-legend-visible: false;
 }
 
-.admin-donut-chart .default-color0.chart-pie { -fx-pie-color: #d4a63c; }
-.admin-donut-chart .default-color1.chart-pie { -fx-pie-color: #5b8def; }
+.admin-donut-chart .default-color0.chart-pie { -fx-pie-color: -glass-cream; }
+.admin-donut-chart .default-color1.chart-pie { -fx-pie-color: -glass-accent; }
 .admin-donut-chart .default-color2.chart-pie { -fx-pie-color: #475569; }
 
 .admin-donut-hole {
-    -fx-background-color: #111827;
+    -fx-background-color: -glass-ink;
     -fx-background-radius: 999px;
 }
 
@@ -2115,7 +2133,7 @@
 }
 
 .series-legend-gold {
-    -fx-background-color: #e8c46a;
+    -fx-background-color: -glass-cream;
     -fx-background-radius: 3px;
     -fx-min-width: 10px;
     -fx-min-height: 10px;
@@ -2124,7 +2142,7 @@
 }
 
 .series-legend-blue {
-    -fx-background-color: #5b8def;
+    -fx-background-color: -glass-accent;
     -fx-background-radius: 3px;
     -fx-min-width: 10px;
     -fx-min-height: 10px;
@@ -2142,8 +2160,8 @@
 }
 
 .avatar-circle-gold {
-    -fx-background-color: #d4a63c;
-    -fx-text-fill: #0b1220;
+    -fx-background-color: -glass-cream;
+    -fx-text-fill: -glass-ink;
     -fx-background-radius: 999px;
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-weight: 700;
@@ -2156,7 +2174,7 @@
 }
 
 .avatar-circle-blue {
-    -fx-background-color: #3b82f6;
+    -fx-background-color: -glass-accent;
     -fx-text-fill: #ffffff;
     -fx-background-radius: 999px;
     -fx-font-family: 'Inter', sans-serif;
@@ -2170,8 +2188,8 @@
 }
 
 .avatar-circle-green {
-    -fx-background-color: #22c55e;
-    -fx-text-fill: #0b1220;
+    -fx-background-color: -glass-ok;
+    -fx-text-fill: -glass-ink;
     -fx-background-radius: 999px;
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-weight: 700;
@@ -2185,7 +2203,7 @@
 
 .avatar-circle-violet {
     -fx-background-color: #c084fc;
-    -fx-text-fill: #0b1220;
+    -fx-text-fill: -glass-ink;
     -fx-background-radius: 999px;
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-weight: 700;
@@ -2206,7 +2224,7 @@
 }
 
 .load-bar-fill-gold {
-    -fx-background-color: linear-gradient(to right, #d4a63c, #e8c46a);
+    -fx-background-color: -glass-white;
     -fx-background-radius: 999px;
     -fx-min-height: 6px;
     -fx-pref-height: 6px;
@@ -2214,7 +2232,7 @@
 }
 
 .load-bar-fill-blue {
-    -fx-background-color: linear-gradient(to right, #3b82f6, #60a5fa);
+    -fx-background-color: linear-gradient(to right, -glass-accent, -glass-accent);
     -fx-background-radius: 999px;
     -fx-min-height: 6px;
     -fx-pref-height: 6px;
@@ -2222,7 +2240,7 @@
 }
 
 .load-bar-fill-red {
-    -fx-background-color: linear-gradient(to right, #dc2626, #f87171);
+    -fx-background-color: linear-gradient(to right, -glass-danger, -glass-danger);
     -fx-background-radius: 999px;
     -fx-min-height: 6px;
     -fx-pref-height: 6px;
@@ -2233,12 +2251,12 @@
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-size: 13px;
     -fx-font-weight: 700;
-    -fx-text-fill: #fca5a5;
+    -fx-text-fill: -glass-danger;
 }
 
 .admin-link-gold {
     -fx-background-color: transparent;
-    -fx-text-fill: #e8c46a;
+    -fx-text-fill: -glass-cream;
     -fx-font-family: 'Inter SemiBold', sans-serif;
     -fx-font-size: 12px;
     -fx-padding: 0;
@@ -2246,7 +2264,7 @@
 }
 
 .admin-link-gold:hover {
-    -fx-text-fill: #f3d98b;
+    -fx-text-fill: -glass-cream;
 }
 
 .admin-credit-text {
@@ -2256,9 +2274,9 @@
 }
 
 .admin-row-card-selected {
-    -fx-background-color: rgba(212, 166, 60, 0.16);
+    -fx-background-color: rgba(241, 238, 223, 0.16);
     -fx-background-radius: 12px;
-    -fx-border-color: rgba(232, 196, 106, 0.55);
+    -fx-border-color: rgba(255, 255, 255, 0.55);
     -fx-border-width: 1px;
     -fx-border-radius: 12px;
     -fx-padding: 10px 14px;
@@ -2266,16 +2284,16 @@
 }
 
 .admin-detail-panel {
-    -fx-background-color: linear-gradient(to bottom right, rgba(212, 166, 60, 0.16), rgba(15, 23, 42, 0.72));
+    -fx-background-color: linear-gradient(to bottom right, rgba(241, 238, 223, 0.16), rgba(15, 19, 24, 0.72));
     -fx-background-radius: 18px;
-    -fx-border-color: rgba(232, 196, 106, 0.35);
+    -fx-border-color: rgba(255, 255, 255, 0.35);
     -fx-border-width: 1px;
     -fx-border-radius: 18px;
     -fx-padding: 16px;
 }
 
 .admin-passenger-card {
-    -fx-background-color: rgba(8, 12, 22, 0.52);
+    -fx-background-color: rgba(15, 19, 24, 0.52);
     -fx-background-radius: 12px;
     -fx-border-color: rgba(255, 255, 255, 0.10);
     -fx-border-width: 1px;
@@ -2287,7 +2305,7 @@
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-size: 28px;
     -fx-font-weight: 700;
-    -fx-text-fill: #f3d98b;
+    -fx-text-fill: -glass-cream;
 }
 
 .admin-route-code-lg {
@@ -2301,11 +2319,11 @@
     -fx-font-family: 'Inter', sans-serif;
     -fx-font-size: 20px;
     -fx-font-weight: 700;
-    -fx-text-fill: #f3d98b;
+    -fx-text-fill: -glass-cream;
 }
 
 .admin-sidebar-card {
-    -fx-background-color: rgba(8, 12, 22, 0.42);
+    -fx-background-color: rgba(15, 19, 24, 0.42);
     -fx-background-radius: 18px;
     -fx-border-color: rgba(255, 255, 255, 0.08);
     -fx-border-width: 1px;
@@ -2328,15 +2346,996 @@
 }
 
 .admin-filter-choice-btn-active {
-    -fx-background-color: rgba(212, 166, 60, 0.18);
-    -fx-text-fill: #f3d98b;
+    -fx-background-color: rgba(241, 238, 223, 0.18);
+    -fx-text-fill: -glass-cream;
     -fx-font-family: 'Inter SemiBold', sans-serif;
     -fx-font-size: 12px;
     -fx-background-radius: 10px;
-    -fx-border-color: rgba(232, 196, 106, 0.55);
+    -fx-border-color: rgba(255, 255, 255, 0.55);
     -fx-border-width: 1px;
     -fx-border-radius: 10px;
     -fx-padding: 7px 12px;
     -fx-alignment: CENTER_LEFT;
     -fx-cursor: hand;
+}
+/* ===================================================================
+ * P5 Foundation Overrides - Unified Sky Royal Glass Tokens
+ * =================================================================== */
+
+.btn-primary-pill, .btn-gold {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-font-weight: 700;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-border-color: transparent;
+    -fx-padding: 10px 22px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.28), 16, 0.0, 0, 6);
+}
+.btn-primary-pill:hover, .btn-gold:hover { -fx-background-color: -glass-cream; -fx-text-fill: -glass-ink; }
+
+.btn-secondary-glass, .btn-ghost {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+    -fx-text-fill: -glass-white;
+    -fx-border-color: -glass-border-strong;
+    -fx-border-width: 1px;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-cursor: hand;
+}
+.btn-secondary-glass:hover, .btn-ghost:hover { -fx-background-color: rgba(255, 255, 255, 0.20); -fx-border-color: rgba(255, 255, 255, 0.45); }
+
+.btn-danger {
+    -fx-background-color: rgba(255, 122, 122, 0.18);
+    -fx-text-fill: -glass-danger;
+    -fx-border-color: rgba(255, 122, 122, 0.55);
+    -fx-border-width: 1px;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-weight: 700;
+    -fx-padding: 9px 18px;
+    -fx-cursor: hand;
+}
+
+.glass-input, .text-field, .password-field {
+    -fx-background-color: -glass-input-bg;
+    -fx-text-fill: -glass-white;
+    -fx-prompt-text-fill: rgba(255, 255, 255, 0.62);
+    -fx-border-color: -glass-input-border;
+    -fx-border-width: 1px;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+}
+.glass-input:focused, .text-field:focused, .password-field:focused {
+    -fx-background-color: -glass-input-bg-focus;
+    -fx-border-color: -glass-input-focus;
+    -fx-effect: dropshadow(gaussian, rgba(77, 163, 255, 0.42), 10, 0.25, 0, 0);
+}
+
+.nav-bar { -fx-background-color: rgba(15, 19, 24, 0.64); -fx-border-color: transparent transparent -glass-border-panel transparent; -fx-border-width: 0 0 1px 0; -fx-padding: 0 24px; }
+.nav-logo-icon, .brand-plane-icon { -fx-stroke: -glass-white; -fx-stroke-width: 2.0; -fx-fill: transparent; }
+.logo-text-sky, .logo-text-voyage { -fx-text-fill: -glass-white; -fx-font-weight: 700; -fx-font-size: 16px; }
+.logo-subtitle { -fx-text-fill: -glass-text-faint; -fx-font-size: 9px; }
+.nav-links-box, .glass-nav-pill { -fx-background-color: rgba(15, 19, 24, 0.56); -fx-background-radius: 999px; -fx-border-color: -glass-border-panel; -fx-border-width: 1px; -fx-border-radius: 999px; -fx-padding: 4px 6px; -fx-spacing: 4px; }
+.nav-link-btn { -fx-background-color: transparent; -fx-text-fill: -glass-text-muted; -fx-font-weight: 600; -fx-font-size: 13px; -fx-background-radius: 999px; -fx-padding: 6px 16px; -fx-cursor: hand; }
+.nav-link-btn:hover { -fx-text-fill: -glass-white; -fx-background-color: rgba(255, 255, 255, 0.10); }
+.nav-link-active { -fx-background-color: -glass-white; -fx-text-fill: -glass-ink; -fx-font-weight: 700; -fx-background-radius: 999px; -fx-border-color: transparent; -fx-border-width: 0; }
+.nav-link-active:hover { -fx-background-color: -glass-cream; -fx-text-fill: -glass-ink; }
+.nav-theme-icon, .theme-toggle-icon { -fx-stroke: -glass-white; -fx-fill: transparent; }
+.glass-avatar-circle, .nav-avatar-pill { -fx-background-color: -glass-cream; -fx-text-fill: -glass-ink; -fx-background-radius: 999px; -fx-border-color: rgba(255, 255, 255, 0.45); -fx-border-width: 1px; -fx-border-radius: 999px; -fx-font-weight: 700; }
+.nav-user-btn { -fx-background-color: rgba(255, 255, 255, 0.12); -fx-text-fill: -glass-white; -fx-background-radius: 999px; -fx-border-color: -glass-border-panel; -fx-border-width: 1px; -fx-border-radius: 999px; -fx-padding: 6px 14px; -fx-font-weight: 600; -fx-cursor: hand; }
+.nav-logout-btn { -fx-background-color: rgba(255, 122, 122, 0.18); -fx-text-fill: -glass-danger; -fx-border-color: rgba(255, 122, 122, 0.45); -fx-border-width: 1px; -fx-background-radius: 999px; -fx-border-radius: 999px; -fx-padding: 6px 14px; -fx-font-weight: 600; -fx-cursor: hand; }
+.dialog-pane { -fx-background-color: -glass-surface-solid; -fx-border-color: -glass-border-strong; -fx-border-width: 1px; }
+.dialog-pane .label, .dialog-pane .content.label { -fx-text-fill: -glass-white; }
+.dialog-pane .header-panel { -fx-background-color: rgba(255, 255, 255, 0.06); }
+.dialog-pane .button { -fx-background-color: -glass-white; -fx-text-fill: -glass-ink; -fx-background-radius: 999px; -fx-font-weight: 700; }
+.glass-toast { -fx-background-color: -glass-surface-strong; -fx-text-fill: -glass-white; -fx-border-color: -glass-border-strong; -fx-border-width: 1px; -fx-background-radius: 999px; -fx-border-radius: 999px; -fx-padding: 10px 18px; }
+
+/* Floating glass pill nav links (shared by Search, Seat Map, Checkout, My Bookings) */
+.glass-nav-pill .glass-nav-link {
+    -fx-background-color: transparent;
+    -fx-background-radius: 999px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 7px 18px;
+    -fx-text-fill: -glass-text-muted;
+    -fx-font-weight: 600;
+    -fx-font-size: 13px;
+}
+.glass-nav-pill .glass-nav-link:hover {
+    -fx-text-fill: -glass-white;
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+}
+.glass-nav-pill .glass-nav-link-active {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-font-weight: 700;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+.glass-nav-pill .glass-nav-link-active:hover {
+    -fx-background-color: -glass-cream;
+    -fx-text-fill: -glass-ink;
+}
+
+/* Home screen (board-1 Sky Royal Glass) */
+.home-hero-kicker {
+    -fx-text-fill: -glass-cream;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 0.12em;
+}
+.home-hero-headline {
+    -fx-text-fill: -glass-white;
+    -fx-font-size: 52px;
+    -fx-font-weight: 700;
+}
+.home-hero-sub {
+    -fx-text-fill: -glass-text-muted;
+    -fx-font-size: 15px;
+}
+.home-glass-card {
+    -fx-background-color: -glass-surface;
+    -fx-background-radius: 22px;
+    -fx-border-color: -glass-border-panel;
+    -fx-border-width: 1px;
+    -fx-border-radius: 22px;
+    -fx-padding: 20px 22px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.36), 30, 0.0, 0, 14);
+}
+.home-field-label {
+    -fx-text-fill: -glass-text-faint;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+}
+.home-glass-input {
+    -fx-background-color: -glass-input-bg;
+    -fx-border-color: -glass-input-border;
+    -fx-border-width: 1px;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-pref-height: 44px;
+}
+.home-feature-glass {
+    -fx-background-color: rgba(15, 19, 24, 0.56);
+    -fx-background-radius: 16px;
+    -fx-border-color: -glass-border-panel;
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 14px 16px;
+}
+.home-feature-icon-circle {
+    -fx-background-color: rgba(241, 238, 223, 0.14);
+    -fx-background-radius: 999px;
+    -fx-min-width: 36px;
+    -fx-min-height: 36px;
+    -fx-max-width: 36px;
+    -fx-max-height: 36px;
+}
+.home-feature-icon {
+    -fx-fill: transparent;
+    -fx-stroke: -glass-cream;
+    -fx-stroke-width: 1.8;
+}
+.home-feature-title {
+    -fx-text-fill: -glass-white;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+}
+.home-feature-desc {
+    -fx-text-fill: -glass-text-muted;
+    -fx-font-size: 11px;
+}
+
+.login-field-box:focus-within {
+    -fx-border-color: -glass-input-focus;
+    -fx-effect: dropshadow(gaussian, rgba(77, 163, 255, 0.42), 10, 0.25, 0, 0);
+}
+.btn-login-gold {
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-pref-height: 50px;
+    -fx-min-height: 50px;
+    -fx-max-height: 50px;
+}
+
+/* ============================================================================
+   P5 Step 3: Seat Map — Sky Royal Glass (board-3 + seatmap-ref)
+   ============================================================================ */
+.glass-nav-pill {
+    -fx-max-height: 40px;
+    -fx-pref-height: 40px;
+    -fx-padding: 3px 5px;
+}
+.glass-nav-pill .glass-nav-link {
+    -fx-padding: 5px 15px;
+}
+
+.seat-plane-card { -fx-padding: 16px 22px 0 22px; }
+.seat-card-title { -fx-font-family: 'Inter SemiBold', 'Inter'; -fx-font-size: 19px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.seat-card-subtitle { -fx-font-family: 'Inter'; -fx-font-size: 12.5px; -fx-text-fill: -glass-text-muted; }
+.seat-zoom-col { -fx-padding: 14px 0 0 0; }
+.seat-zoom-icon { -fx-fill: transparent; -fx-stroke: -glass-white; -fx-stroke-width: 1.8; -fx-stroke-line-cap: round; -fx-scale-x: 0.75; -fx-scale-y: 0.75; }
+
+.section-tab-bar {
+    -fx-background-color: rgba(15, 19, 24, 0.56);
+    -fx-background-radius: 999px;
+    -fx-border-color: -glass-border-panel;
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 3px;
+}
+.section-tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 999px;
+    -fx-text-fill: -glass-text-muted;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-padding: 5px 12px;
+    -fx-min-width: 78px;
+    -fx-cursor: hand;
+}
+.section-tab:hover { -fx-text-fill: -glass-white; -fx-background-color: rgba(255, 255, 255, 0.08); }
+.section-tab-on {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-font-weight: 700;
+}
+
+/* Bottom-left Cabin Preview photo card */
+.seat-cabin-photo-card {
+    -fx-background-color: -glass-surface-solid;
+    -fx-background-radius: 18px;
+    -fx-border-color: -glass-border-panel;
+    -fx-border-width: 1px;
+    -fx-border-radius: 18px;
+}
+.seat-cabin-photo-scrim {
+    -fx-background-color: linear-gradient(to bottom, rgba(13,28,36,0.12) 0%, rgba(15,19,24,0.88) 78%, rgba(15,19,24,0.96) 100%);
+}
+.seat-cabin-photo-content { -fx-padding: 18px; }
+.seat-cabin-kicker { -fx-text-fill: -glass-cream; -fx-font-size: 10px; -fx-font-weight: 700; -fx-letter-spacing: 0.14em; }
+.seat-cabin-title { -fx-text-fill: -glass-white; -fx-font-size: 17px; -fx-font-weight: 700; }
+.seat-cabin-desc { -fx-text-fill: -glass-text-muted; -fx-font-size: 11.5px; -fx-line-spacing: 2px; }
+
+/* Seat Grid Card & Legend */
+.seat-grid-card { -fx-padding: 16px 18px; }
+.seat-section-header { -fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.seat-legend-label { -fx-font-size: 11px; -fx-text-fill: -glass-text-muted; }
+.seat-legend-swatch {
+    -fx-min-width: 12px; -fx-min-height: 12px; -fx-max-width: 12px; -fx-max-height: 12px;
+    -fx-background-radius: 4px; -fx-border-radius: 4px; -fx-border-width: 1px;
+}
+.seat-legend-available { -fx-background-color: rgba(255,255,255,0.12); -fx-border-color: rgba(255,255,255,0.34); }
+.seat-legend-first { -fx-background-color: rgba(241,238,223,0.18); -fx-border-color: rgba(241,238,223,0.58); }
+.seat-legend-taken { -fx-background-color: rgba(15,19,24,0.78); -fx-border-color: rgba(255,255,255,0.12); }
+.seat-legend-taken-x { -fx-text-fill: rgba(255,255,255,0.42); -fx-font-size: 9px; -fx-font-weight: 700; -fx-padding: -2px 0 0 0; }
+.seat-legend-yours { -fx-background-color: -glass-white; -fx-border-color: -glass-white; }
+
+/* Seat cells — frosted glass palette matching board-3 (zero green/red seats) */
+.seat-available,
+.seat-free,
+.seat-economy,
+.seat-button.seat-available {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+    -fx-border-color: rgba(255, 255, 255, 0.30);
+    -fx-border-width: 1px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -glass-white;
+    -fx-cursor: hand;
+}
+.seat-available:hover,
+.seat-free:hover,
+.seat-economy:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.24);
+    -fx-border-color: -glass-white;
+}
+.seat-first,
+.seat-first-class {
+    -fx-background-color: rgba(241, 238, 223, 0.16);
+    -fx-border-color: rgba(241, 238, 223, 0.55);
+    -fx-border-width: 1.2px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -glass-cream;
+    -fx-cursor: hand;
+}
+.seat-first:hover,
+.seat-first-class:hover {
+    -fx-background-color: rgba(241, 238, 223, 0.28);
+    -fx-border-color: -glass-cream;
+}
+.seat-taken,
+.seat-occupied,
+.seat-booked,
+.seat-unavailable {
+    -fx-background-color: rgba(15, 19, 24, 0.72);
+    -fx-border-color: rgba(255, 255, 255, 0.10);
+    -fx-border-width: 1px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: rgba(255, 255, 255, 0.32);
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+.seat-held,
+.seat-held-other {
+    -fx-background-color: rgba(77, 163, 255, 0.22);
+    -fx-border-color: -glass-accent;
+    -fx-border-width: 1.2px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -glass-accent;
+}
+.seat-selected,
+.seat-yours {
+    -fx-background-color: -glass-white;
+    -fx-border-color: -glass-white;
+    -fx-border-width: 1.5px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -glass-ink;
+    -fx-font-weight: 700;
+    -fx-font-size: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.35), 10, 0.15, 0, 0);
+}
+
+/* Right Column: Cream YOUR SEAT card + breakdown + Flight card */
+.seat-right-card { -fx-padding: 16px 18px; }
+.seat-selection-cream-box {
+    -fx-background-color: -glass-cream;
+    -fx-background-radius: 16px;
+    -fx-padding: 14px 16px;
+}
+.seat-cream-kicker { -fx-text-fill: rgba(21, 24, 28, 0.62); -fx-font-size: 10.5px; -fx-font-weight: 700; -fx-letter-spacing: 0.14em; }
+.seat-cream-big-seat { -fx-text-fill: -glass-ink; -fx-font-size: 48px; -fx-font-weight: 700; -fx-padding: -4px 0 -4px 0; }
+.seat-cream-fare-sub { -fx-text-fill: rgba(21, 24, 28, 0.62); -fx-font-size: 11px; }
+.seat-cream-fare-val { -fx-text-fill: -glass-ink; -fx-font-size: 22px; -fx-font-weight: 700; }
+.selection-chip {
+    -fx-background-color: rgba(21, 24, 28, 0.10);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(21, 24, 28, 0.16);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-text-fill: -glass-ink;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-padding: 3px 9px;
+}
+.seat-breakdown-box { -fx-padding: 4px 0 2px 0; }
+.seat-break-lbl { -fx-font-size: 12px; -fx-text-fill: -glass-text-muted; }
+.seat-break-val { -fx-font-size: 12px; -fx-font-weight: 600; -fx-text-fill: -glass-white; }
+.seat-divider { -fx-min-height: 1px; -fx-pref-height: 1px; -fx-max-height: 1px; -fx-background-color: rgba(255,255,255,0.12); }
+.seat-total-lbl { -fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.seat-total-val { -fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: -glass-cream; }
+.seat-vat-lbl { -fx-font-size: 10.5px; -fx-text-fill: -glass-text-faint; }
+
+.seat-timer-row { -fx-padding: 8px 12px; -fx-background-color: rgba(15, 19, 24, 0.56); -fx-background-radius: 14px; -fx-border-color: -glass-border-panel; -fx-border-radius: 14px; -fx-border-width: 1px; }
+.seat-timer-val { -fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.seat-timer-sub { -fx-font-size: 11px; -fx-text-fill: -glass-text-muted; }
+
+.btn-checkout-gold {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-weight: 700;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-effect: null;
+}
+.btn-checkout-gold:hover { -fx-background-color: -glass-cream; }
+.seat-continue-arrow { -fx-fill: transparent; -fx-stroke: -glass-ink; -fx-stroke-width: 2.4; -fx-stroke-line-cap: round; -fx-stroke-line-join: round; -fx-scale-x: 0.78; -fx-scale-y: 0.78; }
+.btn-release-ghost {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-text-fill: -glass-white;
+    -fx-border-color: -glass-border-panel;
+    -fx-border-width: 1px;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-size: 12.5px;
+    -fx-font-weight: 600;
+    -fx-cursor: hand;
+}
+.btn-release-ghost:hover { -fx-background-color: rgba(255, 255, 255, 0.18); }
+
+.seat-flight-card { -fx-padding: 14px 18px; }
+.seat-flight-kicker { -fx-font-size: 10.5px; -fx-font-weight: 700; -fx-text-fill: -glass-cream; -fx-letter-spacing: 0.14em; }
+.seat-flight-code { -fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.seat-flight-time { -fx-font-size: 11.5px; -fx-text-fill: -glass-text-muted; }
+.seat-route-dot { -fx-min-width: 6px; -fx-min-height: 6px; -fx-max-width: 6px; -fx-max-height: 6px; -fx-background-color: -glass-cream; -fx-background-radius: 999px; }
+.seat-route-dash { -fx-border-color: rgba(255,255,255,0.32); -fx-border-style: dashed; -fx-border-width: 1.5px 0 0 0; -fx-min-height: 2px; }
+.seat-route-plane { -fx-fill: -glass-cream; -fx-scale-x: 0.65; -fx-scale-y: 0.65; -fx-rotate: 90; }
+.seat-free-seats-val { -fx-font-size: 12.5px; -fx-font-weight: 700; -fx-text-fill: -glass-ok; }
+
+/* Step 3 R13 polish: unclipped Section 1/2/3 tabs + high-specificity selected seat */
+.section-tab { -fx-min-width: 88px; -fx-padding: 5px 10px; }
+.button.seat-selected, .button.seat-yours, .seat-btn.seat-selected, .seat-btn.seat-yours, .seat-selected, .seat-yours {
+    -fx-background-color: -glass-white;
+    -fx-border-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-font-weight: 700;
+}
+
+/* ============================================================================
+   P5 Step 4: Checkout + Confirmation / White Boarding Pass (board-4, board-7)
+   ============================================================================ */
+.paycard.paycard-cream, .paycard-cream {
+    -fx-background-color: -glass-cream;
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.55);
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 16px 18px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.30), 20, 0.0, 0, 8);
+}
+.paycard-brand { -fx-font-family: 'Inter Bold', 'Inter'; -fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: -glass-ink; }
+.paycard-demo-tag { -fx-font-family: 'Inter SemiBold', 'Inter'; -fx-font-size: 10px; -fx-font-weight: 700; -fx-text-fill: rgba(21, 24, 28, 0.58); -fx-letter-spacing: 0.12em; }
+.paycard-number { -fx-font-family: 'Inter SemiBold', 'Inter'; -fx-font-size: 15px; -fx-font-weight: 600; -fx-letter-spacing: 0.12em; -fx-text-fill: -glass-ink; }
+.paycard-meta { -fx-font-family: 'Inter Medium', 'Inter'; -fx-font-size: 10.5px; -fx-letter-spacing: 0.06em; -fx-text-fill: rgba(21, 24, 28, 0.72); }
+
+.gold-primary-action-btn, .pay-cta-btn {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-weight: 700;
+    -fx-cursor: hand;
+}
+.gold-primary-action-btn:hover, .pay-cta-btn:hover { -fx-background-color: -glass-cream; }
+
+/* Confirmation white badge (board-7) */
+.confirmation-emerald-circle {
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 999px;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.25), 18, 0.10, 0, 0);
+}
+.confirmation-check-icon {
+    -fx-stroke: -glass-ink;
+    -fx-stroke-width: 3.2;
+    -fx-fill: transparent;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+/* White Boarding Pass (TicketView — shared by Confirmation & My Bookings) */
+.ticket-card {
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 22px;
+    -fx-border-color: rgba(255, 255, 255, 0.85);
+    -fx-border-width: 1px;
+    -fx-border-radius: 22px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.42), 34, 0.0, 0, 14);
+}
+.ticket-grid-label, .ticket-stub-label { -fx-text-fill: rgba(21, 24, 28, 0.56); -fx-font-weight: 700; }
+.ticket-grid-value, .ticket-stub-value { -fx-text-fill: -glass-ink; -fx-font-weight: 700; }
+.ticket-airport-code { -fx-text-fill: -glass-ink; -fx-font-weight: 800; }
+.ticket-city-time, .ticket-stub-sub { -fx-text-fill: rgba(21, 24, 28, 0.65); }
+.ticket-cabin-badge {
+    -fx-background-color: -glass-cream;
+    -fx-text-fill: -glass-ink;
+    -fx-border-color: rgba(21, 24, 28, 0.14);
+    -fx-border-width: 1px;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-font-weight: 700;
+}
+.ticket-duration-pill {
+    -fx-background-color: rgba(21, 24, 28, 0.08);
+    -fx-text-fill: -glass-ink;
+    -fx-background-radius: 999px;
+    -fx-padding: 3px 10px;
+    -fx-font-weight: 600;
+}
+.ticket-route-dot { -fx-fill: -glass-ink; }
+.ticket-route-dash { -fx-border-color: rgba(21, 24, 28, 0.28); -fx-border-style: dashed; -fx-border-width: 1.5 0 0 0; }
+.ticket-route-plane { -fx-fill: -glass-ink; -fx-rotate: 90; -fx-scale-x: 0.85; -fx-scale-y: 0.85; }
+.ticket-stub-seat { -fx-text-fill: -glass-ink; -fx-font-weight: 800; }
+.ticket-stub-ref { -fx-text-fill: -glass-ink; -fx-font-weight: 800; }
+.ticket-stub-fare { -fx-text-fill: -glass-ink; -fx-font-weight: 700; }
+.ticket-perf-line { -fx-border-color: rgba(21, 24, 28, 0.22); -fx-border-style: dashed; }
+.ticket-barcode-strip { -fx-background-color: -glass-white; -fx-padding: 6px 12px; -fx-background-radius: 8px; }
+
+/* Step 4 R13 polish: dark ink on white boarding pass stub */
+.ticket-seat-label { -fx-text-fill: rgba(21, 24, 28, 0.56); -fx-font-weight: 700; -fx-font-size: 11px; }
+.ticket-seat-value { -fx-text-fill: -glass-ink; -fx-font-weight: 800; -fx-font-size: 46px; }
+.ticket-stub-gate { -fx-font-family: 'Inter'; -fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: -glass-ink; }
+.ticket-stub-note { -fx-font-family: 'Inter'; -fx-font-size: 11px; -fx-text-fill: rgba(21, 24, 28, 0.62); }
+.ticket-stub-ref { -fx-font-family: 'Inter'; -fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: -glass-ink; -fx-letter-spacing: 0.1em; }
+.ticket-stub-fare { -fx-font-family: 'Inter SemiBold', 'Inter'; -fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: -glass-ink; }
+.ticket-perf-line { -fx-border-color: rgba(21, 24, 28, 0.22); -fx-border-style: dashed; -fx-border-width: 0 0 0 2; }
+
+/* Step 5: unclipped admin status badges & clean active nav pills */
+.badge { -fx-padding: 3px 9px; -fx-alignment: center; }
+.nav-link-btn.nav-link-active, .nav-link-active { -fx-border-color: transparent; -fx-border-width: 0; }
+
+/* ============================================================================
+   P5b Step 1: Web-Parity Foundation (Inter sans, Vivid Glass, Exact TopBar)
+   ============================================================================ */
+.glass-nav-bar {
+    -fx-padding: 0 56px;
+    -fx-background-color: transparent;
+}
+.login-split-card {
+    -fx-background-color: rgba(15, 19, 24, 0.68);
+    -fx-background-radius: 28px;
+    -fx-border-color: rgba(255, 255, 255, 0.22);
+    -fx-border-width: 1px;
+    -fx-border-radius: 28px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 48, 0.0, 0, 18);
+}
+.inner-card {
+    -fx-background-color: rgba(15, 19, 24, 0.68);
+    -fx-border-color: rgba(255, 255, 255, 0.16);
+}
+.search-main-glass {
+    -fx-background-color: rgba(15, 19, 24, 0.56);
+    -fx-border-color: rgba(255, 255, 255, 0.18);
+}
+.nav-brand-box {
+    -fx-cursor: hand;
+}
+.nav-brand-badge {
+    -fx-min-width: 34px;
+    -fx-min-height: 34px;
+    -fx-pref-width: 34px;
+    -fx-pref-height: 34px;
+    -fx-max-width: 34px;
+    -fx-max-height: 34px;
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.24), 10, 0.0, 0, 3);
+}
+.nav-brand-badge-icon {
+    -fx-fill: -glass-ink;
+}
+.nav-brand-text {
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -glass-white;
+}
+.glass-nav-pill {
+    -fx-background-color: rgba(15, 19, 24, 0.52);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 255, 255, 0.20);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 4px 5px;
+    -fx-max-height: 44px;
+    -fx-pref-height: 44px;
+}
+.glass-nav-pill .glass-nav-link {
+    -fx-background-color: transparent;
+    -fx-text-fill: rgba(255, 255, 255, 0.86);
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-padding: 6px 16px;
+    -fx-background-radius: 999px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+}
+.glass-nav-pill .glass-nav-link:hover {
+    -fx-text-fill: -glass-white;
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+}
+.glass-nav-pill .glass-nav-link-active {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-font-weight: 700;
+}
+.glass-nav-pill .glass-nav-link-active:hover {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+}
+.glass-avatar-pill {
+    -fx-background-color: rgba(15, 19, 24, 0.52);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 255, 255, 0.20);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 4px 14px 4px 5px;
+    -fx-max-height: 40px;
+    -fx-pref-height: 40px;
+    -fx-cursor: hand;
+}
+.glass-avatar-pill:hover {
+    -fx-background-color: rgba(15, 19, 24, 0.68);
+    -fx-border-color: rgba(255, 255, 255, 0.34);
+}
+.glass-avatar-pill .glass-avatar-circle {
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-pref-width: 30px;
+    -fx-pref-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+    -fx-background-color: -glass-cream;
+    -fx-background-radius: 999px;
+    -fx-border-width: 0;
+}
+.glass-avatar-pill .glass-avatar-initials {
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -glass-ink;
+}
+.glass-avatar-name {
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -glass-white;
+}
+
+/* ============================================================================
+   P5b Step 2: Search & Seat Map Parity (dropdown chevrons, clear chips, taken seats)
+   ============================================================================ */
+.search-dropdown-chevron {
+    -fx-fill: transparent;
+    -fx-stroke: rgba(255, 255, 255, 0.72);
+    -fx-stroke-width: 1.8;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+    -fx-scale-x: 0.75;
+    -fx-scale-y: 0.75;
+}
+.pill-button {
+    -fx-background-color: rgba(15, 19, 24, 0.48);
+    -fx-border-color: rgba(255, 255, 255, 0.24);
+    -fx-border-width: 1px;
+    -fx-background-radius: 999px;
+    -fx-border-radius: 999px;
+    -fx-text-fill: rgba(255, 255, 255, 0.90);
+    -fx-font-family: 'Inter Medium', 'Inter', sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 500;
+    -fx-padding: 7px 10px;
+    -fx-opacity: 1.0;
+    -fx-cursor: hand;
+}
+.pill-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-border-color: rgba(255, 255, 255, 0.45);
+    -fx-text-fill: -glass-white;
+}
+.pill-button.pill-button-on {
+    -fx-background-color: -glass-white;
+    -fx-border-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-weight: 700;
+}
+.seat-legend-held {
+    -fx-background-color: rgba(77, 163, 255, 0.28);
+    -fx-border-color: rgba(147, 197, 253, 0.85);
+}
+.seat-btn {
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-padding: 0 2px;
+}
+.seat-taken, .seat-occupied, .seat-booked, .seat-unavailable {
+    -fx-background-color: rgba(10, 12, 16, 0.82);
+    -fx-border-color: rgba(255, 255, 255, 0.16);
+    -fx-border-style: dashed;
+    -fx-border-width: 1px;
+    -fx-text-fill: rgba(255, 255, 255, 0.48);
+    -fx-font-size: 10.5px;
+    -fx-font-weight: 600;
+}
+
+/* ============================================================================
+   P5b Step 3: Checkout Cream Card Lock & Hold Pill
+   ============================================================================ */
+.paycard,
+.paycard:hover,
+.paycard:focused,
+.paycard:disabled,
+.paycard.paycard-cream,
+.paycard-cream,
+.paycard-cream:hover,
+.paycard-cream:focused,
+.paycard-cream:disabled {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #f1eedf 0%, #ffffff 100%);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.72);
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 16px 18px;
+    -fx-opacity: 1.0;
+}
+.paycard-chip {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(21, 24, 28, 0.24) 0%, rgba(21, 24, 28, 0.10) 100%);
+    -fx-background-radius: 6px;
+    -fx-border-color: rgba(21, 24, 28, 0.26);
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+}
+.checkout-hold-pill {
+    -fx-background-color: rgba(15, 19, 24, 0.62);
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(255, 255, 255, 0.20);
+    -fx-border-width: 1px;
+    -fx-border-radius: 999px;
+    -fx-padding: 6px 14px;
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 11.5px;
+    -fx-text-fill: rgba(255, 255, 255, 0.86);
+}
+
+/* ============================================================================
+   P5b Step 4: My Bookings 2-Column Web Layout & Live White Pass Preview
+   ============================================================================ */
+.mb-kicker { -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif; -fx-font-size: 12px; -fx-text-fill: -glass-text-muted; }
+.mb-list-panel {
+    -fx-background-color: rgba(12, 16, 22, 0.56);
+    -fx-background-radius: 20px;
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-padding: 14px;
+}
+.mb-row {
+    -fx-background-color: rgba(15, 19, 24, 0.62);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 14px 16px;
+    -fx-cursor: hand;
+}
+.mb-row:hover {
+    -fx-border-color: rgba(255, 255, 255, 0.34);
+    -fx-background-color: rgba(20, 26, 33, 0.72);
+}
+.mb-row-selected {
+    -fx-background-color: -glass-cream;
+    -fx-background-radius: 16px;
+    -fx-border-color: -glass-cream;
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 14px 16px;
+    -fx-cursor: hand;
+}
+.mb-row-route { -fx-font-family: 'Inter Bold', 'Inter', sans-serif; -fx-font-size: 17px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.mb-row-selected .mb-row-route { -fx-text-fill: -glass-ink; }
+.mb-row-meta { -fx-font-family: 'Inter', sans-serif; -fx-font-size: 12px; -fx-text-fill: -glass-text-muted; }
+.mb-row-selected .mb-row-meta { -fx-text-fill: -glass-ink-muted; }
+.mb-row-price { -fx-font-family: 'Inter Bold', 'Inter', sans-serif; -fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: -glass-white; }
+.mb-row-selected .mb-row-price { -fx-text-fill: -glass-ink; }
+.mb-search-bar {
+    -fx-background-color: rgba(15, 19, 24, 0.56);
+    -fx-background-radius: 16px;
+    -fx-border-color: rgba(255, 255, 255, 0.14);
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-padding: 12px 16px;
+}
+.mb-search-prompt { -fx-font-family: 'Inter Medium', 'Inter', sans-serif; -fx-font-size: 13px; -fx-text-fill: -glass-text-muted; }
+.mb-search-cta { -fx-padding: 8px 18px; -fx-font-size: 13px; }
+
+.mb-pass-card {
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 22px;
+    -fx-border-color: rgba(255, 255, 255, 0.88);
+    -fx-border-width: 1px;
+    -fx-border-radius: 22px;
+    -fx-padding: 20px 22px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 26, 0.0, 0, 10);
+}
+.mb-pass-brand { -fx-font-family: 'Inter Bold', 'Inter', sans-serif; -fx-font-size: 15px; -fx-font-weight: 700; -fx-text-fill: -glass-ink; }
+.mb-pass-tag {
+    -fx-background-color: rgba(21, 24, 28, 0.08);
+    -fx-background-radius: 999px;
+    -fx-padding: 3px 9px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 10px;
+    -fx-text-fill: -glass-ink;
+}
+.mb-pass-status {
+    -fx-background-color: rgba(21, 24, 28, 0.08);
+    -fx-background-radius: 999px;
+    -fx-padding: 3px 10px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 10px;
+    -fx-text-fill: -glass-ink;
+}
+.mb-pass-pnr { -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif; -fx-font-size: 12.5px; -fx-text-fill: -glass-ink-muted; }
+.mb-pass-route-box {
+    -fx-background-color: -glass-cream;
+    -fx-background-radius: 16px;
+    -fx-padding: 14px 16px;
+}
+.mb-pass-route-code { -fx-font-family: 'Inter Bold', 'Inter', sans-serif; -fx-font-size: 24px; -fx-font-weight: 800; -fx-text-fill: -glass-ink; }
+.mb-pass-flight-pill {
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 999px;
+    -fx-padding: 4px 10px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: -glass-ink;
+}
+.mb-pass-route-cities { -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif; -fx-font-size: 13px; -fx-text-fill: -glass-ink; }
+.mb-pass-route-time { -fx-font-family: 'Inter', sans-serif; -fx-font-size: 11.5px; -fx-text-fill: -glass-ink-muted; }
+.mb-pass-divider { -fx-min-height: 1px; -fx-pref-height: 1px; -fx-border-color: rgba(21, 24, 28, 0.16); -fx-border-style: dashed; -fx-border-width: 1 0 0 0; }
+.mb-qr-frame {
+    -fx-background-color: -glass-white;
+    -fx-background-radius: 12px;
+    -fx-border-color: rgba(21, 24, 28, 0.12);
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+    -fx-padding: 8px;
+}
+.mb-qr-caption { -fx-font-family: 'Inter', sans-serif; -fx-font-size: 10px; -fx-text-fill: -glass-ink-muted; }
+.mb-btn-dark {
+    -fx-background-color: -glass-ink;
+    -fx-text-fill: -glass-white;
+    -fx-background-radius: 999px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 12.5px;
+    -fx-font-weight: 700;
+    -fx-padding: 9px 14px;
+    -fx-cursor: hand;
+}
+.mb-btn-dark:hover { -fx-opacity: 0.90; }
+.mb-btn-outline {
+    -fx-background-color: -glass-white;
+    -fx-text-fill: -glass-ink;
+    -fx-background-radius: 999px;
+    -fx-border-color: rgba(21, 24, 28, 0.22);
+    -fx-border-radius: 999px;
+    -fx-border-width: 1px;
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 12.5px;
+    -fx-font-weight: 600;
+    -fx-padding: 8px 14px;
+    -fx-cursor: hand;
+}
+.mb-btn-outline:hover { -fx-background-color: -glass-cream; }
+
+
+/* ===================================================================
+ * P8: Styled Dark-Glass Airport Picker Popup, ComboBox Popup & Compact Scale
+ * =================================================================== */
+
+.airport-picker-popup {
+    -fx-background-color: #12171d;
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 255, 255, 0.22);
+    -fx-border-width: 1px;
+    -fx-border-radius: 14px;
+}
+
+.airport-picker-search {
+    -fx-background-color: rgba(9, 13, 18, 0.85);
+    -fx-background-radius: 10px;
+    -fx-border-color: rgba(255, 255, 255, 0.32);
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-text-fill: #ffffff;
+    -fx-prompt-text-fill: rgba(255, 255, 255, 0.52);
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-padding: 7px 10px;
+}
+
+.airport-picker-search:focused {
+    -fx-border-color: -glass-accent;
+}
+
+.airport-picker-list {
+    -fx-background-color: transparent;
+    -fx-control-inner-background: transparent;
+    -fx-padding: 0;
+}
+
+.airport-picker-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 8px;
+    -fx-padding: 2px 4px;
+    -fx-cursor: hand;
+}
+
+.airport-picker-list .list-cell:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+}
+
+.airport-picker-list .list-cell:selected {
+    -fx-background-color: rgba(77, 163, 255, 0.24);
+}
+
+.airport-picker-city {
+    -fx-font-family: 'Inter SemiBold', 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #ffffff;
+}
+
+.airport-picker-name {
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(255, 255, 255, 0.64);
+}
+
+.airport-picker-code {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-background-radius: 6px;
+    -fx-padding: 3px 7px;
+    -fx-font-family: 'Inter Bold', 'Inter', sans-serif;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -glass-cream;
+}
+
+/* Never show a blank white box with a blue bar on standard ComboBox popups */
+.combo-box-popup .list-view {
+    -fx-background-color: #12171d;
+    -fx-border-color: rgba(255, 255, 255, 0.22);
+    -fx-border-width: 1px;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-padding: 4px;
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff;
+    -fx-font-family: 'Inter', sans-serif;
+    -fx-font-size: 13px;
+    -fx-padding: 7px 12px;
+    -fx-background-radius: 8px;
+}
+
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+    -fx-text-fill: #ffffff;
+}
+
+.combo-box-popup .list-view .list-cell:filled:selected,
+.combo-box-popup .list-view .list-cell:filled:selected:hover {
+    -fx-background-color: rgba(77, 163, 255, 0.28);
+    -fx-text-fill: #ffffff;
+}
+
+/* Compact web-parity typography & spacing scale (100% zoom parity) */
+.search-cell {
+    -fx-cursor: hand;
+}
+
+.search-cell:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+}
+
+.search-cell-value-label {
+    -fx-font-size: 15px;
+}
+
+.search-cell-sub-label {
+    -fx-font-size: 11px;
+}
+
+.results-header-title {
+    -fx-font-size: 20px;
+}
+
+.filters-title {
+    -fx-font-size: 17px;
+}
+
+.home-hero-headline {
+    -fx-font-size: 42px;
+}
+
+.login-hero-headline {
+    -fx-font-size: 30px;
+}
+
+.flight-card, .inner-card, .mb-row, .mb-row-selected {
+    -fx-effect: null;
 }

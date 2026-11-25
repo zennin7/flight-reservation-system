@@ -277,9 +277,9 @@ class MyBookingsStatesAndTicketTest {
                 controller.init(ctx, () -> {});
 
                 assertEquals(1, controller.getCardsContainer().getChildren().size());
-                Button viewTicketBtn = (Button) controller.getCardsContainer().getChildren().get(0).lookup(".btn-gold");
-                assertNotNull(viewTicketBtn, "View ticket button must be present on booking card");
-                viewTicketBtn.fire();
+                Button viewPassBtn = (Button) root.lookup("#previewViewPassBtn");
+                assertNotNull(viewPassBtn, "View pass button must be present in live pass preview");
+                viewPassBtn.fire();
 
                 assertEquals(12L, queriedUserId.get(), "getBookingForUser must be called with active userId 12");
                 assertEquals("TK8899", queriedPnr.get(), "getBookingForUser must be called with card PNR TK8899");
@@ -342,9 +342,9 @@ class MyBookingsStatesAndTicketTest {
                 ctx.setCurrentUser(createUser(12L, "demo.traveller@example.com", "Demo Traveller"));
                 controller.init(ctx, () -> {});
 
-                Button viewTicketBtn = (Button) controller.getCardsContainer().getChildren().get(0).lookup(".btn-gold");
-                assertNotNull(viewTicketBtn);
-                viewTicketBtn.fire();
+                Button viewPassBtn = (Button) root.lookup("#previewViewPassBtn");
+                assertNotNull(viewPassBtn, "View pass button must be present in live pass preview");
+                viewPassBtn.fire();
 
                 // Must refuse access and stay off confirmation screen
                 assertNull(scene.getRoot().lookup("#bookingRefLabel"), "Unauthorized user must NOT navigate to booking confirmation");

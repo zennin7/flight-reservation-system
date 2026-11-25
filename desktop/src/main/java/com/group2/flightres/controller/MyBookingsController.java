@@ -1,5 +1,6 @@
 package com.group2.flightres.controller;
 
+import com.group2.flightres.component.GlassTopBar;
 import com.group2.flightres.config.BrandConfig;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.BookingRecord;
@@ -73,8 +74,29 @@ public class MyBookingsController {
     @FXML private Label errorMessageLabel;
     @FXML private Button retryButton;
 
+    @FXML private VBox guestStateContainer;
+    @FXML private Label guestTitleLabel;
+    @FXML private Button guestSignInButton;
+
+    @FXML private GlassTopBar topBar;
+    @FXML private HBox populatedSplitBox;
+    @FXML private VBox passPreviewCard;
+    @FXML private Label previewStatusBadge;
+    @FXML private Label previewPnrLabel;
+    @FXML private Label previewRouteCodeLabel;
+    @FXML private Label previewFlightNoLabel;
+    @FXML private Label previewRouteCitiesLabel;
+    @FXML private Label previewDateTimeLabel;
+    @FXML private Label previewPassengerLabel;
+    @FXML private Label previewSeatLabel;
+    @FXML private Label previewAircraftLabel;
+    @FXML private Label previewFareLabel;
+    @FXML private javafx.scene.image.ImageView previewQrImageView;
+    @FXML private Button previewViewPassBtn;
     @FXML private Label avatarInitialsLabel;
     @FXML private StackPane avatarCircle;
+
+    private BookingSummary selectedBooking;
 
     private final BookingService bookingService;
     private final Clock clock;
@@ -101,6 +123,12 @@ public class MyBookingsController {
     public void init(BookingContext context, Runnable onSearchFlights) {
         this.bookingContext = context != null ? context : new BookingContext();
         this.onSearchFlights = onSearchFlights;
+        if (topBar != null) {
+            topBar.bind(this.bookingContext);
+            if (onSearchFlights != null) {
+                topBar.setOnFlightsAction(onSearchFlights);
+            }
+        }
         updateAvatar();
         loadBookings();
     }
@@ -131,6 +159,11 @@ public class MyBookingsController {
 
     public void updateResponsiveLayout(double width, double height) {
         if (cardMarginWrapper == null) return;
+        if (passPreviewCard != null) {
+            boolean showPreview = width >= 1000;
+            passPreviewCard.setVisible(showPreview);
+            passPreviewCard.setManaged(showPreview);
+        }
         if (width < 1100) {
             cardMarginWrapper.setPadding(new Insets(4, 20, 16, 20));
             if (mainContainer != null) {
@@ -139,7 +172,7 @@ public class MyBookingsController {
         } else {
             cardMarginWrapper.setPadding(new Insets(4, 56, 20, 56));
             if (mainContainer != null) {
-                mainContainer.setStyle("-fx-padding: 24 32 24 32;");
+                mainContainer.setStyle("-fx-padding: 20 26 20 26;");
             }
         }
     }
@@ -164,30 +197,73 @@ public class MyBookingsController {
     }
 
     public void loadBookings() {
+        long userId = resolveAuthenticatedUserId();
+        if (userId <= 0) {
+            allBookings.clear();
+            selectedBooking = null;
+            if (cardsContainer != null) {
+                cardsContainer.getChildren().clear();
+            }
+            showGuestState();
+            return;
+        }
         try {
-            long userId = resolveUserId();
             List<BookingSummary> summaries = bookingService.listBookingsForUser(userId, clock);
             allBookings.clear();
             if (summaries != null) {
                 allBookings.addAll(summaries);
             }
 
-            hideErrorState();
+            hideGuestAndErrorState();
             updateTabCounts();
             renderActiveTab();
         } catch (Exception e) {
-            logger.error("Failed to load bookings for user", e);
+            logger.error("Failed to load bookings for user {}", userId, e);
             showErrorState("We were unable to load your bookings. Please check your connection and try again.");
         }
     }
 
-    private long resolveUserId() {
+    private long resolveAuthenticatedUserId() {
         if (bookingContext != null && bookingContext.getCurrentUser() != null
                 && bookingContext.getCurrentUser().getUserId() > 0) {
             return bookingContext.getCurrentUser().getUserId();
         }
-        // Default to demo traveller user (ID 12) if unauthenticated in current context
-        return 12L;
+        return -1L;
+    }
+
+    public void showGuestState() {
+        if (tabsBar != null) {
+            tabsBar.setVisible(false);
+            tabsBar.setManaged(false);
+        }
+        if (populatedSplitBox != null) {
+            populatedSplitBox.setVisible(false);
+            populatedSplitBox.setManaged(false);
+        }
+        if (bookingsScrollPane != null) {
+            bookingsScrollPane.setVisible(false);
+            bookingsScrollPane.setManaged(false);
+        }
+        if (emptyStateContainer != null) {
+            emptyStateContainer.setVisible(false);
+            emptyStateContainer.setManaged(false);
+        }
+        if (errorStateContainer != null) {
+            errorStateContainer.setVisible(false);
+            errorStateContainer.setManaged(false);
+        }
+        if (guestStateContainer != null) {
+            guestStateContainer.setVisible(true);
+            guestStateContainer.setManaged(true);
+        }
+    }
+
+    private void hideGuestAndErrorState() {
+        if (guestStateContainer != null) {
+            guestStateContainer.setVisible(false);
+            guestStateContainer.setManaged(false);
+        }
+        hideErrorState();
     }
 
     private void updateTabCounts() {
@@ -215,9 +291,9 @@ public class MyBookingsController {
     private void styleTabButton(Button btn, boolean active) {
         if (btn == null) return;
         if (active) {
-            btn.setStyle("-fx-background-color: linear-gradient(to bottom, #e8c46a, #d4a63c); " +
-                    "-fx-text-fill: #0b1220; -fx-font-weight: 700; -fx-background-radius: 999px; " +
-                    "-fx-border-color: #f3d98b; -fx-border-width: 1px; -fx-border-radius: 999px; " +
+            btn.setStyle("-fx-background-color: -glass-white; " +
+                    "-fx-text-fill: -glass-ink; -fx-font-weight: 700; -fx-background-radius: 999px; " +
+                    "-fx-border-color: -glass-white; -fx-border-width: 1px; -fx-border-radius: 999px; " +
                     "-fx-padding: 8 18; -fx-cursor: hand;");
         } else {
             btn.setStyle("-fx-background-color: rgba(255, 255, 255, 0.08); -fx-text-fill: rgba(255, 255, 255, 0.75); " +
@@ -248,6 +324,10 @@ public class MyBookingsController {
     }
 
     private void showPopulatedState(List<BookingSummary> bookings) {
+        if (populatedSplitBox != null) {
+            populatedSplitBox.setVisible(true);
+            populatedSplitBox.setManaged(true);
+        }
         if (bookingsScrollPane != null) {
             bookingsScrollPane.setVisible(true);
             bookingsScrollPane.setManaged(true);
@@ -261,13 +341,26 @@ public class MyBookingsController {
             errorStateContainer.setManaged(false);
         }
 
+        if (selectedBooking == null || !bookings.contains(selectedBooking)) {
+            selectedBooking = bookings.isEmpty() ? null : bookings.get(0);
+        }
+
         for (BookingSummary summary : bookings) {
             Node card = buildBookingCard(summary);
             cardsContainer.getChildren().add(card);
         }
+        updatePassPreview(selectedBooking);
     }
 
     public void showEmptyState() {
+        if (populatedSplitBox != null) {
+            populatedSplitBox.setVisible(false);
+            populatedSplitBox.setManaged(false);
+        }
+        if (populatedSplitBox != null) {
+            populatedSplitBox.setVisible(false);
+            populatedSplitBox.setManaged(false);
+        }
         if (bookingsScrollPane != null) {
             bookingsScrollPane.setVisible(false);
             bookingsScrollPane.setManaged(false);
@@ -298,6 +391,10 @@ public class MyBookingsController {
         if (pastTabBtn != null) pastTabBtn.setText("Past (—)");
         if (cancelledTabBtn != null) cancelledTabBtn.setText("Cancelled (—)");
 
+        if (populatedSplitBox != null) {
+            populatedSplitBox.setVisible(false);
+            populatedSplitBox.setManaged(false);
+        }
         if (bookingsScrollPane != null) {
             bookingsScrollPane.setVisible(false);
             bookingsScrollPane.setManaged(false);
@@ -327,148 +424,207 @@ public class MyBookingsController {
     }
 
     public Node buildBookingCard(BookingSummary summary) {
-        VBox card = new VBox(12);
-        card.getStyleClass().addAll("inner-card", "glass-inner-panel");
-        card.setStyle("-fx-background-color: rgba(8, 12, 22, 0.45); -fx-background-radius: 16px; " +
-                "-fx-border-color: rgba(255, 255, 255, 0.08); -fx-border-radius: 16px; -fx-border-width: 1px; " +
-                "-fx-padding: 18 24;");
+        boolean isSelected = (selectedBooking != null
+                && summary.getBookingReference() != null
+                && summary.getBookingReference().equals(selectedBooking.getBookingReference()));
 
-        // Top Row: Flight number, Date, Aircraft, Status badge, Reference
+        VBox card = new VBox(6);
+        card.getStyleClass().addAll("inner-card", isSelected ? "mb-row-selected" : "mb-row");
+
+        // Top row: Route (CPT -> JNB) + Status badge
         HBox topRow = new HBox(10);
         topRow.setAlignment(Pos.CENTER_LEFT);
-
-        Label flightNoLabel = new Label(summary.getFlightNumber());
-        flightNoLabel.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 15px; -fx-text-fill: #d4a63c;");
-
-        Label bullet1 = new Label("·");
-        bullet1.setStyle("-fx-text-fill: rgba(255, 255, 255, 0.40);");
-
-        Label dateLabel = new Label(summary.getFormattedDepartureDate());
-        dateLabel.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;");
-
-        Label bullet2 = new Label("·");
-        bullet2.setStyle("-fx-text-fill: rgba(255, 255, 255, 0.40);");
-
-        Label aircraftLabel = new Label(summary.getAircraftModel());
-        aircraftLabel.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255, 255, 255, 0.60);");
+        Label routeLabel = new Label(summary.getOriginCode() + " → " + summary.getDestinationCode());
+        routeLabel.getStyleClass().add("mb-row-route");
+        routeLabel.setMinWidth(Region.USE_PREF_SIZE);
 
         Region topSpacer = new Region();
         HBox.setHgrow(topSpacer, Priority.ALWAYS);
 
-        // Status Badge
         Label statusBadge = new Label(summary.getStatus());
-        statusBadge.getStyleClass().add("badge");
-        if ("UPCOMING".equals(summary.getStatus())) {
-            statusBadge.getStyleClass().add("badge-green");
-        } else if ("COMPLETED".equals(summary.getStatus())) {
-            statusBadge.getStyleClass().add("badge-gold");
+        if (isSelected) {
+            statusBadge.getStyleClass().add("mb-pass-status");
         } else {
-            statusBadge.getStyleClass().add("badge-red");
+            statusBadge.getStyleClass().add("badge");
+            if ("UPCOMING".equals(summary.getStatus())) {
+                statusBadge.getStyleClass().add("badge-green");
+            } else if ("CANCELLED".equals(summary.getStatus())) {
+                statusBadge.getStyleClass().add("badge-red");
+            } else {
+                statusBadge.getStyleClass().add("badge-gold");
+            }
+        }
+        statusBadge.setMinWidth(Region.USE_PREF_SIZE);
+
+        topRow.getChildren().addAll(routeLabel, topSpacer, statusBadge);
+
+        // Middle row: Flight number · Date · Time
+        Label flightMeta = new Label(summary.getFlightNumber() + " · " + summary.getFormattedDepartureDate()
+                + " · " + summary.getFormattedDepartureTime());
+        flightMeta.getStyleClass().add("mb-row-meta");
+
+        // Bottom row: PNR · Seat | Price
+        HBox bottomRow = new HBox(10);
+        bottomRow.setAlignment(Pos.CENTER_LEFT);
+        Label pnrSeat = new Label("PNR " + summary.getBookingReference() + " · Seat " + summary.getSeatLabelsString());
+        pnrSeat.getStyleClass().add("mb-row-meta");
+
+        Region botSpacer = new Region();
+        HBox.setHgrow(botSpacer, Priority.ALWAYS);
+
+        Label priceLabel = new Label(MoneyFormatter.format(summary.getTotalPaid()));
+        priceLabel.getStyleClass().add("mb-row-price");
+        priceLabel.setMinWidth(Region.USE_PREF_SIZE);
+
+        bottomRow.getChildren().addAll(pnrSeat, botSpacer, priceLabel);
+
+        card.getChildren().addAll(topRow, flightMeta, bottomRow);
+        card.setFocusTraversable(true);
+        card.setAccessibleText("Select booking " + summary.getBookingReference() + " "
+                + summary.getOriginCode() + " to " + summary.getDestinationCode());
+        card.setOnMouseClicked(e -> {
+            selectedBooking = summary;
+            renderActiveTab();
+        });
+        card.setOnKeyPressed(e -> {
+            if (e.getCode() == javafx.scene.input.KeyCode.ENTER || e.getCode() == javafx.scene.input.KeyCode.SPACE) {
+                selectedBooking = summary;
+                renderActiveTab();
+                e.consume();
+            }
+        });
+        return card;
+    }
+
+    private void updatePassPreview(BookingSummary summary) {
+        if (passPreviewCard == null) return;
+        if (summary == null) {
+            if (previewPnrLabel != null) previewPnrLabel.setText("PNR —");
+            return;
+        }
+        if (previewStatusBadge != null) previewStatusBadge.setText(summary.getStatus());
+        if (previewPnrLabel != null) previewPnrLabel.setText("PNR " + summary.getBookingReference());
+        if (previewRouteCodeLabel != null) {
+            previewRouteCodeLabel.setText(summary.getOriginCode() + " → " + summary.getDestinationCode());
+        }
+        if (previewFlightNoLabel != null) previewFlightNoLabel.setText(summary.getFlightNumber());
+        if (previewRouteCitiesLabel != null) {
+            previewRouteCitiesLabel.setText(summary.getOriginCity() + " to " + summary.getDestinationCity());
+        }
+        if (previewDateTimeLabel != null) {
+            previewDateTimeLabel.setText(summary.getFormattedDepartureDate() + " · "
+                    + summary.getFormattedDepartureTime() + " – " + summary.getFormattedArrivalTime()
+                    + " · " + summary.getDuration());
+        }
+        if (previewPassengerLabel != null) previewPassengerLabel.setText(summary.getPassengerName());
+        if (previewSeatLabel != null) previewSeatLabel.setText(summary.getSeatLabelsString());
+        if (previewAircraftLabel != null) previewAircraftLabel.setText(summary.getAircraftModel());
+        if (previewFareLabel != null) previewFareLabel.setText(MoneyFormatter.format(summary.getTotalPaid()));
+        if (previewViewPassBtn != null) {
+            previewViewPassBtn.setAccessibleText("View pass for booking " + summary.getBookingReference());
         }
 
-        Label pnrPill = new Label("PNR: " + summary.getBookingReference());
-        pnrPill.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-text-fill: #e8c46a; " +
-                "-fx-background-color: rgba(212, 166, 60, 0.12); -fx-padding: 4 10; -fx-background-radius: 6px;");
+        if (previewQrImageView != null) {
+            try {
+                String qrPayload = "SKYROYAL|" + summary.getBookingReference() + "|" + summary.getFlightNumber()
+                        + "|" + summary.getOriginCode() + "-" + summary.getDestinationCode()
+                        + "|" + summary.getSeatLabelsString();
+                java.awt.image.BufferedImage qrImg = com.group2.flightres.util.QrCodeGenerator.generateQrImage(qrPayload, 320);
+                java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+                javax.imageio.ImageIO.write(qrImg, "png", baos);
+                previewQrImageView.setImage(new javafx.scene.image.Image(new java.io.ByteArrayInputStream(baos.toByteArray())));
+            } catch (Exception e) {
+                logger.warn("Could not generate QR preview for {}: {}", summary.getBookingReference(), e.getMessage());
+            }
+        }
+    }
 
-        topRow.getChildren().addAll(flightNoLabel, bullet1, dateLabel, bullet2, aircraftLabel, topSpacer, statusBadge, pnrPill);
+    @FXML
+    public void handlePreviewViewPass() {
+        if (selectedBooking != null) {
+            handleViewTicket(selectedBooking);
+        }
+    }
 
-        // Divider
-        Region div = new Region();
-        div.setPrefHeight(1);
-        div.setStyle("-fx-background-color: rgba(255, 255, 255, 0.06);");
+    @FXML
+    public void handlePreviewDownloadPdf() {
+        if (selectedBooking == null) return;
+        try {
+            javafx.stage.FileChooser chooser = new javafx.stage.FileChooser();
+            chooser.setTitle("Save Boarding Pass PDF");
+            chooser.setInitialFileName("BoardingPass_" + selectedBooking.getBookingReference() + ".pdf");
+            chooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
+            javafx.stage.Window win = passPreviewCard != null && passPreviewCard.getScene() != null
+                    ? passPreviewCard.getScene().getWindow() : null;
+            java.io.File target = chooser.showSaveDialog(win);
+            if (target != null) {
+                BookingContext ctx = buildContextFromSummary(selectedBooking);
+                com.group2.flightres.util.BoardingPassPdfGenerator.generate(ctx, target);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to download PDF from My Bookings: {}", e.getMessage(), e);
+        }
+    }
 
-        // Middle Row: Origin -> Flight Path -> Destination -> Details
-        HBox midRow = new HBox(24);
-        midRow.setAlignment(Pos.CENTER_LEFT);
+    @FXML
+    public void handlePreviewAddCalendar() {
+        if (selectedBooking == null) return;
+        try {
+            javafx.stage.FileChooser chooser = new javafx.stage.FileChooser();
+            chooser.setTitle("Save Calendar Invite (.ics)");
+            chooser.setInitialFileName("Flight_" + selectedBooking.getBookingReference() + ".ics");
+            chooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("Calendar Files (*.ics)", "*.ics"));
+            javafx.stage.Window win = passPreviewCard != null && passPreviewCard.getScene() != null
+                    ? passPreviewCard.getScene().getWindow() : null;
+            java.io.File target = chooser.showSaveDialog(win);
+            if (target != null) {
+                java.time.format.DateTimeFormatter icsFmt = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
+                        .withZone(java.time.ZoneOffset.UTC);
+                String start = selectedBooking.getDepartureInstant() != null ? icsFmt.format(selectedBooking.getDepartureInstant()) : "";
+                String end = selectedBooking.getArrivalInstant() != null ? icsFmt.format(selectedBooking.getArrivalInstant()) : "";
+                String ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Sky Royal//Flight Reservation//EN\r\n"
+                        + "BEGIN:VEVENT\r\nUID:" + selectedBooking.getBookingReference() + "@skyroyal\r\n"
+                        + "DTSTART:" + start + "\r\nDTEND:" + end + "\r\n"
+                        + "SUMMARY:Sky Royal " + selectedBooking.getFlightNumber() + " (" + selectedBooking.getOriginCode() + " to " + selectedBooking.getDestinationCode() + ")\r\n"
+                        + "DESCRIPTION:PNR " + selectedBooking.getBookingReference() + " · Seat " + selectedBooking.getSeatLabelsString() + "\r\n"
+                        + "END:VEVENT\r\nEND:VCALENDAR\r\n";
+                java.nio.file.Files.writeString(target.toPath(), ics, java.nio.charset.StandardCharsets.UTF_8);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to save calendar invite from My Bookings: {}", e.getMessage(), e);
+        }
+    }
 
-        // Origin
-        VBox origBox = new VBox(2);
-        origBox.setAlignment(Pos.CENTER_LEFT);
-        Label origTime = new Label(summary.getFormattedDepartureTime());
-        origTime.setStyle("-fx-font-family: 'Inter'; -fx-font-weight: 700; -fx-font-size: 22px; -fx-text-fill: #ffffff;");
-        Label origCode = new Label(summary.getOriginCode());
-        origCode.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 16px; -fx-text-fill: #e8c46a;");
-        Label origCity = new Label(summary.getOriginCity());
-        origCity.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255, 255, 255, 0.60);");
-        origBox.getChildren().addAll(origTime, origCode, origCity);
-
-        // Flight Path Visual
-        VBox pathBox = new VBox(4);
-        pathBox.setAlignment(Pos.CENTER);
-        pathBox.setPrefWidth(140);
-        Label durLabel = new Label(summary.getDuration());
-        durLabel.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255, 255, 255, 0.60);");
-
-        HBox arrowBox = new HBox(6);
-        arrowBox.setAlignment(Pos.CENTER);
-        arrowBox.setFillHeight(false);
-        Region leftLine = new Region();
-        leftLine.getStyleClass().add("route-connector-line");
-        leftLine.setPrefWidth(40);
-        leftLine.setMinHeight(1.5);
-        leftLine.setPrefHeight(1.5);
-        leftLine.setMaxHeight(2.0);
-        SVGPath planeIcon = new SVGPath();
-        planeIcon.setContent("M3 13l18-8-6 16-3-7-9-1z");
-        planeIcon.setStyle("-fx-stroke: #d4a63c; -fx-stroke-width: 1.5; -fx-fill: transparent;");
-        Region rightLine = new Region();
-        rightLine.getStyleClass().add("route-connector-line");
-        rightLine.setPrefWidth(40);
-        rightLine.setMinHeight(1.5);
-        rightLine.setPrefHeight(1.5);
-        rightLine.setMaxHeight(2.0);
-        arrowBox.getChildren().addAll(leftLine, planeIcon, rightLine);
-
-        Label directLabel = new Label("Direct");
-        directLabel.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 11px; -fx-text-fill: #4ade80;");
-        pathBox.getChildren().addAll(durLabel, arrowBox, directLabel);
-
-        // Destination
-        VBox destBox = new VBox(2);
-        destBox.setAlignment(Pos.CENTER_LEFT);
-        Label destTime = new Label(summary.getFormattedArrivalTime());
-        destTime.setStyle("-fx-font-family: 'Inter'; -fx-font-weight: 700; -fx-font-size: 22px; -fx-text-fill: #ffffff;");
-        Label destCode = new Label(summary.getDestinationCode());
-        destCode.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 16px; -fx-text-fill: #e8c46a;");
-        Label destCity = new Label(summary.getDestinationCity());
-        destCity.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255, 255, 255, 0.60);");
-        destBox.getChildren().addAll(destTime, destCode, destCity);
-
-        Region midSpacer = new Region();
-        HBox.setHgrow(midSpacer, Priority.ALWAYS);
-
-        // Passenger & Fare details
-        VBox detailsBox = new VBox(3);
-        detailsBox.setAlignment(Pos.CENTER_RIGHT);
-        Label passName = new Label(summary.getPassengerName());
-        passName.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;");
-        Label seatLabel = new Label("Seat: " + summary.getSeatLabelsString());
-        seatLabel.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-text-fill: #e8c46a;");
-        Label priceLabel = new Label(MoneyFormatter.format(summary.getTotalPaid()));
-        priceLabel.setStyle("-fx-font-family: 'Inter'; -fx-font-weight: 700; -fx-font-size: 18px; -fx-text-fill: #ffffff;");
-        detailsBox.getChildren().addAll(passName, seatLabel, priceLabel);
-
-        midRow.getChildren().addAll(origBox, pathBox, destBox, midSpacer, detailsBox);
-
-        // Bottom Row: Action Buttons
-        HBox bottomRow = new HBox(12);
-        bottomRow.setAlignment(Pos.CENTER_RIGHT);
-
-        Button viewTicketBtn = new Button("View ticket");
-        viewTicketBtn.getStyleClass().add("btn-gold");
-        viewTicketBtn.setAccessibleText("View ticket for booking " + summary.getBookingReference());
-        viewTicketBtn.setOnAction(e -> handleViewTicket(summary));
-
-        bottomRow.getChildren().addAll(viewTicketBtn);
-
-        card.getChildren().addAll(topRow, div, midRow, bottomRow);
-        return card;
+    private BookingContext buildContextFromSummary(BookingSummary summary) {
+        BookingContext ctx = new BookingContext();
+        ctx.setBookingReference(summary.getBookingReference());
+        ctx.setFlightNumber(summary.getFlightNumber());
+        ctx.setOrigin(summary.getOriginCity() + " (" + summary.getOriginCode() + ")");
+        ctx.setOriginCity(summary.getOriginCity());
+        ctx.setDestination(summary.getDestinationCity() + " (" + summary.getDestinationCode() + ")");
+        ctx.setDestinationCity(summary.getDestinationCity());
+        ctx.setDepartureTime(summary.getFormattedDepartureTime());
+        ctx.setArrivalTime(summary.getFormattedArrivalTime());
+        ctx.setDepartureDate(summary.getFormattedDepartureDate());
+        ctx.setDepartureInstant(summary.getDepartureInstant());
+        ctx.setArrivalInstant(summary.getArrivalInstant());
+        ctx.setDuration(summary.getDuration());
+        ctx.setAircraftModel(summary.getAircraftModel());
+        ctx.setPassengerName(summary.getPassengerName());
+        ctx.setPassengerEmail(summary.getPassengerEmail());
+        ctx.setTotalPrice(summary.getTotalPaid());
+        ctx.setBaseFare(summary.getTotalPaid());
+        return ctx;
     }
 
     private void handleViewTicket(BookingSummary summary) {
         if (summary == null) return;
         try {
-            long uid = resolveUserId();
+            long uid = resolveAuthenticatedUserId();
+            if (uid <= 0) {
+                showGuestState();
+                return;
+            }
             BookingRecord record = bookingService.getBookingForUser(uid, summary.getBookingReference());
 
             BookingContext ctx = new BookingContext();
@@ -554,6 +710,11 @@ public class MyBookingsController {
     }
 
     @FXML
+    private void handleGuestSignIn() {
+        Navigator.navigateToLogin(mainContainer, bookingContext);
+    }
+
+    @FXML
     private void handleRetry() {
         loadBookings();
     }
@@ -594,10 +755,9 @@ public class MyBookingsController {
     @FXML
     private void handleNavAvatar() {
         if (bookingContext != null && bookingContext.getCurrentUser() != null) {
-            bookingContext.setCurrentUser(null);
-            Navigator.navigateToHome(mainContainer, bookingContext);
+            Navigator.signOut(mainContainer, bookingContext);
         } else {
-            Navigator.navigate(mainContainer, "/com/group2/flightres/fxml/login.fxml", false, "Login / Sign Up", bookingContext);
+            Navigator.navigateToLogin(mainContainer, bookingContext);
         }
     }
 
@@ -615,4 +775,6 @@ public class MyBookingsController {
     public Button getRetryButton() { return retryButton; }
     public Label getErrorMessageLabel() { return errorMessageLabel; }
     public HBox getTabsBar() { return tabsBar; }
+    public VBox getGuestStateContainer() { return guestStateContainer; }
+    public Button getGuestSignInButton() { return guestSignInButton; }
 }

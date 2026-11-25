@@ -66,7 +66,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     private double minDurationBound = 0.0;
     private double maxDurationBound = Double.MAX_VALUE;
 
-    private boolean economyFilterActive = false;
+    private boolean economyFilterActive = true;
     private boolean firstClassFilterActive = false;
 
     private Long expandedFlightId = null; // expand 2nd card (index 1) by default
@@ -220,6 +220,8 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             }
 
             updateLocationLabels();
+            updateCheckStyles();
+            updatePillStyles();
             ObservableList<FlightSearchResult> items = getItems();
             if (items != null && !items.isEmpty() && cardsContainer != null) {
                 updateFilterBounds(new ArrayList<>(items));
@@ -300,7 +302,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     }
 
     private String formatPrice(double val) {
-        return "R " + String.format(Locale.ENGLISH, "%,d", Math.round(val));
+        return MoneyFormatter.format(java.math.BigDecimal.valueOf(val));
     }
 
     /**
@@ -475,7 +477,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
             double val = slider.getValue();
             double pct = (max > min) ? Math.max(0.0, Math.min(100.0, (val - min) / (max - min) * 100.0)) : 100.0;
             track.setStyle(String.format(Locale.US,
-                    "-fx-background-color: linear-gradient(to right, #b98a2e 0%%, #e8c46a %.2f%%, rgba(255, 255, 255, 0.12) %.2f%%, rgba(255, 255, 255, 0.12) 100%%); -fx-background-radius: 4px;",
+                    "-fx-background-color: linear-gradient(to right, -glass-accent 0%%, -glass-accent %.2f%%, rgba(255, 255, 255, 0.12) %.2f%%, rgba(255, 255, 255, 0.12) 100%%); -fx-background-radius: 4px;",
                     pct, pct));
         }
     }
@@ -593,6 +595,31 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         if (ctrl != null) {
             // Handled via controller
         }
+    }
+
+    /**
+     * Displays a non-blocking loading indicator card while flights are fetched on a background thread.
+     */
+    public void showLoadingState(String message) {
+        if (cardsContainer == null) {
+            initUiBindings();
+        }
+        if (cardsContainer == null) return;
+        cardsContainer.getChildren().clear();
+
+        VBox loadingBox = new VBox(12);
+        loadingBox.setAlignment(Pos.CENTER);
+        loadingBox.getStyleClass().addAll("inner", "flight-search-state-card");
+
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setPrefSize(32, 32);
+        spinner.setMaxSize(32, 32);
+
+        Label msgLabel = new Label(message != null ? message : "Searching flights...");
+        msgLabel.getStyleClass().add("flight-search-state-text");
+
+        loadingBox.getChildren().addAll(spinner, msgLabel);
+        cardsContainer.getChildren().add(loadingBox);
     }
 
     /**
@@ -915,7 +942,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         SVGPath planeIconGold = new SVGPath();
         planeIconGold.setContent(SVG_PLANE_TINY);
-        planeIconGold.setStyle("-fx-fill: #e8c46a; -fx-rotate: 90; -fx-scale-x: 0.75; -fx-scale-y: 0.75;");
+        planeIconGold.setStyle("-fx-fill: -glass-cream; -fx-rotate: 90; -fx-scale-x: 0.75; -fx-scale-y: 0.75;");
 
         flightPath.getChildren().addAll(dot, dashLine1, durLabel, dashLine2, planeIconGold);
 
@@ -934,8 +961,11 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         destTime.setMinWidth(Region.USE_PREF_SIZE);
         destBlock.getChildren().addAll(destName, destTime);
 
-        // Price Block (right aligned)
-        Label priceLabel = new Label(flight.getPriceFormatted());
+        // Price Block (right aligned) — single MoneyFormatter format (R 1,284.00)
+        String priceStr = flight.getBasePrice() != null
+                ? MoneyFormatter.format(flight.getBasePrice())
+                : flight.getPriceFormatted();
+        Label priceLabel = new Label(priceStr);
         priceLabel.getStyleClass().add("flight-price-bold");
         priceLabel.setMinWidth(Region.USE_PREF_SIZE);
         priceLabel.setAlignment(Pos.CENTER_RIGHT);
@@ -968,7 +998,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
 
         SVGPath chevron = new SVGPath();
         chevron.setContent(isExpanded ? SVG_CHEVRON_UP : SVG_CHEVRON_DOWN);
-        chevron.setStyle("-fx-stroke: #e8c46a; -fx-stroke-width: 3; -fx-stroke-linecap: round; -fx-fill: transparent; -fx-scale-x: 0.6; -fx-scale-y: 0.6;");
+        chevron.setStyle("-fx-stroke: -glass-cream; -fx-stroke-width: 3; -fx-stroke-linecap: round; -fx-fill: transparent; -fx-scale-x: 0.6; -fx-scale-y: 0.6;");
         detailsBtn.setGraphic(chevron);
         detailsBtn.setContentDisplay(ContentDisplay.RIGHT);
 
@@ -1153,7 +1183,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         HBox.setHgrow(dash2, Priority.ALWAYS);
         SVGPath planeIcon = new SVGPath();
         planeIcon.setContent(SVG_PLANE_TINY);
-        planeIcon.setStyle("-fx-fill: #e8c46a; -fx-rotate: 90; -fx-scale-x: 0.65; -fx-scale-y: 0.65;");
+        planeIcon.setStyle("-fx-fill: -glass-cream; -fx-rotate: 90; -fx-scale-x: 0.65; -fx-scale-y: 0.65;");
         path.getChildren().addAll(dot, dash1, dur, dash2, planeIcon);
 
         VBox destBlock = new VBox(2);
@@ -1180,7 +1210,7 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
         Label lbl = new Label(label);
         lbl.setPrefWidth(150);
         lbl.setMinWidth(Region.USE_PREF_SIZE);
-        lbl.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-text-fill: #e8c46a;");
+        lbl.setStyle("-fx-font-family: 'Inter SemiBold'; -fx-font-size: 13px; -fx-text-fill: -glass-cream;");
 
         Label val = new Label(value);
         val.setStyle("-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.85);");
