@@ -1,0 +1,74 @@
+SKY ROYAL FLIGHT RESERVATION SYSTEM - P7-FINAL DOCUMENTATION PROOF REPORT
+============================================================================
+
+1. NATIVE PUBLIC .DOCX XML VERIFICATION
+   - TOC fields (TOC + LOF + LOT) : 3 (required: 3)
+   - SEQ Figure fields            : 34
+   - SEQ Table fields             : 12
+   - Text boxes (w:txbxContent)   : 0 (required: 0)
+   - Anchored drawings (wp:anchor): 0 (required: 0)
+   - Inline pictures (wp:inline)  : 37
+   - Native Word tables (w:tbl)   : 16
+   - Heading 1 count              : 13 (required: 13)
+
+2. PDF EXPORT, FONTS, AND TOC PAGE NUMBER VERIFICATION
+   - PDF generation route         : Single-source .docx -> LibreOffice UNO field update -> writer_pdf_Export
+   - Final PUBLIC PDF page count  : 64 pages (A4 portrait + landscape)
+   - Final FULL PDF page count    : 64 pages
+   - Non-A4 pages                 : 0
+   - Blank pages                  : 0
+   - Type 3 fonts                 : 0
+   - Unembedded fonts             : 0
+   - Embedded font count          : 14
+   - TOC headings verified in PDF : 62 matched (required: >= 10), 0 mismatched
+       [OK] '1. Sky Royal Flight Reservation System' -> TOC 'i' == PDF page 1
+       [OK] '2. Declaration' -> TOC 'ii' == PDF page 2
+       [OK] '3. Table of Contents' -> TOC 'iii' == PDF page 3
+       [OK] '3.1 List of Figures' -> TOC 'vi' == PDF page 6
+       [OK] '3.2 List of Tables' -> TOC 'ix' == PDF page 9
+       [OK] '4. Introduction' -> TOC '1' == PDF page 10
+       [OK] '4.1 Project Background' -> TOC '1' == PDF page 10
+       [OK] '4.2 Problem Statement' -> TOC '1' == PDF page 10
+       [OK] '4.3 Aim and Objectives' -> TOC '1' == PDF page 10
+       [OK] '4.4 Scope of the System' -> TOC '2' == PDF page 11
+       [OK] '4.5 Limitations of the Current System' -> TOC '2' == PDF page 11
+       [OK] '5. Requirements Analysis' -> TOC '4' == PDF page 13
+       [OK] '5.1 Functional Requirements' -> TOC '4' == PDF page 13
+       [OK] '5.2 Non-Functional Requirements' -> TOC '5' == PDF page 14
+       [OK] '5.3 User Roles and Permissions' -> TOC '5' == PDF page 14
+
+3. CONTENT, PRIVACY, AND STYLE CHECKS
+   - Em dashes in prose           : 0
+   - En dashes in prose           : 0
+   - COURSE_AND_YEAR_HERE count   : 0
+   - Banned words found           : 0
+   - Student numbers in PUBLIC    : 0 (checked against 10 patterns)
+   - Student numbers in repo      : 0
+   - Student numbers in FULL      : 10/10 present (Section 10 table only)
+
+4. SUREFIRE TEST COUNTS USED (REAL XML REPORTS)
+   - core    : 43 test suite files, 150 tests, 0 failures, 0 errors, 0 skipped
+   - desktop : 23 test suite files,  67 tests, 0 failures, 0 errors, 0 skipped
+   - web     : 16 test suite files,  41 tests, 0 failures, 0 errors, 0 skipped
+   - TOTAL   : 82 test suite files, 258 tests, 0 failures, 0 errors, 0 skipped
+
+5. OUTPUT FILE PATHS
+   - FULL DOCX   : C:\Users\tttttttttttttttttttt\sky-royal-agent\docs-out\Sky_Royal_Documentation_FULL.docx
+   - FULL PDF    : C:\Users\tttttttttttttttttttt\sky-royal-agent\docs-out\Sky_Royal_Documentation_FULL.pdf
+   - PUBLIC DOCX : C:\Users\tttttttttttttttttttt\sky-royal-agent\docs-out\Sky_Royal_Documentation_PUBLIC.docx
+   - PUBLIC PDF  : C:\Users\tttttttttttttttttttt\sky-royal-agent\docs-out\Sky_Royal_Documentation_PUBLIC.pdf
+   - REPO PUBLIC : C:\Users\tttttttttttttttttttt\Desktop\flight-reservation-system\docs\Sky_Royal_Documentation_PUBLIC.docx
+   - REPO PUBLIC : C:\Users\tttttttttttttttttttt\Desktop\flight-reservation-system\docs\Sky_Royal_Documentation_PUBLIC.pdf
+
+6. CONTACT SHEETS (60 DPI VISUAL INSPECTION)
+   - D:\p7-final-tmp\contact_sheets\contact_sheet_01.png
+   - D:\p7-final-tmp\contact_sheets\contact_sheet_02.png
+   - D:\p7-final-tmp\contact_sheets\contact_sheet_03.png
+   - D:\p7-final-tmp\contact_sheets\contact_sheet_04.png
+   - D:\p7-final-tmp\contact_sheets\contact_sheet_05.png
+   - D:\p7-final-tmp\contact_sheets\contact_sheet_06.png
+   - D:\p7-final-tmp\contact_sheets\contact_sheet_07.png
+   - D:\p7-final-tmp\contact_sheets\contact_sheet_08.png
+
+7. OVERALL QA RESULT
+   - Issues found: 0
