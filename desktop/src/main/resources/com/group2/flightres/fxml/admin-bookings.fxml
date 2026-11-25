@@ -22,7 +22,8 @@
 <!-- Original concept: Petja / Luyanda. Integrated by David. -->
 <GlassBackground xmlns="http://javafx.com/javafx/21"
                  xmlns:fx="http://javafx.com/fxml/1"
-                 fx:controller="com.group2.flightres.controller.AdminBookingsController">
+                 fx:controller="com.group2.flightres.controller.AdminBookingsController"
+                 photoPath="/com/group2/flightres/photos/sky-window-peaks.jpg">
     <VBox spacing="0" alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
 
         <NavBar fx:id="navBar"/>

@@ -285,15 +285,101 @@ public class WebController {
             return idx >= 0 ? idx : intlOrder.size();
         }));
 
+        // Build Top Destinations mosaic (unique destination cities with flights in DB)
+        List<HomeDestinationCard> topDestinations = new ArrayList<>();
+        Set<String> seenTopDest = new HashSet<>();
+        for (HomeDestinationCard c : popularRoutes) {
+            if (seenTopDest.add(c.getRoute().getDestCode()) && topDestinations.size() < 6) {
+                topDestinations.add(c);
+            }
+        }
+        for (HomeDestinationCard c : internationalRoutes) {
+            if (seenTopDest.add(c.getRoute().getDestCode()) && topDestinations.size() < 6) {
+                topDestinations.add(c);
+            }
+        }
+
+        // Build Our Best Flights (up to 8 real upcoming flights from FlightService; no SQL in web layer)
+        List<HomeFlightCard> bestFlightsCheapest = new ArrayList<>();
+        List<HomeFlightCard> bestFlightsMostSeats = new ArrayList<>();
+        try {
+            List<FlightSearchResult> realFlights = new ArrayList<>();
+            Set<Long> seenFlightIds = new HashSet<>();
+            int routeCap = Math.min(allRoutes.size(), 8);
+            for (int i = 0; i < routeCap && realFlights.size() < 24; i++) {
+                RouteSummary rs = allRoutes.get(i);
+                List<FlightSearchResult> found = flightService.searchFlights(rs.getOriginCode(), rs.getDestCode(), tomorrow);
+                if (found != null) {
+                    for (FlightSearchResult f : found) {
+                        if (seenFlightIds.add(f.getFlightId())) {
+                            realFlights.add(f);
+                        }
+                    }
+                }
+            }
+            List<FlightSearchResult> byPrice = new ArrayList<>(realFlights);
+            byPrice.sort(Comparator.comparing(f -> f.getBasePrice() != null ? f.getBasePrice() : BigDecimal.ZERO));
+            for (int i = 0; i < Math.min(8, byPrice.size()); i++) {
+                bestFlightsCheapest.add(toHomeFlightCard(byPrice.get(i), tomorrow));
+            }
+            List<FlightSearchResult> bySeats = new ArrayList<>(realFlights);
+            bySeats.sort(Comparator.comparingInt((FlightSearchResult f) -> f.getAvailableEconomy() + f.getAvailableFirst()).reversed());
+            for (int i = 0; i < Math.min(8, bySeats.size()); i++) {
+                bestFlightsMostSeats.add(toHomeFlightCard(bySeats.get(i), tomorrow));
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to load best flights for home page: {}", e.getMessage());
+        }
+
         model.put("heroEyebrow", heroEyebrow);
         model.put("airports", airports);
         model.put("popularWeekRoutes", popularWeekRoutes);
         model.put("popularRoutes", popularRoutes);
         model.put("moreRoutes", moreRoutes);
         model.put("internationalRoutes", internationalRoutes);
+        model.put("topDestinations", topDestinations);
+        model.put("bestFlightsCheapest", bestFlightsCheapest);
+        model.put("bestFlightsMostSeats", bestFlightsMostSeats);
         model.put("homeError", homeError);
         ctx.render("home.html", model);
     }
+
+    private HomeFlightCard toHomeFlightCard(FlightSearchResult f, LocalDate date) {
+        String photo = DestinationPhotoResolver.resolveWebPath(f.getDestCode());
+        String routeText = f.getOriginCode() + " to " + f.getDestCode();
+        String dateTime = formatFriendlyDate(date) + " \u00B7 " + (f.getDepartureTime() != null ? f.getDepartureTime() : "");
+        String fare = MoneyFormatter.format(f.getBasePrice() != null ? f.getBasePrice() : BigDecimal.ZERO);
+        int seats = f.getAvailableEconomy() + f.getAvailableFirst();
+        String originParam = (f.getOriginCity() != null ? f.getOriginCity() : f.getOriginCode()) + " (" + f.getOriginCode() + ")";
+        String destParam = (f.getDestCity() != null ? f.getDestCity() : f.getDestCode()) + " (" + f.getDestCode() + ")";
+        return new HomeFlightCard(
+                f.getFlightId(),
+                f.getFlightNumber(),
+                photo,
+                f.getDestCity() != null ? f.getDestCity() : f.getDestCode(),
+                routeText,
+                dateTime,
+                fare,
+                seats,
+                originParam,
+                destParam,
+                date.toString()
+        );
+    }
+
+    public record HomeFlightCard(
+            long flightId,
+            String flightNumber,
+            String photoPath,
+            String destCity,
+            String routeText,
+            String dateTime,
+            String fareFormatted,
+            int seatsLeft,
+            String originParam,
+            String destParam,
+            String dateParam
+    ) {}
 
     private static String buildHeroEyebrow(List<Airport> airports) {
         if (airports == null || airports.isEmpty()) {

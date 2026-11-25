@@ -26,6 +26,15 @@ class WebPhotoResourcesTest {
         webPaths.add("/photos/aerial-3.jpg");
         webPaths.add("/photos/cabin-economy-1.jpg");
         webPaths.add("/photos/cabin-first-1.jpg");
+        webPaths.add("/photos/sky-wing-1.jpg");
+        webPaths.add("/photos/cabin-mood-1.jpg");
+        webPaths.add("/photos/sky-engine-1.jpg");
+        webPaths.add("/photos/sky-window-peaks.jpg");
+        webPaths.add("/photos/sky-jet-clouds.jpg");
+        webPaths.add("/photos/sky-jet-ocean.jpg");
+        webPaths.add("/photos/cabin-suite-1.jpg");
+        webPaths.add("/photos/tarmac-jet-1.jpg");
+        webPaths.add("/photos/sky-jet-dark.jpg");
         for (String code : DestinationPhotoResolver.knownAirportCodes()) {
             webPaths.add(DestinationPhotoResolver.resolveWebPath(code));
         }

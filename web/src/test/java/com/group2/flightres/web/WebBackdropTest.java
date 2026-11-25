@@ -85,7 +85,7 @@ class WebBackdropTest {
     @Test
     @DisplayName("Every page template declares backdrop fragment and every resolver photo exists")
     void everyTemplateDeclaresBackdropAndEveryResolverPhotoExists() throws Exception {
-        assertTrue(WebBackdropResolver.ROTATING_PHOTOS.size() <= 6, "Rotation must contain at most 6 images");
+        assertTrue(WebBackdropResolver.ROTATING_PHOTOS.size() >= 6, "Rotation must include aviation backdrop photos");
 
         Set<String> allPaths = new HashSet<>(WebBackdropResolver.ROTATING_PHOTOS);
         allPaths.add(WebBackdropResolver.FIXED_AERIAL);
@@ -240,7 +240,8 @@ class WebBackdropTest {
         Matcher lm = BACKDROP_LIST.matcher(homeHtml);
         assertTrue(lm.find());
         String[] list = lm.group(1).split(",");
-        assertTrue(list.length >= 2 && list.length <= 6);
+        assertEquals(WebBackdropResolver.ROTATING_PHOTOS.size(), list.length);
+        assertTrue(list.length >= 12, "Rotation list should include all new generic aviation photos");
         for (String item : list) {
             HttpResponse<byte[]> asset = http.send(HttpRequest.newBuilder(URI.create(baseUrl + item)).GET().build(),
                     HttpResponse.BodyHandlers.ofByteArray());

@@ -127,14 +127,23 @@ class DesktopTokenGuardTest {
                 "aerial-1.jpg", "aerial-2.jpg", "aerial-3.jpg",
                 "cabin-economy-1.jpg", "cabin-first-1.jpg",
                 "dest-capetown.jpg", "dest-durban.jpg", "dest-johannesburg.jpg",
-                "dest-dubai.jpg", "dest-monaco.jpg", "dest-rome.jpg", "dest-santorini.jpg"
+                "dest-dubai.jpg", "dest-monaco.jpg", "dest-rome.jpg", "dest-santorini.jpg",
+                "sky-wing-1.jpg", "cabin-mood-1.jpg", "sky-engine-1.jpg",
+                "sky-window-peaks.jpg", "sky-jet-clouds.jpg", "sky-jet-ocean.jpg",
+                "cabin-suite-1.jpg", "tarmac-jet-1.jpg", "sky-jet-dark.jpg"
         );
+        Path webPhotosDir = desktopRoot().getParent().resolve("web/src/main/resources/public/photos");
         for (String name : required) {
             Path p = photosDir.resolve(name);
             assertTrue(Files.exists(p), "Missing desktop photo: " + name);
             long size = Files.size(p);
             assertTrue(size > 0 && size <= 358_400L,
                     "Photo " + name + " exceeds 350 KB cap (" + size + " bytes)");
+            Path webCopy = webPhotosDir.resolve(name);
+            if (Files.exists(webCopy)) {
+                assertTrue(java.util.Arrays.equals(Files.readAllBytes(p), Files.readAllBytes(webCopy)),
+                        "Desktop and web photo bytes differ for " + name);
+            }
         }
     }
 }

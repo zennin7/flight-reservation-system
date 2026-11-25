@@ -76,9 +76,10 @@ public class GlassBackground extends StackPane {
                            String linearOverlay, String radialGlow, boolean enableSecondaryGlow, Node content) {
         setAlignment(Pos.CENTER);
 
-        // 1. Configure image & effects
+        // 1. Configure image & effects (unmanaged so cover-scaled portrait photos never inflate layout bounds)
         backgroundImageView.setPreserveRatio(true);
         backgroundImageView.setSmooth(true);
+        backgroundImageView.setManaged(false);
 
         setDarkness(darkness);
         setSaturation(saturation);
@@ -295,8 +296,11 @@ public class GlassBackground extends StackPane {
         double imgH = img.getHeight();
 
         double scale = Math.max(containerW / imgW, containerH / imgH);
-        backgroundImageView.setFitWidth(imgW * scale);
-        backgroundImageView.setFitHeight(imgH * scale);
+        double scaledW = imgW * scale;
+        double scaledH = imgH * scale;
+        backgroundImageView.setFitWidth(scaledW);
+        backgroundImageView.setFitHeight(scaledH);
+        backgroundImageView.relocate((containerW - scaledW) / 2.0, (containerH - scaledH) / 2.0);
     }
 
     @Override

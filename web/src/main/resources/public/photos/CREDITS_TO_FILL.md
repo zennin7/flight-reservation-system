@@ -22,3 +22,12 @@
 | scene-capetown-sunset.jpg | supplied by team | supplied by team | to be confirmed by David |
 | scene-zoolake.jpg | supplied by team | supplied by team | to be confirmed by David |
 | scene-ponte-tower.jpg | supplied by team | supplied by team | to be confirmed by David |
+| sky-wing-1.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
+| cabin-mood-1.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
+| sky-engine-1.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
+| sky-window-peaks.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
+| sky-jet-clouds.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
+| sky-jet-ocean.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
+| cabin-suite-1.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
+| tarmac-jet-1.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
+| sky-jet-dark.jpg | supplied by the team | supplied by the team | licence to be confirmed by David |
