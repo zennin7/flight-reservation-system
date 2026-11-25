@@ -14,7 +14,8 @@
 | home-hero.jpg | supplied by team | supplied by team | to be confirmed by David |
 | dest-capetown.jpg | supplied by team (promoted from 1920x1080 scene-capetown-sunset.jpg) | supplied by team | to be confirmed by David |
 | dest-durban.jpg | supplied by team | supplied by team | to be confirmed by David |
-| dest-johannesburg.jpg | supplied by team | supplied by team | to be confirmed by David |
+| dest-johannesburg.jpg | Photo by Jolame Chirwa on Unsplash (Unsplash licence) (source: jolame-chirwa-Pwo18X0cMvM-unsplash.jpg) | Unsplash | Unsplash licence |
+| dest-gqeberha.jpg | Photo by Christian Asare-Baah on Unsplash (Unsplash licence) (source: christian-asare-baah-rV4GwGRTvi0-unsplash.jpg) | Unsplash | Unsplash licence |
 | dest-dubai.jpg | Photo by Zq Lee on Unsplash (source: zq-lee-DcyL0IoCY0A-unsplash.jpg) | Unsplash | Unsplash licence |
 | dest-rome.jpg | Photo by Matteo Del Piano on Unsplash (source: matteo-del-piano-7Y015gklIDg-unsplash.jpg) | Unsplash | Unsplash licence |
 | dest-swiss-alps.jpg | Photo by Ronnie Schmutz on Unsplash (source: ronnie-schmutz-SuATc8TPrMQ-unsplash.jpg) | Unsplash | Unsplash licence |
