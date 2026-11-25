@@ -598,6 +598,31 @@ public class GlassFlightResultsBridge extends TableView<FlightSearchResult> {
     }
 
     /**
+     * Displays a non-blocking loading indicator card while flights are fetched on a background thread.
+     */
+    public void showLoadingState(String message) {
+        if (cardsContainer == null) {
+            initUiBindings();
+        }
+        if (cardsContainer == null) return;
+        cardsContainer.getChildren().clear();
+
+        VBox loadingBox = new VBox(12);
+        loadingBox.setAlignment(Pos.CENTER);
+        loadingBox.getStyleClass().addAll("inner", "flight-search-state-card");
+
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.setPrefSize(32, 32);
+        spinner.setMaxSize(32, 32);
+
+        Label msgLabel = new Label(message != null ? message : "Searching flights...");
+        msgLabel.getStyleClass().add("flight-search-state-text");
+
+        loadingBox.getChildren().addAll(spinner, msgLabel);
+        cardsContainer.getChildren().add(loadingBox);
+    }
+
+    /**
      * Displays an honest error state card in the results container.
      */
     public void showErrorState(Runnable retryAction) {

@@ -44,23 +44,23 @@
         <GlassTopBar fx:id="topBar" activeNav="flights"/>
 
         <!-- ===================================================================
-             MAIN GLASS CARD (margins: left/right 56, top 4, bottom 32; padding 14, gap 14)
+             MAIN GLASS CARD (compact web-parity margins & heights)
              =================================================================== -->
         <VBox styleClass="search-main-glass"
-              spacing="14"
+              spacing="10"
               VBox.vgrow="ALWAYS">
             <VBox.margin>
-                <Insets top="4" right="56" bottom="32" left="56"/>
+                <Insets top="2" right="32" bottom="16" left="32"/>
             </VBox.margin>
 
             <!-- ==============================================================-
-                 SEARCH BAR (inner card, 84 high)
+                 SEARCH BAR (inner card, 70 high)
                  ==============================================================- -->
-            <HBox alignment="CENTER_LEFT" prefHeight="84" minHeight="84" maxHeight="84" styleClass="glass-search-bar">
+            <HBox alignment="CENTER_LEFT" prefHeight="70" minHeight="70" maxHeight="70" styleClass="glass-search-bar">
 
                 <!-- FROM Cell -->
-                <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-cell" HBox.hgrow="ALWAYS" prefWidth="230">
-                    <VBox alignment="CENTER_LEFT" spacing="3" HBox.hgrow="ALWAYS">
+                <HBox fx:id="fromCell" onMouseClicked="#handleOpenFromPicker" alignment="CENTER_LEFT" spacing="8" styleClass="search-cell" HBox.hgrow="ALWAYS" prefWidth="210">
+                    <VBox alignment="CENTER_LEFT" spacing="2" HBox.hgrow="ALWAYS">
                         <Label text="From" styleClass="search-cell-muted-label"/>
                         <Label fx:id="fromCityDisplay" text="" styleClass="search-cell-value-label"/>
                         <Label fx:id="fromSubDisplay" text="" styleClass="search-cell-sub-label"/>
@@ -75,7 +75,7 @@
                     <HBox.margin>
                         <Insets left="-16" right="-16"/>
                     </HBox.margin>
-                    <Button onAction="#handleSwapLocations" styleClass="search-swap-btn">
+                    <Button fx:id="swapButton" onAction="#handleSwapLocations" styleClass="search-swap-btn" accessibleText="Swap origin and destination">
                         <graphic>
                             <SVGPath content="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"
                                      stroke="WHITE" strokeWidth="2" strokeLineCap="ROUND" strokeLineJoin="ROUND" fill="TRANSPARENT"
@@ -85,11 +85,11 @@
                 </StackPane>
 
                 <!-- TO Cell -->
-                <HBox alignment="CENTER_LEFT" spacing="8" styleClass="search-cell, search-cell-border" HBox.hgrow="ALWAYS" prefWidth="230">
+                <HBox fx:id="toCell" onMouseClicked="#handleOpenToPicker" alignment="CENTER_LEFT" spacing="8" styleClass="search-cell, search-cell-border" HBox.hgrow="ALWAYS" prefWidth="210">
                     <padding>
-                        <Insets top="14" right="18" bottom="14" left="28"/>
+                        <Insets top="10" right="14" bottom="10" left="24"/>
                     </padding>
-                    <VBox alignment="CENTER_LEFT" spacing="3" HBox.hgrow="ALWAYS">
+                    <VBox alignment="CENTER_LEFT" spacing="2" HBox.hgrow="ALWAYS">
                         <Label text="To" styleClass="search-cell-muted-label"/>
                         <Label fx:id="toCityDisplay" text="" styleClass="search-cell-value-label"/>
                         <Label fx:id="toSubDisplay" text="" styleClass="search-cell-sub-label"/>
@@ -100,7 +100,7 @@
                 </HBox>
 
                 <!-- DEPARTURE Cell -->
-                <VBox alignment="CENTER_LEFT" spacing="3" styleClass="search-cell, search-cell-border" HBox.hgrow="ALWAYS" prefWidth="170">
+                <VBox fx:id="departureCell" onMouseClicked="#handleOpenDatePicker" alignment="CENTER_LEFT" spacing="2" styleClass="search-cell, search-cell-border" HBox.hgrow="ALWAYS" prefWidth="155">
                     <Label text="Departure" styleClass="search-cell-muted-label"/>
                     <Label fx:id="depDateDisplay" text="" styleClass="search-cell-value-label"/>
                     <Label fx:id="depDayDisplay" text="" styleClass="search-cell-sub-label"/>

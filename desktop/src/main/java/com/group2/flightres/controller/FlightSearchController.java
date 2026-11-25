@@ -1,11 +1,13 @@
 package com.group2.flightres.controller;
 
+import com.group2.flightres.component.AirportPickerPopup;
 import com.group2.flightres.component.GlassTopBar;
 import com.group2.flightres.model.Airport;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.FlightSearchResult;
 import com.group2.flightres.model.Route;
 import com.group2.flightres.service.FlightService;
+import com.group2.flightres.util.DesktopAsync;
 import com.group2.flightres.util.GlassFlightResultsBridge;
 import com.group2.flightres.util.Motion;
 import com.group2.flightres.util.Navigator;
@@ -48,6 +50,10 @@ public class FlightSearchController implements WizardStepController {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @FXML private GlassTopBar topBar;
+    @FXML private HBox fromCell;
+    @FXML private HBox toCell;
+    @FXML private VBox departureCell;
+    @FXML private Button swapButton;
     @FXML private ComboBox<Airport> fromCombo;
     @FXML private ComboBox<Airport> toCombo;
     @FXML private DatePicker departureDatePicker;
@@ -71,6 +77,12 @@ public class FlightSearchController implements WizardStepController {
     private Runnable onNext;
 
     private final ObservableList<FlightSearchResult> flightList = FXCollections.observableArrayList();
+    private final AirportPickerPopup airportPickerPopup = new AirportPickerPopup();
+    private final java.util.concurrent.atomic.AtomicLong searchGeneration = new java.util.concurrent.atomic.AtomicLong(0);
+    private List<Airport> cachedAirports = List.of();
+    private boolean airportsLoaded = false;
+
+    private record SearchInitData(List<Airport> airports, Optional<Route> defaultRoute, LocalDate initialDate) {}
 
     public FlightSearchController() {
         this(new FlightService());
@@ -87,40 +99,106 @@ public class FlightSearchController implements WizardStepController {
         if (topBar != null) {
             topBar.bind(context);
         }
-        if (bookingContext != null) {
-            List<Airport> airports = flightService.listAirports();
-            if (bookingContext.getOrigin() != null && !bookingContext.getOrigin().isBlank() && fromCombo != null) {
-                String orig = bookingContext.getOrigin();
-                airports.stream()
-                        .filter(a -> a.code().equalsIgnoreCase(orig)
-                                || orig.contains(a.code())
-                                || orig.contains(a.city()))
-                        .findFirst()
-                        .ifPresent(fromCombo::setValue);
-            }
-            if (bookingContext.getDestination() != null && !bookingContext.getDestination().isBlank() && toCombo != null) {
-                String dest = bookingContext.getDestination();
-                airports.stream()
-                        .filter(a -> a.code().equalsIgnoreCase(dest)
-                                || dest.contains(a.code())
-                                || dest.contains(a.city()))
-                        .findFirst()
-                        .ifPresent(toCombo::setValue);
-            }
+        if (airportsLoaded) {
+            applyContextRouteAndSearch();
         }
-        performSearch();
     }
 
     @FXML
     public void initialize() {
         initSearchControls();
         initTable();
+        loadAirportsAndInitialSearch();
+    }
+
+    private void applyContextRouteAndSearch() {
+        if (bookingContext != null && !cachedAirports.isEmpty()) {
+            if (bookingContext.getOrigin() != null && !bookingContext.getOrigin().isBlank() && fromCombo != null) {
+                String orig = bookingContext.getOrigin();
+                cachedAirports.stream()
+                        .filter(a -> a.code().equalsIgnoreCase(orig)
+                                || orig.contains("(" + a.code() + ")")
+                                || orig.equalsIgnoreCase(a.city()))
+                        .findFirst()
+                        .ifPresent(fromCombo::setValue);
+            }
+            if (bookingContext.getDestination() != null && !bookingContext.getDestination().isBlank() && toCombo != null) {
+                String dest = bookingContext.getDestination();
+                cachedAirports.stream()
+                        .filter(a -> a.code().equalsIgnoreCase(dest)
+                                || dest.contains("(" + a.code() + ")")
+                                || dest.equalsIgnoreCase(a.city()))
+                        .findFirst()
+                        .ifPresent(toCombo::setValue);
+            }
+            if (bookingContext.getDepartureDate() != null && !bookingContext.getDepartureDate().isBlank()
+                    && departureDatePicker != null) {
+                try {
+                    departureDatePicker.setValue(LocalDate.parse(bookingContext.getDepartureDate().trim(), DATE_FORMATTER));
+                } catch (Exception ignored) {
+                }
+            }
+        }
         performSearch();
     }
 
-    private void initSearchControls() {
-        List<Airport> airports = flightService.listAirports();
+    private void loadAirportsAndInitialSearch() {
+        GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+        if (bridge != null) {
+            bridge.showLoadingState("Loading routes and flights...");
+        }
+        DesktopAsync.run("FlightSearch:loadInitialData", () -> {
+            List<Airport> airports = flightService.listAirports();
+            Optional<Route> defRoute = flightService.defaultRoute();
+            LocalDate initialDate = null;
+            if (defRoute.isPresent()) {
+                Airport origin = defRoute.get().origin();
+                initialDate = flightService.nextAvailableDate(defRoute.get())
+                        .orElseGet(() -> LocalDate.now(origin.zoneId()).plusDays(1));
+            } else if (airports.size() >= 2) {
+                initialDate = LocalDate.now(airports.get(0).zoneId()).plusDays(1);
+            }
+            return new SearchInitData(airports, defRoute, initialDate);
+        }, data -> {
+            cachedAirports = data.airports();
+            airportsLoaded = true;
+            if (fromCombo != null) {
+                fromCombo.getItems().setAll(cachedAirports);
+            }
+            if (data.defaultRoute().isPresent()) {
+                Airport origin = data.defaultRoute().get().origin();
+                Airport dest = data.defaultRoute().get().destination();
+                if (fromCombo != null) fromCombo.setValue(origin);
+                if (toCombo != null) {
+                    toCombo.getItems().setAll(cachedAirports.stream().filter(a -> !a.equals(origin)).toList());
+                    toCombo.setValue(dest);
+                }
+                if (departureDatePicker != null && data.initialDate() != null) {
+                    departureDatePicker.setValue(data.initialDate());
+                }
+            } else if (cachedAirports.size() >= 2) {
+                Airport origin = cachedAirports.get(0);
+                Airport dest = cachedAirports.get(1);
+                if (fromCombo != null) fromCombo.setValue(origin);
+                if (toCombo != null) {
+                    toCombo.getItems().setAll(cachedAirports.stream().filter(a -> !a.equals(origin)).toList());
+                    toCombo.setValue(dest);
+                }
+                if (departureDatePicker != null && data.initialDate() != null) {
+                    departureDatePicker.setValue(data.initialDate());
+                }
+            }
+            applyContextRouteAndSearch();
+        }, err -> {
+            logger.error("Failed to load initial airports/routes", err);
+            GlassFlightResultsBridge b = GlassFlightResultsBridge.getInstance();
+            if (b != null) {
+                b.showErrorState(this::loadAirportsAndInitialSearch);
+            }
+        });
+    }
 
+    private void initSearchControls() {
         StringConverter<Airport> airportConverter = new StringConverter<>() {
             @Override
             public String toString(Airport airport) {
@@ -135,7 +213,6 @@ public class FlightSearchController implements WizardStepController {
 
         if (fromCombo != null) {
             fromCombo.setConverter(airportConverter);
-            fromCombo.getItems().setAll(airports);
         }
 
         if (toCombo != null) {
@@ -144,8 +221,8 @@ public class FlightSearchController implements WizardStepController {
 
         if (fromCombo != null && toCombo != null) {
             fromCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal != null) {
-                    List<Airport> filteredTo = airports.stream()
+                if (newVal != null && !cachedAirports.isEmpty()) {
+                    List<Airport> filteredTo = cachedAirports.stream()
                             .filter(a -> !a.equals(newVal))
                             .toList();
                     Airport currentTo = toCombo.getValue();
@@ -186,36 +263,8 @@ public class FlightSearchController implements WizardStepController {
                     }
                 }
             });
-        }
 
-        // Initial selection from defaultRoute
-        Optional<Route> defRoute = flightService.defaultRoute();
-        if (defRoute.isPresent()) {
-            Airport origin = defRoute.get().origin();
-            Airport dest = defRoute.get().destination();
-            if (fromCombo != null) {
-                fromCombo.setValue(origin);
-            }
-            if (toCombo != null) {
-                toCombo.getItems().setAll(airports.stream().filter(a -> !a.equals(origin)).toList());
-                toCombo.setValue(dest);
-            }
-            if (departureDatePicker != null) {
-                LocalDate initialDate = flightService.nextAvailableDate(defRoute.get())
-                        .orElseGet(() -> LocalDate.now(origin.zoneId()).plusDays(1));
-                departureDatePicker.setValue(initialDate);
-            }
-        } else if (airports.size() >= 2) {
-            Airport origin = airports.get(0);
-            Airport dest = airports.get(1);
-            if (fromCombo != null) fromCombo.setValue(origin);
-            if (toCombo != null) {
-                toCombo.getItems().setAll(airports.stream().filter(a -> !a.equals(origin)).toList());
-                toCombo.setValue(dest);
-            }
-            if (departureDatePicker != null) {
-                departureDatePicker.setValue(LocalDate.now(origin.zoneId()).plusDays(1));
-            }
+            departureDatePicker.setOnAction(e -> performSearch());
         }
 
         if (passengersCombo != null) {
@@ -316,45 +365,62 @@ public class FlightSearchController implements WizardStepController {
                 ? departureDatePicker.getValue()
                 : LocalDate.now(originZone).plusDays(1);
 
+        long gen = searchGeneration.incrementAndGet();
         flightList.clear();
         GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
         if (bridge != null) {
             bridge.updateLocationLabels();
+            bridge.showLoadingState("Searching flights from " + fromAirport.city() + " to " + toAirport.city() + "...");
+        }
+        if (searchButton != null) {
+            searchButton.setDisable(true);
         }
 
-        try {
-            List<FlightSearchResult> results = flightService.searchFlights(fromAirport.code(), toAirport.code(), date);
-            if (results != null && !results.isEmpty()) {
-                flightList.addAll(results);
-                if (resultsCountLabel != null) {
-                    resultsCountLabel.setText("Showing " + results.size() + (results.size() == 1 ? " flight" : " flights"));
-                    resultsCountLabel.setVisible(true);
-                }
-                if (bridge != null) {
-                    bridge.updateFilterBounds(results);
-                }
-            } else {
-                if (resultsCountLabel != null) {
-                    resultsCountLabel.setText("");
-                    resultsCountLabel.setVisible(false);
-                }
-                if (bridge != null) {
-                    bridge.updateFilterBounds(List.of());
-                    bridge.showEmptyState(this::handleNextAvailableDate);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Could not query flights from database", e);
-            flightList.clear();
-            if (resultsCountLabel != null) {
-                resultsCountLabel.setText("");
-                resultsCountLabel.setVisible(false);
-            }
-            if (bridge != null) {
-                bridge.updateFilterBounds(List.of());
-                bridge.showErrorState(this::performSearch);
-            }
-        }
+        String fromCode = fromAirport.code();
+        String toCode = toAirport.code();
+
+        DesktopAsync.run("FlightSearch:" + fromCode + "->" + toCode + "@" + date,
+                () -> flightService.searchFlights(fromCode, toCode, date),
+                results -> {
+                    if (gen != searchGeneration.get()) return;
+                    if (searchButton != null) searchButton.setDisable(false);
+                    GlassFlightResultsBridge b = GlassFlightResultsBridge.getInstance();
+                    if (results != null && !results.isEmpty()) {
+                        flightList.setAll(results);
+                        if (resultsCountLabel != null) {
+                            resultsCountLabel.setText("Showing " + results.size() + (results.size() == 1 ? " flight" : " flights"));
+                            resultsCountLabel.setVisible(true);
+                        }
+                        if (b != null) {
+                            b.updateFilterBounds(results);
+                        }
+                    } else {
+                        flightList.clear();
+                        if (resultsCountLabel != null) {
+                            resultsCountLabel.setText("");
+                            resultsCountLabel.setVisible(false);
+                        }
+                        if (b != null) {
+                            b.updateFilterBounds(List.of());
+                            b.showEmptyState(this::handleNextAvailableDate);
+                        }
+                    }
+                },
+                err -> {
+                    if (gen != searchGeneration.get()) return;
+                    if (searchButton != null) searchButton.setDisable(false);
+                    logger.error("Could not query flights from database", err);
+                    flightList.clear();
+                    if (resultsCountLabel != null) {
+                        resultsCountLabel.setText("");
+                        resultsCountLabel.setVisible(false);
+                    }
+                    GlassFlightResultsBridge b = GlassFlightResultsBridge.getInstance();
+                    if (b != null) {
+                        b.updateFilterBounds(List.of());
+                        b.showErrorState(this::performSearch);
+                    }
+                });
     }
 
     public void handleNextAvailableDate() {
@@ -366,27 +432,46 @@ public class FlightSearchController implements WizardStepController {
                 ? departureDatePicker.getValue()
                 : LocalDate.now(from.zoneId());
 
-        Optional<LocalDate> nextDateOpt = flightService.nextAvailableDate(from.code(), to.code(), currentDate.plusDays(1));
-        if (nextDateOpt.isPresent()) {
-            LocalDate nextDate = nextDateOpt.get();
-            if (departureDatePicker != null) {
-                departureDatePicker.setValue(nextDate);
-            }
-            GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
-            if (bridge != null) {
-                bridge.updateLocationLabels();
-            }
-            performSearch();
-        } else {
-            if (resultsCountLabel != null) {
-                resultsCountLabel.setText("");
-                resultsCountLabel.setVisible(false);
-            }
-            GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
-            if (bridge != null) {
-                bridge.showNoUpcomingFlightsState();
-            }
+        GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+        if (bridge != null) {
+            bridge.showLoadingState("Finding next available date...");
         }
+
+        String fromCode = from.code();
+        String toCode = to.code();
+        LocalDate searchFrom = currentDate.plusDays(1);
+
+        DesktopAsync.run("FlightSearch:nextAvailableDate:" + fromCode + "->" + toCode,
+                () -> flightService.nextAvailableDate(fromCode, toCode, searchFrom),
+                nextDateOpt -> {
+                    if (nextDateOpt.isPresent()) {
+                        LocalDate nextDate = nextDateOpt.get();
+                        if (departureDatePicker != null) {
+                            departureDatePicker.setValue(nextDate);
+                        }
+                        GlassFlightResultsBridge b = GlassFlightResultsBridge.getInstance();
+                        if (b != null) {
+                            b.updateLocationLabels();
+                        }
+                        performSearch();
+                    } else {
+                        if (resultsCountLabel != null) {
+                            resultsCountLabel.setText("");
+                            resultsCountLabel.setVisible(false);
+                        }
+                        GlassFlightResultsBridge b = GlassFlightResultsBridge.getInstance();
+                        if (b != null) {
+                            b.showNoUpcomingFlightsState();
+                        }
+                    }
+                },
+                err -> {
+                    logger.error("Failed to find next available date", err);
+                    GlassFlightResultsBridge b = GlassFlightResultsBridge.getInstance();
+                    if (b != null) {
+                        b.showErrorState(this::handleNextAvailableDate);
+                    }
+                });
     }
 
     public void setSearchRoute(String fromCode, String toCode, LocalDate date) {
@@ -497,19 +582,64 @@ public class FlightSearchController implements WizardStepController {
     }
 
     @FXML
-    private void handleSwapLocations() {
+    private void handleOpenFromPicker() {
+        if (fromCell == null || cachedAirports.isEmpty()) return;
+        airportPickerPopup.show(fromCell, cachedAirports, fromCombo != null ? fromCombo.getValue() : null, selected -> {
+            if (fromCombo != null) {
+                fromCombo.setValue(selected);
+            }
+            GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+            if (bridge != null) bridge.updateLocationLabels();
+            performSearch();
+        });
+    }
+
+    @FXML
+    private void handleOpenToPicker() {
+        if (toCell == null || cachedAirports.isEmpty()) return;
+        Airport currentFrom = fromCombo != null ? fromCombo.getValue() : null;
+        List<Airport> destOptions = currentFrom != null
+                ? cachedAirports.stream().filter(a -> !a.equals(currentFrom)).toList()
+                : cachedAirports;
+        airportPickerPopup.show(toCell, destOptions, toCombo != null ? toCombo.getValue() : null, selected -> {
+            if (toCombo != null) {
+                toCombo.setValue(selected);
+            }
+            GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+            if (bridge != null) bridge.updateLocationLabels();
+            performSearch();
+        });
+    }
+
+    @FXML
+    private void handleOpenDatePicker() {
+        if (departureDatePicker != null) {
+            departureDatePicker.show();
+        }
+    }
+
+    @FXML
+    public void handleSwapLocations() {
         if (fromCombo != null && toCombo != null) {
             Airport tempFrom = fromCombo.getValue();
             Airport tempTo = toCombo.getValue();
             if (tempFrom != null && tempTo != null) {
-                List<Airport> airports = flightService.listAirports();
-                toCombo.getItems().setAll(airports.stream().filter(a -> !a.equals(tempTo)).toList());
+                List<Airport> all = !cachedAirports.isEmpty() ? cachedAirports : fromCombo.getItems();
+                toCombo.getItems().setAll(all.stream().filter(a -> !a.equals(tempTo)).toList());
                 fromCombo.setValue(tempTo);
                 toCombo.setValue(tempFrom);
+                GlassFlightResultsBridge bridge = GlassFlightResultsBridge.getInstance();
+                if (bridge != null) bridge.updateLocationLabels();
                 performSearch();
             }
         }
     }
+
+    public AirportPickerPopup getAirportPickerPopup() { return airportPickerPopup; }
+    public ObservableList<FlightSearchResult> getFlightList() { return flightList; }
+    public Button getSwapButton() { return swapButton; }
+    public ComboBox<Airport> getFromCombo() { return fromCombo; }
+    public ComboBox<Airport> getToCombo() { return toCombo; }
 
     @FXML
     private void handleComingSoonOffers() {
@@ -528,7 +658,7 @@ public class FlightSearchController implements WizardStepController {
 
     @FXML
     private void handleNavHome() {
-        navigateTo("/com/group2/flightres/fxml/home.fxml", "Home");
+        Navigator.navigateToHome(searchButton != null ? searchButton : fromCombo, bookingContext);
     }
 
     @FXML
@@ -538,21 +668,22 @@ public class FlightSearchController implements WizardStepController {
 
     @FXML
     private void handleNavAbout() {
-        navigateTo("/com/group2/flightres/fxml/about.fxml", "About");
+        Navigator.navigate(searchButton != null ? searchButton : fromCombo,
+                "/com/group2/flightres/fxml/about.fxml", false, "About", bookingContext);
     }
 
     @FXML
     private void handleNavContact() {
-        navigateTo("/com/group2/flightres/fxml/contact.fxml", "Contact");
+        Navigator.navigate(searchButton != null ? searchButton : fromCombo,
+                "/com/group2/flightres/fxml/contact.fxml", false, "Contact", bookingContext);
     }
 
     @FXML
     private void handleNavAvatar() {
         if (bookingContext != null && bookingContext.getCurrentUser() != null) {
-            bookingContext.setCurrentUser(null);
-            navigateTo("/com/group2/flightres/fxml/home.fxml", "Home");
+            Navigator.signOut(searchButton != null ? searchButton : fromCombo, bookingContext);
         } else {
-            navigateTo("/com/group2/flightres/fxml/login.fxml", "Login / Sign Up");
+            Navigator.navigateToLogin(searchButton != null ? searchButton : fromCombo, bookingContext);
         }
     }
 

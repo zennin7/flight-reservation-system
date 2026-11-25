@@ -5,6 +5,7 @@ import com.group2.flightres.model.Airport;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.Route;
 import com.group2.flightres.service.FlightService;
+import com.group2.flightres.util.DesktopAsync;
 import com.group2.flightres.util.Motion;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -56,10 +57,12 @@ public class HomeController implements WizardStepController {
         }
     }
 
+    private record HomeInitData(List<Airport> airports, Optional<Route> defaultRoute, LocalDate initialDate) {}
+
+    private List<Airport> cachedAirports = List.of();
+
     @FXML
     public void initialize() {
-        List<Airport> airports = flightService.listAirports();
-
         StringConverter<Airport> airportConverter = new StringConverter<>() {
             @Override
             public String toString(Airport airport) {
@@ -74,7 +77,6 @@ public class HomeController implements WizardStepController {
 
         if (fromCombo != null) {
             fromCombo.setConverter(airportConverter);
-            fromCombo.getItems().setAll(airports);
         }
 
         if (toCombo != null) {
@@ -83,8 +85,8 @@ public class HomeController implements WizardStepController {
 
         if (fromCombo != null && toCombo != null) {
             fromCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal != null) {
-                    List<Airport> filteredTo = airports.stream()
+                if (newVal != null && !cachedAirports.isEmpty()) {
+                    List<Airport> filteredTo = cachedAirports.stream()
                             .filter(a -> !a.equals(newVal))
                             .toList();
                     Airport currentTo = toCombo.getValue();
@@ -115,36 +117,6 @@ public class HomeController implements WizardStepController {
             });
         }
 
-        // Initial selection from defaultRoute
-        Optional<Route> defRoute = flightService.defaultRoute();
-        if (defRoute.isPresent()) {
-            Airport origin = defRoute.get().origin();
-            Airport dest = defRoute.get().destination();
-            if (fromCombo != null) {
-                fromCombo.setValue(origin);
-            }
-            if (toCombo != null) {
-                toCombo.getItems().setAll(airports.stream().filter(a -> !a.equals(origin)).toList());
-                toCombo.setValue(dest);
-            }
-            if (departureDatePicker != null) {
-                LocalDate initialDate = flightService.nextAvailableDate(defRoute.get())
-                        .orElseGet(() -> LocalDate.now(origin.zoneId()).plusDays(1));
-                departureDatePicker.setValue(initialDate);
-            }
-        } else if (airports.size() >= 2) {
-            Airport origin = airports.get(0);
-            Airport dest = airports.get(1);
-            if (fromCombo != null) fromCombo.setValue(origin);
-            if (toCombo != null) {
-                toCombo.getItems().setAll(airports.stream().filter(a -> !a.equals(origin)).toList());
-                toCombo.setValue(dest);
-            }
-            if (departureDatePicker != null) {
-                departureDatePicker.setValue(LocalDate.now(origin.zoneId()).plusDays(1));
-            }
-        }
-
         if (passengersCombo != null) {
             passengersCombo.getItems().addAll("1 Adult", "2 Adults", "3 Adults", "4 Adults");
             passengersCombo.setValue("1 Adult");
@@ -154,6 +126,49 @@ public class HomeController implements WizardStepController {
             searchFlightsButton.setOnAction(e -> handleSearch());
             Motion.attachHoverLift(searchFlightsButton);
         }
+
+        // Load airports, default route, and next available date off the JavaFX thread
+        DesktopAsync.run("Home:loadInitialData", () -> {
+            List<Airport> airports = flightService.listAirports();
+            Optional<Route> defRoute = flightService.defaultRoute();
+            LocalDate initialDate = null;
+            if (defRoute.isPresent()) {
+                Airport origin = defRoute.get().origin();
+                initialDate = flightService.nextAvailableDate(defRoute.get())
+                        .orElseGet(() -> LocalDate.now(origin.zoneId()).plusDays(1));
+            } else if (airports.size() >= 2) {
+                initialDate = LocalDate.now(airports.get(0).zoneId()).plusDays(1);
+            }
+            return new HomeInitData(airports, defRoute, initialDate);
+        }, data -> {
+            cachedAirports = data.airports();
+            if (fromCombo != null) {
+                fromCombo.getItems().setAll(cachedAirports);
+            }
+            if (data.defaultRoute().isPresent()) {
+                Airport origin = data.defaultRoute().get().origin();
+                Airport dest = data.defaultRoute().get().destination();
+                if (fromCombo != null) fromCombo.setValue(origin);
+                if (toCombo != null) {
+                    toCombo.getItems().setAll(cachedAirports.stream().filter(a -> !a.equals(origin)).toList());
+                    toCombo.setValue(dest);
+                }
+                if (departureDatePicker != null && data.initialDate() != null) {
+                    departureDatePicker.setValue(data.initialDate());
+                }
+            } else if (cachedAirports.size() >= 2) {
+                Airport origin = cachedAirports.get(0);
+                Airport dest = cachedAirports.get(1);
+                if (fromCombo != null) fromCombo.setValue(origin);
+                if (toCombo != null) {
+                    toCombo.getItems().setAll(cachedAirports.stream().filter(a -> !a.equals(origin)).toList());
+                    toCombo.setValue(dest);
+                }
+                if (departureDatePicker != null && data.initialDate() != null) {
+                    departureDatePicker.setValue(data.initialDate());
+                }
+            }
+        }, err -> logger.warn("Failed to load Home initial route data: {}", err != null ? err.getMessage() : "unknown"));
     }
 
     @FXML

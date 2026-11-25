@@ -4,6 +4,8 @@ import com.group2.flightres.exception.AuthenticationException;
 import com.group2.flightres.model.BookingContext;
 import com.group2.flightres.model.User;
 import com.group2.flightres.service.AuthService;
+import com.group2.flightres.util.AppSession;
+import com.group2.flightres.util.DesktopAsync;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -23,14 +25,26 @@ public class LoginController implements WizardStepController {
     @FXML private Label errorLabel;
     @FXML private Button loginButton;
 
-    private final AuthService authService = new AuthService();
+    private final AuthService authService;
     private static User lastAuthenticatedUser;
 
     private BookingContext bookingContext;
     private Runnable onNext;
 
+    public LoginController() {
+        this(new AuthService());
+    }
+
+    public LoginController(AuthService authService) {
+        this.authService = authService != null ? authService : new AuthService();
+    }
+
     public static User getLastAuthenticatedUser() {
         return lastAuthenticatedUser;
+    }
+
+    public static void clearLastAuthenticatedUser() {
+        lastAuthenticatedUser = null;
     }
 
     @Override
@@ -56,30 +70,43 @@ public class LoginController implements WizardStepController {
             return;
         }
 
-        try {
-            User authenticatedUser = authService.authenticate(username, password);
-            lastAuthenticatedUser = authenticatedUser;
-            if (bookingContext != null) {
-                bookingContext.setCurrentUser(authenticatedUser);
-            }
-            hideError();
-            if (onNext != null) {
-                onNext.run();
-            } else {
-                // Standalone test mode (no wizard context wired in yet)
-                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
-                        javafx.scene.control.Alert.AlertType.INFORMATION,
-                        "Login successful! Welcome, " + authenticatedUser.getFullName()
-                                + " (" + authenticatedUser.getRole() + ")");
-                alert.setHeaderText(null);
-                alert.showAndWait();
-            }
-        } catch (AuthenticationException e) {
-            showError(e.getMessage());
-        } catch (Exception e) {
-            logger.error("Authentication error during login: {}", e.getMessage(), e);
-            showError("Unable to connect to the database. Please try again later.");
+        hideError();
+        if (loginButton != null) {
+            loginButton.setDisable(true);
+            loginButton.setText("Signing in...");
         }
+
+        DesktopAsync.run("Login:authenticate", () -> authService.authenticate(username, password),
+                authenticatedUser -> {
+                    if (loginButton != null) {
+                        loginButton.setDisable(false);
+                        loginButton.setText("Sign in");
+                    }
+                    lastAuthenticatedUser = authenticatedUser;
+                    AppSession.setCurrentUser(authenticatedUser);
+                    if (bookingContext != null) {
+                        bookingContext.setCurrentUser(authenticatedUser);
+                    }
+                    if (passwordField != null) {
+                        passwordField.clear();
+                    }
+                    hideError();
+                    if (onNext != null) {
+                        onNext.run();
+                    }
+                },
+                err -> {
+                    if (loginButton != null) {
+                        loginButton.setDisable(false);
+                        loginButton.setText("Sign in");
+                    }
+                    if (err instanceof AuthenticationException authEx) {
+                        showError(authEx.getMessage());
+                    } else {
+                        logger.error("Authentication error during login: {}", err != null ? err.getMessage() : "unknown", err);
+                        showError("Unable to connect to the database. Please try again later.");
+                    }
+                });
     }
 
     private void showError(String message) {

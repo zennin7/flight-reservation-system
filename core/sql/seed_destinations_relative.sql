@@ -32,19 +32,54 @@ CREATE TEMP TABLE dest_seed_template (
 ) ON COMMIT DROP;
 
 INSERT INTO dest_seed_template VALUES
-    ('SR 720','JNB','PLZ',TIME '08:15',INTERVAL '1 hour 40 minutes',1140.00),
-    ('SR 721','PLZ','JNB',TIME '10:45',INTERVAL '1 hour 40 minutes',1140.00),
-    ('SR 730','JNB','GRJ',TIME '09:30',INTERVAL '1 hour 55 minutes',1290.00),
-    ('SR 731','GRJ','JNB',TIME '12:15',INTERVAL '1 hour 55 minutes',1290.00),
-    ('SR 801','JNB','DXB',TIME '19:40',INTERVAL '8 hours 10 minutes',8450.00),
-    ('SR 802','CPT','DXB',TIME '20:15',INTERVAL '9 hours 20 minutes',8990.00),
-    ('SR 811','JNB','FCO',TIME '20:50',INTERVAL '10 hours 15 minutes',9750.00),
-    ('SR 821','JNB','ZRH',TIME '21:10',INTERVAL '10 hours 35 minutes',10200.00),
-    ('SR 831','JNB','MXP',TIME '18:40',INTERVAL '10 hours 40 minutes',9450.00),
-    ('SR 841','JNB','JTR',TIME '19:15',INTERVAL '9 hours 50 minutes',10500.00),
-    ('SR 851','JNB','NCE',TIME '21:30',INTERVAL '10 hours 25 minutes',9800.00),
-    ('SR 861','JNB','PSA',TIME '20:05',INTERVAL '10 hours 30 minutes',9350.00),
-    ('SR 871','JNB','GVA',TIME '21:45',INTERVAL '10 hours 45 minutes',10150.00);
+    -- PLZ (Gqeberha) - 3 outbound + 3 return daily
+    ('SR 720','JNB','PLZ',TIME '05:40',INTERVAL '1 hour 40 minutes',1090.00),
+    ('SR 722','JNB','PLZ',TIME '11:15',INTERVAL '1 hour 40 minutes',1140.00),
+    ('SR 724','JNB','PLZ',TIME '18:20',INTERVAL '1 hour 40 minutes',1190.00),
+    ('SR 721','PLZ','JNB',TIME '08:15',INTERVAL '1 hour 40 minutes',1090.00),
+    ('SR 723','PLZ','JNB',TIME '13:45',INTERVAL '1 hour 40 minutes',1140.00),
+    ('SR 725','PLZ','JNB',TIME '20:30',INTERVAL '1 hour 40 minutes',1190.00),
+    -- GRJ (George) - 3 outbound + 3 return daily
+    ('SR 730','JNB','GRJ',TIME '05:50',INTERVAL '1 hour 55 minutes',1220.00),
+    ('SR 732','JNB','GRJ',TIME '12:30',INTERVAL '1 hour 55 minutes',1290.00),
+    ('SR 734','JNB','GRJ',TIME '19:10',INTERVAL '1 hour 55 minutes',1340.00),
+    ('SR 731','GRJ','JNB',TIME '08:30',INTERVAL '1 hour 55 minutes',1220.00),
+    ('SR 733','GRJ','JNB',TIME '15:15',INTERVAL '1 hour 55 minutes',1290.00),
+    ('SR 735','GRJ','JNB',TIME '21:20',INTERVAL '1 hour 55 minutes',1340.00),
+    -- DXB (Dubai) - 3 daily from JNB + 2 from CPT
+    ('SR 801','JNB','DXB',TIME '05:30',INTERVAL '8 hours 10 minutes',8250.00),
+    ('SR 803','JNB','DXB',TIME '13:40',INTERVAL '8 hours 10 minutes',8450.00),
+    ('SR 805','JNB','DXB',TIME '19:40',INTERVAL '8 hours 10 minutes',8690.00),
+    ('SR 802','CPT','DXB',TIME '09:15',INTERVAL '9 hours 20 minutes',8890.00),
+    ('SR 804','CPT','DXB',TIME '20:15',INTERVAL '9 hours 20 minutes',8990.00),
+    -- FCO (Rome) - 3 daily from JNB
+    ('SR 811','JNB','FCO',TIME '07:15',INTERVAL '10 hours 15 minutes',9550.00),
+    ('SR 813','JNB','FCO',TIME '14:20',INTERVAL '10 hours 15 minutes',9750.00),
+    ('SR 815','JNB','FCO',TIME '20:50',INTERVAL '10 hours 15 minutes',9950.00),
+    -- ZRH (Swiss Alps) - 3 daily from JNB
+    ('SR 821','JNB','ZRH',TIME '06:45',INTERVAL '10 hours 35 minutes',9980.00),
+    ('SR 823','JNB','ZRH',TIME '13:50',INTERVAL '10 hours 35 minutes',10200.00),
+    ('SR 825','JNB','ZRH',TIME '21:10',INTERVAL '10 hours 35 minutes',10450.00),
+    -- MXP (Lake Como) - 3 daily from JNB
+    ('SR 831','JNB','MXP',TIME '08:10',INTERVAL '10 hours 40 minutes',9250.00),
+    ('SR 833','JNB','MXP',TIME '15:05',INTERVAL '10 hours 40 minutes',9450.00),
+    ('SR 835','JNB','MXP',TIME '19:40',INTERVAL '10 hours 40 minutes',9680.00),
+    -- JTR (Santorini) - 3 daily from JNB
+    ('SR 841','JNB','JTR',TIME '07:40',INTERVAL '9 hours 50 minutes',10250.00),
+    ('SR 843','JNB','JTR',TIME '14:15',INTERVAL '9 hours 50 minutes',10500.00),
+    ('SR 845','JNB','JTR',TIME '19:55',INTERVAL '9 hours 50 minutes',10750.00),
+    -- NCE (Monaco) - 3 daily from JNB
+    ('SR 851','JNB','NCE',TIME '08:25',INTERVAL '10 hours 25 minutes',9600.00),
+    ('SR 853','JNB','NCE',TIME '15:30',INTERVAL '10 hours 25 minutes',9800.00),
+    ('SR 855','JNB','NCE',TIME '21:30',INTERVAL '10 hours 25 minutes',9990.00),
+    -- PSA (Cinque Terre) - 3 daily from JNB
+    ('SR 861','JNB','PSA',TIME '07:55',INTERVAL '10 hours 30 minutes',9150.00),
+    ('SR 863','JNB','PSA',TIME '14:45',INTERVAL '10 hours 30 minutes',9350.00),
+    ('SR 865','JNB','PSA',TIME '20:05',INTERVAL '10 hours 30 minutes',9550.00),
+    -- GVA (Valais) - 3 daily from JNB
+    ('SR 871','JNB','GVA',TIME '06:55',INTERVAL '10 hours 45 minutes',9950.00),
+    ('SR 873','JNB','GVA',TIME '14:30',INTERVAL '10 hours 45 minutes',10150.00),
+    ('SR 875','JNB','GVA',TIME '21:45',INTERVAL '10 hours 45 minutes',10350.00);
 
 CREATE TEMP TABLE dest_seed_days ON COMMIT DROP AS
 SELECT ((NOW() AT TIME ZONE 'Africa/Johannesburg')::date + i) AS op_date

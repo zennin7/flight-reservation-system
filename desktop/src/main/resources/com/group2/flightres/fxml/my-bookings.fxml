@@ -184,6 +184,19 @@
                         <Button fx:id="retryButton" text="Retry" styleClass="btn-gold" onAction="#handleRetry" prefWidth="180"/>
                     </VBox>
 
+                    <!-- 4. GUEST (UNAUTHENTICATED) STATE -->
+                    <VBox fx:id="guestStateContainer" alignment="CENTER" spacing="14" visible="false" managed="false"
+                          style="-fx-padding: 48 20 48 20;" VBox.vgrow="ALWAYS">
+                        <StackPane prefWidth="52" prefHeight="52" maxWidth="52" maxHeight="52"
+                                   style="-fx-background-color: rgba(241, 238, 223, 0.14); -fx-background-radius: 999px; -fx-border-color: rgba(241, 238, 223, 0.36); -fx-border-radius: 999px;">
+                            <SVGPath content="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
+                                     style="-fx-fill: -glass-cream;" scaleX="0.85" scaleY="0.85"/>
+                        </StackPane>
+                        <Label fx:id="guestTitleLabel" text="Sign in to see your bookings" styleClass="headline-serif" style="-fx-font-size: 22px;"/>
+                        <Label fx:id="guestSubtitleLabel" text="Sign in to view your upcoming trips, boarding passes, and booking history." styleClass="subheadline" wrapText="true"/>
+                        <Button fx:id="guestSignInButton" text="Sign in" styleClass="btn-gold" onAction="#handleGuestSignIn" prefWidth="180"/>
+                    </VBox>
+
                 </StackPane>
 
             </VBox>

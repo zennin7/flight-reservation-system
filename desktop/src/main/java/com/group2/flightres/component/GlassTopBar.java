@@ -51,9 +51,9 @@ public class GlassTopBar extends HBox {
     public GlassTopBar() {
         getStyleClass().add("glass-nav-bar");
         setAlignment(Pos.CENTER_LEFT);
-        setPrefHeight(64);
-        setMinHeight(64);
-        setMaxHeight(64);
+        setPrefHeight(54);
+        setMinHeight(54);
+        setMaxHeight(54);
 
         // Left: white rounded plane badge + "Sky Royal"
         SVGPath planeSvg = new SVGPath();
@@ -148,8 +148,8 @@ public class GlassTopBar extends HBox {
     }
 
     public void bind(BookingContext context) {
-        this.bookingContext = context;
-        User user = context != null ? context.getCurrentUser() : null;
+        this.bookingContext = AppSession.ensureUser(context);
+        User user = this.bookingContext.getCurrentUser();
         setUser(user);
     }
 
@@ -224,32 +224,35 @@ public class GlassTopBar extends HBox {
 
     private void showAvatarMenu() {
         ContextMenu menu = new ContextMenu();
+        User user = bookingContext != null ? bookingContext.getCurrentUser() : AppSession.getCurrentUser();
+
         MenuItem myBookingsItem = new MenuItem("My bookings");
         myBookingsItem.setOnAction(e -> triggerMyBookings());
         menu.getItems().add(myBookingsItem);
 
-        boolean isAdmin = bookingContext != null && bookingContext.getCurrentUser() != null
-                && bookingContext.getCurrentUser().getRole() == UserRole.ADMIN;
-        if (isAdmin) {
-            MenuItem adminDashItem = new MenuItem("Admin dashboard");
-            adminDashItem.setOnAction(e -> triggerAdmin());
-            MenuItem adminBookingsItem = new MenuItem("Admin bookings");
-            adminBookingsItem.setOnAction(e -> Navigator.navigateToAdminBookings(this, bookingContext));
-            menu.getItems().addAll(adminDashItem, adminBookingsItem);
-        }
-
-        MenuItem logoutItem = new MenuItem("Log out");
-        logoutItem.setOnAction(e -> {
-            if (onLogoutAction != null) {
-                onLogoutAction.run();
-            } else {
-                if (bookingContext != null) {
-                    bookingContext.setCurrentUser(null);
-                }
-                Navigator.navigate(this, "/com/group2/flightres/fxml/login.fxml", false, "Login", bookingContext);
+        if (user == null) {
+            MenuItem signInItem = new MenuItem("Sign in");
+            signInItem.setOnAction(e -> Navigator.navigateToLogin(this, bookingContext));
+            menu.getItems().add(signInItem);
+        } else {
+            if (user.getRole() == UserRole.ADMIN) {
+                MenuItem adminDashItem = new MenuItem("Admin dashboard");
+                adminDashItem.setOnAction(e -> triggerAdmin());
+                MenuItem adminBookingsItem = new MenuItem("Admin bookings");
+                adminBookingsItem.setOnAction(e -> Navigator.navigateToAdminBookings(this, bookingContext));
+                menu.getItems().addAll(adminDashItem, adminBookingsItem);
             }
-        });
-        menu.getItems().add(logoutItem);
+
+            MenuItem logoutItem = new MenuItem("Sign out");
+            logoutItem.setOnAction(e -> {
+                if (onLogoutAction != null) {
+                    onLogoutAction.run();
+                } else {
+                    Navigator.signOut(this, bookingContext);
+                }
+            });
+            menu.getItems().add(logoutItem);
+        }
         menu.show(avatarPill, Side.BOTTOM, 0, 6);
     }
 

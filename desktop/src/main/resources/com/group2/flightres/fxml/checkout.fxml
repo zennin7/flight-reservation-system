@@ -31,13 +31,11 @@
                  stylesheets="@../css/glass.css"
                  styleClass="seat-map-glass-root"
                  prefWidth="1280"
-                 prefHeight="800"
-                 minWidth="1280"
-                 minHeight="800"
-                 maxWidth="1280"
-                 maxHeight="800">
+                 prefHeight="760"
+                 minWidth="1024"
+                 minHeight="660">
 
-    <VBox alignment="TOP_CENTER" spacing="0" prefWidth="1280" prefHeight="800" minWidth="1280" minHeight="800" maxWidth="1280" maxHeight="800">
+    <VBox alignment="TOP_CENTER" spacing="0" VBox.vgrow="ALWAYS">
 
         <!-- ===================================================================
              TOP NAV (64 high, web-parity GlassTopBar)

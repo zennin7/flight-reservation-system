@@ -74,6 +74,10 @@ public class MyBookingsController {
     @FXML private Label errorMessageLabel;
     @FXML private Button retryButton;
 
+    @FXML private VBox guestStateContainer;
+    @FXML private Label guestTitleLabel;
+    @FXML private Button guestSignInButton;
+
     @FXML private GlassTopBar topBar;
     @FXML private HBox populatedSplitBox;
     @FXML private VBox passPreviewCard;
@@ -193,30 +197,73 @@ public class MyBookingsController {
     }
 
     public void loadBookings() {
+        long userId = resolveAuthenticatedUserId();
+        if (userId <= 0) {
+            allBookings.clear();
+            selectedBooking = null;
+            if (cardsContainer != null) {
+                cardsContainer.getChildren().clear();
+            }
+            showGuestState();
+            return;
+        }
         try {
-            long userId = resolveUserId();
             List<BookingSummary> summaries = bookingService.listBookingsForUser(userId, clock);
             allBookings.clear();
             if (summaries != null) {
                 allBookings.addAll(summaries);
             }
 
-            hideErrorState();
+            hideGuestAndErrorState();
             updateTabCounts();
             renderActiveTab();
         } catch (Exception e) {
-            logger.error("Failed to load bookings for user", e);
+            logger.error("Failed to load bookings for user {}", userId, e);
             showErrorState("We were unable to load your bookings. Please check your connection and try again.");
         }
     }
 
-    private long resolveUserId() {
+    private long resolveAuthenticatedUserId() {
         if (bookingContext != null && bookingContext.getCurrentUser() != null
                 && bookingContext.getCurrentUser().getUserId() > 0) {
             return bookingContext.getCurrentUser().getUserId();
         }
-        // Default to demo traveller user (ID 12) if unauthenticated in current context
-        return 12L;
+        return -1L;
+    }
+
+    public void showGuestState() {
+        if (tabsBar != null) {
+            tabsBar.setVisible(false);
+            tabsBar.setManaged(false);
+        }
+        if (populatedSplitBox != null) {
+            populatedSplitBox.setVisible(false);
+            populatedSplitBox.setManaged(false);
+        }
+        if (bookingsScrollPane != null) {
+            bookingsScrollPane.setVisible(false);
+            bookingsScrollPane.setManaged(false);
+        }
+        if (emptyStateContainer != null) {
+            emptyStateContainer.setVisible(false);
+            emptyStateContainer.setManaged(false);
+        }
+        if (errorStateContainer != null) {
+            errorStateContainer.setVisible(false);
+            errorStateContainer.setManaged(false);
+        }
+        if (guestStateContainer != null) {
+            guestStateContainer.setVisible(true);
+            guestStateContainer.setManaged(true);
+        }
+    }
+
+    private void hideGuestAndErrorState() {
+        if (guestStateContainer != null) {
+            guestStateContainer.setVisible(false);
+            guestStateContainer.setManaged(false);
+        }
+        hideErrorState();
     }
 
     private void updateTabCounts() {
@@ -573,7 +620,11 @@ public class MyBookingsController {
     private void handleViewTicket(BookingSummary summary) {
         if (summary == null) return;
         try {
-            long uid = resolveUserId();
+            long uid = resolveAuthenticatedUserId();
+            if (uid <= 0) {
+                showGuestState();
+                return;
+            }
             BookingRecord record = bookingService.getBookingForUser(uid, summary.getBookingReference());
 
             BookingContext ctx = new BookingContext();
@@ -659,6 +710,11 @@ public class MyBookingsController {
     }
 
     @FXML
+    private void handleGuestSignIn() {
+        Navigator.navigateToLogin(mainContainer, bookingContext);
+    }
+
+    @FXML
     private void handleRetry() {
         loadBookings();
     }
@@ -699,10 +755,9 @@ public class MyBookingsController {
     @FXML
     private void handleNavAvatar() {
         if (bookingContext != null && bookingContext.getCurrentUser() != null) {
-            bookingContext.setCurrentUser(null);
-            Navigator.navigateToHome(mainContainer, bookingContext);
+            Navigator.signOut(mainContainer, bookingContext);
         } else {
-            Navigator.navigate(mainContainer, "/com/group2/flightres/fxml/login.fxml", false, "Login / Sign Up", bookingContext);
+            Navigator.navigateToLogin(mainContainer, bookingContext);
         }
     }
 
@@ -720,4 +775,6 @@ public class MyBookingsController {
     public Button getRetryButton() { return retryButton; }
     public Label getErrorMessageLabel() { return errorMessageLabel; }
     public HBox getTabsBar() { return tabsBar; }
+    public VBox getGuestStateContainer() { return guestStateContainer; }
+    public Button getGuestSignInButton() { return guestSignInButton; }
 }

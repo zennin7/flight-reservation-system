@@ -6,8 +6,6 @@ import javafx.animation.Timeline;
 import javafx.beans.DefaultProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.effect.ColorAdjust;
-import javafx.scene.effect.GaussianBlur;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Region;
@@ -46,8 +44,6 @@ public class GlassBackground extends StackPane {
     public static final String DEFAULT_RADIAL_GLOW_BLUE = "transparent";
 
     private final ImageView backgroundImageView = new ImageView();
-    private final ColorAdjust colorAdjust = new ColorAdjust();
-    private final GaussianBlur gaussianBlur = new GaussianBlur();
     private final Region navyOverlay = new Region();
     private final Region glowGold = new Region();
     private final Region glowBlue = new Region();
@@ -157,7 +153,15 @@ public class GlassBackground extends StackPane {
             Image img = loadPhotoImage(photoPath);
             if (img != null) {
                 backgroundImageView.setImage(img);
-                updateImageCover();
+                if (img.getWidth() > 0 && img.getHeight() > 0) {
+                    updateImageCover();
+                } else {
+                    img.widthProperty().addListener((obs, o, n) -> {
+                        if (n != null && n.doubleValue() > 0) {
+                            updateImageCover();
+                        }
+                    });
+                }
             } else {
                 logger.warn("Could not load glass background photo: {}", photoPath);
             }
@@ -292,9 +296,10 @@ public class GlassBackground extends StackPane {
     }
 
     public void setBlurRadius(double radius) {
-        this.currentBlurRadius = Math.max(0.0, radius);
-        gaussianBlur.setRadius(this.currentBlurRadius);
-        updateImageEffects();
+        // Runtime blur on full-screen backdrops is intentionally disabled for smooth 60fps rendering;
+        // a cheap gradient scrim is used instead.
+        this.currentBlurRadius = 0.0;
+        backgroundImageView.setEffect(null);
     }
 
     public double getDarkness() {
@@ -303,8 +308,6 @@ public class GlassBackground extends StackPane {
 
     public void setDarkness(double darkness) {
         this.currentDarkness = darkness;
-        colorAdjust.setBrightness(Math.max(-1.0, Math.min(1.0, darkness)));
-        updateImageEffects();
     }
 
     public double getSaturation() {
@@ -313,24 +316,10 @@ public class GlassBackground extends StackPane {
 
     public void setSaturation(double saturation) {
         this.currentSaturation = saturation;
-        colorAdjust.setSaturation(Math.max(-1.0, Math.min(1.0, saturation)));
-        updateImageEffects();
     }
 
     private void updateImageEffects() {
-        boolean needsColor = Math.abs(currentDarkness) > 0.001 || Math.abs(currentSaturation) > 0.001;
-        boolean needsBlur = currentBlurRadius > 0.05;
-        if (needsBlur && needsColor) {
-            gaussianBlur.setInput(colorAdjust);
-            backgroundImageView.setEffect(gaussianBlur);
-        } else if (needsBlur) {
-            gaussianBlur.setInput(null);
-            backgroundImageView.setEffect(gaussianBlur);
-        } else if (needsColor) {
-            backgroundImageView.setEffect(colorAdjust);
-        } else {
-            backgroundImageView.setEffect(null);
-        }
+        backgroundImageView.setEffect(null);
     }
 
     public boolean isHeroScrim() {

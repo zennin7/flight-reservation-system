@@ -9,6 +9,7 @@ import com.group2.flightres.model.FlightSeat;
 import com.group2.flightres.service.SeatMapService;
 import com.group2.flightres.model.User;
 import com.group2.flightres.model.UserRole;
+import com.group2.flightres.util.AppSession;
 import com.group2.flightres.util.Motion;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -58,10 +59,13 @@ public class MainShellController {
                 }
             }
         }
-        User user = (bookingContext != null) ? bookingContext.getCurrentUser() : null;
+        User user = (bookingContext != null && bookingContext.getCurrentUser() != null)
+                ? bookingContext.getCurrentUser()
+                : AppSession.getCurrentUser();
         this.bookingContext = new BookingContext();
         if (user != null) {
             this.bookingContext.setCurrentUser(user);
+            AppSession.setCurrentUser(user);
         }
     }
 
@@ -174,13 +178,12 @@ public class MainShellController {
                 }
                 break;
             case "Logout":
-                if (bookingContext != null) {
-                    bookingContext.setCurrentUser(null);
-                }
+                LoginController.clearLastAuthenticatedUser();
+                this.bookingContext = AppSession.signOut(bookingContext);
                 if (navBar != null) {
                     navBar.setAdminMode(false);
                 }
-                handleNavigation("Home");
+                handleNavigation("Login");
                 break;
             case "Help":
                 logger.info("Help clicked.");
@@ -241,15 +244,17 @@ public class MainShellController {
             Object controller = loader.getController();
             if (controller instanceof LoginController loginCtrl) {
                 loginCtrl.init(bookingContext, () -> {
-                    User u = LoginController.getLastAuthenticatedUser();
-                    if (u != null && u.getRole() == UserRole.ADMIN) {
-                        if (navBar != null) {
-                            navBar.setAdminMode(true);
-                        }
-                        handleNavigation("Dashboard");
-                    } else {
-                        handleNavigation("Home");
+                    User u = bookingContext.getCurrentUser() != null
+                            ? bookingContext.getCurrentUser()
+                            : LoginController.getLastAuthenticatedUser();
+                    if (u != null) {
+                        bookingContext.setCurrentUser(u);
+                        AppSession.setCurrentUser(u);
                     }
+                    if (navBar != null) {
+                        navBar.setAdminMode(u != null && u.getRole() == UserRole.ADMIN);
+                    }
+                    handleNavigation("Flights");
                 });
             } else if (controller instanceof AboutController aboutCtrl) {
                 aboutCtrl.init(bookingContext, () -> handleNavigation("Home"));

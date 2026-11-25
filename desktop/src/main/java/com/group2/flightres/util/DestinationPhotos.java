@@ -25,6 +25,8 @@ public final class DestinationPhotos {
     public static final String PHOTOS_PREFIX = "/com/group2/flightres/photos/";
     private static final String CABIN_CONFIG_RESOURCE = "/com/group2/flightres/cabin-sections.properties";
     public static final int MAX_IMAGE_CACHE = 6;
+    public static final double MAX_DECODE_WIDTH = 1440.0;
+    public static final double MAX_DECODE_HEIGHT = 900.0;
 
     private static final Map<Integer, String> SECTION_CABIN_PHOTOS;
     private static final Map<String, String> CLASS_CABIN_PHOTOS;
@@ -179,7 +181,14 @@ public final class DestinationPhotos {
 
     private static Optional<Image> loadUrl(URL url) {
         try {
-            return Optional.of(new Image(url.toExternalForm(), false));
+            boolean backgroundLoading = !Boolean.getBoolean("skyroyal.screenshots");
+            return Optional.of(new Image(
+                    url.toExternalForm(),
+                    MAX_DECODE_WIDTH,
+                    MAX_DECODE_HEIGHT,
+                    true,
+                    true,
+                    backgroundLoading));
         } catch (Exception e) {
             return Optional.empty();
         }
