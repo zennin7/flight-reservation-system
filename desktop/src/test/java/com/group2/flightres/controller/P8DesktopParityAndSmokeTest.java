@@ -109,13 +109,17 @@ class P8DesktopParityAndSmokeTest {
         LocalDate tomorrow = LocalDate.now(ZoneId.of("Africa/Johannesburg")).plusDays(1);
 
         List<FlightSearchResult> jnbCpt = flightService.searchFlights("JNB", "CPT", tomorrow);
-        assertTrue(jnbCpt.size() >= 8, "JNB->CPT must return at least 8 flights, got " + jnbCpt.size());
+        assertTrue(jnbCpt.size() >= 8,
+                "JNB->CPT must return at least 8 flights, got " + jnbCpt.size()
+                        + " (run scripts\\reseed.cmd to refresh the rolling 14-day schedule)");
 
         GlassFlightResultsBridge bridge = new GlassFlightResultsBridge();
         for (String chip : List.of("Before 6 AM", "6 AM to 12 PM", "12 PM to 6 PM", "After 6 PM")) {
             bridge.setDepartureFilter(chip);
             long count = jnbCpt.stream().filter(bridge::matchesDeparture).count();
-            assertTrue(count >= 1, "Time chip '" + chip + "' must match >=1 flight on JNB->CPT, got " + count);
+            assertTrue(count >= 1,
+                    "Time chip '" + chip + "' must match >=1 flight on JNB->CPT, got " + count
+                            + " (run scripts\\reseed.cmd to refresh the rolling 14-day schedule)");
         }
 
         // Every destination in airports list (except JNB) must return multiple flights from JNB for each of next 7 days
@@ -127,7 +131,8 @@ class P8DesktopParityAndSmokeTest {
                 LocalDate d = LocalDate.now(ZoneId.of("Africa/Johannesburg")).plusDays(dayOffset);
                 List<FlightSearchResult> res = flightService.searchFlights("JNB", dest.code(), d);
                 assertTrue(res.size() >= 2,
-                        "Destination " + dest.code() + " on " + d + " must return >=2 flights from JNB, got " + res.size());
+                        "Destination " + dest.code() + " on " + d + " must return >=2 flights from JNB, got " + res.size()
+                                + " (run scripts\\reseed.cmd to refresh the rolling 14-day schedule)");
             }
         }
 
@@ -204,7 +209,9 @@ class P8DesktopParityAndSmokeTest {
         // 2. Search JNB -> CPT tomorrow (>= 8 flights)
         LocalDate tomorrow = LocalDate.now(ZoneId.of("Africa/Johannesburg")).plusDays(1);
         List<FlightSearchResult> flights = flightService.searchFlights("JNB", "CPT", tomorrow);
-        assertTrue(flights.size() >= 8, "Expected >=8 JNB->CPT flights, got " + flights.size());
+        assertTrue(flights.size() >= 8,
+                "Expected >=8 JNB->CPT flights, got " + flights.size()
+                        + " (run scripts\\reseed.cmd to refresh the rolling 14-day schedule)");
 
         // 3. Pick a flight & hold an available economy seat
         FlightSearchResult chosen = flights.get(0);
@@ -216,83 +223,99 @@ class P8DesktopParityAndSmokeTest {
 
         String holdOwner = "p8-smoke-" + UUID.randomUUID();
         seatMapService.selectSeat(available, holdOwner);
-        PriceQuote quote = pricingService.quote(chosen.getFlightId(), SeatClass.ECONOMY, Clock.systemUTC());
+        String createdRef = null;
+        try {
+            PriceQuote quote = pricingService.quote(chosen.getFlightId(), SeatClass.ECONOMY, Clock.systemUTC());
 
-        // 4. Checkout with test card 4242 4242 4242 4242
-        PaymentResult pay = gateway.processPayment("4242 4242 4242 4242", "12/30", "123", quote.total());
-        assertTrue(pay.isApproved(), "Test card 4242 must be approved");
+            // 4. Checkout with test card 4242 4242 4242 4242
+            PaymentResult pay = gateway.processPayment("4242 4242 4242 4242", "12/30", "123", quote.total());
+            assertTrue(pay.isApproved(), "Test card 4242 must be approved");
 
-        BookingContext ctx = new BookingContext();
-        ctx.setCurrentUser(customer);
-        ctx.setFlightId(chosen.getFlightId());
-        ctx.setFlightNumber(chosen.getFlightNumber());
-        ctx.setOrigin(chosen.getOriginCity() + " (" + chosen.getOriginCode() + ")");
-        ctx.setDestination(chosen.getDestCity() + " (" + chosen.getDestCode() + ")");
-        ctx.setOriginCity(chosen.getOriginCity());
-        ctx.setDestinationCity(chosen.getDestCity());
-        ctx.setDepartureInstant(chosen.getDeparture());
-        ctx.setArrivalInstant(chosen.getArrival());
-        ctx.setSelectedSeats(List.of(available));
-        ctx.setPriceQuotes(List.of(quote));
-        ctx.setBaseFare(quote.baseFare());
-        ctx.setTotalPrice(quote.total());
-        ctx.setPassengerName("Demo Customer");
-        ctx.setPassengerEmail("customer@example.com");
-        ctx.setPassportNumber("ZA998877");
-        ctx.setDateOfBirth(LocalDate.of(1992, 5, 15));
-        ctx.setHoldOwner(holdOwner);
-        ctx.setPaymentResult(pay);
-        ctx.setIdempotencyKey("p8-smoke-" + UUID.randomUUID());
+            BookingContext ctx = new BookingContext();
+            ctx.setCurrentUser(customer);
+            ctx.setFlightId(chosen.getFlightId());
+            ctx.setFlightNumber(chosen.getFlightNumber());
+            ctx.setOrigin(chosen.getOriginCity() + " (" + chosen.getOriginCode() + ")");
+            ctx.setDestination(chosen.getDestCity() + " (" + chosen.getDestCode() + ")");
+            ctx.setOriginCity(chosen.getOriginCity());
+            ctx.setDestinationCity(chosen.getDestCity());
+            ctx.setDepartureInstant(chosen.getDeparture());
+            ctx.setArrivalInstant(chosen.getArrival());
+            ctx.setSelectedSeats(List.of(available));
+            ctx.setPriceQuotes(List.of(quote));
+            ctx.setBaseFare(quote.baseFare());
+            ctx.setTotalPrice(quote.total());
+            ctx.setPassengerName("Demo Customer");
+            ctx.setPassengerEmail("customer@example.com");
+            ctx.setPassportNumber("ZA998877");
+            ctx.setDateOfBirth(LocalDate.of(1992, 5, 15));
+            ctx.setHoldOwner(holdOwner);
+            ctx.setPaymentResult(pay);
+            ctx.setIdempotencyKey("p8-smoke-" + UUID.randomUUID());
 
-        var record = bookingService.createBooking(ctx);
-        assertNotNull(record.getBookingReference());
+            var record = bookingService.createBooking(ctx);
+            createdRef = record.getBookingReference();
+            assertNotNull(createdRef);
+            final String bookingRef = createdRef;
 
-        // 5. Verify My Bookings UI for customer shows ONLY customer's bookings, then sign out -> guest sees none -> sign in as admin
-        CountDownLatch latch = new CountDownLatch(1);
-        AtomicReference<Throwable> err = new AtomicReference<>();
+            // 5. Verify My Bookings UI for customer shows ONLY customer's bookings, then sign out -> guest sees none -> sign in as admin
+            CountDownLatch latch = new CountDownLatch(1);
+            AtomicReference<Throwable> err = new AtomicReference<>();
 
-        Platform.runLater(() -> {
-            Stage stage = new Stage();
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource(Navigator.MY_BOOKINGS_FXML));
-                Parent root = loader.load();
-                MyBookingsController mbCtrl = loader.getController();
-                Scene scene = new Scene(root, 1280, 760);
-                stage.setScene(scene);
+            Platform.runLater(() -> {
+                Stage stage = new Stage();
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource(Navigator.MY_BOOKINGS_FXML));
+                    Parent root = loader.load();
+                    MyBookingsController mbCtrl = loader.getController();
+                    Scene scene = new Scene(root, 1280, 760);
+                    stage.setScene(scene);
 
-                mbCtrl.init(ctx, () -> Navigator.navigateToSearch(root, ctx));
-                assertFalse(mbCtrl.getAllBookings().isEmpty(), "Customer must see their new booking");
-                assertTrue(mbCtrl.getAllBookings().stream().allMatch(b -> b.getUserId() == customer.getUserId()),
-                        "My bookings must ONLY contain bookings owned by the logged-in user");
-                assertTrue(mbCtrl.getAllBookings().stream().anyMatch(b -> record.getBookingReference().equals(b.getBookingReference())),
-                        "Newly created booking must appear in My bookings");
+                    mbCtrl.init(ctx, () -> Navigator.navigateToSearch(root, ctx));
+                    assertFalse(mbCtrl.getAllBookings().isEmpty(), "Customer must see their new booking");
+                    assertTrue(mbCtrl.getAllBookings().stream().allMatch(b -> b.getUserId() == customer.getUserId()),
+                            "My bookings must ONLY contain bookings owned by the logged-in user");
+                    assertTrue(mbCtrl.getAllBookings().stream().anyMatch(b -> bookingRef.equals(b.getBookingReference())),
+                            "Newly created booking must appear in My bookings");
 
-                // Sign out -> guest sees no bookings
-                Navigator.signOut(root, ctx);
-                assertNull(AppSession.getCurrentUser());
-                Navigator.navigateToMyBookings(scene.getRoot(), new BookingContext());
-                assertNotNull(scene.getRoot().lookup("#guestSignInButton"));
-                assertTrue(scene.getRoot().lookup("#guestStateContainer").isVisible(),
-                        "After sign out, guest must see sign-in prompt and zero bookings");
+                    // Sign out -> guest sees no bookings
+                    Navigator.signOut(root, ctx);
+                    assertNull(AppSession.getCurrentUser());
+                    Navigator.navigateToMyBookings(scene.getRoot(), new BookingContext());
+                    assertNotNull(scene.getRoot().lookup("#guestSignInButton"));
+                    assertTrue(scene.getRoot().lookup("#guestStateContainer").isVisible(),
+                            "After sign out, guest must see sign-in prompt and zero bookings");
 
-                // Sign in again as admin -> Admin button visible
-                User admin = authService.authenticate("testadmin", "Passw0rd!");
-                BookingContext adminCtx = new BookingContext();
-                adminCtx.setCurrentUser(admin);
-                AppSession.setCurrentUser(admin);
-                Navigator.navigateToHome(scene.getRoot(), adminCtx);
-                GlassTopBar bar = (GlassTopBar) scene.getRoot().lookup("#topBar");
-                assertNotNull(bar);
-                assertTrue(bar.getAdminBtn().isVisible(), "Admin button must be visible after signing in as admin");
-            } catch (Throwable t) {
-                err.set(t);
-            } finally {
-                stage.close();
-                latch.countDown();
+                    // Sign in again as admin -> Admin button visible
+                    User admin = authService.authenticate("testadmin", "Passw0rd!");
+                    BookingContext adminCtx = new BookingContext();
+                    adminCtx.setCurrentUser(admin);
+                    AppSession.setCurrentUser(admin);
+                    Navigator.navigateToHome(scene.getRoot(), adminCtx);
+                    GlassTopBar bar = (GlassTopBar) scene.getRoot().lookup("#topBar");
+                    assertNotNull(bar);
+                    assertTrue(bar.getAdminBtn().isVisible(), "Admin button must be visible after signing in as admin");
+                } catch (Throwable t) {
+                    err.set(t);
+                } finally {
+                    stage.close();
+                    latch.countDown();
+                }
+            });
+
+            assertTrue(latch.await(25, TimeUnit.SECONDS));
+            if (err.get() != null) throw new AssertionError(err.get());
+        } finally {
+            // Clean up smoke-test booking / release seat so repeated verify runs do not consume seats
+            if (createdRef != null) {
+                try {
+                    bookingService.cancelBookingForUser(customer.getUserId(), createdRef, gateway);
+                } catch (Exception ignored) {}
+            } else {
+                try {
+                    seatMapService.deselectSeat(available, holdOwner);
+                } catch (Exception ignored) {}
             }
-        });
-
-        assertTrue(latch.await(25, TimeUnit.SECONDS));
-        if (err.get() != null) throw new AssertionError(err.get());
+        }
     }
 }

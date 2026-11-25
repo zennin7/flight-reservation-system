@@ -33,38 +33,38 @@
                  styleClass="seat-map-glass-root"
                  prefWidth="1280"
                  prefHeight="760"
-                 minWidth="1024"
-                 minHeight="660">
+                 minWidth="860"
+                 minHeight="620">
 
     <VBox alignment="TOP_CENTER" spacing="0" VBox.vgrow="ALWAYS">
 
         <!-- ===================================================================
-             TOP NAV (64 high, web-parity GlassTopBar)
+             TOP NAV (54 high, web-parity GlassTopBar)
              =================================================================== -->
         <GlassTopBar fx:id="topBar" activeNav="flights"/>
 
         <!-- ===================================================================
              MAIN GLASS CARD
              =================================================================== -->
-        <VBox VBox.vgrow="ALWAYS" spacing="12" styleClass="search-main-glass"
+        <VBox VBox.vgrow="ALWAYS" spacing="10" styleClass="search-main-glass"
               maxWidth="1168">
             <VBox.margin>
-                <Insets top="4" right="40" bottom="20" left="40"/>
+                <Insets top="4" right="20" bottom="16" left="20"/>
             </VBox.margin>
 
             <!-- 1. Stepper Bar -->
-            <HBox alignment="CENTER" prefHeight="48" minHeight="48" maxHeight="48" styleClass="glass-stepper-card">
-                <StepperBar fx:id="stepperBar" alignment="CENTER" prefHeight="48"/>
+            <HBox alignment="CENTER" prefHeight="42" minHeight="42" maxHeight="42" styleClass="glass-stepper-card">
+                <StepperBar fx:id="stepperBar" alignment="CENTER" prefHeight="42"/>
             </HBox>
 
-            <!-- 2. Main Workspace Split: Left Columns + Right Column (320w) -->
-            <HBox VBox.vgrow="ALWAYS" spacing="14" minHeight="0">
+            <!-- 2. Main Workspace Split: Left Columns + Right Column (306w) -->
+            <HBox VBox.vgrow="ALWAYS" spacing="12" minHeight="0">
 
                 <!-- LEFT COLUMN: Plane Card + (Cabin Photo Card + Seat Grid) -->
-                <VBox HBox.hgrow="ALWAYS" spacing="12" minHeight="0">
+                <VBox HBox.hgrow="ALWAYS" spacing="10" minHeight="0">
 
                     <!-- A. Plane Card -->
-                    <VBox prefHeight="214" minHeight="214" maxHeight="214"
+                    <VBox prefHeight="170" minHeight="170" maxHeight="170"
                           styleClass="glass-card, seat-plane-card">
 
                         <HBox alignment="TOP_LEFT" spacing="12">
@@ -90,23 +90,23 @@
                                 </Button>
                             </VBox>
 
-                            <StackPane alignment="CENTER" HBox.hgrow="ALWAYS" prefHeight="152" minHeight="152" maxHeight="152" minWidth="0">
+                            <StackPane alignment="CENTER" HBox.hgrow="ALWAYS" prefHeight="112" minHeight="112" maxHeight="112" minWidth="0">
                                 <Group>
-                                    <GlassPlaneGraphic fx:id="planeGraphic" scaleX="0.72" scaleY="0.72"/>
+                                    <GlassPlaneGraphic fx:id="planeGraphic" scaleX="0.58" scaleY="0.58"/>
                                 </Group>
                             </StackPane>
                         </HBox>
                     </VBox>
 
                     <!-- B. Bottom Row: Cabin Photo Card + Seat Grid Card -->
-                    <HBox VBox.vgrow="ALWAYS" spacing="14" minHeight="0">
+                    <HBox VBox.vgrow="ALWAYS" spacing="12" minHeight="0">
 
                         <!-- Inside the cabin photo card (dynamic per section, click to expand lightbox) -->
-                        <StackPane fx:id="cabinPhotoCard" prefWidth="176" minWidth="172" maxWidth="180" styleClass="seat-cabin-photo-card">
+                        <StackPane fx:id="cabinPhotoCard" prefWidth="176" minWidth="176" maxWidth="180" prefHeight="360" maxHeight="360" styleClass="seat-cabin-photo-card">
                             <clip>
-                                <Rectangle width="176" height="400" arcWidth="36" arcHeight="36"/>
+                                <Rectangle width="176" height="360" arcWidth="36" arcHeight="36"/>
                             </clip>
-                            <ImageView fx:id="cabinPhotoView" fitWidth="176" fitHeight="400" preserveRatio="false">
+                            <ImageView fx:id="cabinPhotoView" fitWidth="176" fitHeight="360" preserveRatio="false">
                                 <image>
                                     <Image url="@../photos/karsten-winegeart-TkKTqPPkWP4-unsplash.jpg"/>
                                 </image>
@@ -116,7 +116,7 @@
                                 <Label fx:id="cabinKickerLabel" text="SECTION 1 CABIN" styleClass="seat-cabin-kicker"/>
                                 <Label fx:id="cabinTitleLabel" text="Inside the cabin" styleClass="seat-cabin-title"/>
                                 <Label text="Economy 3-3 and First 2-2 seating. Select any available seat on the map."
-                                       wrapText="true" prefWidth="136"
+                                       wrapText="true" prefWidth="128" maxWidth="132" minHeight="-Infinity"
                                        styleClass="seat-cabin-desc"/>
                             </VBox>
                         </StackPane>
@@ -163,10 +163,10 @@
                 </VBox>
 
                 <!-- RIGHT COLUMN (width 306): Cream Selection Card + Flight Card -->
-                <VBox prefWidth="306" minWidth="296" maxWidth="310" spacing="10">
+                <VBox prefWidth="306" minWidth="296" maxWidth="310" spacing="8">
 
                     <!-- A. Selection Card (with Cream highlight header matching board-3) -->
-                    <VBox styleClass="glass-card, seat-right-card" spacing="10">
+                    <VBox styleClass="glass-card, seat-right-card" spacing="7">
                         <!-- Cream highlight card for selected seat -->
                         <VBox styleClass="seat-selection-cream-box" spacing="8">
                             <Label text="YOUR SEAT" styleClass="seat-cream-kicker"/>
@@ -231,7 +231,7 @@
                         <Button fx:id="continueButton"
                                 text="Continue to checkout"
                                 onAction="#handleContinue"
-                                prefHeight="46" minHeight="46" maxHeight="46"
+                                prefHeight="40" minHeight="40" maxHeight="40"
                                 maxWidth="Infinity"
                                 styleClass="btn-checkout-gold">
                             <graphic>
@@ -242,13 +242,13 @@
                         <Button fx:id="releaseButton"
                                 text="Release seat and choose another"
                                 onAction="#handleReleaseSeat"
-                                prefHeight="38" minHeight="38" maxHeight="38"
+                                prefHeight="34" minHeight="34" maxHeight="34"
                                 maxWidth="Infinity"
                                 styleClass="btn-release-ghost"/>
                     </VBox>
 
                     <!-- B. Flight Card -->
-                    <VBox styleClass="glass-card, seat-flight-card" spacing="8" VBox.vgrow="ALWAYS">
+                    <VBox styleClass="glass-card, seat-flight-card" spacing="5" VBox.vgrow="ALWAYS">
                         <Label text="FLIGHT" styleClass="seat-flight-kicker"/>
 
                         <HBox alignment="CENTER_LEFT" spacing="8">

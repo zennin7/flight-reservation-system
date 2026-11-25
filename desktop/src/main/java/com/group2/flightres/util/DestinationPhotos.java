@@ -114,6 +114,10 @@ public final class DestinationPhotos {
         return sectionIndex1Based <= 1 ? CABIN_FIRST : CABIN_FALLBACK;
     }
 
+    public static String sectionLightboxTitle(int sectionIndex1Based) {
+        return "Section " + sectionIndex1Based + " — Inside the cabin";
+    }
+
     public static String cabinPhotoPath(SeatClass seatClass) {
         if (seatClass == null) {
             return CABIN_FALLBACK;

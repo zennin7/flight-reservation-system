@@ -29,7 +29,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,6 +158,16 @@ public class CheckoutController implements WizardStepController {
     public void initialize() {
         if (stepperBar != null) {
             stepperBar.setActiveStep(BookingStep.CHECKOUT);
+        }
+        if (tripHeroImageView != null && tripHeroImageView.getParent() instanceof StackPane heroBanner) {
+            tripHeroImageView.fitWidthProperty().bind(heroBanner.widthProperty());
+            tripHeroImageView.fitHeightProperty().bind(heroBanner.heightProperty());
+            Rectangle bannerClip = new Rectangle();
+            bannerClip.setArcWidth(32);
+            bannerClip.setArcHeight(32);
+            bannerClip.widthProperty().bind(heroBanner.widthProperty());
+            bannerClip.heightProperty().bind(heroBanner.heightProperty());
+            heroBanner.setClip(bannerClip);
         }
         populateData();
     }

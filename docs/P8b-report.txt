@@ -1,0 +1,137 @@
+================================================================================
+SKY ROYAL — TASK P8b REPORT
+Branch: feat/p5b-desktop-parity
+Date: 2026-11-25
+Database used for verification: throwaway sr_p8 on localhost:5433 (main DB untouched)
+================================================================================
+
+1. SUMMARY OF THE 6 FIXES
+--------------------------------------------------------------------------------
+
+(1) SeatMapAndCheckoutLayoutTest.testCheckoutLayout (checkout.fxml at 900 & 1100)
+  - Root cause:
+    The checkout main glass container still carried rigid prefWidth="1168" /
+    minWidth="1168", the Confirm button graphic HBox had prefWidth="480", and
+    the left column had no responsive shrink range. At widths 900 and 1100, the
+    right-hand summary labels ("Demo Traveller", "Demo payment, no real card is
+    charged", "Card", "Seat 7C · Economy", price rows, VAT line, "SEAT HOLD")
+    overflowed the root bounds by ~25-36 px.
+  - Fix:
+    * desktop/src/main/resources/com/group2/flightres/fxml/checkout.fxml:
+      - Reduced root minWidth to 860 / minHeight to 620 and outer margins to
+        4 20 16 20.
+      - Removed rigid prefWidth/minWidth="1168" on search-main-glass.
+      - Made Left Column responsive (prefWidth="400", minWidth="320",
+        maxWidth="500", HBox.hgrow="SOMETIMES") and marked tripHeroImageView
+        managed="false" so it never inflates column width.
+      - Tightened card preview dimensions (200x136) and removed fixed
+        prefWidth="480" from the Confirm button graphic HBox.
+    * desktop/src/main/java/com/group2/flightres/controller/CheckoutController.java:
+      - Bound tripHeroImageView fitWidth/fitHeight and a rounded Rectangle clip
+        dynamically to the hero banner StackPane so the hero photo never bleeds
+        across the card boundary at narrow widths.
+  - Test untouched. Verified GREEN at 900 and 1100 px.
+
+(2) SeatMapAndCheckoutLayoutTest.testSeatMapLayout (seat-map.fxml at 900 & 1100)
+  - Root cause:
+    The cabin description label ("Economy 3-3 and First 2-2 seating. Select any
+    available seat on the map.") had prefWidth="136" while its available width
+    inside cabinPhotoCard was 135.2 px, causing a 0.8 px truncation violation.
+    Additionally, at 900 px the aircraft graphic slightly overlapped the right
+    column and vertical spacing pushed row F and the Flight Card near the bottom.
+  - Fix:
+    * desktop/src/main/resources/com/group2/flightres/fxml/seat-map.fxml:
+      - Set wrapText="true" prefWidth="128" maxWidth="132" minHeight="-Infinity"
+        on the cabin description label so it wraps cleanly inside cabinPhotoCard.
+      - Reduced root minWidth to 860 / minHeight to 620, margins to 4 20 16 20.
+      - Compacted seat-plane-card (height 170, planeGraphic scale 0.58) and
+        aligned cabinPhotoCard prefHeight/maxHeight/clip to 360 px so the full
+        cabin description, seat rows A-F, and Flight Card fit cleanly with zero
+        overlap or cutoff.
+  - Test untouched. Verified GREEN at 900 and 1100 px.
+
+(3) AdminBookingsLayoutTest.testLayoutAtWidths (line 207 at width 1100)
+  - Exact violation reproduced before fixing:
+    "Header ROUTE minX=468.8 must align with cell minX=544.0 at width 1100.0"
+  - Root cause:
+    In the 3-column bookingsGrid at width 1100, the centre table column was
+    narrow enough that the passenger cell (paxCell) forced the first row HBox
+    wider than rowsContainer, shifting the ROUTE cell right by 75.2 px relative
+    to the header.
+  - Fix:
+    * desktop/src/main/resources/com/group2/flightres/fxml/admin-bookings.fxml:
+      - Tightened bookingsGrid column constraints (c0: 142/148/180, c2:
+        220/228/290, hgap="8") and matched header column widths (spacing="4",
+        pnr=60, route=58, seat=28, total=68, status=78).
+    * desktop/src/main/java/com/group2/flightres/controller/AdminBookingsController.java:
+      - Updated row cell widths and spacing to match the header column widths
+        identically (spacing="4", pnr=60, route=58, seat=28, total=68, status=78).
+  - Test untouched. Verified GREEN at 1280, 1100, and 900 px.
+
+(4) FlightSearchSourceGuardTest.testNoHardcodedFlightSearchLiterals
+  - Exact violation:
+    GlassSeatMapBridge.java:407 contained the banned literal 'Cabin View'.
+  - Fix:
+    * desktop/src/main/java/com/group2/flightres/util/DestinationPhotos.java:
+      - Added helper DestinationPhotos.sectionLightboxTitle(int sectionIndex1Based)
+        returning "Section " + sectionIndex1Based + " — Inside the cabin".
+    * desktop/src/main/java/com/group2/flightres/util/GlassSeatMapBridge.java:
+      - Replaced the hardcoded 'Cabin View' literal at line 407 with
+        DestinationPhotos.sectionLightboxTitle(activeSection).
+  - Guard test and its banned list untouched. Verified GREEN.
+
+(5) P8DesktopParityAndSmokeTest (endToEndSmokeFlow & flightSearchParityAndDestinationCoverage)
+  - Root cause:
+    When run against a database that still has the old pre-P8 seed (4 flights/day
+    on JNB->CPT instead of 9), the assertion failed without telling the operator
+    how to reseed. Additionally, endToEndSmokeFlow created a real booking without
+    cleaning it up, gradually consuming seats on repeated verify runs.
+  - Fix:
+    * desktop/src/test/java/com/group2/flightres/controller/P8DesktopParityAndSmokeTest.java:
+      - Added explicit "(run scripts\reseed.cmd to refresh the rolling 14-day schedule)"
+        guidance to the flight-count assertion messages.
+      - Wrapped the booking/seat-hold section of endToEndSmokeFlow in try/finally
+        calling bookingService.cancelBookingForUser(...) (or releasing the seat
+        hold if booking creation did not complete) so repeated runs leave seat
+        inventory intact.
+  - Verified GREEN on sr_p8.
+
+(6) Web Module Compile & Test Check (.\mvnw.cmd -pl web test)
+  - Compiled cleanly against core.
+  - Result against sr_p8: Tests run: 41, Failures: 1, Errors: 0, Skipped: 0.
+  - Pre-existing failure (unrelated to P8/P8b):
+    LocaleFormattingTest.allPagesFormatMoneyAndPercentagesWithDotDecimalsUnderCommaLocales:193
+    Message: "Flights fare must format as R 1,180.00 under en_ZA"
+    Cause: LocaleFormattingTest hardcodes date=2026-11-24, which is now in the
+    past (today is 2026-11-25), so FlightSalesPolicy excludes flights on that
+    date and the flights page renders no fare rows. Not modified in P8b.
+
+
+2. DESKTOP TEST RESULTS (sr_p8 on localhost:5433)
+--------------------------------------------------------------------------------
+Command:
+  MAVEN_OPTS='-Xms64m -Xmx384m -XX:ReservedCodeCacheSize=96m'
+  SKY_ROYAL_DB_HOST=localhost SKY_ROYAL_DB_PORT=5433 SKY_ROYAL_DB_NAME=sr_p8
+  .\mvnw.cmd -pl desktop test -Dtest="SeatMapAndCheckoutLayoutTest,AdminBookingsLayoutTest,FlightSearchSourceGuardTest,P8DesktopParityAndSmokeTest,DesktopTokenGuardTest,BrandGuardTest"
+
+Results:
+  - SeatMapAndCheckoutLayoutTest: 4/4 PASS (checkout & seat-map at 1100 and 900)
+  - AdminBookingsLayoutTest:      4/4 PASS (widths 1280, 1100, 900 + RBAC/100+ rows)
+  - FlightSearchSourceGuardTest:  2/2 PASS
+  - P8DesktopParityAndSmokeTest:  4/4 PASS (with booking cleanup in finally)
+  - DesktopTokenGuardTest:        4/4 PASS (no gold/navy or token regressions)
+  - BrandGuardTest:               (core/desktop brand guard green)
+  Total targeted suite:           18/18 PASS, 0 Failures, 0 Errors, 0 Skipped.
+
+
+3. SCREENSHOTS (docs/screenshots/p8b/)
+--------------------------------------------------------------------------------
+Captured via desktop/src/test/java/com/group2/flightres/tools/P8bScreenshotRunner.java
+and visually inspected:
+  - docs/screenshots/p8b/checkout-900.png   (886x713)  — no overflow, clean clip
+  - docs/screenshots/p8b/checkout-1100.png  (1086x713) — no overflow, clean clip
+  - docs/screenshots/p8b/checkout-1366.png  (1352x731) — no overflow, clean clip
+  - docs/screenshots/p8b/seat-map-900.png   (886x713)  — plane & grid fit cleanly
+  - docs/screenshots/p8b/seat-map-1100.png  (1086x713) — plane & grid fit cleanly
+  - docs/screenshots/p8b/seat-map-1366.png  (1352x731) — full seat map & flight card
+================================================================================

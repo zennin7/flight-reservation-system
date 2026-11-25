@@ -68,11 +68,11 @@
                                 hbarPolicy="NEVER"
                                 vbarPolicy="AS_NEEDED"
                                 VBox.vgrow="ALWAYS">
-                        <GridPane fx:id="bookingsGrid" hgap="12" vgap="12">
+                        <GridPane fx:id="bookingsGrid" hgap="8" vgap="12">
                             <columnConstraints>
-                                <ColumnConstraints minWidth="176" prefWidth="184" maxWidth="196"/>
+                                <ColumnConstraints minWidth="142" prefWidth="148" maxWidth="180"/>
                                 <ColumnConstraints hgrow="ALWAYS"/>
-                                <ColumnConstraints minWidth="285" prefWidth="296" maxWidth="310"/>
+                                <ColumnConstraints minWidth="220" prefWidth="228" maxWidth="290"/>
                             </columnConstraints>
 
                             <!-- Left Filter Sidebar (collapses to compact bar at 900) -->
@@ -127,13 +127,13 @@
                                     <Label fx:id="showingRangeLabel" text="Showing 0 to 0" styleClass="admin-row-meta" minWidth="-Infinity"/>
                                 </HBox>
 
-                                <HBox fx:id="bookingsTableHeader" spacing="6" styleClass="admin-table-header" alignment="CENTER_LEFT">
-                                    <Label fx:id="hdrRefLabel" text="REFERENCE" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="76"/>
+                                <HBox fx:id="bookingsTableHeader" spacing="4" styleClass="admin-table-header" alignment="CENTER_LEFT">
+                                    <Label fx:id="hdrRefLabel" text="REFERENCE" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="60"/>
                                     <Label fx:id="hdrPaxLabel" text="PASSENGER" styleClass="admin-section-title" minWidth="-Infinity" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                                    <Label fx:id="hdrRouteLabel" text="ROUTE" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="68"/>
-                                    <Label fx:id="hdrSeatLabel" text="SEAT" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="34"/>
-                                    <Label fx:id="hdrTotalLabel" text="TOTAL" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="84"/>
-                                    <Label fx:id="hdrStatusLabel" text="STATUS" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="96"/>
+                                    <Label fx:id="hdrRouteLabel" text="ROUTE" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="58"/>
+                                    <Label fx:id="hdrSeatLabel" text="SEAT" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="28"/>
+                                    <Label fx:id="hdrTotalLabel" text="TOTAL" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="68"/>
+                                    <Label fx:id="hdrStatusLabel" text="STATUS" styleClass="admin-section-title" minWidth="-Infinity" prefWidth="78"/>
                                 </HBox>
 
                                 <ScrollPane fx:id="tableScrollPane"

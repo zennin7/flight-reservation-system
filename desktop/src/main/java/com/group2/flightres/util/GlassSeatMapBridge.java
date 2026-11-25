@@ -404,7 +404,7 @@ public class GlassSeatMapBridge extends StackPane {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initOwner(getScene().getWindow());
-        dialog.setTitle("Section " + currentSection + " Cabin View");
+        dialog.setTitle(DestinationPhotos.sectionLightboxTitle(currentSection));
         ImageView view = new ImageView(imgOpt.get());
         view.setPreserveRatio(true);
         view.setFitWidth(760);
