@@ -140,16 +140,17 @@
                  ==============================================================- -->
             <HBox spacing="16" VBox.vgrow="ALWAYS" minHeight="0">
 
-                <!-- FILTERS SIDEBAR (width 300) -->
-                <VBox styleClass="filters-panel" minWidth="300" prefWidth="300" maxWidth="300" spacing="10">
+                <!-- FILTERS SIDEBAR (width 260, scrollable at compact/125% heights) -->
+                <VBox styleClass="filters-panel" minWidth="260" prefWidth="260" maxWidth="260" spacing="8">
                     <Label fx:id="filtersTitleLabel" text="Filters" styleClass="filters-title"/>
 
-                    <VBox fx:id="filtersCard" styleClass="filters-card" minWidth="300" prefWidth="300" maxWidth="300" VBox.vgrow="ALWAYS" spacing="16">
+                    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="glass-scroll-pane" VBox.vgrow="ALWAYS">
+                    <VBox fx:id="filtersCard" styleClass="filters-card" spacing="10">
 
                         <!-- Section: Departure (2x2 pills) -->
-                        <VBox spacing="10">
+                        <VBox spacing="6">
                             <Label text="Departure" styleClass="filter-section-title"/>
-                            <GridPane hgap="8" vgap="8">
+                            <GridPane hgap="6" vgap="6">
                                 <Button text="Before 6 AM" onAction="#handleFilterDeparture"
                                         styleClass="pill-button" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                                 <Button text="6 AM to 12 PM" onAction="#handleFilterDeparture"
@@ -162,37 +163,37 @@
                         </VBox>
 
                         <!-- Section: Price (range slider) -->
-                        <VBox fx:id="priceFilterSection" spacing="8">
+                        <VBox fx:id="priceFilterSection" spacing="6">
                             <HBox alignment="CENTER_LEFT">
                                 <Label text="Price" styleClass="filter-section-title"/>
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button text="Reset" onAction="#handleResetPrice" styleClass="filter-reset-link"/>
                             </HBox>
                             <Label fx:id="priceFilterValueLabel" text="Max price: R 0" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.75);"/>
-                            <Slider fx:id="priceSlider" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
+                            <Slider fx:id="priceSlider" maxWidth="Infinity" styleClass="glass-slider"/>
                             <Label fx:id="priceSingleValueLabel" text="" visible="false" managed="false" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;"/>
                         </VBox>
 
                         <!-- Section: Flight duration (range slider) -->
-                        <VBox fx:id="durationFilterSection" spacing="8">
+                        <VBox fx:id="durationFilterSection" spacing="6">
                             <HBox alignment="CENTER_LEFT">
                                 <Label text="Flight duration" styleClass="filter-section-title"/>
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button text="Reset" onAction="#handleResetDuration" styleClass="filter-reset-link"/>
                             </HBox>
                             <Label fx:id="durationFilterValueLabel" text="Max duration: 0h 00m" style="-fx-font-family: 'Inter'; -fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.75);"/>
-                            <Slider fx:id="durationSlider" minWidth="264" prefWidth="264" maxWidth="264" styleClass="glass-slider"/>
+                            <Slider fx:id="durationSlider" maxWidth="Infinity" styleClass="glass-slider"/>
                             <Label fx:id="durationSingleValueLabel" text="" visible="false" managed="false" style="-fx-font-family: 'Inter'; -fx-font-size: 13px; -fx-text-fill: #ffffff;"/>
                         </VBox>
 
                         <!-- Section: Cabin (two rows) -->
-                        <VBox spacing="10">
+                        <VBox spacing="6">
                             <HBox alignment="CENTER_LEFT">
                                 <Label text="Cabin" styleClass="filter-section-title"/>
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button text="Reset" onAction="#handleResetCabin" styleClass="filter-reset-link"/>
                             </HBox>
-                            <VBox spacing="10">
+                            <VBox spacing="8">
                                 <HBox fx:id="economyCabinRow" alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleCabinRowEconomy" styleClass="cabin-check-row">
                                     <StackPane fx:id="economyCheckCircle" styleClass="check-circle, check-circle-on">
                                         <SVGPath content="M5 12l5 5 9-10" styleClass="check-tick-icon"/>
@@ -210,6 +211,7 @@
                         </VBox>
 
                     </VBox>
+                    </ScrollPane>
                 </VBox>
 
                 <!-- RESULTS COLUMN (flex-grow) -->
